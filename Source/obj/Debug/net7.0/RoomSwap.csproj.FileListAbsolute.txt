@@ -1,0 +1,12 @@
+C:\Program Files (x86)\Steam\steamapps\common\Celeste\Mods\RoomSwap\Source\bin\Debug\net7.0\RoomSwap.deps.json
+C:\Program Files (x86)\Steam\steamapps\common\Celeste\Mods\RoomSwap\Source\bin\Debug\net7.0\RoomSwap.dll
+C:\Program Files (x86)\Steam\steamapps\common\Celeste\Mods\RoomSwap\Source\bin\Debug\net7.0\RoomSwap.pdb
+C:\Program Files (x86)\Steam\steamapps\common\Celeste\Mods\RoomSwap\Source\obj\Debug\net7.0\RoomSwap.csproj.AssemblyReference.cache
+C:\Program Files (x86)\Steam\steamapps\common\Celeste\Mods\RoomSwap\Source\obj\Debug\net7.0\RoomSwap.GeneratedMSBuildEditorConfig.editorconfig
+C:\Program Files (x86)\Steam\steamapps\common\Celeste\Mods\RoomSwap\Source\obj\Debug\net7.0\RoomSwap.AssemblyInfoInputs.cache
+C:\Program Files (x86)\Steam\steamapps\common\Celeste\Mods\RoomSwap\Source\obj\Debug\net7.0\RoomSwap.AssemblyInfo.cs
+C:\Program Files (x86)\Steam\steamapps\common\Celeste\Mods\RoomSwap\Source\obj\Debug\net7.0\RoomSwap.csproj.CoreCompileInputs.cache
+C:\Program Files (x86)\Steam\steamapps\common\Celeste\Mods\RoomSwap\Source\obj\Debug\net7.0\RoomSwap.dll
+C:\Program Files (x86)\Steam\steamapps\common\Celeste\Mods\RoomSwap\Source\obj\Debug\net7.0\refint\RoomSwap.dll
+C:\Program Files (x86)\Steam\steamapps\common\Celeste\Mods\RoomSwap\Source\obj\Debug\net7.0\RoomSwap.pdb
+C:\Program Files (x86)\Steam\steamapps\common\Celeste\Mods\RoomSwap\Source\obj\Debug\net7.0\ref\RoomSwap.dll

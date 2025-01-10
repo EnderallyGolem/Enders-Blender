@@ -1,0 +1,814 @@
+﻿using Celeste.Mod.EndHelper.Entities.Misc;
+using Celeste.Mod.EndHelper.Integration;
+using Celeste.Mod.SpeedrunTool.Message;
+using Microsoft.Xna.Framework;
+using Monocle;
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Data.Common;
+using System.Linq;
+using System.Text.Json;
+using System.Threading.Tasks;
+using static MonoMod.InlineRT.MonoModRule;
+//using VivHelper.Module__Extensions__Etc;
+
+namespace Celeste.Mod.EndHelper;
+
+public class EndHelperModule : EverestModule {
+
+    #region Everest Stuff
+    public static EndHelperModule Instance { get; private set; }
+
+    public override Type SettingsType => typeof(EndHelperModuleSettings);
+    public static EndHelperModuleSettings Settings => (EndHelperModuleSettings) Instance._Settings;
+
+    public override Type SessionType => typeof(EndHelperModuleSession);
+    public static EndHelperModuleSession Session => (EndHelperModuleSession) Instance._Session;
+
+    public override Type SaveDataType => typeof(EndHelperModuleSaveData);
+    public static EndHelperModuleSaveData SaveData => (EndHelperModuleSaveData) Instance._SaveData;
+
+
+    //Custom spritebank, for contest xml location stuff
+    public static SpriteBank SpriteBank => Instance._CustomEntitySpriteBank;
+    private SpriteBank _CustomEntitySpriteBank;
+
+    #endregion
+
+    #region Initialisation
+
+    //Event Listener for when room modification occurs
+    public static event EventHandler<RoomModificationEventArgs> RoomModificationEvent;
+    public static bool enableRoomSwapHooks = false;
+    public class RoomModificationEventArgs : EventArgs
+    {
+        public string gridID { get; set; }
+        public RoomModificationEventArgs(string gridID)
+        {
+            this.gridID = gridID;
+        }
+    }
+    public static void roomModificationEventTrigger(string gridID)
+    {
+        RoomModificationEvent?.Invoke(null, new RoomModificationEventArgs(gridID));
+    }
+
+    public EndHelperModule() {
+        Instance = this;
+#if DEBUG
+        // debug builds use verbose logging
+        Logger.SetLogLevel(nameof(EndHelperModule), LogLevel.Verbose);
+#else
+        // release builds use info logging to reduce spam in log files
+        Logger.SetLogLevel(nameof(RoomSwapModule), LogLevel.Info);
+#endif
+    }
+
+    public override void Load() {
+        //On.Celeste.Level.TransitionRoutine += Hook_TransitionRoutine;
+        Everest.Events.AssetReload.OnReloadLevel += reupdateAllRooms;
+        Everest.Events.AssetReload.OnBeforeReload += reloadBeginFunc;
+        Everest.Events.AssetReload.OnAfterReload += reloadCompleteFunc;
+
+        On.Celeste.Player.Update += hook_OnPlayerUpdate;
+        On.Celeste.Player.IntroRespawnBegin += hook_OnPlayerRespawn;
+        On.Celeste.Player.Die += hook_OnPlayerDeath;
+        On.Celeste.Level.TransitionRoutine += Hook_TransitionRoutine;
+
+        SpeedrunToolIntegration.Load();
+    }
+
+    // Optional, initialize anything after Celeste has initialized itself properly.
+    public override void Initialize(){
+
+    }
+
+    // Optional, do anything requiring either the Celeste or mod content here.
+    public override void LoadContent(bool firstLoad)
+    {
+        base.LoadContent(firstLoad);
+        _CustomEntitySpriteBank = new SpriteBank(GFX.Game, "Graphics/EndHelper/Sprites.xml");
+    }
+
+    // Unload the entirety of your mod's content. Free up any native resources.
+    public override void Unload() {
+        //On.Celeste.Level.TransitionRoutine -= Hook_TransitionRoutine;
+        Everest.Events.AssetReload.OnReloadLevel -= reupdateAllRooms;
+        Everest.Events.AssetReload.OnBeforeReload -= reloadBeginFunc;
+        Everest.Events.AssetReload.OnAfterReload -= reloadCompleteFunc;
+
+        On.Celeste.Player.Update -= hook_OnPlayerUpdate;
+        On.Celeste.Player.IntroRespawnBegin -= hook_OnPlayerRespawn;
+        On.Celeste.Player.Die -= hook_OnPlayerDeath;
+        On.Celeste.Level.TransitionRoutine -= Hook_TransitionRoutine;
+
+        SpeedrunToolIntegration.Unload();
+    }
+    #endregion
+
+    #region Hooks
+
+    public static bool reloadComplete;
+
+    private static void reloadCompleteFunc(bool silent)
+    {
+        reloadComplete = true;
+    }
+    private static void reloadBeginFunc(bool silent)
+    {
+        reloadComplete = false;
+    }
+
+
+
+    private static void hook_OnPlayerUpdate(On.Celeste.Player.orig_Update orig, global::Celeste.Player self){
+        if (EndHelperModule.Settings.FreeMultiroomWatchtower.Button.Pressed)
+        {
+            spawnMultiroomWatchtower();
+        }
+        orig(self);
+    }
+
+    public static PlayerDeadBody hook_OnPlayerDeath(On.Celeste.Player.orig_Die orig, global::Celeste.Player self, Vector2 direction, bool evenIfInvincible, bool registerDeathInStats)
+    {
+        
+        return orig(self, direction, evenIfInvincible, registerDeathInStats);
+    }
+
+    public static void hook_OnPlayerRespawn(On.Celeste.Player.orig_IntroRespawnBegin orig, global::Celeste.Player self)
+    {
+        reupdateAllRooms();
+        orig(self);
+    }
+
+    private static IEnumerator Hook_TransitionRoutine(
+        On.Celeste.Level.orig_TransitionRoutine orig, global::Celeste.Level self, global::Celeste.LevelData next, Vector2 direction
+    )
+    {
+        if (enableRoomSwapHooks)
+        {
+            reupdateAllRooms(); //This only exists so it updates when you respawn from debug. It umm still requires a transition to work. screw debug
+        }
+        yield return new SwapImmediately(orig(self, next, direction));
+    }
+
+    #endregion
+
+    #region Spawn Multiroom Watchtower
+
+    private static void spawnMultiroomWatchtower()
+    {
+        if (Engine.Scene is not Level level)
+        {
+            return;
+        }
+        if (level.Tracker.GetEntity<Player>() is not Player player)
+        {
+            return;
+        }
+
+        MultiroomWatchtower portableWatchtower = new(new EntityData
+        {
+            Position = player.Position,
+            Level = level.Session.LevelData
+        }, Vector2.Zero);
+
+        portableWatchtower.allowOnAir = true;
+        portableWatchtower.destroyUponFinishView = true;
+        portableWatchtower.maxSpeedSet *= 2;
+        portableWatchtower.canToggleBlocker = true;
+
+        portableWatchtower.Interact(player);
+        level.Add(portableWatchtower);
+    }
+
+    [Tracked(true)]
+    private class PortableMultiroomWatchtower : MultiroomWatchtower
+    {
+        internal PortableMultiroomWatchtower(EntityData data, Vector2 offset) : base(data, offset) {
+        }
+        internal static bool Exists => Engine.Scene.Tracker.GetEntity<PortableMultiroomWatchtower>() != null;
+    }
+
+    #endregion
+
+    #region Room-Swap
+
+    public static void reupdateAllRooms()
+    {
+        if (Engine.Scene is not Level level)
+        {
+            return;
+        } else
+        {
+            reupdateAllRooms(level);
+        }
+    }
+
+    public static void reupdateAllRooms(global::Celeste.Level level)
+    {
+        foreach (String gridID in EndHelperModule.Session.roomSwapOrderList.Keys)
+        {
+            int roomSwapTotalRow = EndHelperModule.Session.roomSwapRow[gridID];
+            int roomSwapTotalColumn = EndHelperModule.Session.roomSwapColumn[gridID];
+            String roomSwapPrefix = EndHelperModule.Session.roomSwapPrefix[gridID];
+            String roomTemplatePrefix = EndHelperModule.Session.roomTemplatePrefix[gridID];
+
+            for (int row = 1; row <= roomSwapTotalRow; row++)
+            {
+                for (int column = 1; column <= roomSwapTotalColumn; column++)
+                {
+                    replaceRoomAfterReloadEnd(gridID, roomSwapPrefix, row, column, level);
+                }
+            }
+            roomModificationEventTrigger(gridID);
+        }
+    }
+
+    public static async void replaceRoomAfterReloadEnd(string gridID, String roomSwapPrefix, int row, int column, global::Celeste.Level level)
+    {
+        while (reloadComplete != true)
+        {
+            await Task.Delay(20);
+        }
+
+        //Logger.Log(LogLevel.Info, "EndHelper/main", $"Replace {EndHelperModule.Session.roomSwapOrderList[gridID][row - 1][column - 1]} >> {roomSwapPrefix}{row}{column}");
+        replaceRoom($"{roomSwapPrefix}{row}{column}", EndHelperModule.Session.roomSwapOrderList[gridID][row - 1][column - 1], level);
+    }
+
+    static LevelData getRoomDataFromName(string roomName, Level level)
+    {
+        foreach (LevelData levelData in level.Session.MapData.Levels)
+        {
+            if (levelData.Name == roomName) { return levelData; }
+        }
+        Logger.Log(LogLevel.Warn, "EndHelper/main/getRoomDataFromName", $"Unable to find room {roomName} - returning current room leveldata instead.");
+        return level.Session.LevelData; //returns current room if can't find (this should not happen)
+    }
+
+    static void replaceRoom(String replaceSwapRoomName, String replaceTemplateRoomName, global::Celeste.Level level)
+    {
+        LevelData replaceSwapRoomData = getRoomDataFromName(replaceSwapRoomName, level);
+        LevelData replaceTemplateRoomData = getRoomDataFromName(replaceTemplateRoomName, level);
+
+        //Logger.Log(LogLevel.Info, "EndHelper/main", $"Replacing room {replaceSwapRoomName} with the template {replaceTemplateRoomName}");
+
+        // Avoid changing name, position
+        // FG and BG tiles don't even work smhmh
+        replaceSwapRoomData.Entities = replaceTemplateRoomData.Entities;
+        replaceSwapRoomData.Dummy = replaceTemplateRoomData.Dummy;
+        //replaceSwapRoomData.Space = replaceTemplateRoomData.Space;
+        replaceSwapRoomData.Bg = replaceTemplateRoomData.Bg;
+        replaceSwapRoomData.BgDecals = replaceTemplateRoomData.BgDecals;
+
+        // Spawns don't have their position set properly, but that's what TransitionRespawnForceSameRoomTrigger is for
+        replaceSwapRoomData.Spawns = replaceTemplateRoomData.Spawns;
+        replaceSwapRoomData.DefaultSpawn = replaceTemplateRoomData.DefaultSpawn;
+
+        //Tiles only SOMETIMES work, so i'll remove here so they consistently don't work
+        //replaceSwapRoomData.BgTiles = replaceTemplateRoomData.BgTiles;
+        //replaceSwapRoomData.FgTiles = replaceTemplateRoomData.FgTiles;
+        replaceSwapRoomData.ObjTiles = replaceTemplateRoomData.ObjTiles;
+
+        replaceSwapRoomData.Solids = replaceTemplateRoomData.Solids;
+
+        replaceSwapRoomData.FgDecals = replaceTemplateRoomData.FgDecals;
+        replaceSwapRoomData.Music = replaceTemplateRoomData.Music;
+        replaceSwapRoomData.Strawberries = replaceTemplateRoomData.Strawberries;
+        replaceSwapRoomData.Triggers = replaceTemplateRoomData.Triggers;
+        replaceSwapRoomData.MusicLayers = replaceTemplateRoomData.MusicLayers;
+        replaceSwapRoomData.Music = replaceTemplateRoomData.Music;
+        replaceSwapRoomData.MusicProgress = replaceTemplateRoomData.MusicProgress;
+        replaceSwapRoomData.MusicWhispers = replaceTemplateRoomData.MusicWhispers;
+        replaceSwapRoomData.DelayAltMusic = replaceTemplateRoomData.DelayAltMusic;
+        replaceSwapRoomData.AltMusic = replaceTemplateRoomData.AltMusic;
+        replaceSwapRoomData.Ambience = replaceTemplateRoomData.Ambience;
+        replaceSwapRoomData.AmbienceProgress = replaceTemplateRoomData.AmbienceProgress;
+        replaceSwapRoomData.Dark = replaceTemplateRoomData.Dark;
+        replaceSwapRoomData.EnforceDashNumber = replaceTemplateRoomData.EnforceDashNumber;
+        replaceSwapRoomData.Underwater = replaceTemplateRoomData.Underwater;
+        replaceSwapRoomData.WindPattern = replaceTemplateRoomData.WindPattern;
+        replaceSwapRoomData.HasGem = replaceTemplateRoomData.HasGem;
+        replaceSwapRoomData.HasHeartGem = replaceTemplateRoomData.HasHeartGem;
+        replaceSwapRoomData.HasCheckpoint = replaceTemplateRoomData.HasCheckpoint;
+    }
+
+    public static async void temporarilyDisableTrigger(int millisecondDelay, string gridID)
+    {
+        EndHelperModule.Session.allowTriggerEffect[gridID] = false;
+        await Task.Delay(millisecondDelay);
+        EndHelperModule.Session.allowTriggerEffect[gridID] = true;
+    }
+
+    public static bool modifyRooms(String modifyType, bool isSilent, Player? player, Level level, String gridID, int teleportDelayMilisecond = 0, int teleportDisableMilisecond = 200, bool flashEffect = false)
+    {
+        bool succeedModify = false;
+
+        //player is NULLable! player should only be checked inside the not-silent box
+        LevelData currentRoomData = level.Session.LevelData;
+        String currentRoomName = currentRoomData.Name;
+
+        int roomSwapTotalRow = EndHelperModule.Session.roomSwapRow[gridID];
+        int roomSwapTotalColumn = EndHelperModule.Session.roomSwapColumn[gridID];
+        String roomSwapPrefix = EndHelperModule.Session.roomSwapPrefix[gridID];
+        String roomTemplatePrefix = EndHelperModule.Session.roomTemplatePrefix[gridID];
+
+        String currentTemplateRoomName = getTemplateRoomFromSwapRoom(currentRoomName);
+
+        if (EndHelperModule.Session.allowTriggerEffect[gridID])
+        {
+            Logger.Log(LogLevel.Info, "EndHelper/Main", $"Modifying Room! Type: {modifyType}. Triggered from {currentRoomName}. ({roomSwapTotalRow}x{roomSwapTotalColumn})");
+            EndHelperModule.temporarilyDisableTrigger(teleportDisableMilisecond + (int)(EndHelperModule.Session.roomTransitionTime[gridID] * 1000 + teleportDelayMilisecond), gridID);
+
+            if (EndHelperModule.Session.roomSwapOrderList.ContainsKey(gridID)) //Don't run this if first load
+            {
+                level.Session.SetFlag(getTransitionFlagName(), false); //Remove flag
+            }
+            
+
+            switch (modifyType)
+            {
+
+                case "Test":
+                    EndHelperModule.Session.roomSwapOrderList[gridID] = [];
+                    for (int row = 1; row <= roomSwapTotalRow; row++)
+                    {
+                        List<string> roomRow = [];
+                        for (int column = 1; column <= roomSwapTotalColumn; column++)
+                        {
+                            getPosFromRoomName($"{roomSwapPrefix}");
+                            roomRow.Add($"{roomTemplatePrefix}11");
+
+                        }
+                        EndHelperModule.Session.roomSwapOrderList[gridID].Add(roomRow);
+                    }
+                    updateRooms();
+                    //teleportToRoom("swap11", player, level);
+                    if (currentRoomName.StartsWith(roomSwapPrefix))
+                    {
+                        teleportToRoom(getSwapRoomFromTemplateRoom(currentTemplateRoomName), player, level);
+                    }
+
+                    //level.Session.LevelData = getRoomDataFromName($"{roomTemplatePrefix}11", level);
+                    break;
+
+                case "Reset":
+                    {
+                        List<List<string>> initial = null;
+                        if (EndHelperModule.Session.roomSwapOrderList.TryGetValue(gridID, out List<List<string>> value))
+                        {
+                            initial = new List<List<string>>(DeepCopyJSON(value));
+                        }
+                        
+
+                        EndHelperModule.Session.roomSwapOrderList[gridID] = [];
+                        for (int row = 1; row <= roomSwapTotalRow; row++)
+                        {
+                            List<string> roomRow = [];
+                            for (int column = 1; column <= roomSwapTotalColumn; column++)
+                            {
+                                roomRow.Add($"{roomTemplatePrefix}{row}{column}");
+                            }
+                            EndHelperModule.Session.roomSwapOrderList[gridID].Add(roomRow);
+                        }
+
+                        if(!Are2LayerListsEqual(initial, EndHelperModule.Session.roomSwapOrderList[gridID]))
+                        {
+                            updateRooms();
+                        }
+
+                        //If reset is triggered while in the swap zone, do le warp
+                        if (currentRoomName.StartsWith(roomSwapPrefix))
+                        {
+                            teleportToRoom(getSwapRoomFromTemplateRoom(currentTemplateRoomName), player, level);
+                        }
+                    }
+                    break;
+
+                case "CurrentRowLeft":
+                    {
+                        int roomRow = getPosFromRoomName(currentRoomName)[0];
+
+                        EndHelperModule.Session.roomSwapOrderList[gridID][roomRow - 1].Add(EndHelperModule.Session.roomSwapOrderList[gridID][roomRow - 1][0]);
+                        EndHelperModule.Session.roomSwapOrderList[gridID][roomRow - 1].RemoveAt(0);
+                        updateRooms();
+                        teleportToRoom(getSwapRoomFromTemplateRoom(currentTemplateRoomName), player, level);
+                    }
+                    break;
+
+                case "CurrentRowLeft_PreventWarp":
+                    {
+                        int roomCol = getPosFromRoomName(currentRoomName)[1];
+                        int roomRow = getPosFromRoomName(currentRoomName)[0];
+
+                        //Only continue if roomCol is not leftmost room
+                        if (roomCol != 1)
+                        {
+                            EndHelperModule.Session.roomSwapOrderList[gridID][roomRow - 1].Add(EndHelperModule.Session.roomSwapOrderList[gridID][roomRow - 1][0]);
+                            EndHelperModule.Session.roomSwapOrderList[gridID][roomRow - 1].RemoveAt(0);
+                            updateRooms();
+                            teleportToRoom(getSwapRoomFromTemplateRoom(currentTemplateRoomName), player, level);
+                        }
+                    }
+                    break;
+
+                case "CurrentRowRight":
+                    {
+                        int roomRow = getPosFromRoomName(currentRoomName)[0];
+
+                        EndHelperModule.Session.roomSwapOrderList[gridID][roomRow-1].Insert(0, EndHelperModule.Session.roomSwapOrderList[gridID][roomRow-1][roomSwapTotalColumn - 1]);
+                        EndHelperModule.Session.roomSwapOrderList[gridID][roomRow-1].RemoveAt(roomSwapTotalColumn);
+                        updateRooms();
+                        teleportToRoom(getSwapRoomFromTemplateRoom(currentTemplateRoomName), player, level);
+                    }
+                    break;
+
+                case "CurrentRowRight_PreventWarp":
+                    {
+                        int roomCol = getPosFromRoomName(currentRoomName)[1];
+                        int roomRow = getPosFromRoomName(currentRoomName)[0];
+
+                        //Only continue if roomCol is not rightmost room
+                        if (roomCol != roomSwapTotalColumn)
+                        {
+                            EndHelperModule.Session.roomSwapOrderList[gridID][roomRow - 1].Insert(0, EndHelperModule.Session.roomSwapOrderList[gridID][roomRow - 1][roomSwapTotalColumn - 1]);
+                            EndHelperModule.Session.roomSwapOrderList[gridID][roomRow - 1].RemoveAt(roomSwapTotalColumn);
+                            updateRooms();
+                            teleportToRoom(getSwapRoomFromTemplateRoom(currentTemplateRoomName), player, level);
+                        }
+                    }
+                    break;
+
+                case "CurrentColumnUp":
+                    {
+                        int roomCol = getPosFromRoomName(currentRoomName)[1];
+                        int roomRow = getPosFromRoomName(currentRoomName)[0];
+
+                        String topRoomName = EndHelperModule.Session.roomSwapOrderList[gridID][0][roomCol - 1];
+                        for (int row = 1; row <= roomSwapTotalRow-1; row++)
+                        {
+                            //Move each room up
+                            EndHelperModule.Session.roomSwapOrderList[gridID][row - 1][roomCol - 1] = EndHelperModule.Session.roomSwapOrderList[gridID][row][roomCol - 1];
+                        }
+                        //Copy over top room to the bottom
+                        EndHelperModule.Session.roomSwapOrderList[gridID][roomSwapTotalRow-1][roomCol - 1] = topRoomName;
+                        updateRooms();
+                        teleportToRoom(getSwapRoomFromTemplateRoom(currentTemplateRoomName), player, level);
+                    }
+                    break;
+
+                case "CurrentColumnUp_PreventWarp":
+                    {
+                        int roomCol = getPosFromRoomName(currentRoomName)[1];
+                        int roomRow = getPosFromRoomName(currentRoomName)[0];
+
+                        //Only continue if roomRow is not topmost room
+                        if (roomRow != 1)
+                        {
+                            String topRoomName = EndHelperModule.Session.roomSwapOrderList[gridID][0][roomCol - 1];
+                            for (int row = 1; row <= roomSwapTotalRow - 1; row++)
+                            {
+                                //Move each room up
+                                EndHelperModule.Session.roomSwapOrderList[gridID][row - 1][roomCol - 1] = EndHelperModule.Session.roomSwapOrderList[gridID][row][roomCol - 1];
+                            }
+                            //Copy over top room to the bottom
+                            EndHelperModule.Session.roomSwapOrderList[gridID][roomSwapTotalRow - 1][roomCol - 1] = topRoomName;
+                            updateRooms();
+                            teleportToRoom(getSwapRoomFromTemplateRoom(currentTemplateRoomName), player, level);
+                        }
+                    }
+                    break;
+
+                case "CurrentColumnDown":
+                    {
+                        int roomCol = getPosFromRoomName(currentRoomName)[1];
+                        int roomRow = getPosFromRoomName(currentRoomName)[0];
+
+                        String bottomRoomName = EndHelperModule.Session.roomSwapOrderList[gridID][roomSwapTotalRow - 1][roomCol - 1];
+                        for (int row = roomSwapTotalRow; row > 1; row--)
+                        {
+                            //Move each room down
+                            EndHelperModule.Session.roomSwapOrderList[gridID][row - 1][roomCol - 1] = EndHelperModule.Session.roomSwapOrderList[gridID][row - 2][roomCol - 1];
+                        }
+                        //Copy over bottom room to the top
+                        EndHelperModule.Session.roomSwapOrderList[gridID][0][roomCol - 1] = bottomRoomName;
+                        updateRooms();
+                        teleportToRoom(getSwapRoomFromTemplateRoom(currentTemplateRoomName), player, level);
+                    }
+                    break;
+
+                case "CurrentColumnDown_PreventWarp":
+                    {
+                        int roomCol = getPosFromRoomName(currentRoomName)[1];
+                        int roomRow = getPosFromRoomName(currentRoomName)[0];
+
+                        //Only continue if roomRow is not bottommost room
+                        if (roomRow != roomSwapTotalRow)
+                        {
+                            String bottomRoomName = EndHelperModule.Session.roomSwapOrderList[gridID][roomSwapTotalRow - 1][roomCol - 1];
+                            for (int row = roomSwapTotalRow; row > 1; row--)
+                            {
+                                //Move each room down
+                                EndHelperModule.Session.roomSwapOrderList[gridID][row - 1][roomCol - 1] = EndHelperModule.Session.roomSwapOrderList[gridID][row - 2][roomCol - 1];
+                            }
+                            //Copy over bottom room to the top
+                            EndHelperModule.Session.roomSwapOrderList[gridID][0][roomCol - 1] = bottomRoomName;
+                            updateRooms();
+                            teleportToRoom(getSwapRoomFromTemplateRoom(currentTemplateRoomName), player, level);
+                        }
+                    }
+                    break;
+
+                case "SwapLeftRight":
+                    {
+                        int roomCol = getPosFromRoomName(currentRoomName)[1];
+                        int roomRow = getPosFromRoomName(currentRoomName)[0];
+
+                        //Only continue if not leftmost or rightmost
+                        if (roomCol != roomSwapTotalColumn && roomCol != 1)
+                        {
+                            String leftRoom = EndHelperModule.Session.roomSwapOrderList[gridID][roomRow - 1][roomCol - 2];
+                            EndHelperModule.Session.roomSwapOrderList[gridID][roomRow - 1][roomCol-2] = EndHelperModule.Session.roomSwapOrderList[gridID][roomRow - 1][roomCol];
+                            EndHelperModule.Session.roomSwapOrderList[gridID][roomRow - 1][roomCol] = leftRoom;
+                            updateRooms();
+                            //teleportToRoom(getSwapRoomFromTemplateRoom(currentTemplateRoomName), player, level);
+                        }
+                    }
+                    break;
+
+                case "SwapUpDown":
+                    {
+                        int roomCol = getPosFromRoomName(currentRoomName)[1];
+                        int roomRow = getPosFromRoomName(currentRoomName)[0];
+
+                        //Only continue if not topmost or bottommost
+                        if (roomRow != roomSwapTotalRow && roomRow != 1)
+                        {
+                            String topRoom = EndHelperModule.Session.roomSwapOrderList[gridID][roomRow - 2][roomCol - 1];
+                            EndHelperModule.Session.roomSwapOrderList[gridID][roomRow - 2][roomCol - 1] = EndHelperModule.Session.roomSwapOrderList[gridID][roomRow][roomCol - 1];
+                            EndHelperModule.Session.roomSwapOrderList[gridID][roomRow][roomCol - 1] = topRoom;
+                            updateRooms();
+                            //teleportToRoom(getSwapRoomFromTemplateRoom(currentTemplateRoomName), player, level);
+                        }
+                    }
+                    break;
+
+                //set_11_12_21_22
+                case string s when s.StartsWith("Set_"):
+                    {
+                        int roomCol = getPosFromRoomName(currentRoomName)[1];
+                        int roomRow = getPosFromRoomName(currentRoomName)[0];
+                        string oldTemplateRoomAtThisPos = EndHelperModule.Session.roomSwapOrderList[gridID][roomRow - 1][roomCol - 1];
+
+                        string[] splittedArr = s.Split("_");
+                        int row = 1;
+                        int column = 1;
+
+                        List<List<string>> initial = null;
+                        if (EndHelperModule.Session.roomSwapOrderList.TryGetValue(gridID, out List<List<string>> value))
+                        {
+                            initial = new List<List<string>>(DeepCopyJSON(value));
+                        }
+
+                        for (int i = 1; i < splittedArr.Length; i++)
+                        {
+
+                            List<int> roomPos = getPosFromRoomName(splittedArr[i]);
+
+                            // Set i-th item in splittedArr to row/col
+                            EndHelperModule.Session.roomSwapOrderList[gridID][row - 1][column - 1] = $"{roomTemplatePrefix}{roomPos[0]}{roomPos[1]}";
+                            
+                            // Change row/column index.
+                            // If overshot/undershot, it still shouldn't break
+                            column++;
+                            if (column > roomSwapTotalColumn)
+                            {
+                                column = 1;
+                                row++;
+                            }
+                            if (row > roomSwapTotalRow) { break; }
+                        }
+                        if (!Are2LayerListsEqual(initial, EndHelperModule.Session.roomSwapOrderList[gridID]))
+                        {
+
+                            updateRooms();
+                            // There can be multiple of the same template room. First check if the current room is the same
+                            string newTemplateRoomAtThisPos = EndHelperModule.Session.roomSwapOrderList[gridID][roomRow - 1][roomCol - 1];
+
+                            //Logger.Log(LogLevel.Info, "EndHelper/Main", $"current {oldTemplateRoomAtThisPos} new {newTemplateRoomAtThisPos}");
+                            if (oldTemplateRoomAtThisPos != newTemplateRoomAtThisPos)
+                            {
+                                // Only teleport if the template room at the same position is different
+                                teleportToRoom(getSwapRoomFromTemplateRoom(currentTemplateRoomName), player, level);
+                            }
+                        }
+                    }
+                    break;
+
+                case "None":
+                    updateRooms();
+                    break;
+
+                default:
+                    // nothing!!!!
+                    break;
+            }
+            level.Session.SetFlag(getTransitionFlagName(), true); //Set flag
+        }
+
+        void updateRooms()
+        {
+            for (int row = 1; row <= roomSwapTotalRow; row++)
+            {
+                for (int column = 1; column <= roomSwapTotalColumn; column++)
+                {
+                    replaceRoom($"{roomSwapPrefix}{row}{column}", EndHelperModule.Session.roomSwapOrderList[gridID][row - 1][column - 1], level);
+                }
+            }
+            //Logger.Log(LogLevel.Info, "EndHelper/Main", "Updating rooms...");
+            swapEffects();
+        }
+
+        async void teleportToRoom(String teleportToRoomName, Player player, Level level)
+        {
+            LevelData currentRoomData = level.Session.LevelData;
+            Vector2 currentRoomPos = currentRoomData.Position;
+
+            if (currentRoomData.Name == teleportToRoomName){
+                //If same room, do nothing
+                EndHelperModule.Session.allowTriggerEffect[gridID] = true; //Well actually we can set this to true immediately
+            } else {
+                LevelData toRoomData = getRoomDataFromName(teleportToRoomName, level);
+                Vector2 toRoomPos = toRoomData.Position;
+
+                await Task.Delay(teleportDelayMilisecond);
+
+                Vector2 playerOriginalPos = new (player.Position.X, player.Position.Y);
+
+                level.NextTransitionDuration = EndHelperModule.Session.roomTransitionTime[gridID];
+                Vector2 transitionOffset = toRoomPos - currentRoomPos;
+                Vector2 transitionDirection = transitionOffset.SafeNormalize();
+
+                player.Position += transitionOffset;
+                level.TransitionTo(toRoomData, transitionDirection);
+
+                //Occasionally the transition is jank and undoes the position change.
+                //This is here to unjank the jank
+                if (Math.Abs(playerOriginalPos.X - player.Position.X) <= 5 && Math.Abs(playerOriginalPos.Y - player.Position.Y) <= 5)
+                {
+                    //If player coordinates barely change, teleport again...
+                    player.Position += transitionOffset;
+                }
+
+                player.ResetSpriteNextFrame(default); // Hopefully fixes a bug where the player sometimes turns invisible after warp
+
+                // Move followers along with player
+                for (int index = 0; index < player.Leader.PastPoints.Count; index++)
+                {
+                    player.Leader.PastPoints[index] += transitionOffset;
+                }
+                foreach (var follower in player.Leader.Followers)
+                {
+                    if (follower != null)
+                    {
+                        follower.Entity.Position += transitionOffset;
+                    }
+                }
+
+                Logger.Log(LogLevel.Info, "EndHelper/Main", $"Teleporting from {currentRoomData.Name} >> {teleportToRoomName}. Pos change: ({playerOriginalPos.X} {playerOriginalPos.Y} => {player.Position.X} {player.Position.Y}) - change by ({(toRoomPos - currentRoomPos).X} {(toRoomPos - currentRoomPos).Y}), Transition direction: ({transitionDirection.X} {transitionDirection.Y})");
+            }
+        }
+
+        String getSwapRoomFromTemplateRoom(String templateRoomName)
+        {
+            List<List<String>> roomList = EndHelperModule.Session.roomSwapOrderList[gridID];
+            for (int row = 1; row <= roomSwapTotalRow; row++)
+            {
+                for (int column = 1; column <= roomSwapTotalColumn; column++)
+                {
+                    if (templateRoomName == roomList[row-1][column-1])
+                    {
+                        //Found match at {row}{colu} - the swap room is {prefix}{row}{col}
+                        return $"{roomSwapPrefix}{row}{column}";
+                    }
+                }
+            }
+            Logger.Log(LogLevel.Info, "EndHelper/main", $"getSwapRoomFromTemplateRoom - Unable to find {templateRoomName} - returning current room leveldata instead.");
+            return currentRoomName; //This shouldn't happen...
+        }
+
+        String getTemplateRoomFromSwapRoom(String swapRoomName)
+        {
+            if (swapRoomName.StartsWith(roomSwapPrefix))
+            {
+                List<List<String>> roomList = EndHelperModule.Session.roomSwapOrderList[gridID];
+                int len = swapRoomName.Length;
+                int rowIndex = swapRoomName[len - 2] - '0';
+                rowIndex += -1;
+                int colIndex = swapRoomName[len - 1] - '0';
+                colIndex += -1;
+                String templateRoomName = roomList[rowIndex][colIndex];
+                return templateRoomName;
+            }
+            //This means the current room is not a swap room, so just return something invalid
+            //If the template room can't be found it means modifyRoom was triggered from outside the swap grid
+            //If the swap effect doesn't depend on the current room this will run with no issues!
+            return "no such template room name...";
+        }
+
+        void swapEffects()
+        {
+            roomModificationEventTrigger(gridID);
+
+            if (flashEffect)
+            {
+                level.Flash(Color.White, drawPlayerOver: true);
+            }
+            if (!isSilent && player is not null)
+            {
+                level.Shake();
+
+                if(EndHelperModule.Session.activateSoundEvent1[gridID] != "")
+                {
+                    Audio.Play(EndHelperModule.Session.activateSoundEvent1[gridID], player.Position);
+                }
+                if (EndHelperModule.Session.activateSoundEvent2[gridID] != "")
+                {
+                    Audio.Play(EndHelperModule.Session.activateSoundEvent2[gridID], player.Position);
+                }
+            }
+            succeedModify = true;
+        }
+
+        String getTransitionFlagName()
+        {
+            String flagName = roomSwapPrefix;
+            for (int row = 1; row <= roomSwapTotalRow; row++)
+                {
+                for (int column = 1; column <= roomSwapTotalColumn; column++)
+                {
+                    String roomNameAtPos = EndHelperModule.Session.roomSwapOrderList[gridID][row-1][column-1];
+                    List<int> roomPos = getPosFromRoomName(roomNameAtPos);
+                    flagName += $"_{roomPos[0]}{roomPos[1]}";
+                }
+            }
+            //Logger.Log(LogLevel.Info, "EndHelper/main", $"getTransitionFlagName - Obtained flag name for {roomSwapPrefix} to be {flagName}");
+            return flagName;
+        }
+
+        return succeedModify;
+    }
+
+    /// <summary>
+    /// Returns the last 2 digits of the room name... or any string lol
+    /// </summary>
+    /// <param name="roomName"></param>
+    /// <returns></returns>
+    public static List<int> getPosFromRoomName(String roomName)
+    {
+        int len = roomName.Length;
+        int row = roomName[len - 2] - '0';
+        int col = roomName[len - 1] - '0';
+
+        return [row, col];
+    }
+
+    #endregion
+
+    #region Misc Functions
+
+    /// <summary>
+    /// Compare if 2 2d lists are equal
+    /// </summary>
+    /// <param name="list1"></param>
+    /// <param name="list2"></param>
+    /// <returns></returns>
+    static bool Are2LayerListsEqual<T>(List<List<T>> list1, List<List<T>> list2)
+    {
+        if(list1 == null || list2 == null)
+        {
+            return false;
+        }
+
+        return list1.Count == list2.Count &&
+               list1.Zip(list2, (inner1, inner2) => inner1.SequenceEqual(inner2)).All(equal => equal);
+    }
+
+    // When will I finally learn a language that doesn't make deep cloning an absolute pain
+
+    /// <summary>
+    /// Lazy af deep cloning
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="input"></param>
+    /// <returns></returns>
+    public static T DeepCopyJSON<T>(T input)
+    {
+        var jsonString = JsonSerializer.Serialize(input);
+
+        return JsonSerializer.Deserialize<T>(jsonString);
+    }
+
+    #endregion
+}

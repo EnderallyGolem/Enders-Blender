@@ -1,0 +1,22 @@
+Interlude: false
+Mountain:
+    Idle:
+        Position: [ -6.415, 3.680, -0.684 ]
+        Target: [ -4.570, 3.121, -1.219 ]
+    Select:
+        Position: [ -4.190, 3.378, -1.300 ]
+        Target: [ -2.287, 3.488, -1.907 ]
+    Zoom:
+        Position: [ -3.478, 3.439, -1.527 ]
+        Target: [ -1.590, 3.669, -2.133 ]
+    Cursor: [ -3.366, 4.081, -1.573 ]
+    State: 0
+CompleteScreen:
+    Atlas: "Endscreens/" # required
+    Title:
+        ASide: 'AREACOMPLETE_NORMAL' # A-side complete ("Chapter Complete")
+    Layers:
+      - Type: "layer"                               # default: "layer"
+        Images: [ "" ]                      # default: [ ]
+    MusicBySide:
+      - event:/music/menu/complete_bside # A-side

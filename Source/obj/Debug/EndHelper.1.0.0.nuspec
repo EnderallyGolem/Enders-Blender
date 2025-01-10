@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
+  <metadata>
+    <id>EndHelper</id>
+    <version>1.0.0</version>
+    <authors>EndHelper</authors>
+    <description>Package Description</description>
+    <repository type="git" />
+    <dependencies>
+      <group targetFramework="net7.0" />
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="C:\Program Files (x86)\Steam\steamapps\common\Celeste\Mods\EndBlender\Source\bin\Debug\net7.0\EndHelper.dll" target="lib\net7.0\EndHelper.dll" />
+  </files>
+</package>

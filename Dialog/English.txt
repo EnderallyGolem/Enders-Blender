@@ -1,0 +1,67 @@
+# ----------------------------------  Helper Stuff  ---------------------------------------
+modsettings_EndHelper_FreeMultiroomWatchtower=Spawn Multi-Room Watchtower
+
+# ----------------------------------  Map Stuff  ----------------------------------------
+
+EndHelperTest=Ender's Blender
+EndHelperTest_EndHelperTestMap=Test Jar
+
+
+EndHelperTest_Tutorial_Misc_TileEntity=Tile Entity
+
+# ----------------------------------  Room Swap  ----------------------------------------
+EndHelperTest_Tutorial_RoomSwap_Category=Room-Swap
+
+
+EndHelperTest_Tutorial_RoomSwap_Tutorial=Room-Swap lets you create a rectangular grid of rooms that can be shuffled around.
+Each grid of rooms is created by its own {# ffff66}Controller{#}. This must be loaded before/at the same time any other Room-Swap item for that grid is loaded.
+The grid consists of {# 0099ff}template rooms{#}, where you place the layout of the rooms in and are unreachable, and {# 0099ff}swapper rooms{#}, which are located where the player accesses but are initially empty.
+When the controller is first loaded, the template rooms are copied to the swapper rooms in the default order. This order can then be changed by the {# ffff66}Room-Swap Breaker Box{#} or {# ffff66}Modify Room Trigger{#}.
+Note: The grid rooms {# F94A4A}cannot contain foreground/background tiles and collectables.{#}
+Foreground and background tiles are not properly copied from the template to swapper rooms. 
+(You can use this mod's Tile Entity for foreground tiles, which allows you to connect them to each other and the edge of the screen.)
+Collectables are stored per room, so when rooms are moved, a collected collectable might reappear.
+Lastly, to ensure respawn points work properly, add a {# ffff66}Respawn Force Same Room Trigger{#} in every room, and use the {# ffff66}Room-Swap Change Respawn Trigger{#} instead of the regular one.
+Without them, dying could respawn you in the template room instead of the swapper room.
+
+EndHelperTest_Tutorial_RoomSwap_MapTutorial=The map consists of a background, outline that labels the current position, and room icons.
+The background and room icons will automatically be spaced depending on the size of the texture.
+The icons should be named {# ffff66}{iconPrefix}{#}{# 0099ff}{row}{#}{# 00ff00}{column}{#}, or {# F94A4A}{levelNumber}{#}{# ffff66}{iconprefix}{#}{# 0099ff}{row}{#}{# 00ff00}{column}{#} for levels above 0. The default level (0) should not have a prefix.
+To have animated map, add _{# F94A4A}frameNumber{#} to the end of the texture's name, including the 0th.
+In the example here, the left scroll resets the level to 0, while the right scroll increases it by 1. The row 1 col 1 map is animated for level 1.
+Both are also set to respawn when you leave the room.
+
+EndHelperTest_Tutorial_RoomSwap_Room11=Room 11
+EndHelperTest_Tutorial_RoomSwap_Room12=Room 12
+EndHelperTest_Tutorial_RoomSwap_Room12_Desc=(Row 1 Col 2)
+EndHelperTest_Tutorial_RoomSwap_Room13=Room 13
+EndHelperTest_Tutorial_RoomSwap_Room21=Room 21
+EndHelperTest_Tutorial_RoomSwap_Room22=Room 22
+EndHelperTest_Tutorial_RoomSwap_Room23=Room 23
+EndHelperTest_Tutorial_RoomSwap_Room31=Room 31
+EndHelperTest_Tutorial_RoomSwap_Room32=Room 32
+EndHelperTest_Tutorial_RoomSwap_Room33=Room 33
+
+EndHelperTest_Tutorial_RoomSwap_Controller=Controller (Invis)
+EndHelperTest_Tutorial_RoomSwap_Controller_Desc=Load before using!
+EndHelperTest_Tutorial_RoomSwap_Scroll_Reset=Reset
+EndHelperTest_Tutorial_RoomSwap_Scroll_Add=+1
+
+EndHelperTest_Tutorial_RoomSwap_TileEntity=Tile Entity
+EndHelperTest_Tutorial_RoomSwap_TileEntity_Desc=FG/BG & collectables break!
+EndHelperTest_Tutorial_RoomSwap_ModifyTrigger=Modify Room Trigger
+
+EndHelperTest_Tutorial_RoomSwap_ChangeRespawnTrigger=Room-Swap Change Respawn Trigger
+EndHelperTest_Tutorial_RoomSwap_ChangeRespawnTrigger_Desc=Normal Trigger will break!
+EndHelperTest_Tutorial_RoomSwap_RespawnForceSameRoomTrigger=Respawn Force Same Room Trigger
+EndHelperTest_Tutorial_RoomSwap_RespawnForceSameRoomTrigger_Desc=Add to every room in grid!
+
+
+# ----------------------------------  Death Warp  ----------------------------------------
+EndHelperTest_Tutorial_DeathWarp_Category=Death-Warp
+
+
+# ----------------------------------  Credits  ----------------------------------------
+endhelper_credits={~}Additional credits:{/~}
+The sprites for the Room-Swap map, map upgrade, and box and were by Pakyjenace.
+A lot of code was blatantly plagur-{0.5} i mean modified from SpeedrunTools and VivHelper.

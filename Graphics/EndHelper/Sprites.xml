@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Sprites>
+    <transitionController path="objects/EndHelper/RoomSwapController/" start="idle">
+        <Justify x="0.5" y="0.5" />
+        <Anim id="idle" path="idle" delay="0.1" frames="0" />
+    </transitionController>
+	
+  <multiroomWatchtower path="objects/EndHelper/multiroomWatchtower/" start="idle">
+	<Justify x=".5" y="1" />
+    
+    <Loop id="idle" path="lookout" delay="0.1" frames="5*9,6"/>
+    <Anim id="lookRight" path="lookout" delay="0.08" frames="0-4" goto="looking"/>
+    <Anim id="lookLeft" path="lookout" delay="0.08" frames="15-17,3,4" goto="looking"/>
+    <Loop id="looking" path="lookout" delay="0.08" frames="4"/>
+    <Loop id="lookingUp" path="lookout" frames="7"/>
+    <Loop id="lookingUpRight" path="lookout" frames="8"/>
+    <Loop id="lookingRight" path="lookout" frames="9"/>
+    <Loop id="lookingDownRight" path="lookout" frames="10"/>
+    <Loop id="lookingDown" path="lookout" frames="11"/>
+    <Loop id="lookingDownLeft" path="lookout" frames="12"/>
+    <Loop id="lookingLeft" path="lookout" frames="13"/>
+    <Loop id="lookingUpLeft" path="lookout" frames="14"/>
+
+    <Loop id="badeline_idle" path="badeline" delay="0.1" frames="5*9,6"/>
+    <Anim id="badeline_lookRight" path="badeline" delay="0.08" frames="0-4" goto="badeline_looking"/>
+    <Anim id="badeline_lookLeft" path="badeline" delay="0.08" frames="15-17,3,4" goto="badeline_looking"/>
+    <Loop id="badeline_looking" path="badeline" delay="0.08" frames="4"/>
+    <Loop id="badeline_lookingUp" path="badeline" frames="7"/>
+    <Loop id="badeline_lookingUpRight" path="badeline" frames="8"/>
+    <Loop id="badeline_lookingRight" path="badeline" frames="9"/>
+    <Loop id="badeline_lookingDownRight" path="badeline" frames="10"/>
+    <Loop id="badeline_lookingDown" path="badeline" frames="11"/>
+    <Loop id="badeline_lookingDownLeft" path="badeline" frames="12"/>
+    <Loop id="badeline_lookingLeft" path="badeline" frames="13"/>
+    <Loop id="badeline_lookingUpLeft" path="badeline" frames="14"/>
+
+    <Loop id="nobackpack_idle" path="nobackpack" delay="0.1" frames="5*9,6"/>
+    <Anim id="nobackpack_lookRight" path="nobackpack" delay="0.08" frames="0-4" goto="nobackpack_looking"/>
+    <Anim id="nobackpack_lookLeft" path="nobackpack" delay="0.08" frames="15-17,3,4" goto="nobackpack_looking"/>
+    <Loop id="nobackpack_looking" path="nobackpack" delay="0.08" frames="4"/>
+    <Loop id="nobackpack_lookingUp" path="nobackpack" frames="7"/>
+    <Loop id="nobackpack_lookingUpRight" path="nobackpack" frames="8"/>
+    <Loop id="nobackpack_lookingRight" path="nobackpack" frames="9"/>
+    <Loop id="nobackpack_lookingDownRight" path="nobackpack" frames="10"/>
+    <Loop id="nobackpack_lookingDown" path="nobackpack" frames="11"/>
+    <Loop id="nobackpack_lookingDownLeft" path="nobackpack" frames="12"/>
+    <Loop id="nobackpack_lookingLeft" path="nobackpack" frames="13"/>
+    <Loop id="nobackpack_lookingUpLeft" path="nobackpack" frames="14"/>
+  </multiroomWatchtower>
+	
+</Sprites>

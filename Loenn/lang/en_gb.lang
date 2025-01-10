@@ -1,0 +1,106 @@
+mods.EndHelper.name=Ender's Blender
+
+############ MISC STUFF
+
+# Tile Entity
+entities.EndHelper/TileEntity.placements.name.normal=Tile Entity
+entities.EndHelper/TileEntity.placements.description.normal=Modified VivHelper Custom Depth Tile Entity
+entities.EndHelper/TileEntity.attributes.description.tiletypeOffscreen=The portion of the entity that is outside a room will show up as this.\nSet this to an invisible tile ("fake air") and extend the tiles offscreen to allow seemless room transitions.\nAlternatively, add <Tileset id="◯" copy="y" path="EndHelper/fakeAir" sound="0"/> to your ForegroundTiles.xml.
+entities.EndHelper/TileEntity.attributes.description.extendOffscreen=If the tiles are placed at the edge of the room, they will be extended one tile outside the room.
+entities.EndHelper/TileEntity.attributes.description.allowMerge=Allows the tiles to connect to each other.\nBoth tile entities must have this enabled for them to connect.
+entities.EndHelper/TileEntity.attributes.description.allowMergeDifferentType=Allows DIFFERENT tiles to connect to each other.\nBoth tile entities must have this and Allow Merge enabled for them to connect.\nNote: Groups of multiple tiles sometimes only connect to those with this enabled (depending on connection order),\neven if the part of the group share the same time.
+entities.EndHelper/TileEntity.attributes.description.noEdge=If true, the tiles will have no edge (all parts look like the middle of the tile).\nNote: When merged, as long as one of the parts have this enabled, \nthe full block will act as though this is enabled.
+entities.EndHelper/TileEntity.attributes.description.offU=The offscreen tiletype will be used if it extends offscreen to the top
+entities.EndHelper/TileEntity.attributes.description.offUR=The offscreen tiletype will be used if it extends offscreen to the top right
+entities.EndHelper/TileEntity.attributes.description.offR=The offscreen tiletype will be used if it extends offscreen to the right
+entities.EndHelper/TileEntity.attributes.description.offDR=The offscreen tiletype will be used if it extends offscreen to the bottom right
+entities.EndHelper/TileEntity.attributes.description.offD=The offscreen tiletype will be used if it extends offscreen to the bottom
+entities.EndHelper/TileEntity.attributes.description.offDL=The offscreen tiletype will be used if it extends offscreen to the bottom left
+entities.EndHelper/TileEntity.attributes.description.offL=The offscreen tiletype will be used if it extends offscreen to the left
+entities.EndHelper/TileEntity.attributes.description.offUL=The offscreen tiletype will be used if it extends offscreen to the top left
+
+
+# Multiroom Watchtower
+entities.EndHelper/MultiroomWatchtower.placements.name.normal=Multi-Room Watchtower
+entities.EndHelper/MultiroomWatchtower.placements.description.normal=Watchtower that can scroll through to different rooms.\nNodes work, but it cannot skip rooms, and each room must have at least 1 spot along the nodes that the camera can fit.\nFYI: The player will be stored at the bottom left of the room, but with no hitbox.
+entities.EndHelper/MultiroomWatchtower.attributes.description.modifiedInterpolation=If you're using nodes, uses Catmull-Rom Splines instead of whatever vanilla uses for the watchtower path,\nwhich have the advantage of ensuring the camera always goes past nodes, but is less smooth.\nBecareful if this is disabled, if the path does not go through a location where the camera can fit in the room,\nthe watchtower cannot access it and any future rooms!
+entities.EndHelper/MultiroomWatchtower.attributes.description.ignoreLookoutBlocker=The lookout bypasses Lookout Blockers.\nThis allows both scrolling past the blockers and looking at rooms past the blockers.\nThis has no effect if nodes are used.
+
+
+
+
+############ RoomSwap
+
+# RoomSwap Controller
+entities.EndHelper/RoomSwapController.placements.name.normal=Room-Swap Controller
+entities.EndHelper/RoomSwapController.placements.description.normal=Informs the level on how many rows/cols to swap.\nThis should be loaded once before entering any swap-zones (load it at the start of the map, or global load it).\nThe zones DO NOT swap FG/BG tiles.\nRoom-Swap Respawn Force Same Room Triggers should be added in each template room for respawn points to work properly, and Room-Swap Change Respawn Triggers should be used in place of the regular ones.\nCollectables/Gates/etc don't properly save between swaps (are room dependent) so don't use them!
+entities.EndHelper/RoomSwapController.attributes.description.gridId=The identifier (any string) for this set of moveable grid. One Room-Swap controller sets information for 1 moveable grid.
+entities.EndHelper/RoomSwapController.attributes.description.totalRows=The total number of rows in the moveable grid
+entities.EndHelper/RoomSwapController.attributes.description.totalColumns=The total number of columns in the moveable grid
+entities.EndHelper/RoomSwapController.attributes.description.swapRoomNamePrefix=Rooms with {prefix}{row}{col} will have their room layout changed. Eg: swap11
+entities.EndHelper/RoomSwapController.attributes.description.templateRoomNamePrefix=Room layouts will be based off rooms with the name {prefix}{row}{col}. Eg: template11
+entities.EndHelper/RoomSwapController.attributes.description.roomTransitionTime=Time (in seconds) room transitions will take when the room you're in is moved
+entities.EndHelper/RoomSwapController.attributes.description.activateSoundEvent1=Sound event that plays when room changing occurs
+entities.EndHelper/RoomSwapController.attributes.description.activateSoundEvent2=2nd Sound event that plays when room changing occurs
+
+# RoomSwap Breaker Box
+entities.EndHelper/RoomSwapBox.placements.name.normal=Room-Swap Breaker Box
+entities.EndHelper/RoomSwapBox.placements.description.normal=Breaker Box that modifies room order depending on dash direction. And also does not break.
+entities.EndHelper/RoomSwapBox.attributes.description.gridId=The identifier for the moveable grid this box affects.
+entities.EndHelper/RoomSwapBox.attributes.description.modificationTypeLeft=Room order modification when box is hit from the left.\nFor Set To Order, the format is _{row1}{col1}_{row2}{col2}_{row3}{col3}_... from left to right, top down.
+entities.EndHelper/RoomSwapBox.attributes.description.modificationTypeRight=Room order modification when box is hit from the right.\nFor Set To Order, the format is _{row1}{col1}_{row2}{col2}_{row3}{col3}_... from left to right, top down.
+entities.EndHelper/RoomSwapBox.attributes.description.modificationTypeUp=Room order modification when box is hit from the top.\nFor Set To Order, the format is _{row1}{col1}_{row2}{col2}_{row3}{col3}_... from left to right, top down.
+entities.EndHelper/RoomSwapBox.attributes.description.modificationTypeDown=Room order modification when box is hit from the bottom.\nFor Set To Order, the format is _{row1}{col1}_{row2}{col2}_{row3}{col3}_... from left to right, top down.
+entities.EndHelper/RoomSwapBox.attributes.description.particleColour1=1st particle colour emitted when box is hit
+entities.EndHelper/RoomSwapBox.attributes.description.particleColour2=2nd particle colour emitted when box is hit
+entities.EndHelper/RoomSwapBox.attributes.description.texturePath=Texture used for the box (Recommended size = 32x32).\nMake sure it is under Graphics\Atlases\Gameplay\objects\nIf blank, default textures are chosen depending on Left modification type.\nPut "heart" for heart texture.
+entities.EndHelper/RoomSwapBox.attributes.description.flagCheck=If not empty, the trigger only activates if this flag is set (or unset)
+entities.EndHelper/RoomSwapBox.attributes.description.flagRequire=True means flag must be set for trigger to activate.\nFalse means flag must be unset for trigger to activate.
+entities.EndHelper/RoomSwapBox.attributes.description.flagToggle=If true, the flag's state (set or unset) will be changed when the trigger activates.
+entities.EndHelper/RoomSwapBox.attributes.description.flashEffect=Flashes the screen when room modification occurs.
+entities.EndHelper/RoomSwapBox.attributes.description.preset=Sets the Modification Types (and texture) to some preset values.
+
+# RoomSwap Map
+entities.EndHelper/RoomSwapMap.placements.name.normal=Room-Swap Map
+entities.EndHelper/RoomSwapMap.placements.description.normal=A dynamically changing map that shows the current room order.\nYou can check for a specific arrangement with the flag\n{Swap Room Name Prefix}_{row1}{col1}_{row2}{col2}_{row3}{col3}_...\nfrom left to right, top down. Eg: swap_11_12_13_21_22_23_31_32_33
+entities.EndHelper/RoomSwapMap.attributes.description.gridId=The identifier for the moveable grid this map displays.
+entities.EndHelper/RoomSwapMap.attributes.description.scale=Factor that the map is scaled by
+entities.EndHelper/RoomSwapMap.attributes.description.floatAmplitude=Factor to scale the floatingness by
+entities.EndHelper/RoomSwapMap.attributes.description.folderPath=Folder that all the files for the map will be in.\nMake sure it is under Graphics\Atlases\Gameplay\objects
+entities.EndHelper/RoomSwapMap.attributes.description.mapBackgroundFileName=The name of the file in the folder path used for the map's background.\nMap size will be dependent on size of this image.
+entities.EndHelper/RoomSwapMap.attributes.description.mapCurrentPosFileName=The name of the file in the folder path used to show the current location.\nKeep it the same/slightly larger than the icon image!\nEmpty = No current position higlight.
+entities.EndHelper/RoomSwapMap.attributes.description.mapIconFilePrefix=The PREFIX of the file in the folder path used for the map's icons.\nIcon size will be dependent on size of this image.\nEg: For prefix="icon_" the file name for row 2 col 3 room is "icon_23".
+entities.EndHelper/RoomSwapMap.attributes.description.animationSpeedMultiplier=Change the rate animated map icons animate.\nYou can turn any icon into an animated icon by adding _{integer} to the end of it, starting from 0.\nEg: icon_23_0, icon_23_1, icon_23_2 for 3 frames of animation.\nNegative multipliers make the animation play backwards.
+
+# RoomSwap MapUpgrade
+entities.EndHelper/RoomSwapMapUpgrade.placements.name.normal=Room-Swap Map Upgrade
+entities.EndHelper/RoomSwapMapUpgrade.placements.description.normal=Collectable that increases/sets a gridID's map level.\nThis causes Room-Swap Map to show icons with the name {map level}{file prefix}{row}{col}.\nEg: icon_11 (level 0) -> 1icon11 (level 1) -> 2icon11 (level 2) -> 3icon11 (level 3) -> ...
+entities.EndHelper/RoomSwapMapUpgrade.attributes.description.gridId=The identifier for the moveable grid this affects.
+entities.EndHelper/RoomSwapMapUpgrade.attributes.description.texturePath=Texture used for the upgrade.\nMake sure it is under Graphics\Atlases\Gameplay\objects
+entities.EndHelper/RoomSwapMapUpgrade.attributes.description.floatAmplitude=Factor to scale the floatingness by
+entities.EndHelper/RoomSwapMapUpgrade.attributes.description.changeLevel=Number to increase the map level by. Levels are positive integers or 0.
+entities.EndHelper/RoomSwapMapUpgrade.attributes.description.setLevel=If ticked, sets the level to a value (0 or positive integer) insteads of increasing it.
+entities.EndHelper/RoomSwapMapUpgrade.attributes.description.obtainSoundEvent=Sound event that plays when the map is obtained
+entities.EndHelper/RoomSwapMapUpgrade.attributes.description.oneTime=If ticked, the map permamently disappears when obtained.\nOtherwise, it respawns when the room is re-entered.
+
+
+
+# RoomSwap Modify Room Trigger
+triggers.EndHelper/RoomSwapModifyRoomTrigger.placements.name.normal=Room-Swap Modify Room Trigger
+triggers.EndHelper/RoomSwapModifyRoomTrigger.placements.description.normal=Trigger that modifies room order
+triggers.EndHelper/RoomSwapModifyRoomTrigger.attributes.description.gridId=The identifier for the moveable grid this trigger affects.
+triggers.EndHelper/RoomSwapModifyRoomTrigger.attributes.description.modificationType=How does entering this trigger affect the room order?\nFor Set To Order, the format is _{row1}{col1}_{row2}{col2}_{row3}{col3}_... from left to right, top down.
+triggers.EndHelper/RoomSwapModifyRoomTrigger.attributes.description.modifySilently=Modify without any sound/visual effects.
+triggers.EndHelper/RoomSwapModifyRoomTrigger.attributes.description.flagCheck=If not empty, the trigger only activates if this flag is set (or unset)
+triggers.EndHelper/RoomSwapModifyRoomTrigger.attributes.description.flagRequire=True means flag must be set for trigger to activate.\nFalse means flag must be unset for trigger to activate.
+triggers.EndHelper/RoomSwapModifyRoomTrigger.attributes.description.flagToggle=If true, the flag's state (set or unset) will be changed when the trigger activates.
+triggers.EndHelper/RoomSwapModifyRoomTrigger.attributes.description.flashEffect=Flashes the screen when room modification occurs.
+
+# RoomSwap Respawn Force Same Room Trigger
+triggers.EndHelper/RoomSwapRespawnForceSameRoomTrigger.placements.name.normal=Room-Swap Respawn Force Same Room Trigger
+triggers.EndHelper/RoomSwapRespawnForceSameRoomTrigger.placements.description.normal=Corrects respawn positions set at a template room to the current room.\nJust place one of these in every template room.
+triggers.EndHelper/RoomSwapRespawnForceSameRoomTrigger.attributes.description.onAwake=Does it corrects the spawn points when the trigger is awake (upon entering room) rather than when entering the trigger?\nYou should probably leave this on.
+
+# RoomSwap Change Respawn Trigger
+triggers.EndHelper/RoomSwapChangeRespawnTrigger.placements.name.normal=Room-Swap Change Respawn Trigger
+triggers.EndHelper/RoomSwapChangeRespawnTrigger.placements.description.normal=Change respawn trigger that rechecks for spawnpoints when the player enters.\nThis ensures the trigger sets the correct spawnpoint, even when it is moved.

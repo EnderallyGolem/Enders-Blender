@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
+  <metadata>
+    <id>RoomSwap</id>
+    <version>1.0.0</version>
+    <authors>RoomSwap</authors>
+    <description>Package Description</description>
+    <repository type="git" />
+    <dependencies>
+      <group targetFramework="net7.0" />
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="C:\Program Files (x86)\Steam\steamapps\common\Celeste\Mods\RoomSwap\Source\bin\Debug\net7.0\RoomSwap.dll" target="lib\net7.0\RoomSwap.dll" />
+  </files>
+</package>
