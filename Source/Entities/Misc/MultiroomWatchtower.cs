@@ -645,7 +645,7 @@ public class MultiroomWatchtower : Entity
         //
         // Stay within this while loop as long as viewing binoculars
         //
-        while (!Input.MenuCancel.Pressed && !Input.Pause && !Input.ESC && interacting
+        while (!Input.MenuCancel.Pressed && !Input.Pause.Pressed && !Input.ESC.Pressed && interacting
             /*&& !Input.MenuConfirm.Pressed && !Input.Dash.Pressed && !Input.Jump.Pressed*/)
         {
             // Force these to be the correct values. In case other stuff changes these.
@@ -1260,7 +1260,7 @@ public class MultiroomWatchtower : Entity
             float approach2 = 0f;
             Coroutine component = new Coroutine(level.ZoomTo(new Vector2(160f, 90f), 2f, duration2));
             Add(component);
-            while (!Input.MenuCancel.Pressed && !Input.MenuConfirm.Pressed && !Input.Dash.Pressed && !Input.Jump.Pressed && !Input.Pause && !Input.ESC && interacting)
+            while (!Input.MenuCancel.Pressed && !Input.MenuConfirm.Pressed && !Input.Dash.Pressed && !Input.Jump.Pressed && !Input.Pause.Pressed && !Input.ESC.Pressed && interacting)
             {
                 approach2 = Calc.Approach(approach2, 1f, Engine.DeltaTime / duration2);
                 Audio.SetMusicParam("escape", approach2);
