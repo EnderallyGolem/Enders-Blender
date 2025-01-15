@@ -278,30 +278,29 @@ public class EndHelperModule : EverestModule {
         {
             return;
         }
-        if (level.Tracker.GetEntity<MultiroomWatchtower>() is MultiroomWatchtower)
+        if (level.Tracker.GetEntity<PortableMultiroomWatchtower>() is PortableMultiroomWatchtower)
         {
             return;
         }
 
-        MultiroomWatchtower portableWatchtower = new(new EntityData
+        PortableMultiroomWatchtower portableWatchtower = new(new EntityData
         {
             Position = player.Position,
             Level = level.Session.LevelData
         }, Vector2.Zero);
 
-        portableWatchtower.allowOnAir = true;
-        portableWatchtower.destroyUponFinishView = true;
-        portableWatchtower.maxSpeedSet *= 2;
-        portableWatchtower.canToggleBlocker = true;
-
-        portableWatchtower.Interact(player);
         level.Add(portableWatchtower);
+        portableWatchtower.Interact(player);
     }
 
     [Tracked(true)]
     private class PortableMultiroomWatchtower : MultiroomWatchtower
     {
         internal PortableMultiroomWatchtower(EntityData data, Vector2 offset) : base(data, offset) {
+            allowAnywhere = true;
+            destroyUponFinishView = true;
+            maxSpeedSet *= 2;
+            canToggleBlocker = true;
         }
         internal static bool Exists => Engine.Scene.Tracker.GetEntity<PortableMultiroomWatchtower>() != null;
     }

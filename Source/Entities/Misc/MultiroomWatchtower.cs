@@ -20,9 +20,9 @@ using static Celeste.WaveDashPage;
 using Celeste.Mod.SpeedrunTool.Message;
 using Celeste.Mod.SpeedrunTool.SaveLoad;
 using Celeste.Mod.SpeedrunTool;
+using System.Diagnostics.CodeAnalysis;
 
-
-
+// Because I keep forgetting: the vanilla entity is Lookout.
 namespace Celeste.Mod.EndHelper.Entities.Misc;
 
 [Tracked(true)]
@@ -404,7 +404,7 @@ public class MultiroomWatchtower : Entity
     public bool summit;
     public string animPrefix = "";
 
-    public bool allowOnAir = false;
+    public bool allowAnywhere = false;
     public bool destroyUponFinishView = false;
     public bool ignoreBlocker = false;
     public bool canToggleBlocker = false;
@@ -543,24 +543,9 @@ public class MultiroomWatchtower : Entity
 
     public IEnumerator LookRoutine(Player player)
     {
-        //if (Everest.Modules.Any((EverestModule m) => m.Metadata.Name == "Hateline"))
-        //{
-        //    HatelineModule.Session.MapForcedHat = "b";
-        //}
-
         trackPercent = 0f;
-
-        AddTag(Tags.Persistent);
-        previouslyInteracted = true;
-
         Level level = SceneAs<Level>();
 
-        bool canRetryInitial = level.CanRetry;
-        bool canSaveQuitInitial = level.SaveQuitDisabled;
-        bool pauseLock = level.PauseLock;
-        level.CanRetry = false; //Disable retry because otherwise you can just respawn at the screen you are looking at
-        level.SaveQuitDisabled = true; //Disable save and quit because respawning also
-        level.PauseLock = true; //ok i give up just lock pause. im gonna keep the other two just in case someone makes a retry shortcut or something
         SandwichLava sandwichLava = level.Entities.FindFirst<SandwichLava>();
         if (sandwichLava != null)
         {
@@ -573,8 +558,20 @@ public class MultiroomWatchtower : Entity
         }
 
         player.StateMachine.State = 11;
-        yield return player.DummyWalkToExact((int)X, walkBackwards: false, 1f, cancelOnFall: true);
-        if (Math.Abs(X - player.X) > 4f || player.Dead || !player.OnGround() && !allowOnAir)
+
+        if (allowAnywhere)
+        {
+            // For keybind: No walking, just immediately use the bino. Also set to inactive.
+            player.X = X;
+            player.Y = Y;
+            player.Active = false;
+        }
+        else
+        {
+            yield return player.DummyWalkToExact((int)X, walkBackwards: false, 1f, cancelOnFall: true);
+        }
+
+        if (Math.Abs(X - player.X) > 4f || player.Dead || (!player.OnGround() && !allowAnywhere))
         {
             if (!player.Dead)
             {
@@ -583,6 +580,17 @@ public class MultiroomWatchtower : Entity
 
             yield break;
         }
+
+        // From here: player is definitely using it
+        AddTag(Tags.Persistent);
+        previouslyInteracted = true;
+
+        bool canRetryInitial = level.CanRetry;
+        bool canSaveQuitInitial = level.SaveQuitDisabled;
+        bool pauseLock = level.PauseLock;
+        level.CanRetry = false; //Disable retry because otherwise you can just respawn at the screen you are looking at
+        level.SaveQuitDisabled = true; //Disable save and quit because respawning also
+        level.PauseLock = true; //ok i give up just lock pause. im gonna keep the other two just in case someone makes a retry shortcut or something
 
         Audio.Play("event:/game/general/lookout_use", Position);
         if (player.Facing == Facings.Right)
@@ -596,10 +604,7 @@ public class MultiroomWatchtower : Entity
 
         player.Sprite.Visible = false;
         player.Hair.Visible = false;
-        player.Active = false;
-        player.Collidable = false;
-        Collider playerCollider = player.Collider;
-        player.Collider = new Hitbox(-9999f, -9999f, 0f, 0f);
+        Collider originalPlayerCollider = player.Collider;
         yield return 0.2f;
         level.Add(hud = new Hud(this));
         trackMode = nodes != null;
@@ -638,13 +643,9 @@ public class MultiroomWatchtower : Entity
         while (!Input.MenuCancel.Pressed && !Input.Pause && !Input.ESC && interacting
             /*&& !Input.MenuConfirm.Pressed && !Input.Dash.Pressed && !Input.Jump.Pressed*/)
         {
-
             // Force these to be false. In case other stuff changes these.
             player.Sprite.Visible = false;
             player.Hair.Visible = false;
-            player.Active = false;
-            player.Collidable = false;
-            player.Collider = new Hitbox(-9999f, -9999f, 0f, 0f);
 
             // Solely for the keybind multiroom bino
             if (canToggleBlocker && EndHelperModule.Settings.FreeMultiroomWatchtower.Button.Pressed)
@@ -752,15 +753,22 @@ public class MultiroomWatchtower : Entity
 
                 level.TransitionTo(newRoomLevelData, transitionDirection);
 
-                // If watchtower room, set player position to watchtower
+                // If watchtower room, set player position to watchtower, and let the player be active and have collision
+                // Otherwise, inactive and no collision
                 if (newRoomLevelData.Name == camStartRoomName)
                 {
                     player.Position = watchtowerPosition;
                     player.Visible = true;
+                    player.Active = allowAnywhere ? false : true;
+                    player.Collidable = true;
+                    player.Collider = originalPlayerCollider;
                 }
                 else
                 {
                     player.Visible = false;
+                    player.Active = false;
+                    player.Collidable = false;
+                    player.Collider = new Hitbox(-9999f, -9999f, 0f, 0f);
                 }
 
                 changeRoomCooldown = 10; // Rooms can't be changed for this number of frames
@@ -1303,7 +1311,7 @@ public class MultiroomWatchtower : Entity
             player.Active = true;
             player.Visible = true;
             player.Collidable = true;
-            player.Collider = playerCollider;
+            player.Collider = originalPlayerCollider;
             player.Sprite.Visible = true;
             player.Hair.Visible = true;
 
