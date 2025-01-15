@@ -58,9 +58,6 @@ public class EndHelperModule : EverestModule {
     public static OrderedDictionary externalRoomStatDict_timer = new OrderedDictionary { };
     public static OrderedDictionary externalRoomStatDict_strawberries = new OrderedDictionary { };
 
-    // Store if viewing bino, checked by RoomStatisticsDisplayer to see if it should update the current room the timer is ticking for
-    public static bool viewingMultiroomBino = false;
-
     // Event Listener for when room modification occurs
     public static event EventHandler<RoomModificationEventArgs> RoomModificationEvent;
     public static bool enableRoomSwapHooks = false;
@@ -73,7 +70,7 @@ public class EndHelperModule : EverestModule {
         }
     }
 
-    public static void roomModificationEventTrigger(string gridID)
+    public static void RoomModificationEventTrigger(string gridID)
     {
         RoomModificationEvent?.Invoke(null, new RoomModificationEventArgs(gridID));
     }
@@ -85,7 +82,7 @@ public class EndHelperModule : EverestModule {
         Everest.Events.AssetReload.OnAfterReload += ReloadCompleteFunc;
         Everest.Events.Level.OnEnter += EnterMapFunc;
 
-        On.Celeste.Player.Update += hook_PlayerUpdate;
+        On.Celeste.Level.Update += hook_LevelUpdate;
         On.Celeste.Player.Die += hook_OnPlayerDeath;
         On.Celeste.Player.IntroRespawnBegin += hook_OnPlayerRespawn;
         On.Celeste.Level.TransitionRoutine += Hook_TransitionRoutine;
@@ -118,7 +115,7 @@ public class EndHelperModule : EverestModule {
         Everest.Events.AssetReload.OnAfterReload -= ReloadCompleteFunc;
         Everest.Events.Level.OnEnter -= EnterMapFunc;
 
-        On.Celeste.Player.Update -= hook_PlayerUpdate;
+        On.Celeste.Level.Update -= hook_LevelUpdate;
         On.Celeste.Player.Die -= hook_OnPlayerDeath;
         On.Celeste.Player.IntroRespawnBegin -= hook_OnPlayerRespawn;
         On.Celeste.Level.TransitionRoutine -= Hook_TransitionRoutine;
@@ -160,23 +157,27 @@ public class EndHelperModule : EverestModule {
 
     // Using player update instead of level update so nothing happens when the level is loading
     // Level update screws with the timeSinceSessionReset.
-    private static void hook_PlayerUpdate(On.Celeste.Player.orig_Update orig, global::Celeste.Player self)
+    private static void hook_LevelUpdate(On.Celeste.Level.orig_Update orig, global::Celeste.Level self)
     {
-        Level level = self.SceneAs<Level>();
-        //Logger.Log(LogLevel.Info, "EndHelper/main", $"CONSTANT UPDATE {timeSinceSessionReset}");
+        Level level = self;
+        Logger.Log(LogLevel.Info, "EndHelper/main", $"CONSTANT UPDATE {timeSinceSessionReset} | {level.Paused}");
         if (EndHelperModule.Settings.FreeMultiroomWatchtower.Button.Pressed)
         {
             spawnMultiroomWatchtower();
         }
 
-        EndHelperModule.timeSinceSessionReset++; // Yeah i'm just going to increase it here because I am lazy
+        EndHelperModule.timeSinceSessionReset++;
+
         if (EndHelperModule.timeSinceSessionReset == 1)
         {
             // This occurs when reset happens
-            EndHelperModule.viewingMultiroomBino = false; // If it resets out of the bino. If it resets into the bino, no issues.
             if (enableRoomSwapHooks)
             {
                 ReupdateAllRooms(level); //This only exists so it updates when you respawn from debug. It umm still requires a transition/respawn to work lol
+            }
+            if (level.Tracker.GetEntity<RoomStatisticsDisplayer>() is RoomStatisticsDisplayer roomStatDisplayer)
+            {
+                roomStatDisplayer.ImportRoomStatInfo();
             }
         }
         else if (EndHelperModule.timeSinceSessionReset > 1)
@@ -338,14 +339,14 @@ public class EndHelperModule : EverestModule {
             {
                 for (int column = 1; column <= roomSwapTotalColumn; column++)
                 {
-                    replaceRoomAfterReloadEnd(gridID, roomSwapPrefix, row, column, level);
+                    ReplaceRoomAfterReloadEnd(gridID, roomSwapPrefix, row, column, level);
                 }
             }
-            roomModificationEventTrigger(gridID);
+            RoomModificationEventTrigger(gridID);
         }
     }
 
-    public static async void replaceRoomAfterReloadEnd(string gridID, String roomSwapPrefix, int row, int column, global::Celeste.Level level)
+    public static async void ReplaceRoomAfterReloadEnd(string gridID, String roomSwapPrefix, int row, int column, global::Celeste.Level level)
     {
         while (reloadComplete != true)
         {
@@ -353,7 +354,7 @@ public class EndHelperModule : EverestModule {
         }
 
         //Logger.Log(LogLevel.Info, "EndHelper/main", $"Replace {EndHelperModule.Session.roomSwapOrderList[gridID][row - 1][column - 1]} >> {roomSwapPrefix}{row}{column}");
-        replaceRoom($"{roomSwapPrefix}{row}{column}", EndHelperModule.Session.roomSwapOrderList[gridID][row - 1][column - 1], level);
+        ReplaceRoom($"{roomSwapPrefix}{row}{column}", EndHelperModule.Session.roomSwapOrderList[gridID][row - 1][column - 1], level);
     }
 
     static LevelData getRoomDataFromName(string roomName, Level level)
@@ -366,7 +367,7 @@ public class EndHelperModule : EverestModule {
         return level.Session.LevelData; //returns current room if can't find (this should not happen)
     }
 
-    static void replaceRoom(String replaceSwapRoomName, String replaceTemplateRoomName, global::Celeste.Level level)
+    static void ReplaceRoom(String replaceSwapRoomName, String replaceTemplateRoomName, global::Celeste.Level level)
     {
         LevelData replaceSwapRoomData = getRoomDataFromName(replaceSwapRoomName, level);
         LevelData replaceTemplateRoomData = getRoomDataFromName(replaceTemplateRoomName, level);
@@ -413,14 +414,14 @@ public class EndHelperModule : EverestModule {
         replaceSwapRoomData.HasCheckpoint = replaceTemplateRoomData.HasCheckpoint;
     }
 
-    public static async void temporarilyDisableTrigger(int millisecondDelay, string gridID)
+    public static async void TemporarilyDisableTrigger(int millisecondDelay, string gridID)
     {
         EndHelperModule.Session.allowTriggerEffect[gridID] = false;
         await Task.Delay(millisecondDelay);
         EndHelperModule.Session.allowTriggerEffect[gridID] = true;
     }
 
-    public static bool modifyRooms(String modifyType, bool isSilent, Player? player, Level level, String gridID, int teleportDelayMilisecond = 0, int teleportDisableMilisecond = 200, bool flashEffect = false)
+    public static bool ModifyRooms(String modifyType, bool isSilent, Player player, Level level, String gridID, int teleportDelayMilisecond = 0, int teleportDisableMilisecond = 200, bool flashEffect = false)
     {
         bool succeedModify = false;
 
@@ -433,16 +434,16 @@ public class EndHelperModule : EverestModule {
         String roomSwapPrefix = EndHelperModule.Session.roomSwapPrefix[gridID];
         String roomTemplatePrefix = EndHelperModule.Session.roomTemplatePrefix[gridID];
 
-        String currentTemplateRoomName = getTemplateRoomFromSwapRoom(currentRoomName);
+        String currentTemplateRoomName = GetTemplateRoomFromSwapRoom(currentRoomName);
 
         if (EndHelperModule.Session.allowTriggerEffect[gridID])
         {
             Logger.Log(LogLevel.Info, "EndHelper/Main", $"Modifying Room! Type: {modifyType}. Triggered from {currentRoomName}. ({roomSwapTotalRow}x{roomSwapTotalColumn})");
-            EndHelperModule.temporarilyDisableTrigger(teleportDisableMilisecond + (int)(EndHelperModule.Session.roomTransitionTime[gridID] * 1000 + teleportDelayMilisecond), gridID);
+            EndHelperModule.TemporarilyDisableTrigger(teleportDisableMilisecond + (int)(EndHelperModule.Session.roomTransitionTime[gridID] * 1000 + teleportDelayMilisecond), gridID);
 
             if (EndHelperModule.Session.roomSwapOrderList.ContainsKey(gridID)) //Don't run this if first load
             {
-                level.Session.SetFlag(getTransitionFlagName(), false); //Remove flag
+                level.Session.SetFlag(GetTransitionFlagName(), false); //Remove flag
             }
             
 
@@ -456,17 +457,17 @@ public class EndHelperModule : EverestModule {
                         List<string> roomRow = [];
                         for (int column = 1; column <= roomSwapTotalColumn; column++)
                         {
-                            getPosFromRoomName($"{roomSwapPrefix}");
+                            GetPosFromRoomName($"{roomSwapPrefix}");
                             roomRow.Add($"{roomTemplatePrefix}11");
 
                         }
                         EndHelperModule.Session.roomSwapOrderList[gridID].Add(roomRow);
                     }
-                    updateRooms();
+                    UpdateRooms();
                     //teleportToRoom("swap11", player, level);
                     if (currentRoomName.StartsWith(roomSwapPrefix))
                     {
-                        teleportToRoom(getSwapRoomFromTemplateRoom(currentTemplateRoomName), player, level);
+                        TeleportToRoom(getSwapRoomFromTemplateRoom(currentTemplateRoomName), player, level);
                     }
 
                     //level.Session.LevelData = getRoomDataFromName($"{roomTemplatePrefix}11", level);
@@ -494,75 +495,75 @@ public class EndHelperModule : EverestModule {
 
                         if(!Are2LayerListsEqual(initial, EndHelperModule.Session.roomSwapOrderList[gridID]))
                         {
-                            updateRooms();
+                            UpdateRooms();
                         }
 
                         //If reset is triggered while in the swap zone, do le warp
                         if (currentRoomName.StartsWith(roomSwapPrefix))
                         {
-                            teleportToRoom(getSwapRoomFromTemplateRoom(currentTemplateRoomName), player, level);
+                            TeleportToRoom(getSwapRoomFromTemplateRoom(currentTemplateRoomName), player, level);
                         }
                     }
                     break;
 
                 case "CurrentRowLeft":
                     {
-                        int roomRow = getPosFromRoomName(currentRoomName)[0];
+                        int roomRow = GetPosFromRoomName(currentRoomName)[0];
 
                         EndHelperModule.Session.roomSwapOrderList[gridID][roomRow - 1].Add(EndHelperModule.Session.roomSwapOrderList[gridID][roomRow - 1][0]);
                         EndHelperModule.Session.roomSwapOrderList[gridID][roomRow - 1].RemoveAt(0);
-                        updateRooms();
-                        teleportToRoom(getSwapRoomFromTemplateRoom(currentTemplateRoomName), player, level);
+                        UpdateRooms();
+                        TeleportToRoom(getSwapRoomFromTemplateRoom(currentTemplateRoomName), player, level);
                     }
                     break;
 
                 case "CurrentRowLeft_PreventWarp":
                     {
-                        int roomCol = getPosFromRoomName(currentRoomName)[1];
-                        int roomRow = getPosFromRoomName(currentRoomName)[0];
+                        int roomCol = GetPosFromRoomName(currentRoomName)[1];
+                        int roomRow = GetPosFromRoomName(currentRoomName)[0];
 
                         //Only continue if roomCol is not leftmost room
                         if (roomCol != 1)
                         {
                             EndHelperModule.Session.roomSwapOrderList[gridID][roomRow - 1].Add(EndHelperModule.Session.roomSwapOrderList[gridID][roomRow - 1][0]);
                             EndHelperModule.Session.roomSwapOrderList[gridID][roomRow - 1].RemoveAt(0);
-                            updateRooms();
-                            teleportToRoom(getSwapRoomFromTemplateRoom(currentTemplateRoomName), player, level);
+                            UpdateRooms();
+                            TeleportToRoom(getSwapRoomFromTemplateRoom(currentTemplateRoomName), player, level);
                         }
                     }
                     break;
 
                 case "CurrentRowRight":
                     {
-                        int roomRow = getPosFromRoomName(currentRoomName)[0];
+                        int roomRow = GetPosFromRoomName(currentRoomName)[0];
 
                         EndHelperModule.Session.roomSwapOrderList[gridID][roomRow-1].Insert(0, EndHelperModule.Session.roomSwapOrderList[gridID][roomRow-1][roomSwapTotalColumn - 1]);
                         EndHelperModule.Session.roomSwapOrderList[gridID][roomRow-1].RemoveAt(roomSwapTotalColumn);
-                        updateRooms();
-                        teleportToRoom(getSwapRoomFromTemplateRoom(currentTemplateRoomName), player, level);
+                        UpdateRooms();
+                        TeleportToRoom(getSwapRoomFromTemplateRoom(currentTemplateRoomName), player, level);
                     }
                     break;
 
                 case "CurrentRowRight_PreventWarp":
                     {
-                        int roomCol = getPosFromRoomName(currentRoomName)[1];
-                        int roomRow = getPosFromRoomName(currentRoomName)[0];
+                        int roomCol = GetPosFromRoomName(currentRoomName)[1];
+                        int roomRow = GetPosFromRoomName(currentRoomName)[0];
 
                         //Only continue if roomCol is not rightmost room
                         if (roomCol != roomSwapTotalColumn)
                         {
                             EndHelperModule.Session.roomSwapOrderList[gridID][roomRow - 1].Insert(0, EndHelperModule.Session.roomSwapOrderList[gridID][roomRow - 1][roomSwapTotalColumn - 1]);
                             EndHelperModule.Session.roomSwapOrderList[gridID][roomRow - 1].RemoveAt(roomSwapTotalColumn);
-                            updateRooms();
-                            teleportToRoom(getSwapRoomFromTemplateRoom(currentTemplateRoomName), player, level);
+                            UpdateRooms();
+                            TeleportToRoom(getSwapRoomFromTemplateRoom(currentTemplateRoomName), player, level);
                         }
                     }
                     break;
 
                 case "CurrentColumnUp":
                     {
-                        int roomCol = getPosFromRoomName(currentRoomName)[1];
-                        int roomRow = getPosFromRoomName(currentRoomName)[0];
+                        int roomCol = GetPosFromRoomName(currentRoomName)[1];
+                        int roomRow = GetPosFromRoomName(currentRoomName)[0];
 
                         String topRoomName = EndHelperModule.Session.roomSwapOrderList[gridID][0][roomCol - 1];
                         for (int row = 1; row <= roomSwapTotalRow-1; row++)
@@ -572,15 +573,15 @@ public class EndHelperModule : EverestModule {
                         }
                         //Copy over top room to the bottom
                         EndHelperModule.Session.roomSwapOrderList[gridID][roomSwapTotalRow-1][roomCol - 1] = topRoomName;
-                        updateRooms();
-                        teleportToRoom(getSwapRoomFromTemplateRoom(currentTemplateRoomName), player, level);
+                        UpdateRooms();
+                        TeleportToRoom(getSwapRoomFromTemplateRoom(currentTemplateRoomName), player, level);
                     }
                     break;
 
                 case "CurrentColumnUp_PreventWarp":
                     {
-                        int roomCol = getPosFromRoomName(currentRoomName)[1];
-                        int roomRow = getPosFromRoomName(currentRoomName)[0];
+                        int roomCol = GetPosFromRoomName(currentRoomName)[1];
+                        int roomRow = GetPosFromRoomName(currentRoomName)[0];
 
                         //Only continue if roomRow is not topmost room
                         if (roomRow != 1)
@@ -593,16 +594,16 @@ public class EndHelperModule : EverestModule {
                             }
                             //Copy over top room to the bottom
                             EndHelperModule.Session.roomSwapOrderList[gridID][roomSwapTotalRow - 1][roomCol - 1] = topRoomName;
-                            updateRooms();
-                            teleportToRoom(getSwapRoomFromTemplateRoom(currentTemplateRoomName), player, level);
+                            UpdateRooms();
+                            TeleportToRoom(getSwapRoomFromTemplateRoom(currentTemplateRoomName), player, level);
                         }
                     }
                     break;
 
                 case "CurrentColumnDown":
                     {
-                        int roomCol = getPosFromRoomName(currentRoomName)[1];
-                        int roomRow = getPosFromRoomName(currentRoomName)[0];
+                        int roomCol = GetPosFromRoomName(currentRoomName)[1];
+                        int roomRow = GetPosFromRoomName(currentRoomName)[0];
 
                         String bottomRoomName = EndHelperModule.Session.roomSwapOrderList[gridID][roomSwapTotalRow - 1][roomCol - 1];
                         for (int row = roomSwapTotalRow; row > 1; row--)
@@ -612,15 +613,15 @@ public class EndHelperModule : EverestModule {
                         }
                         //Copy over bottom room to the top
                         EndHelperModule.Session.roomSwapOrderList[gridID][0][roomCol - 1] = bottomRoomName;
-                        updateRooms();
-                        teleportToRoom(getSwapRoomFromTemplateRoom(currentTemplateRoomName), player, level);
+                        UpdateRooms();
+                        TeleportToRoom(getSwapRoomFromTemplateRoom(currentTemplateRoomName), player, level);
                     }
                     break;
 
                 case "CurrentColumnDown_PreventWarp":
                     {
-                        int roomCol = getPosFromRoomName(currentRoomName)[1];
-                        int roomRow = getPosFromRoomName(currentRoomName)[0];
+                        int roomCol = GetPosFromRoomName(currentRoomName)[1];
+                        int roomRow = GetPosFromRoomName(currentRoomName)[0];
 
                         //Only continue if roomRow is not bottommost room
                         if (roomRow != roomSwapTotalRow)
@@ -633,16 +634,16 @@ public class EndHelperModule : EverestModule {
                             }
                             //Copy over bottom room to the top
                             EndHelperModule.Session.roomSwapOrderList[gridID][0][roomCol - 1] = bottomRoomName;
-                            updateRooms();
-                            teleportToRoom(getSwapRoomFromTemplateRoom(currentTemplateRoomName), player, level);
+                            UpdateRooms();
+                            TeleportToRoom(getSwapRoomFromTemplateRoom(currentTemplateRoomName), player, level);
                         }
                     }
                     break;
 
                 case "SwapLeftRight":
                     {
-                        int roomCol = getPosFromRoomName(currentRoomName)[1];
-                        int roomRow = getPosFromRoomName(currentRoomName)[0];
+                        int roomCol = GetPosFromRoomName(currentRoomName)[1];
+                        int roomRow = GetPosFromRoomName(currentRoomName)[0];
 
                         //Only continue if not leftmost or rightmost
                         if (roomCol != roomSwapTotalColumn && roomCol != 1)
@@ -650,7 +651,7 @@ public class EndHelperModule : EverestModule {
                             String leftRoom = EndHelperModule.Session.roomSwapOrderList[gridID][roomRow - 1][roomCol - 2];
                             EndHelperModule.Session.roomSwapOrderList[gridID][roomRow - 1][roomCol-2] = EndHelperModule.Session.roomSwapOrderList[gridID][roomRow - 1][roomCol];
                             EndHelperModule.Session.roomSwapOrderList[gridID][roomRow - 1][roomCol] = leftRoom;
-                            updateRooms();
+                            UpdateRooms();
                             //teleportToRoom(getSwapRoomFromTemplateRoom(currentTemplateRoomName), player, level);
                         }
                     }
@@ -658,8 +659,8 @@ public class EndHelperModule : EverestModule {
 
                 case "SwapUpDown":
                     {
-                        int roomCol = getPosFromRoomName(currentRoomName)[1];
-                        int roomRow = getPosFromRoomName(currentRoomName)[0];
+                        int roomCol = GetPosFromRoomName(currentRoomName)[1];
+                        int roomRow = GetPosFromRoomName(currentRoomName)[0];
 
                         //Only continue if not topmost or bottommost
                         if (roomRow != roomSwapTotalRow && roomRow != 1)
@@ -667,7 +668,7 @@ public class EndHelperModule : EverestModule {
                             String topRoom = EndHelperModule.Session.roomSwapOrderList[gridID][roomRow - 2][roomCol - 1];
                             EndHelperModule.Session.roomSwapOrderList[gridID][roomRow - 2][roomCol - 1] = EndHelperModule.Session.roomSwapOrderList[gridID][roomRow][roomCol - 1];
                             EndHelperModule.Session.roomSwapOrderList[gridID][roomRow][roomCol - 1] = topRoom;
-                            updateRooms();
+                            UpdateRooms();
                             //teleportToRoom(getSwapRoomFromTemplateRoom(currentTemplateRoomName), player, level);
                         }
                     }
@@ -676,8 +677,8 @@ public class EndHelperModule : EverestModule {
                 //set_11_12_21_22
                 case string s when s.StartsWith("Set_"):
                     {
-                        int roomCol = getPosFromRoomName(currentRoomName)[1];
-                        int roomRow = getPosFromRoomName(currentRoomName)[0];
+                        int roomCol = GetPosFromRoomName(currentRoomName)[1];
+                        int roomRow = GetPosFromRoomName(currentRoomName)[0];
                         string oldTemplateRoomAtThisPos = EndHelperModule.Session.roomSwapOrderList[gridID][roomRow - 1][roomCol - 1];
 
                         string[] splittedArr = s.Split("_");
@@ -693,7 +694,7 @@ public class EndHelperModule : EverestModule {
                         for (int i = 1; i < splittedArr.Length; i++)
                         {
 
-                            List<int> roomPos = getPosFromRoomName(splittedArr[i]);
+                            List<int> roomPos = GetPosFromRoomName(splittedArr[i]);
 
                             // Set i-th item in splittedArr to row/col
                             EndHelperModule.Session.roomSwapOrderList[gridID][row - 1][column - 1] = $"{roomTemplatePrefix}{roomPos[0]}{roomPos[1]}";
@@ -711,7 +712,7 @@ public class EndHelperModule : EverestModule {
                         if (!Are2LayerListsEqual(initial, EndHelperModule.Session.roomSwapOrderList[gridID]))
                         {
 
-                            updateRooms();
+                            UpdateRooms();
                             // There can be multiple of the same template room. First check if the current room is the same
                             string newTemplateRoomAtThisPos = EndHelperModule.Session.roomSwapOrderList[gridID][roomRow - 1][roomCol - 1];
 
@@ -719,37 +720,37 @@ public class EndHelperModule : EverestModule {
                             if (oldTemplateRoomAtThisPos != newTemplateRoomAtThisPos)
                             {
                                 // Only teleport if the template room at the same position is different
-                                teleportToRoom(getSwapRoomFromTemplateRoom(currentTemplateRoomName), player, level);
+                                TeleportToRoom(getSwapRoomFromTemplateRoom(currentTemplateRoomName), player, level);
                             }
                         }
                     }
                     break;
 
                 case "None":
-                    updateRooms();
+                    UpdateRooms();
                     break;
 
                 default:
                     // nothing!!!!
                     break;
             }
-            level.Session.SetFlag(getTransitionFlagName(), true); //Set flag
+            level.Session.SetFlag(GetTransitionFlagName(), true); //Set flag
         }
 
-        void updateRooms()
+        void UpdateRooms()
         {
             for (int row = 1; row <= roomSwapTotalRow; row++)
             {
                 for (int column = 1; column <= roomSwapTotalColumn; column++)
                 {
-                    replaceRoom($"{roomSwapPrefix}{row}{column}", EndHelperModule.Session.roomSwapOrderList[gridID][row - 1][column - 1], level);
+                    ReplaceRoom($"{roomSwapPrefix}{row}{column}", EndHelperModule.Session.roomSwapOrderList[gridID][row - 1][column - 1], level);
                 }
             }
             //Logger.Log(LogLevel.Info, "EndHelper/Main", "Updating rooms...");
             swapEffects();
         }
 
-        async void teleportToRoom(String teleportToRoomName, Player player, Level level)
+        async void TeleportToRoom(String teleportToRoomName, Player player, Level level)
         {
             LevelData currentRoomData = level.Session.LevelData;
             Vector2 currentRoomPos = currentRoomData.Position;
@@ -817,7 +818,7 @@ public class EndHelperModule : EverestModule {
             return currentRoomName; //This shouldn't happen...
         }
 
-        String getTemplateRoomFromSwapRoom(String swapRoomName)
+        String GetTemplateRoomFromSwapRoom(String swapRoomName)
         {
             if (swapRoomName.StartsWith(roomSwapPrefix))
             {
@@ -838,7 +839,7 @@ public class EndHelperModule : EverestModule {
 
         void swapEffects()
         {
-            roomModificationEventTrigger(gridID);
+            RoomModificationEventTrigger(gridID);
 
             if (flashEffect)
             {
@@ -860,7 +861,7 @@ public class EndHelperModule : EverestModule {
             succeedModify = true;
         }
 
-        String getTransitionFlagName()
+        String GetTransitionFlagName()
         {
             String flagName = roomSwapPrefix;
             for (int row = 1; row <= roomSwapTotalRow; row++)
@@ -868,7 +869,7 @@ public class EndHelperModule : EverestModule {
                 for (int column = 1; column <= roomSwapTotalColumn; column++)
                 {
                     String roomNameAtPos = EndHelperModule.Session.roomSwapOrderList[gridID][row-1][column-1];
-                    List<int> roomPos = getPosFromRoomName(roomNameAtPos);
+                    List<int> roomPos = GetPosFromRoomName(roomNameAtPos);
                     flagName += $"_{roomPos[0]}{roomPos[1]}";
                 }
             }
@@ -884,7 +885,7 @@ public class EndHelperModule : EverestModule {
     /// </summary>
     /// <param name="roomName"></param>
     /// <returns></returns>
-    public static List<int> getPosFromRoomName(String roomName)
+    public static List<int> GetPosFromRoomName(String roomName)
     {
         int len = roomName.Length;
         int row = roomName[len - 2] - '0';

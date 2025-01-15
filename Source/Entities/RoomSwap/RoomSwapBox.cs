@@ -170,25 +170,25 @@ public class RoomSwapBox : Solid
         {
             if (dir == Vector2.UnitX)
             {
-                bool checkSucceed = EndHelperModule.modifyRooms(modifyTypeLeft, modifySilently, player, SceneAs<Level>(), gridId, teleportDelayMilisecond: 150, flashEffect: flashEffect);
+                bool checkSucceed = EndHelperModule.ModifyRooms(modifyTypeLeft, modifySilently, player, SceneAs<Level>(), gridId, teleportDelayMilisecond: 150, flashEffect: flashEffect);
                 if (checkSucceed) { hitEffects(); }
             }
 
             if (dir == -Vector2.UnitX)
             {
-                bool checkSucceed = EndHelperModule.modifyRooms(modifyTypeRight, modifySilently, player, SceneAs<Level>(), gridId, teleportDelayMilisecond: 150, flashEffect: flashEffect);
+                bool checkSucceed = EndHelperModule.ModifyRooms(modifyTypeRight, modifySilently, player, SceneAs<Level>(), gridId, teleportDelayMilisecond: 150, flashEffect: flashEffect);
                 if (checkSucceed) { hitEffects(); }
             }
 
             if (dir == Vector2.UnitY)
             {
-                bool checkSucceed = EndHelperModule.modifyRooms(modifyTypeUp, modifySilently, player, SceneAs<Level>(), gridId, teleportDelayMilisecond: 250, flashEffect: flashEffect); //More delay to kb away
+                bool checkSucceed = EndHelperModule.ModifyRooms(modifyTypeUp, modifySilently, player, SceneAs<Level>(), gridId, teleportDelayMilisecond: 250, flashEffect: flashEffect); //More delay to kb away
                 if (checkSucceed) { hitEffects(); }
             }
 
             if (dir == -Vector2.UnitY)
             {
-                bool checkSucceed = EndHelperModule.modifyRooms(modifyTypeDown, modifySilently, player, SceneAs<Level>(), gridId, teleportDelayMilisecond: 0, flashEffect: flashEffect); //No delay otherwise clip inside
+                bool checkSucceed = EndHelperModule.ModifyRooms(modifyTypeDown, modifySilently, player, SceneAs<Level>(), gridId, teleportDelayMilisecond: 0, flashEffect: flashEffect); //No delay otherwise clip inside
                 if (checkSucceed) { hitEffects(); }
             }
         }

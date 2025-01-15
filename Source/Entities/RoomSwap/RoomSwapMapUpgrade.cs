@@ -3,8 +3,6 @@ using Celeste.Mod.EndHelper.Triggers;
 using Microsoft.Xna.Framework;
 using Monocle;
 using System.Runtime.CompilerServices;
-using Microsoft.Xna.Framework;
-using Monocle;
 using static Celeste.TempleGate;
 using static On.Celeste.Level;
 using System.Security.Cryptography.X509Certificates;
@@ -215,7 +213,7 @@ public class RoomSwapMapUpgrade : Entity
         }
         level.Flash(new Color(200, 200, 200, 200), drawPlayerOver: true);
         Scene.Add(new BgFlash());
-        roomModificationEventTrigger(gridID);
+        RoomModificationEventTrigger(gridID);
 
         RemoveSelf();
     }

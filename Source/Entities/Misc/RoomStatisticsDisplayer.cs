@@ -29,6 +29,7 @@ public class RoomStatisticsDisplayer : Entity
     private int afkDurationFrames = 0;
     private bool allowIncrementTimer = true;
     private bool statisticsGuiOpen = false;
+    public bool disableRoomChange = false;
 
     public RoomStatisticsDisplayer(Level level)
     {
@@ -41,11 +42,23 @@ public class RoomStatisticsDisplayer : Entity
         base.Added(scene);
     }
 
+    public void ImportRoomStatInfo()
+    {
+        EndHelperModule.Session.roomStatDict_death = EndHelperModule.externalRoomStatDict_death; // Import
+        EndHelperModule.Session.roomStatDict_timer = EndHelperModule.externalRoomStatDict_timer;
+
+        // Only keep for debug. Load state also un-collects the berry so let the berry count be loaded.
+        if (EndHelperModule.lastSessionResetCause == SessionResetCause.Debug)
+        {
+            EndHelperModule.Session.roomStatDict_strawberries = EndHelperModule.externalRoomStatDict_strawberries;
+        }
+    }
+
     public override void Update()
     {
         // Keep these updated!
         Level level = SceneAs<Level>();
-        if (!EndHelperModule.viewingMultiroomBino) // Current room should stay the same if using the multiroom bino
+        if (!disableRoomChange)
         {
             currentRoomName = level.Session.LevelData.Name;
         }
@@ -56,15 +69,7 @@ public class RoomStatisticsDisplayer : Entity
         // If something wacky happens (aka if debug mode is used), grab data from there. Otherwise export data there.
         if (EndHelperModule.timeSinceSessionReset == 1)
         {
-            EndHelperModule.Session.roomStatDict_death = EndHelperModule.externalRoomStatDict_death; // Import
-            EndHelperModule.Session.roomStatDict_timer = EndHelperModule.externalRoomStatDict_timer;
-
-            // Only keep for debug. Load state also un-collects the berry so let the berry count be loaded.
-            if(EndHelperModule.lastSessionResetCause == SessionResetCause.Debug)
-            {
-                EndHelperModule.Session.roomStatDict_strawberries = EndHelperModule.externalRoomStatDict_strawberries;
-            }
-            
+            ImportRoomStatInfo();
         }
         else if (EndHelperModule.timeSinceSessionReset > 1)
         {
@@ -97,11 +102,14 @@ public class RoomStatisticsDisplayer : Entity
             allowIncrementTimer = false;
         }
 
-        // Ensure key
-        if (!EndHelperModule.Session.roomStatDict_death.Contains(currentRoomName) || !EndHelperModule.Session.roomStatDict_timer.Contains(currentRoomName) || !EndHelperModule.Session.roomStatDict_strawberries.Contains(currentRoomName))
+        // Ensure key. Strawberries are seperated as they are undone during load state unlike the rest.
+        if (!EndHelperModule.Session.roomStatDict_death.Contains(currentRoomName) || !EndHelperModule.Session.roomStatDict_timer.Contains(currentRoomName))
         {
             EndHelperModule.Session.roomStatDict_death[currentRoomName] = (int)0;
             EndHelperModule.Session.roomStatDict_timer[currentRoomName] = (long)0;
+        }
+        if (!EndHelperModule.Session.roomStatDict_strawberries.Contains(currentRoomName))
+        {
             EndHelperModule.Session.roomStatDict_strawberries[currentRoomName] = (int)0;
         }
 
@@ -299,10 +307,13 @@ public class RoomStatisticsDisplayer : Entity
     public void OnDeath()
     {
         // Check if dict has current room, just in case.
-        if (!EndHelperModule.Session.roomStatDict_death.Contains(currentRoomName) || !EndHelperModule.Session.roomStatDict_timer.Contains(currentRoomName) || !EndHelperModule.Session.roomStatDict_strawberries.Contains(currentRoomName))
+        if (!EndHelperModule.Session.roomStatDict_death.Contains(currentRoomName) || !EndHelperModule.Session.roomStatDict_timer.Contains(currentRoomName))
         {
             EndHelperModule.Session.roomStatDict_death[currentRoomName] = (int)0;
             EndHelperModule.Session.roomStatDict_timer[currentRoomName] = (long)0;
+        }
+        if (!EndHelperModule.Session.roomStatDict_strawberries.Contains(currentRoomName))
+        {
             EndHelperModule.Session.roomStatDict_strawberries[currentRoomName] = (int)0;
         }
         EndHelperModule.Session.roomStatDict_death[currentRoomName] = Convert.ToInt32(EndHelperModule.Session.roomStatDict_death[currentRoomName]) + 1;

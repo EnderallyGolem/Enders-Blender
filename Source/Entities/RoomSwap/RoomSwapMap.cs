@@ -3,8 +3,6 @@ using Celeste.Mod.EndHelper.Triggers;
 using Microsoft.Xna.Framework;
 using Monocle;
 using System.Runtime.CompilerServices;
-using Microsoft.Xna.Framework;
-using Monocle;
 using static Celeste.TempleGate;
 using static On.Celeste.Level;
 using System.Security.Cryptography.X509Certificates;
@@ -105,7 +103,7 @@ public class RoomSwapMap : Entity
         currentRoomPosFileName = entityData.Attr("mapCurrentPosFileName", "");
         if (currentRoomName.StartsWith(EndHelperModule.Session.roomSwapPrefix[gridID]) && currentRoomPosFileName != "")
         {
-            currentRoomPos = getPosFromRoomName(currentRoomName);
+            currentRoomPos = GetPosFromRoomName(currentRoomName);
             string currentRoomPosSuffix = $"{currentRoomPos[0].ToString()}{currentRoomPos[1].ToString()}";
         }
     }
@@ -162,7 +160,7 @@ public class RoomSwapMap : Entity
                     List<string> roomPosSuffixListRow = [];
                     for (int col = 1; col <= EndHelperModule.Session.roomSwapColumn[gridID]; col++)
                     {
-                        List<int> roomPos = getPosFromRoomName(roomSwapOrderList[row - 1][col - 1]);
+                        List<int> roomPos = GetPosFromRoomName(roomSwapOrderList[row - 1][col - 1]);
                         string roomPosSuffix = $"{roomPos[0].ToString()}{roomPos[1].ToString()}";
 
                         //Try get folderpath/iconprefix_XY_# then see how many # are there

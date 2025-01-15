@@ -3,8 +3,6 @@ using Celeste.Mod.EndHelper.Triggers;
 using Microsoft.Xna.Framework;
 using Monocle;
 using System.Runtime.CompilerServices;
-using Microsoft.Xna.Framework;
-using Monocle;
 using static Celeste.TempleGate;
 using static On.Celeste.Level;
 using System.Security.Cryptography.X509Certificates;
@@ -54,7 +52,7 @@ public class RoomSwapController : Entity
             Level level = SceneAs<Level>();
             Player player = level.Tracker.GetEntity<Player>();
 
-            EndHelperModule.modifyRooms("Reset", true, player, level, gridID); //This loads the stuff in 
+            EndHelperModule.ModifyRooms("Reset", true, player, level, gridID); //This loads the stuff in 
             Logger.Log(LogLevel.Info, "EndHelper/RoomSwap/RoomSwapController", $"Added a {EndHelperModule.Session.roomSwapRow[gridID]}x{EndHelperModule.Session.roomSwapColumn[gridID]} grid with id {gridID}");
         }
     }

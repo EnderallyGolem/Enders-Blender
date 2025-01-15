@@ -34,7 +34,7 @@ public class RoomSwapModifyRoomTrigger : Trigger
         Level level = SceneAs<Level>();
         if (flagCheck == "")
         {
-            EndHelperModule.modifyRooms(modifyType, modifySilently, player, SceneAs<Level>(), gridID, teleportDisableMilisecond: 300, flashEffect: flashEffect);
+            EndHelperModule.ModifyRooms(modifyType, modifySilently, player, SceneAs<Level>(), gridID, teleportDisableMilisecond: 300, flashEffect: flashEffect);
         }
         else if (level.Session.GetFlag(flagCheck) == flagRequire)
         {
@@ -42,7 +42,7 @@ public class RoomSwapModifyRoomTrigger : Trigger
             {
                 level.Session.SetFlag(flagCheck, !level.Session.GetFlag(flagCheck));
             }
-            EndHelperModule.modifyRooms(modifyType, modifySilently, player, SceneAs<Level>(), gridID, teleportDisableMilisecond: 300, flashEffect: flashEffect);
+            EndHelperModule.ModifyRooms(modifyType, modifySilently, player, SceneAs<Level>(), gridID, teleportDisableMilisecond: 300, flashEffect: flashEffect);
         }
     }
 
