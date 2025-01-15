@@ -178,12 +178,7 @@ public class RoomStatisticsDisplayer : Entity
         long timerNum = Convert.ToInt64(EndHelperModule.Session.roomStatDict_timer[currentRoomName]);
         int strawberriesNum = Convert.ToInt32(EndHelperModule.Session.roomStatDict_strawberries[currentRoomName]);
 
-        Color timerColor = Color.White;
-        if (!allowIncrementTimer && EndHelperModule.Settings.StatDisplay.ShowTimeSpent)
-        {
-            timerColor = Color.Gray;
-        }
-
+        Color timerColor = allowIncrementTimer ? Color.White : Color.Gray;
         float xJustification = 0;
         if (EndHelperModule.Settings.StatDisplay.xJustification == StatDisplaySubMenu.Justification.Center)
         {
@@ -203,10 +198,12 @@ public class RoomStatisticsDisplayer : Entity
     {
         public string displayMsg;
         public int textWidth;
-        public DisplayInfo(string displayMsg, int textWidth)
+        public string id;
+        public DisplayInfo(string id, string displayMsg, int textWidth)
         {
             this.displayMsg = displayMsg;
             this.textWidth = textWidth;
+            this.id = id;
         }
     }
 
@@ -217,7 +214,7 @@ public class RoomStatisticsDisplayer : Entity
 
         if (prefix != "")
         {
-            displayInfoList.Add(new DisplayInfo(prefix, (int)(ActiveFont.WidthToNextLine($"{prefix}", 0) * displayScale)));
+            displayInfoList.Add(new DisplayInfo("prefix", prefix, (int)(ActiveFont.WidthToNextLine($"{prefix}", 0) * displayScale)));
             //ActiveFont.DrawOutline(prefix, new Vector2(sectionXPos + xOffset, displayYPos), justification, Vector2.One * displayScale, timerColor, 2f, Color.Black);
         }
 
@@ -240,19 +237,23 @@ public class RoomStatisticsDisplayer : Entity
                 displayMsg += ":";
             }
 
-            displayInfoList.Add(new DisplayInfo(displayMsg, (int)(ActiveFont.WidthToNextLine($"{displayMsg} ", 0) * displayScale)));
+            displayInfoList.Add(new DisplayInfo("roomname", displayMsg, (int)(ActiveFont.WidthToNextLine($"{displayMsg} ", 0) * displayScale)));
         }
 
         if (showAll || EndHelperModule.Settings.StatDisplay.ShowDeaths)
         {
             string displayMsg = $":EndHelper/uioutline_skull: {deathNum}";
-            displayInfoList.Add(new DisplayInfo(displayMsg, (int)(ActiveFont.WidthToNextLine($"{deathNum}XXX|", 0) * displayScale)));
+            displayInfoList.Add(new DisplayInfo("deaths", displayMsg, (int)(ActiveFont.WidthToNextLine($"{deathNum}XXX|", 0) * displayScale)));
         }
         if (showAll || EndHelperModule.Settings.StatDisplay.ShowTimeSpent)
         {
             TimeSpan timeSpent = TimeSpan.FromTicks(timerNum);
             string timeString = EndHelperModule.MinimalGameplayFormat(timeSpent);
             string displayMsg = $":EndHelper/uioutline_clock: {timeString}";
+            if (timerColor == Color.Gray)
+            {
+                displayMsg = $":EndHelper/uioutline_clock_gray: {timeString}";
+            }
 
             int textWidth = 0;
             if (timeSpent.TotalHours < 1)
@@ -263,7 +264,7 @@ public class RoomStatisticsDisplayer : Entity
             {
                 textWidth = (int)((ActiveFont.WidthToNextLine($"X", 0) * timeString.Length + ActiveFont.WidthToNextLine($"X:", 0)) * displayScale);
             }
-            displayInfoList.Add(new DisplayInfo(displayMsg, textWidth));
+            displayInfoList.Add(new DisplayInfo("timer", displayMsg, textWidth));
         }
         if (showAll || EndHelperModule.Settings.StatDisplay.ShowStrawberries)
         {
@@ -275,12 +276,12 @@ public class RoomStatisticsDisplayer : Entity
                 {
                     displayMsg += $" {strawberriesNum}";
                 }
-                displayInfoList.Add(new DisplayInfo(displayMsg, (int)(ActiveFont.WidthToNextLine($"{strawberriesNum}XXX|", 0) * displayScale)));
+                displayInfoList.Add(new DisplayInfo("strawberries", displayMsg, (int)(ActiveFont.WidthToNextLine($"{strawberriesNum}XXX|", 0) * displayScale)));
             }
         }
         if (suffix != "")
         {
-            displayInfoList.Add(new DisplayInfo(suffix, (int)(ActiveFont.WidthToNextLine($"{prefix}", 0) * displayScale)));
+            displayInfoList.Add(new DisplayInfo("suffix", suffix, (int)(ActiveFont.WidthToNextLine($"{prefix}", 0) * displayScale)));
         }
 
         // First get the totalTextWidth to find how much to offset for the justification
@@ -299,7 +300,8 @@ public class RoomStatisticsDisplayer : Entity
         int sectionXPos = displayXPos;
         foreach (DisplayInfo displayInfo in displayInfoList)
         {
-            ActiveFont.DrawOutline(displayInfo.displayMsg, new Vector2(sectionXPos + xOffset, displayYPos), justification, Vector2.One * displayScale, timerColor, 2f, Color.Black);
+            Color color = displayInfo.id == "timer" ? timerColor : Color.White;
+            ActiveFont.DrawOutline(displayInfo.displayMsg, new Vector2(sectionXPos + xOffset, displayYPos), justification, Vector2.One * displayScale, color, 2f, Color.Black);
             sectionXPos += displayInfo.textWidth;
         }
     }

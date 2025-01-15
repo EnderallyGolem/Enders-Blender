@@ -54,8 +54,7 @@
               "RelativeToolTip": "Source\\Entities\\Misc\\MultiroomWatchtower.cs",
               "ViewState": "AgIAAHUCAAAAAAAAAAAswIcCAAAWAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-01-15T12:10:58.486Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-01-15T12:10:58.486Z"
             },
             {
               "$type": "Document",
@@ -75,9 +74,9 @@
               "Title": "RoomStatisticsDisplayer.cs",
               "DocumentMoniker": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Celeste\\Mods\\EndBlender\\Source\\Entities\\Misc\\RoomStatisticsDisplayer.cs",
               "RelativeDocumentMoniker": "Source\\Entities\\Misc\\RoomStatisticsDisplayer.cs",
-              "ToolTip": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Celeste\\Mods\\EndBlender\\Source\\Entities\\Misc\\RoomStatisticsDisplayer.cs*",
-              "RelativeToolTip": "Source\\Entities\\Misc\\RoomStatisticsDisplayer.cs*",
-              "ViewState": "AgIAAGgAAAAAAAAAAAAswHoAAAASAAAAAAAAAA==",
+              "ToolTip": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Celeste\\Mods\\EndBlender\\Source\\Entities\\Misc\\RoomStatisticsDisplayer.cs",
+              "RelativeToolTip": "Source\\Entities\\Misc\\RoomStatisticsDisplayer.cs",
+              "ViewState": "AgIAAOwAAAAAAAAAAAAswP0AAAANAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-01-11T14:15:23.936Z",
               "EditorCaption": ""
