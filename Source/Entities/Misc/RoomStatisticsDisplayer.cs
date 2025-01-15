@@ -25,8 +25,7 @@ namespace Celeste.Mod.EndHelper.Entities.Misc;
 public class RoomStatisticsDisplayer : Entity
 {
     private string clipboardText = "";
-
-    private string currentRoomName = "";
+    public string currentRoomName = "";
     private int afkDurationFrames = 0;
     private bool allowIncrementTimer = true;
     private bool statisticsGuiOpen = false;
@@ -46,7 +45,11 @@ public class RoomStatisticsDisplayer : Entity
     {
         // Keep these updated!
         Level level = SceneAs<Level>();
-        currentRoomName = level.Session.LevelData.Name;
+        if (!EndHelperModule.viewingMultiroomBino) // Current room should stay the same if using the multiroom bino
+        {
+            currentRoomName = level.Session.LevelData.Name;
+        }
+        
 
         //Logger.Log(LogLevel.Info, "EndHelper/RoomStatisticsDisplayer", $"session reset time {EndHelperModule.timeSinceSessionReset}");
 

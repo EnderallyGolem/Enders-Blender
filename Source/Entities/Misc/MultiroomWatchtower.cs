@@ -498,6 +498,7 @@ public class MultiroomWatchtower : Entity
     public void StopInteracting()
     {
         interacting = false;
+        EndHelperModule.viewingMultiroomBino = false;
         sprite.Play(animPrefix + "idle");
     }
 
@@ -583,6 +584,7 @@ public class MultiroomWatchtower : Entity
 
         // From here: player is definitely using it
         AddTag(Tags.Persistent);
+        EndHelperModule.viewingMultiroomBino = true;
         previouslyInteracted = true;
 
         bool canRetryInitial = level.CanRetry;
@@ -643,9 +645,10 @@ public class MultiroomWatchtower : Entity
         while (!Input.MenuCancel.Pressed && !Input.Pause && !Input.ESC && interacting
             /*&& !Input.MenuConfirm.Pressed && !Input.Dash.Pressed && !Input.Jump.Pressed*/)
         {
-            // Force these to be false. In case other stuff changes these.
+            // Force these to be the correct values. In case other stuff changes these.
             player.Sprite.Visible = false;
             player.Hair.Visible = false;
+            EndHelperModule.viewingMultiroomBino = true;
 
             // Solely for the keybind multiroom bino
             if (canToggleBlocker && EndHelperModule.Settings.FreeMultiroomWatchtower.Button.Pressed)
@@ -1308,6 +1311,7 @@ public class MultiroomWatchtower : Entity
             await Task.Delay((int)(Engine.DeltaTime * 1000 * frames + 1));
 
             RemoveTag(Tags.Persistent);
+            EndHelperModule.viewingMultiroomBino = false;
             player.Active = true;
             player.Visible = true;
             player.Collidable = true;

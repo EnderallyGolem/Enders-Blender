@@ -93,13 +93,13 @@ namespace Celeste.Mod.EndHelper.Integration
         {
             // +1 to death count =)
             Level preloadLevel = Monocle.Engine.Scene as Level;
-            string reloadRoomName = preloadLevel.Session.LevelData.Name;
+            //String reloadRoomName = preloadLevel.Session.LevelData.Name;
 
-            if (preloadLevel.Tracker.GetEntity<Player>() is Player player)
+            if (preloadLevel.Tracker.GetEntity<Player>() is Player player && preloadLevel.Tracker.GetEntity<RoomStatisticsDisplayer>() is RoomStatisticsDisplayer roomStatDisplayer)
             {
                 if (!player.Dead) {
-                    // Add +1 death when loading state, unless the player is already dead
-                    EndHelperModule.externalRoomStatDict_death[reloadRoomName] = Convert.ToInt32(EndHelperModule.externalRoomStatDict_death[reloadRoomName]) + 1;
+                    // Add +1 death when loading state, unless the player is already dead. Use the currentRoomName from roomStatDisplayer so it doesn't count multi-room bino
+                    EndHelperModule.externalRoomStatDict_death[roomStatDisplayer.currentRoomName] = Convert.ToInt32(EndHelperModule.externalRoomStatDict_death[roomStatDisplayer.currentRoomName]) + 1;
                 }
             }
 

@@ -53,9 +53,13 @@ public class EndHelperModule : EverestModule {
     public static int timeSinceSessionReset = 2;                                    // If == 1, correct for resets if needed. Starts from 2 so it does not cause a reset when loading!
     public static SessionResetCause lastSessionResetCause = SessionResetCause.None; // Stores the previous cause of reset. Sometimes useful.
 
+    // Store information for room stats externally for them to persist through save states
     public static OrderedDictionary externalRoomStatDict_death = new OrderedDictionary { };
     public static OrderedDictionary externalRoomStatDict_timer = new OrderedDictionary { };
     public static OrderedDictionary externalRoomStatDict_strawberries = new OrderedDictionary { };
+
+    // Store if viewing bino, checked by RoomStatisticsDisplayer to see if it should update the current room the timer is ticking for
+    public static bool viewingMultiroomBino = false;
 
     // Event Listener for when room modification occurs
     public static event EventHandler<RoomModificationEventArgs> RoomModificationEvent;
@@ -169,6 +173,7 @@ public class EndHelperModule : EverestModule {
         if (EndHelperModule.timeSinceSessionReset == 1)
         {
             // This occurs when reset happens
+            EndHelperModule.viewingMultiroomBino = false; // If it resets out of the bino. If it resets into the bino, no issues.
             if (enableRoomSwapHooks)
             {
                 ReupdateAllRooms(level); //This only exists so it updates when you respawn from debug. It umm still requires a transition/respawn to work lol
