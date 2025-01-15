@@ -3,14 +3,20 @@ using Celeste.Mod.EndHelper.Integration;
 using Celeste.Mod.SpeedrunTool.Message;
 using Microsoft.Xna.Framework;
 using Monocle;
+using On.Celeste;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Data.Common;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
 using System.Threading.Tasks;
+using static Celeste.Mod.EndHelper.Entities.Misc.RoomStatisticsDisplayer;
 using static MonoMod.InlineRT.MonoModRule;
+using static On.Celeste.Level;
+using static On.Celeste.Strawberry;
 //using VivHelper.Module__Extensions__Etc;
 
 namespace Celeste.Mod.EndHelper;
@@ -29,6 +35,10 @@ public class EndHelperModule : EverestModule {
     public override Type SaveDataType => typeof(EndHelperModuleSaveData);
     public static EndHelperModuleSaveData SaveData => (EndHelperModuleSaveData) Instance._SaveData;
 
+    public EndHelperModule()
+    {
+        Instance = this;
+    }
 
     //Custom spritebank, for contest xml location stuff
     public static SpriteBank SpriteBank => Instance._CustomEntitySpriteBank;
@@ -38,7 +48,16 @@ public class EndHelperModule : EverestModule {
 
     #region Initialisation
 
-    //Event Listener for when room modification occurs
+    // Debug mode is annoying
+    public enum SessionResetCause { None, LoadState, Debug }
+    public static int timeSinceSessionReset = 2;                                    // If == 1, correct for resets if needed. Starts from 2 so it does not cause a reset when loading!
+    public static SessionResetCause lastSessionResetCause = SessionResetCause.None; // Stores the previous cause of reset. Sometimes useful.
+
+    public static OrderedDictionary externalRoomStatDict_death = new OrderedDictionary { };
+    public static OrderedDictionary externalRoomStatDict_timer = new OrderedDictionary { };
+    public static OrderedDictionary externalRoomStatDict_strawberries = new OrderedDictionary { };
+
+    // Event Listener for when room modification occurs
     public static event EventHandler<RoomModificationEventArgs> RoomModificationEvent;
     public static bool enableRoomSwapHooks = false;
     public class RoomModificationEventArgs : EventArgs
@@ -49,32 +68,28 @@ public class EndHelperModule : EverestModule {
             this.gridID = gridID;
         }
     }
+
     public static void roomModificationEventTrigger(string gridID)
     {
         RoomModificationEvent?.Invoke(null, new RoomModificationEventArgs(gridID));
     }
 
-    public EndHelperModule() {
-        Instance = this;
-#if DEBUG
-        // debug builds use verbose logging
-        Logger.SetLogLevel(nameof(EndHelperModule), LogLevel.Verbose);
-#else
-        // release builds use info logging to reduce spam in log files
-        Logger.SetLogLevel(nameof(RoomSwapModule), LogLevel.Info);
-#endif
-    }
-
     public override void Load() {
         //On.Celeste.Level.TransitionRoutine += Hook_TransitionRoutine;
-        Everest.Events.AssetReload.OnReloadLevel += reupdateAllRooms;
-        Everest.Events.AssetReload.OnBeforeReload += reloadBeginFunc;
-        Everest.Events.AssetReload.OnAfterReload += reloadCompleteFunc;
+        Everest.Events.AssetReload.OnReloadLevel += ReupdateAllRooms;
+        Everest.Events.AssetReload.OnBeforeReload += ReloadBeginFunc;
+        Everest.Events.AssetReload.OnAfterReload += ReloadCompleteFunc;
+        Everest.Events.Level.OnEnter += EnterMapFunc;
 
-        On.Celeste.Player.Update += hook_OnPlayerUpdate;
-        On.Celeste.Player.IntroRespawnBegin += hook_OnPlayerRespawn;
+        On.Celeste.Player.Update += hook_PlayerUpdate;
         On.Celeste.Player.Die += hook_OnPlayerDeath;
+        On.Celeste.Player.IntroRespawnBegin += hook_OnPlayerRespawn;
         On.Celeste.Level.TransitionRoutine += Hook_TransitionRoutine;
+        On.Celeste.LevelLoader.StartLevel += Hook_StartMap;
+
+        On.Celeste.Editor.MapEditor.Update += Hook_UsingMapEditor;
+        On.Celeste.Strawberry.Added += Hook_StrawberryAddedToLevel;
+        On.Celeste.Strawberry.OnCollect += Hook_CollectStrawberry;
 
         SpeedrunToolIntegration.Load();
     }
@@ -94,14 +109,20 @@ public class EndHelperModule : EverestModule {
     // Unload the entirety of your mod's content. Free up any native resources.
     public override void Unload() {
         //On.Celeste.Level.TransitionRoutine -= Hook_TransitionRoutine;
-        Everest.Events.AssetReload.OnReloadLevel -= reupdateAllRooms;
-        Everest.Events.AssetReload.OnBeforeReload -= reloadBeginFunc;
-        Everest.Events.AssetReload.OnAfterReload -= reloadCompleteFunc;
+        Everest.Events.AssetReload.OnReloadLevel -= ReupdateAllRooms;
+        Everest.Events.AssetReload.OnBeforeReload -= ReloadBeginFunc;
+        Everest.Events.AssetReload.OnAfterReload -= ReloadCompleteFunc;
+        Everest.Events.Level.OnEnter -= EnterMapFunc;
 
-        On.Celeste.Player.Update -= hook_OnPlayerUpdate;
-        On.Celeste.Player.IntroRespawnBegin -= hook_OnPlayerRespawn;
+        On.Celeste.Player.Update -= hook_PlayerUpdate;
         On.Celeste.Player.Die -= hook_OnPlayerDeath;
+        On.Celeste.Player.IntroRespawnBegin -= hook_OnPlayerRespawn;
         On.Celeste.Level.TransitionRoutine -= Hook_TransitionRoutine;
+        On.Celeste.LevelLoader.StartLevel -= Hook_StartMap;
+
+        On.Celeste.Editor.MapEditor.Update -= Hook_UsingMapEditor;
+        On.Celeste.Strawberry.Added -= Hook_StrawberryAddedToLevel;
+        On.Celeste.Strawberry.OnCollect -= Hook_CollectStrawberry;
 
         SpeedrunToolIntegration.Unload();
     }
@@ -111,34 +132,73 @@ public class EndHelperModule : EverestModule {
 
     public static bool reloadComplete;
 
-    private static void reloadCompleteFunc(bool silent)
+    private static void ReloadCompleteFunc(bool silent)
     {
         reloadComplete = true;
     }
-    private static void reloadBeginFunc(bool silent)
+    private static void ReloadBeginFunc(bool silent)
     {
         reloadComplete = false;
     }
+    private static void EnterMapFunc(global::Celeste.Session session, bool fromSaveData)
+    {
+        // If first time (not fromSaveData), check Hook_StartMap since it has access to level
+        if (fromSaveData)
+        {
+            // Loading from save data
+            String roomName = session.Level;
 
+            // +1 death for save and quit. The reason why this is done here instead of everest onexit event is because
+            // as far as I can tell saving and returning to lobby with collabutil saves the session before onexit runs.
+            EndHelperModule.Session.roomStatDict_death[roomName] = Convert.ToInt32(EndHelperModule.Session.roomStatDict_death[roomName]) + 1;
+        }
+    }
 
-
-    private static void hook_OnPlayerUpdate(On.Celeste.Player.orig_Update orig, global::Celeste.Player self){
+    // Using player update instead of level update so nothing happens when the level is loading
+    // Level update screws with the timeSinceSessionReset.
+    private static void hook_PlayerUpdate(On.Celeste.Player.orig_Update orig, global::Celeste.Player self)
+    {
+        Level level = self.SceneAs<Level>();
+        //Logger.Log(LogLevel.Info, "EndHelper/main", $"CONSTANT UPDATE {timeSinceSessionReset}");
         if (EndHelperModule.Settings.FreeMultiroomWatchtower.Button.Pressed)
         {
             spawnMultiroomWatchtower();
         }
+
+        EndHelperModule.timeSinceSessionReset++; // Yeah i'm just going to increase it here because I am lazy
+        if (EndHelperModule.timeSinceSessionReset == 1)
+        {
+            // This occurs when reset happens
+            if (enableRoomSwapHooks)
+            {
+                ReupdateAllRooms(level); //This only exists so it updates when you respawn from debug. It umm still requires a transition/respawn to work lol
+            }
+        }
+        else if (EndHelperModule.timeSinceSessionReset > 1)
+        {
+            // Store data to use during reset
+        }
+
         orig(self);
     }
 
     public static PlayerDeadBody hook_OnPlayerDeath(On.Celeste.Player.orig_Die orig, global::Celeste.Player self, Vector2 direction, bool evenIfInvincible, bool registerDeathInStats)
     {
-        
+        Level level = self.SceneAs<Level>();
+
+        //Increment room death count.
+        level.Tracker.GetEntity<RoomStatisticsDisplayer>()?.OnDeath();
+
         return orig(self, direction, evenIfInvincible, registerDeathInStats);
     }
 
     public static void hook_OnPlayerRespawn(On.Celeste.Player.orig_IntroRespawnBegin orig, global::Celeste.Player self)
     {
+        Level level = self.SceneAs<Level>();
+
+        //Update the room-swap rooms. This is kind of here as a failsafe, and also otherwise warping with debug mode permamently empty the swap rooms.
         reupdateAllRooms();
+
         orig(self);
     }
 
@@ -146,11 +206,62 @@ public class EndHelperModule : EverestModule {
         On.Celeste.Level.orig_TransitionRoutine orig, global::Celeste.Level self, global::Celeste.LevelData next, Vector2 direction
     )
     {
-        if (enableRoomSwapHooks)
-        {
-            reupdateAllRooms(); //This only exists so it updates when you respawn from debug. It umm still requires a transition to work. screw debug
-        }
         yield return new SwapImmediately(orig(self, next, direction));
+    }
+
+    private static void Hook_StartMap(On.Celeste.LevelLoader.orig_StartLevel orig, global::Celeste.LevelLoader self)
+    {
+        Level level = self.Level;
+        level.Add(new RoomStatisticsDisplayer(level));
+        orig(self);
+    }
+
+    public static void Hook_UsingMapEditor(On.Celeste.Editor.MapEditor.orig_Update orig, global::Celeste.Editor.MapEditor self)
+    {
+        timeSinceSessionReset = 0;
+        lastSessionResetCause = SessionResetCause.Debug;
+        orig(self);
+    }
+
+    public class HomeRoom : Component
+    {
+        public string roomName;
+        public HomeRoom(String roomName) : base(true, false)
+        {
+            this.roomName = roomName;
+        }
+    }
+
+    private static void Hook_StrawberryAddedToLevel(On.Celeste.Strawberry.orig_Added orig, global::Celeste.Strawberry self, Scene scene)
+    {
+        Level level = scene as Level;
+        String roomName = level.Session.LevelData.Name;
+        self.Add(new HomeRoom(roomName));
+        //Logger.Log(LogLevel.Info, "EndHelper/main", $"added component to berry in {roomName}");
+
+        orig(self, scene);
+    }
+
+    private static void Hook_CollectStrawberry(On.Celeste.Strawberry.orig_OnCollect orig, global::Celeste.Strawberry self)
+    {
+        Level level = self.SceneAs<Level>();
+        string roomName;
+
+        string homeroom = self.Get<HomeRoom>().roomName;
+
+        if (homeroom == "")
+        {
+            roomName = level.Session.LevelData.Name;
+            //Logger.Log(LogLevel.Info, "EndHelper/main", $"can't get homeroom, using current room {roomName}");
+        } else
+        {
+            roomName = homeroom;
+            //Logger.Log(LogLevel.Info, "EndHelper/main", $"strawberry homeroom = {roomName}");
+        }
+
+        EndHelperModule.Session.roomStatDict_strawberries[roomName] = Convert.ToInt32(EndHelperModule.Session.roomStatDict_strawberries[roomName]) + 1;
+
+        orig(self);
     }
 
     #endregion
@@ -164,6 +275,10 @@ public class EndHelperModule : EverestModule {
             return;
         }
         if (level.Tracker.GetEntity<Player>() is not Player player)
+        {
+            return;
+        }
+        if (level.Tracker.GetEntity<MultiroomWatchtower>() is MultiroomWatchtower)
         {
             return;
         }
@@ -202,11 +317,11 @@ public class EndHelperModule : EverestModule {
             return;
         } else
         {
-            reupdateAllRooms(level);
+            ReupdateAllRooms(level);
         }
     }
 
-    public static void reupdateAllRooms(global::Celeste.Level level)
+    public static void ReupdateAllRooms(global::Celeste.Level level)
     {
         foreach (String gridID in EndHelperModule.Session.roomSwapOrderList.Keys)
         {
@@ -810,5 +925,20 @@ public class EndHelperModule : EverestModule {
         return JsonSerializer.Deserialize<T>(jsonString);
     }
 
+    /// <summary>
+    /// Converts a Timespan into h:mm:ss string
+    /// </summary>
+    /// <param name="time"></param>
+    /// <returns></returns>
+    public static string MinimalGameplayFormat(TimeSpan time)
+    {
+        if (time.TotalHours >= 1.0)
+        {
+            return (int)time.TotalHours + ":" + time.ToString("mm\\:ss");
+        }
+        return time.ToString("m\\:ss");
+    }
+
     #endregion
+
 }

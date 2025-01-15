@@ -1,10 +1,40 @@
 # ----------------------------------  Helper Stuff  ---------------------------------------
-modsettings_EndHelper_FreeMultiroomWatchtower=Spawn Multi-Room Watchtower
+
+EndHelper_Settings=Ender's Blender's Knobs & Dials
+
+modoptions_EndHelperModule_FreeMultiroomWatchtower=Spawn Multi-Room Watchtower!
+modoptions_EndHelperModule_OpenStatDisplayMenu=Show All Room Statistics
+
+modoptions_EndHelperModule_StatDisplay=Room Statistics Display
+modoptions_EndHelperModule_OffsetX=X-Offset
+modoptions_EndHelperModule_OffsetY=Y-Offset
+modoptions_EndHelperModule_Size=Display Size
+
+modoptions_EndHelperModule_xJustification=Alignment
+modoptions_EndHelperModule_xJustification_Left=Left
+modoptions_EndHelperModule_xJustification_Center=Center
+modoptions_EndHelperModule_xJustification_Right=Right
+
+modoptions_EndHelperModule_ShowRoomName=Show Room Name
+modoptions_EndHelperModule_ShowDeaths=Show Deaths
+modoptions_EndHelperModule_ShowTimeSpent=Show Time Spent
+modoptions_EndHelperModule_ShowStrawberries=Show Strawberries
+
+modoptions_EndHelperModule_PauseOption=Pause Timer When
+modoptions_EndHelperModule_PauseOption_None=Never
+modoptions_EndHelperModule_PauseOption_Pause=Game Paused
+modoptions_EndHelperModule_PauseOption_AFK=AFK (No input for 30s)
+modoptions_EndHelperModule_PauseOption_Both=Game Paused or AFK
+
+EndHelper_Dialog_RoomStatisticsDisplayer_CopiedToClipboard=Copied Statistics to Clipboard
+EndHelper_Dialog_MultiroomWatchtower_FreeCameraON=Unlock Camera: ON
+EndHelper_Dialog_MultiroomWatchtower_FreeCameraOFF=Unlock Camera: OFF
 
 # ----------------------------------  Map Stuff  ----------------------------------------
 
 EndHelperTest=Ender's Blender
 EndHelperTest_EndHelperTestMap=Test Jar
+poem_EndHelperTest_EndHelperTestMap_A= 
 
 
 EndHelperTest_Tutorial_Misc_TileEntity=Tile Entity
@@ -26,8 +56,8 @@ Without them, dying could respawn you in the template room instead of the swappe
 
 EndHelperTest_Tutorial_RoomSwap_MapTutorial=The map consists of a background, outline that labels the current position, and room icons.
 The background and room icons will automatically be spaced depending on the size of the texture.
-The icons should be named {# ffff66}{iconPrefix}{#}{# 0099ff}{row}{#}{# 00ff00}{column}{#}, or {# F94A4A}{levelNumber}{#}{# ffff66}{iconprefix}{#}{# 0099ff}{row}{#}{# 00ff00}{column}{#} for levels above 0. The default level (0) should not have a prefix.
-To have animated map, add _{# F94A4A}frameNumber{#} to the end of the texture's name, including the 0th.
+The icons should be named {# ffff66}(iconPrefix){#}{# 0099ff}(row){#}{# 00ff00}(column){#}, or {# F94A4A}(levelNumber){#}{# ffff66}(iconPrefix){#}{# 0099ff}(row){#}{# 00ff00}(column){#} for levels above 0. The default level (0) should not have a prefix.
+To have animated map, add _{# F94A4A}(frameNumber){#} to the end of the texture's name, including the 0th.
 In the example here, the left scroll resets the level to 0, while the right scroll increases it by 1. The row 1 col 1 map is animated for level 1.
 Both are also set to respawn when you leave the room.
 
@@ -61,7 +91,36 @@ EndHelperTest_Tutorial_RoomSwap_RespawnForceSameRoomTrigger_Desc=Add to every ro
 EndHelperTest_Tutorial_DeathWarp_Category=Death-Warp
 
 
+
+# ----------------------------------  Misc  -------------------------------------------
+EndHelperTest_Tutorial_RoomStatisticsCountersBirb=Counters
+EndHelperTest_Tutorial_RoomStatisticsCounters=The mod tracks the number of deaths, time spent, and berries collected in each room.
+These can be accessed from the counters {# ffff66}EndHelper_RoomStatistics_{# F94A4A}(currentRoomName){#}_death{#}, {# ffff66}EndHelper_RoomStatistics_{# F94A4A}(currentRoomName){#}_timer{#} (gives time in seconds), and {# ffff66}EndHelper_RoomStatistics_{# F94A4A}(currentRoomName){#}_strawberries{#}.
+
+
 # ----------------------------------  Credits  ----------------------------------------
 endhelper_credits={~}Additional credits:{/~}
 The sprites for the Room-Swap map, map upgrade, and box and were by Pakyjenace.
-A lot of code was blatantly plagur-{0.5} i mean modified from SpeedrunTools and VivHelper.
+A lot of code was blatantly plagur-{0.5} i mean modified from SpeedrunTools, VivHelper, and DeathTracker
+
+
+
+# NOTES:
+# The # Symbol at the start of a line counts as a Comment. To include in dialog, use a \#
+# The . Symbol will cause a pause unless escaped with \. (ex: Mr. Oshiro has a pause, Mr\. Oshiro does not)
+# Newlines automatically create a Page Break, unless there is an {n} command on the previous line
+# Commands: Anything inside of curly braces {...} is a command and should not be translated.
+
+# Inline Text Commands:
+# {~}wavy text{/~}
+# {!}impact text{/!}
+# {>> x}changes speed at which characters are displayed{>>}
+# {# 000000}this text is black{#} (uses HEX color values)
+# {+MENU_BEGIN} inserts the dialog from the MENU_BEGIN value (in English, "CLIMB")
+# {n} creates a newline, without a page break
+# {0.5} creates a 0.5 second pause
+# {big}this text is large{/big}
+
+# Gameplay Control Commands (should never change)
+# {trigger x} this triggers an in-game event
+# {anchor} controls the visual position of the textbox in-game

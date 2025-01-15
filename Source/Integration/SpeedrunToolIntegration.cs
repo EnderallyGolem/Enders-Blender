@@ -1,5 +1,7 @@
 ﻿using Celeste.Mod.EndHelper;
 using MonoMod.RuntimeDetour;
+
+using Monocle;
 using System;
 using System.Collections.Generic;
 using System.Data.Common;
@@ -8,6 +10,13 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using Celeste.Mod.SpeedrunTool.SaveLoad;
+using Celeste.Mod.EndHelper.Entities.Misc;
+using IL.Monocle;
+using static Celeste.Mod.EndHelper.Entities.Misc.RoomStatisticsDisplayer;
+using System.Reflection.PortableExecutable;
+using System.Collections;
+using System.Collections.Specialized;
+using static Celeste.Mod.EndHelper.EndHelperModule;
 
 namespace Celeste.Mod.EndHelper.Integration
 {
@@ -16,6 +25,7 @@ namespace Celeste.Mod.EndHelper.Integration
 
         private static Type StateManager;
         private static Type TeleportRoomUtils;
+
         private static MethodInfo StateManager_SaveState;
         private static MethodInfo StateManager_LoadState;
         private static MethodInfo TeleportRoomUtils_TeleportTo;
@@ -44,11 +54,15 @@ namespace Celeste.Mod.EndHelper.Integration
                 TeleportRoomUtils = Type.GetType("Celeste.Mod.SpeedrunTool.TeleportRoom.TeleportRoomUtils,SpeedrunTool");
                 TeleportRoomUtils_TeleportTo = TeleportRoomUtils.GetMethod("TeleportTo", BindingFlags.NonPublic | BindingFlags.Static);
 
+
                 // Set up hooks
                 Hook_StateManager_SaveState = new Hook(StateManager_SaveState,
                     typeof(SpeedrunToolIntegration).GetMethod("OnSaveState", BindingFlags.NonPublic | BindingFlags.Static));
                 Hook_StateManager_LoadState = new Hook(StateManager_LoadState,
                     typeof(SpeedrunToolIntegration).GetMethod("OnLoadState", BindingFlags.NonPublic | BindingFlags.Static));
+                Hook_TeleportRoomUtils_TeleportTo = new Hook(TeleportRoomUtils_TeleportTo,
+                    typeof(SpeedrunToolIntegration).GetMethod("OnTeleportTo", BindingFlags.NonPublic | BindingFlags.Static));
+
                 Hook_TeleportRoomUtils_TeleportTo = new Hook(TeleportRoomUtils_TeleportTo,
                     typeof(SpeedrunToolIntegration).GetMethod("OnTeleportTo", BindingFlags.NonPublic | BindingFlags.Static));
 
@@ -77,18 +91,33 @@ namespace Celeste.Mod.EndHelper.Integration
 
         private static bool OnLoadState(Func<object, bool, bool> orig, object stateManager, bool tas)
         {
+            // +1 to death count =)
+            Level preloadLevel = Monocle.Engine.Scene as Level;
+            string reloadRoomName = preloadLevel.Session.LevelData.Name;
+
+            if (preloadLevel.Tracker.GetEntity<Player>() is Player player)
+            {
+                if (!player.Dead) {
+                    // Add +1 death when loading state, unless the player is already dead
+                    EndHelperModule.externalRoomStatDict_death[reloadRoomName] = Convert.ToInt32(EndHelperModule.externalRoomStatDict_death[reloadRoomName]) + 1;
+                }
+            }
+
             bool result = orig(stateManager, tas);
-            Level savedLevel = SpeedrunTool.SaveLoad.StateManager.Instance.SavedLevel;
-            EndHelperModule.reupdateAllRooms(savedLevel);
+
+            EndHelperModule.timeSinceSessionReset = 0; // Call for reset
+            lastSessionResetCause = SessionResetCause.LoadState;
+
             return result;
         }
 
         private static void OnTeleportTo(Action<Session, bool> orig, Session session, bool fromHistory)
         {
+            //Logger.Log(LogLevel.Info, "EndHelper/SpeedrunToolIntegration", $"onteleport beofre");
             orig(session, fromHistory);
         }
 
 #pragma warning restore IDE0051  // Private method is unused
 
+        }
     }
-}

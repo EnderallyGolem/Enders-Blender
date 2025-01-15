@@ -18,6 +18,8 @@ using Celeste.Mod.Core;
 using static Celeste.GaussianBlur;
 using static Celeste.WaveDashPage;
 using Celeste.Mod.SpeedrunTool.Message;
+using Celeste.Mod.SpeedrunTool.SaveLoad;
+using Celeste.Mod.SpeedrunTool;
 
 
 
@@ -633,19 +635,30 @@ public class MultiroomWatchtower : Entity
         //
         // Stay within this while loop as long as viewing binoculars
         //
-        while (!Input.MenuCancel.Pressed && !Input.Pause && !Input.ESC && interacting /*&& !Input.MenuConfirm.Pressed && !Input.Dash.Pressed && !Input.Jump.Pressed*/)
+        while (!Input.MenuCancel.Pressed && !Input.Pause && !Input.ESC && interacting
+            /*&& !Input.MenuConfirm.Pressed && !Input.Dash.Pressed && !Input.Jump.Pressed*/)
         {
+
+            // Force these to be false. In case other stuff changes these.
+            player.Sprite.Visible = false;
+            player.Hair.Visible = false;
+            player.Active = false;
+            player.Collidable = false;
+            player.Collider = new Hitbox(-9999f, -9999f, 0f, 0f);
+
             // Solely for the keybind multiroom bino
             if (canToggleBlocker && EndHelperModule.Settings.FreeMultiroomWatchtower.Button.Pressed)
             {
                 ignoreBlocker = !ignoreBlocker;
+                string message;
                 if (ignoreBlocker)
                 {
-                    Tooltip.Show("Unlock Camera: ON", 1.5f);
+                    message = Dialog.Get("EndHelper_Dialog_MultiroomWatchtower_FreeCameraON");
                 } else
                 {
-                    Tooltip.Show("Unlock Camera: OFF", 1.5f);
+                    message = Dialog.Get("EndHelper_Dialog_MultiroomWatchtower_FreeCameraOFF");
                 }
+                Tooltip.Show(message, 1.5f);
             }
 
 
@@ -840,13 +853,13 @@ public class MultiroomWatchtower : Entity
                     Rectangle checkRect = new Rectangle(-1, -1, 2, 2);
                     if (lookDirection.X != 0)
                     {
-                        checkRect.Y = -24;
-                        checkRect.Height = 48;
+                        checkRect.Y = -40;
+                        checkRect.Height = 80;
                     }
                     if (lookDirection.Y != 0)
                     {
-                        checkRect.X = -40;
-                        checkRect.Width = 80;
+                        checkRect.X = -50;
+                        checkRect.Width = 100;
                     }
                     LevelData aimRoomData = findOverlapRoom(roomAimPos, edgeRoomDataList, checkRect);
                     return aimRoomData;
@@ -865,6 +878,7 @@ public class MultiroomWatchtower : Entity
                     checkRect = new Rectangle(-1, -1, 2, 2);
                 }
 
+                Rectangle checkRectHalfAbsolute = new Rectangle((int)roomAimPos.X + checkRect.Value.Left/2, (int)roomAimPos.Y + checkRect.Value.Top/2, checkRect.Value.Width/2, checkRect.Value.Height/2);
                 Rectangle checkRectAbsolute = new Rectangle((int)roomAimPos.X + checkRect.Value.Left, (int)roomAimPos.Y + checkRect.Value.Top, checkRect.Value.Width, checkRect.Value.Height);
 
                 // Check the exact point first - so the selected room is the one that makes more sense if there's multiple available
@@ -879,7 +893,17 @@ public class MultiroomWatchtower : Entity
                     }
                 }
 
-                // If no room found, check in the rect instead
+                // If no room found, check half the size of the rect instead. This is so rooms closer to the rect are "prioritised" if there are multiple.
+                foreach (LevelData levelData in edgeRoomDataList)
+                {
+                    Rectangle levelDataBounds = levelData.Bounds;
+                    if (checkRectHalfAbsolute.Intersects(levelDataBounds))
+                    {
+                        return levelData; //Found room that this position aims at
+                    }
+                }
+
+                // If STILL no room found, check in the rect instead
                 foreach (LevelData levelData in edgeRoomDataList)
                 {
                     Rectangle levelDataBounds = levelData.Bounds;
@@ -889,7 +913,7 @@ public class MultiroomWatchtower : Entity
                     }
                 }
 
-                // STILL no room found
+                // if **STILL** no room found, return null
                 return null;
             }
 
