@@ -160,7 +160,6 @@ public class EndHelperModule : EverestModule {
     private static void hook_LevelUpdate(On.Celeste.Level.orig_Update orig, global::Celeste.Level self)
     {
         Level level = self;
-        Logger.Log(LogLevel.Info, "EndHelper/main", $"CONSTANT UPDATE {timeSinceSessionReset} | {level.Paused}");
         if (EndHelperModule.Settings.FreeMultiroomWatchtower.Button.Pressed)
         {
             spawnMultiroomWatchtower();
@@ -795,7 +794,6 @@ public class EndHelperModule : EverestModule {
                         follower.Entity.Position += transitionOffset;
                     }
                 }
-
                 Logger.Log(LogLevel.Info, "EndHelper/Main", $"Teleporting from {currentRoomData.Name} >> {teleportToRoomName}. Pos change: ({playerOriginalPos.X} {playerOriginalPos.Y} => {player.Position.X} {player.Position.Y}) - change by ({(toRoomPos - currentRoomPos).X} {(toRoomPos - currentRoomPos).Y}), Transition direction: ({transitionDirection.X} {transitionDirection.Y})");
             }
         }
