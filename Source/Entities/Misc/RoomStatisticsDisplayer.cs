@@ -259,30 +259,30 @@ public class RoomStatisticsDisplayer : Entity
             int textWidth = 0;
             if (timeSpent.TotalHours < 1)
             {
-                textWidth = (int)((ActiveFont.WidthToNextLine($"X", 0) * timeString.Length + ActiveFont.WidthToNextLine($"XX", 0)) * displayScale);
+                textWidth = (int)((ActiveFont.WidthToNextLine($"X", 0) * timeString.Length + ActiveFont.WidthToNextLine($"XX|", 0)) * displayScale);
             }
             else
             {
-                textWidth = (int)((ActiveFont.WidthToNextLine($"X", 0) * timeString.Length + ActiveFont.WidthToNextLine($"X:", 0)) * displayScale);
+                textWidth = (int)((ActiveFont.WidthToNextLine($"X", 0) * timeString.Length + ActiveFont.WidthToNextLine($"X:|", 0)) * displayScale);
             }
             displayInfoList.Add(new DisplayInfo("timer", displayMsg, textWidth));
         }
         if (showAll || EndHelperModule.Settings.StatDisplay.ShowStrawberries)
         {
-            String displayMsg = "";
             int mapBerryCount = level.Session.MapData.DetectedStrawberries;
             if (strawberriesNum > 0 || (showTotalMapBerryCount && mapBerryCount > 0)) // If player (incl gold/moon) or map (excl gold/moon) has strawberries
             {
-                displayMsg += $":EndHelper/uioutline_strawberry:";
+                String displayMsgNoEmote = " ";
                 if (strawberriesNum >= 2 || showTotalMapBerryCount) // Show num if >=2 or menu
                 {
-                    displayMsg += $" {strawberriesNum}";
+                    displayMsgNoEmote += $"{strawberriesNum}";
                 }
                 if (showTotalMapBerryCount && (mapBerryCount > 0 || strawberriesNum > 0)) // Show total if menu && map/player has strawberries
                 {
-                    displayMsg += $"/{mapBerryCount}";
+                    displayMsgNoEmote += $"/{mapBerryCount}";
                 }
-                displayInfoList.Add(new DisplayInfo("strawberries", displayMsg, (int)(ActiveFont.WidthToNextLine($"{strawberriesNum}XXX|", 0) * displayScale)));
+                String displayMsg = $":EndHelper/uioutline_strawberry:{displayMsgNoEmote}";
+                displayInfoList.Add(new DisplayInfo("strawberries", displayMsg, (int)(ActiveFont.WidthToNextLine($"{displayMsgNoEmote}XXX", 0) * displayScale)));
             }
         }
         if (suffix != "")
