@@ -62,8 +62,8 @@ public class RoomStatisticsDisplayer : Entity
         {
             currentRoomName = level.Session.LevelData.Name;
         }
-        
 
+        //Logger.Log(LogLevel.Info, "EndHelper/RoomStatisticsDisplayer", $"straw count {level.Session.Strawberries.Count} {level.Session.MapData.DetectedStrawberries}");
         //Logger.Log(LogLevel.Info, "EndHelper/RoomStatisticsDisplayer", $"session reset time {EndHelperModule.timeSinceSessionReset}");
 
         // If something wacky happens (aka if debug mode is used), grab data from there. Otherwise export data there.
@@ -207,8 +207,9 @@ public class RoomStatisticsDisplayer : Entity
         }
     }
 
-    void showStats(int displayXPos, int displayYPos, float displayScale, Color timerColor, bool yCentered, float xJustification, bool showAll, bool hideRoomName, bool showBerryCountIfOne, string prefix, string suffix, int deathNum, long timerNum, int strawberriesNum)
+    void showStats(int displayXPos, int displayYPos, float displayScale, Color timerColor, bool yCentered, float xJustification, bool showAll, bool hideRoomName, bool showTotalMapBerryCount, string prefix, string suffix, int deathNum, long timerNum, int strawberriesNum)
     {
+        Level level = SceneAs<Level>();
         Vector2 justification = new Vector2(0, yCentered ? 0.5f : 0f);
         List<DisplayInfo> displayInfoList = [];
 
@@ -269,12 +270,17 @@ public class RoomStatisticsDisplayer : Entity
         if (showAll || EndHelperModule.Settings.StatDisplay.ShowStrawberries)
         {
             String displayMsg = "";
-            if (strawberriesNum > 0)
+            int mapBerryCount = level.Session.MapData.DetectedStrawberries;
+            if (strawberriesNum > 0 || (showTotalMapBerryCount && mapBerryCount > 0)) // If player (incl gold/moon) or map (excl gold/moon) has strawberries
             {
                 displayMsg += $":EndHelper/uioutline_strawberry:";
-                if (strawberriesNum >= 2 || showBerryCountIfOne)
+                if (strawberriesNum >= 2 || showTotalMapBerryCount) // Show num if >=2 or menu
                 {
                     displayMsg += $" {strawberriesNum}";
+                }
+                if (showTotalMapBerryCount && (mapBerryCount > 0 || strawberriesNum > 0)) // Show total if menu && map/player has strawberries
+                {
+                    displayMsg += $"/{mapBerryCount}";
                 }
                 displayInfoList.Add(new DisplayInfo("strawberries", displayMsg, (int)(ActiveFont.WidthToNextLine($"{strawberriesNum}XXX|", 0) * displayScale)));
             }
