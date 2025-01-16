@@ -189,7 +189,7 @@ public class RoomStatisticsDisplayer : Entity
             xJustification = 1f;
         }
 
-        showStats(displayXPos, displayYPos, displayScale, timerColor, false, xJustification, false, false, "", "", deathNum, timerNum, strawberriesNum);
+        showStats(displayXPos, displayYPos, displayScale, timerColor, false, xJustification, false, false, false, "", "", deathNum, timerNum, strawberriesNum);
 
         base.Render();
     }
@@ -207,7 +207,7 @@ public class RoomStatisticsDisplayer : Entity
         }
     }
 
-    void showStats(int displayXPos, int displayYPos, float displayScale, Color timerColor, bool yCentered, float xJustification, bool showAll, bool hideRoomName, string prefix, string suffix, int deathNum, long timerNum, int strawberriesNum)
+    void showStats(int displayXPos, int displayYPos, float displayScale, Color timerColor, bool yCentered, float xJustification, bool showAll, bool hideRoomName, bool showBerryCountIfOne, string prefix, string suffix, int deathNum, long timerNum, int strawberriesNum)
     {
         Vector2 justification = new Vector2(0, yCentered ? 0.5f : 0f);
         List<DisplayInfo> displayInfoList = [];
@@ -272,7 +272,7 @@ public class RoomStatisticsDisplayer : Entity
             if (strawberriesNum > 0)
             {
                 displayMsg += $":EndHelper/uioutline_strawberry:";
-                if (strawberriesNum >= 2)
+                if (strawberriesNum >= 2 || showBerryCountIfOne)
                 {
                     displayMsg += $" {strawberriesNum}";
                 }
@@ -445,7 +445,7 @@ public class RoomStatisticsDisplayer : Entity
         }
 
         // Total Stats
-        showStats(100, 1010, 0.7f, Color.White, true, 0, true, true, "Total: ", "", totalDeaths, totalTimer, totalStrawberries);
+        showStats(100, 1010, 0.7f, Color.White, true, 0, true, true, true, "Total: ", "", totalDeaths, totalTimer, totalStrawberries);
 
         //ActiveFont.DrawOutline(displayTotalStatsString, new Vector2(totalXpos, 1010), new Vector2(0f, 0.5f), new Vector2(0.7f, 0.7f), Color.White, 2f, Color.Black);
 
