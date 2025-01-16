@@ -15,7 +15,7 @@ using Celeste.Mod.SpeedrunTool.Message;
 using static Celeste.Mod.UI.CriticalErrorHandler;
 using static Celeste.Mod.EndHelper.Entities.Misc.RoomStatisticsDisplayer;
 using static Celeste.Mod.EndHelper.EndHelperModuleSettings.StatDisplaySubMenu;
-
+using NETCoreifier;
 
 
 namespace Celeste.Mod.EndHelper.Entities.Misc;
@@ -116,7 +116,7 @@ public class RoomStatisticsDisplayer : Entity
         if (allowIncrementTimer)
         {
             // OrderedDict do not handle types well, save & quit converts them into strings for some reason, hence the really dumb Convert.ToInts
-            EndHelperModule.Session.roomStatDict_timer[currentRoomName] = TimeSpan.FromSeconds(Engine.RawDeltaTime).Ticks + Convert.ToInt64(EndHelperModule.Session.roomStatDict_timer[currentRoomName]);
+            EndHelperModule.Session.roomStatDict_timer[currentRoomName] = TimeSpanShims.FromSeconds((double)Engine.RawDeltaTime).Ticks + Convert.ToInt64(EndHelperModule.Session.roomStatDict_timer[currentRoomName]);
         }
 
         //AFK Checker

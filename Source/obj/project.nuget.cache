@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "xbtkfh502Pc=",
+  "dgSpecHash": "sYsaA+Ew340=",
   "success": true,
-  "projectFilePath": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Celeste\\Mods\\EndBlender\\Source\\EndHelper.csproj",
+  "projectFilePath": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Celeste\\Mods\\EndersBlender\\Source\\EndHelper.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\user\\.nuget\\packages\\asmresolver\\6.0.0-beta.1\\asmresolver.6.0.0-beta.1.nupkg.sha512",
     "C:\\Users\\user\\.nuget\\packages\\asmresolver.dotnet\\6.0.0-beta.1\\asmresolver.dotnet.6.0.0-beta.1.nupkg.sha512",

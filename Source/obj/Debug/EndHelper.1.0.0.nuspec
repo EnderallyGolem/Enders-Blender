@@ -5,12 +5,12 @@
     <version>1.0.0</version>
     <authors>EndHelper</authors>
     <description>Package Description</description>
-    <repository type="git" commit="d8e13eb62980450cce1a0f3654d6002bcf91f14e" />
+    <repository type="git" commit="57031be9c1216e1096d192a3cb9e56bba671fd02" />
     <dependencies>
       <group targetFramework="net7.0" />
     </dependencies>
   </metadata>
   <files>
-    <file src="C:\Program Files (x86)\Steam\steamapps\common\Celeste\Mods\EndBlender\Source\bin\Debug\net7.0\EndHelper.dll" target="lib\net7.0\EndHelper.dll" />
+    <file src="C:\Program Files (x86)\Steam\steamapps\common\Celeste\Mods\EndersBlender\Source\bin\Debug\net7.0\EndHelper.dll" target="lib\net7.0\EndHelper.dll" />
   </files>
 </package>
