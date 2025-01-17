@@ -2,9 +2,11 @@
 
 EndHelper_Settings=Ender's Blender's Knobs & Dials
 
-modoptions_EndHelperModule_FreeMultiroomWatchtower=Spawn Multi-Room Watchtower!
-modoptions_EndHelperModule_OpenStatDisplayMenu=Show All Room Statistics
+modoptions_EndHelperModule_FreeMultiroomWatchtower=Spawn Multi-Room Watchtower
+modoptions_EndHelperModule_OpenStatDisplayMenu=Open Room Statistics Menu
+modoptions_EndHelperModule_QuickRetry=Quick Retry
 
+# Room Display Stuff
 modoptions_EndHelperModule_StatDisplay=Room Statistics Display
 modoptions_EndHelperModule_OffsetX=X-Offset
 modoptions_EndHelperModule_OffsetY=Y-Offset
@@ -19,12 +21,17 @@ modoptions_EndHelperModule_ShowRoomName=Show Room Name
 modoptions_EndHelperModule_ShowDeaths=Show Deaths
 modoptions_EndHelperModule_ShowTimeSpent=Show Time Spent
 modoptions_EndHelperModule_ShowStrawberries=Show Strawberries
+modoptions_EndHelperModule_ShowStrawberries_Desc=Only shown when at least one strawberry is collected.
 
 modoptions_EndHelperModule_PauseOption=Pause Timer When
 modoptions_EndHelperModule_PauseOption_None=Never
 modoptions_EndHelperModule_PauseOption_Pause=Game Paused
 modoptions_EndHelperModule_PauseOption_AFK=AFK (No input for 30s)
 modoptions_EndHelperModule_PauseOption_Both=Game Paused or AFK
+
+modoptions_EndHelperModule_MenuMulticolor=Multi-Colored Menu
+modoptions_EndHelperModule_MenuMulticolor_Desc=The Room stats menu's background will be dependent on the room color index.
+
 
 EndHelper_Dialog_RoomStatisticsDisplayer_CopiedToClipboard=Copied Statistics to Clipboard
 EndHelper_Dialog_MultiroomWatchtower_FreeCameraON=Unlock Camera: ON

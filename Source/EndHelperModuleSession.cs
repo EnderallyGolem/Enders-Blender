@@ -34,4 +34,5 @@ public class EndHelperModuleSession : EverestModuleSession
     public OrderedDictionary roomStatDict_death = new OrderedDictionary { }; // <string, int>
     public OrderedDictionary roomStatDict_timer = new OrderedDictionary { }; // <string, long>
     public OrderedDictionary roomStatDict_strawberries = new OrderedDictionary { }; // <string, int>
+    public OrderedDictionary roomStatDict_colorIndex = new OrderedDictionary { }; // <string, int>
 }

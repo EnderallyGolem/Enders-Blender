@@ -7,6 +7,7 @@ namespace Celeste.Mod.EndHelper;
 public class EndHelperModuleSettings : EverestModuleSettings {
     public ButtonBinding FreeMultiroomWatchtower { get; set; }
     public ButtonBinding OpenStatDisplayMenu { get; set; }
+    public ButtonBinding QuickRetry { get; set; }
 
     // Room Statistics Displayer
 
@@ -20,6 +21,7 @@ public class EndHelperModuleSettings : EverestModuleSettings {
         [DefaultValue(false)]
         public bool ShowTimeSpent { get; set; }
         [DefaultValue(false)]
+        [SettingSubText("modoptions_EndHelperModule_ShowStrawberries_Desc")]
         public bool ShowStrawberries { get; set; }
 
         // offset xy and scale
@@ -40,11 +42,16 @@ public class EndHelperModuleSettings : EverestModuleSettings {
         public int Size { get; set; }
 
 
-
         public enum PauseScenarioEnum { None, Pause, AFK, Both }
 
         [DefaultValue(PauseScenarioEnum.Pause)]
         public PauseScenarioEnum PauseOption { get; set; }
+
+
+        [DefaultValue(true)]
+        [SettingSubText("modoptions_EndHelperModule_MenuMulticolor_Desc")]
+        public bool MenuMulticolor { get; set; }
     }
+
     public StatDisplaySubMenu StatDisplay { get; set; } = new();
 }

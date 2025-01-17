@@ -46,6 +46,7 @@ public class RoomStatisticsDisplayer : Entity
     {
         EndHelperModule.Session.roomStatDict_death = EndHelperModule.externalRoomStatDict_death; // Import
         EndHelperModule.Session.roomStatDict_timer = EndHelperModule.externalRoomStatDict_timer;
+        EndHelperModule.Session.roomStatDict_colorIndex = EndHelperModule.externalRoomStatDict_colorIndex;
 
         // Only keep for debug. Load state also un-collects the berry so let the berry count be loaded.
         if (EndHelperModule.lastSessionResetCause == SessionResetCause.Debug)
@@ -76,6 +77,7 @@ public class RoomStatisticsDisplayer : Entity
             EndHelperModule.externalRoomStatDict_death = EndHelperModule.Session.roomStatDict_death; // Export
             EndHelperModule.externalRoomStatDict_timer = EndHelperModule.Session.roomStatDict_timer;
             EndHelperModule.externalRoomStatDict_strawberries = EndHelperModule.Session.roomStatDict_strawberries;
+            EndHelperModule.externalRoomStatDict_colorIndex = EndHelperModule.Session.roomStatDict_colorIndex;
         }
 
         //Increment time spent in room
@@ -103,10 +105,11 @@ public class RoomStatisticsDisplayer : Entity
         }
 
         // Ensure key. Strawberries are seperated as they are undone during load state unlike the rest.
-        if (!EndHelperModule.Session.roomStatDict_death.Contains(currentRoomName) || !EndHelperModule.Session.roomStatDict_timer.Contains(currentRoomName))
+        if (!EndHelperModule.Session.roomStatDict_death.Contains(currentRoomName) || !EndHelperModule.Session.roomStatDict_timer.Contains(currentRoomName) || !EndHelperModule.Session.roomStatDict_colorIndex.Contains(currentRoomName))
         {
             EndHelperModule.Session.roomStatDict_death[currentRoomName] = (int)0;
             EndHelperModule.Session.roomStatDict_timer[currentRoomName] = (long)0;
+            EndHelperModule.Session.roomStatDict_colorIndex[currentRoomName] = (int)level.Session.LevelData.EditorColorIndex;
         }
         if (!EndHelperModule.Session.roomStatDict_strawberries.Contains(currentRoomName))
         {
@@ -189,7 +192,11 @@ public class RoomStatisticsDisplayer : Entity
             xJustification = 1f;
         }
 
-        showStats(displayXPos, displayYPos, displayScale, timerColor, false, xJustification, false, false, false, "", "", deathNum, timerNum, strawberriesNum);
+        if (!statisticsGuiOpen)
+        {
+            showStats(displayXPos, displayYPos, displayScale, timerColor, 255, false, xJustification, false, false, false, "", "", deathNum, timerNum, strawberriesNum);
+        }
+        
 
         base.Render();
     }
@@ -207,7 +214,7 @@ public class RoomStatisticsDisplayer : Entity
         }
     }
 
-    void showStats(int displayXPos, int displayYPos, float displayScale, Color timerColor, bool yCentered, float xJustification, bool showAll, bool hideRoomName, bool showTotalMapBerryCount, string prefix, string suffix, int deathNum, long timerNum, int strawberriesNum)
+    void showStats(int displayXPos, int displayYPos, float displayScale, Color timerColor, int alpha, bool yCentered, float xJustification, bool showAll, bool hideRoomName, bool showTotalMapBerryCount, string prefix, string suffix, int deathNum, long timerNum, int strawberriesNum)
     {
         Level level = SceneAs<Level>();
         Vector2 justification = new Vector2(0, yCentered ? 0.5f : 0f);
@@ -314,11 +321,13 @@ public class RoomStatisticsDisplayer : Entity
 
     public void OnDeath()
     {
+        Level level = SceneAs<Level>();
         // Check if dict has current room, just in case.
-        if (!EndHelperModule.Session.roomStatDict_death.Contains(currentRoomName) || !EndHelperModule.Session.roomStatDict_timer.Contains(currentRoomName))
+        if (!EndHelperModule.Session.roomStatDict_death.Contains(currentRoomName) || !EndHelperModule.Session.roomStatDict_timer.Contains(currentRoomName) || !EndHelperModule.Session.roomStatDict_colorIndex.Contains(currentRoomName))
         {
             EndHelperModule.Session.roomStatDict_death[currentRoomName] = (int)0;
             EndHelperModule.Session.roomStatDict_timer[currentRoomName] = (long)0;
+            EndHelperModule.Session.roomStatDict_colorIndex[currentRoomName] = (int)level.Session.LevelData.EditorColorIndex;
         }
         if (!EndHelperModule.Session.roomStatDict_strawberries.Contains(currentRoomName))
         {
@@ -333,7 +342,12 @@ public class RoomStatisticsDisplayer : Entity
         MTexture backgroundTexture = GFX.Gui["misc/EndHelper/statGUI_background"];
         MTexture backgroundTextureShort = GFX.Gui["misc/EndHelper/statGUI_background_short"];
         MTexture pageArrow = GFX.Gui["dotarrow_outline"];
-        const int roomsPerColumn = 16;
+        if (!EndHelperModule.Settings.StatDisplay.MenuMulticolor)
+        {
+            backgroundTexture = GFX.Gui["misc/EndHelper/statGUI_background_purple"];
+            backgroundTextureShort = GFX.Gui["misc/EndHelper/statGUI_background_short_purple"];
+        }
+            const int roomsPerColumn = 16;
         int lastRowShown = firstRowShown + 2*roomsPerColumn;
 
         int currentItem = 0;
@@ -362,6 +376,27 @@ public class RoomStatisticsDisplayer : Entity
 
 
         const int bufferX = 10;
+
+        Session session = SceneAs<Level>().Session;
+        // Map Name Header
+        String mapName = session.Area.GetSID();
+        if (mapName.StartsWith("Celeste/"))
+        {
+            int mapID = session.Area.ID;
+            mapName = $"AREA_{mapID}";
+        }
+        mapName = mapName.DialogCleanOrNull(Dialog.Languages["english"]) ?? mapName;
+
+        AreaMode side = session.Area.Mode;
+        if (side == AreaMode.BSide)
+        {
+            mapName += " B";
+        } else if (side == AreaMode.CSide)
+        {
+            mapName += " C";
+        }
+        ActiveFont.DrawOutline($"{mapName}", new Vector2(980, 5), new Vector2(0.5f, 0f), new Vector2(0.7f, 0.7f), Color.Orange, 2f, Color.Black);
+
 
         // The table headers (aka just death and timer icons)
         ActiveFont.DrawOutline(":EndHelper/uioutline_skull:", new Vector2(startX_death + width_death / 2, startY - heightBetweenRows), new Vector2(0.5f, 0f), new Vector2(0.7f, 0.7f), Color.White, 2f, Color.Black);
@@ -420,13 +455,33 @@ public class RoomStatisticsDisplayer : Entity
                     col2BufferCurrent = col2Buffer;
                 }
 
-                backgroundTexture.Draw(new Vector2(startX + col2BufferCurrent, startY + heightBetweenRows * displayRow));
+                Color bgColor;
+                if (EndHelperModule.Settings.StatDisplay.MenuMulticolor)
+                {
+                    int colorIndex = Convert.ToInt32(EndHelperModule.Session.roomStatDict_colorIndex[roomName]);
+                    switch (colorIndex)
+                    {
+                        case 0: bgColor = Color.Gray; break;
+                        case 1: bgColor = Color.DarkOrange; break;
+                        case 2: bgColor = Color.LimeGreen; break;
+                        case 3: bgColor = Color.Cyan; break;
+                        case 4: bgColor = Color.Blue; break;
+                        case 5: bgColor = Color.Magenta; break;
+                        case 6: bgColor = Color.DarkRed; break;
+                        default: bgColor = Color.White; break;
+                    }
+                } else
+                {
+                    bgColor = Color.White;
+                }
+
+                backgroundTexture.Draw(new Vector2(startX + col2BufferCurrent, startY + heightBetweenRows * displayRow), Vector2.Zero, bgColor);
                 ActiveFont.DrawOutline(shortenedRoomName, new Vector2(startX + bufferX + col2BufferCurrent, startY + heightBetweenRows * displayRow + (heightBetweenRows-5)/2), new Vector2(0f, 0.5f), textScale, Color.White, 2f, Color.Black);
 
-                backgroundTextureShort.Draw(new Vector2(startX_death + col2BufferCurrent, startY + heightBetweenRows * displayRow));
+                backgroundTextureShort.Draw(new Vector2(startX_death + col2BufferCurrent, startY + heightBetweenRows * displayRow), Vector2.Zero, bgColor);
                 ActiveFont.DrawOutline($"{roomDeaths}", new Vector2(startX_death + col2BufferCurrent + width_death/2, startY + heightBetweenRows * displayRow), new Vector2(0.5f, 0f), new Vector2(0.7f, 0.7f), Color.White, 2f, Color.Black);
 
-                backgroundTextureShort.Draw(new Vector2(startX_timer + col2BufferCurrent, startY + heightBetweenRows * displayRow));
+                backgroundTextureShort.Draw(new Vector2(startX_timer + col2BufferCurrent, startY + heightBetweenRows * displayRow), Vector2.Zero, bgColor);
 
                 ActiveFont.DrawOutline(roomTimeString, new Vector2(startX_timer + col2BufferCurrent + width_timer/2, startY + heightBetweenRows * displayRow), new Vector2(0.5f, 0f), new Vector2(0.7f, 0.7f), Color.White, 2f, Color.Black);
 
@@ -451,7 +506,7 @@ public class RoomStatisticsDisplayer : Entity
         }
 
         // Total Stats
-        showStats(100, 1010, 0.7f, Color.White, true, 0, true, true, true, "Total: ", "", totalDeaths, totalTimer, totalStrawberries);
+        showStats(100, 1010, 0.7f, Color.White, 255, true, 0, true, true, true, "Total: ", "", totalDeaths, totalTimer, totalStrawberries);
 
         //ActiveFont.DrawOutline(displayTotalStatsString, new Vector2(totalXpos, 1010), new Vector2(0f, 0.5f), new Vector2(0.7f, 0.7f), Color.White, 2f, Color.Black);
 

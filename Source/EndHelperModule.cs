@@ -57,6 +57,7 @@ public class EndHelperModule : EverestModule {
     public static OrderedDictionary externalRoomStatDict_death = new OrderedDictionary { };
     public static OrderedDictionary externalRoomStatDict_timer = new OrderedDictionary { };
     public static OrderedDictionary externalRoomStatDict_strawberries = new OrderedDictionary { };
+    public static OrderedDictionary externalRoomStatDict_colorIndex = new OrderedDictionary { };
 
     // Event Listener for when room modification occurs
     public static event EventHandler<RoomModificationEventArgs> RoomModificationEvent;
@@ -87,6 +88,7 @@ public class EndHelperModule : EverestModule {
         On.Celeste.Player.IntroRespawnBegin += hook_OnPlayerRespawn;
         On.Celeste.Level.TransitionRoutine += Hook_TransitionRoutine;
         On.Celeste.LevelLoader.StartLevel += Hook_StartMap;
+        On.Celeste.Level.Pause += Hook_Pause;
 
         On.Celeste.Editor.MapEditor.Update += Hook_UsingMapEditor;
         On.Celeste.Strawberry.Added += Hook_StrawberryAddedToLevel;
@@ -120,6 +122,7 @@ public class EndHelperModule : EverestModule {
         On.Celeste.Player.IntroRespawnBegin -= hook_OnPlayerRespawn;
         On.Celeste.Level.TransitionRoutine -= Hook_TransitionRoutine;
         On.Celeste.LevelLoader.StartLevel -= Hook_StartMap;
+        On.Celeste.Level.Pause -= Hook_Pause;
 
         On.Celeste.Editor.MapEditor.Update -= Hook_UsingMapEditor;
         On.Celeste.Strawberry.Added -= Hook_StrawberryAddedToLevel;
@@ -184,6 +187,17 @@ public class EndHelperModule : EverestModule {
             // Store data to use during reset
         }
 
+        // Quick Restart Keybind
+        if (EndHelperModule.Settings.QuickRetry.Button.Pressed && level.Tracker.GetEntity<Player>() is Player player && !level.Paused && level.CanPause)
+        {
+            if (!player.Dead)
+            {
+                level.Paused = false;
+                level.PauseMainMenuOpen = false;
+                player.Die(Vector2.Zero, evenIfInvincible: true);
+            }
+        }
+
         orig(self);
     }
 
@@ -219,6 +233,16 @@ public class EndHelperModule : EverestModule {
         Level level = self.Level;
         level.Add(new RoomStatisticsDisplayer(level));
         orig(self);
+    }
+    private static void Hook_Pause(On.Celeste.Level.orig_Pause orig, global::Celeste.Level self, int startIndex, bool minimal, bool quickReset)
+    {
+        Level level = self;
+        if (quickReset && EndHelperModule.Settings.QuickRetry.Button.Pressed && level.Tracker.GetEntity<Player>() is Player player && !level.Paused)
+        {
+            // Do not quick reset if you are quick dying
+            return;
+        }
+        orig(self, startIndex, minimal, quickReset);
     }
 
     public static void Hook_UsingMapEditor(On.Celeste.Editor.MapEditor.orig_Update orig, global::Celeste.Editor.MapEditor self)
