@@ -15,7 +15,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("EndHelper")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+b4cdc667b08b4a86f4757ccba158b22f2f21ba9d")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+973d98a538d8bb47087d272509ded9a2babc2ba4")]
 [assembly: System.Reflection.AssemblyProductAttribute("EndHelper")]
 [assembly: System.Reflection.AssemblyTitleAttribute("EndHelper")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

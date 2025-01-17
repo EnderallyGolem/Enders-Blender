@@ -3,12 +3,12 @@
   "WorkspaceRootPath": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Celeste\\Mods\\EndersBlender\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{472281A7-9373-412A-8E8E-5B603857A9D6}|Source\\EndHelper.csproj|c:\\program files (x86)\\steam\\steamapps\\common\\celeste\\mods\\endersblender\\source\\endhelpermodulesettings.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{472281A7-9373-412A-8E8E-5B603857A9D6}|Source\\EndHelper.csproj|solutionrelative:source\\endhelpermodulesettings.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{472281A7-9373-412A-8E8E-5B603857A9D6}|Source\\EndHelper.csproj|c:\\program files (x86)\\steam\\steamapps\\common\\celeste\\mods\\endersblender\\source\\endhelpermodule.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{472281A7-9373-412A-8E8E-5B603857A9D6}|Source\\EndHelper.csproj|solutionrelative:source\\endhelpermodule.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{472281A7-9373-412A-8E8E-5B603857A9D6}|Source\\EndHelper.csproj|c:\\program files (x86)\\steam\\steamapps\\common\\celeste\\mods\\endersblender\\source\\endhelpermodulesettings.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{472281A7-9373-412A-8E8E-5B603857A9D6}|Source\\EndHelper.csproj|solutionrelative:source\\endhelpermodulesettings.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{472281A7-9373-412A-8E8E-5B603857A9D6}|Source\\EndHelper.csproj|c:\\program files (x86)\\steam\\steamapps\\common\\celeste\\mods\\endersblender\\source\\entities\\misc\\roomstatisticsdisplayer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -34,7 +34,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 2,
+          "SelectedChildIndex": 1,
           "Children": [
             {
               "$type": "Bookmark",
@@ -42,20 +42,20 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 0,
               "Title": "EndHelperModule.cs",
               "DocumentMoniker": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Celeste\\Mods\\EndersBlender\\Source\\EndHelperModule.cs",
               "RelativeDocumentMoniker": "Source\\EndHelperModule.cs",
               "ToolTip": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Celeste\\Mods\\EndersBlender\\Source\\EndHelperModule.cs",
               "RelativeToolTip": "Source\\EndHelperModule.cs",
-              "ViewState": "AgIAAKwAAAAAAAAAAAAswL4AAACXAAAAAAAAAA==",
+              "ViewState": "AgIAAMAAAAAAAAAAAAAswNMAAABkAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-01-05T07:47:20.868Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 1,
               "Title": "EndHelperModuleSettings.cs",
               "DocumentMoniker": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Celeste\\Mods\\EndersBlender\\Source\\EndHelperModuleSettings.cs",
               "RelativeDocumentMoniker": "Source\\EndHelperModuleSettings.cs",
@@ -76,8 +76,7 @@
               "RelativeToolTip": "Source\\EndHelperModuleSession.cs",
               "ViewState": "AgIAABEAAAAAAAAAAAA1wCMAAAA2AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-01-17T12:34:20.52Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-01-17T12:34:20.52Z"
             },
             {
               "$type": "Document",
@@ -89,8 +88,7 @@
               "RelativeToolTip": "Source\\Entities\\Misc\\RoomStatisticsDisplayer.cs",
               "ViewState": "AgIAAEgBAAAAAAAAAAAmwFsBAAAMAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-01-11T14:15:23.936Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-01-11T14:15:23.936Z"
             },
             {
               "$type": "Document",
@@ -102,8 +100,7 @@
               "RelativeToolTip": "Source\\Integration\\SpeedrunToolIntegration.cs",
               "ViewState": "AgIAAE8AAAAAAAAAAAAgwGsAAAAhAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-01-15T14:30:15.562Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-01-15T14:30:15.562Z"
             },
             {
               "$type": "Document",

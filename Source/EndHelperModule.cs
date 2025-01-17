@@ -3,6 +3,7 @@ using Celeste.Mod.EndHelper.Integration;
 using Celeste.Mod.SpeedrunTool.Message;
 using Microsoft.Xna.Framework;
 using Monocle;
+using MonoMod.Utils;
 using On.Celeste;
 using System;
 using System.Collections;
@@ -188,13 +189,27 @@ public class EndHelperModule : EverestModule {
         }
 
         // Quick Restart Keybind
-        if (EndHelperModule.Settings.QuickRetry.Button.Pressed && level.Tracker.GetEntity<Player>() is Player player && !level.Paused && level.CanPause)
+        if (EndHelperModule.Settings.QuickRetry.Button.Pressed && level.Tracker.GetEntity<Player>() is Player player && !level.Paused && level.CanPause && level.CanRetry)
         {
             if (!player.Dead)
             {
                 level.Paused = false;
                 level.PauseMainMenuOpen = false;
-                player.Die(Vector2.Zero, evenIfInvincible: true);
+                Engine.TimeRate = 1f;
+                Distort.GameRate = 1f;
+                Distort.Anxiety = 0f;
+                level.InCutscene = (level.SkippingCutscene = false);
+                foreach (LevelEndingHook component in level.Tracker.GetComponents<LevelEndingHook>())
+                {
+                    if (component.OnEnd != null)
+                    {
+                        component.OnEnd();
+                    }
+                }
+                PlayerDeadBody deadPlayer = player.Die(Vector2.Zero, evenIfInvincible: true);
+                DynamicData deadPlayerData = DynamicData.For(deadPlayer);
+                level.DoScreenWipe(wipeIn: false, level.Reload);
+                deadPlayerData.Set("finished", true); // Stop trying to end again if holding confirm
             }
         }
 
@@ -237,7 +252,7 @@ public class EndHelperModule : EverestModule {
     private static void Hook_Pause(On.Celeste.Level.orig_Pause orig, global::Celeste.Level self, int startIndex, bool minimal, bool quickReset)
     {
         Level level = self;
-        if (quickReset && EndHelperModule.Settings.QuickRetry.Button.Pressed && level.Tracker.GetEntity<Player>() is Player player && !level.Paused)
+        if (quickReset && (EndHelperModule.Settings.QuickRetry.Button.Pressed && level.Tracker.GetEntity<Player>() is Player player && !level.Paused && level.CanPause && level.CanRetry))
         {
             // Do not quick reset if you are quick dying
             return;
