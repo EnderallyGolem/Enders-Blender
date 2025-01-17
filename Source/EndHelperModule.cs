@@ -252,10 +252,16 @@ public class EndHelperModule : EverestModule {
     private static void Hook_Pause(On.Celeste.Level.orig_Pause orig, global::Celeste.Level self, int startIndex, bool minimal, bool quickReset)
     {
         Level level = self;
-        if (quickReset && (EndHelperModule.Settings.QuickRetry.Button.Pressed && level.Tracker.GetEntity<Player>() is Player player && !level.Paused && level.CanPause && level.CanRetry))
+
+        if (quickReset)
         {
-            // Do not quick reset if you are quick dying
-            return;
+            if (EndHelperModule.Settings.DisableQuickRestart ||
+                (EndHelperModule.Settings.QuickRetry.Button.Pressed && level.Tracker.GetEntity<Player>() is Player player && !level.Paused && level.CanPause && level.CanRetry)
+               )
+            {
+                // Do not quick reset if you are quick dying (or if disabled)
+                return;
+            }
         }
         orig(self, startIndex, minimal, quickReset);
     }

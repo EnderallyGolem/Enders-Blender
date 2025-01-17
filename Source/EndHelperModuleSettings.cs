@@ -54,4 +54,8 @@ public class EndHelperModuleSettings : EverestModuleSettings {
     }
 
     public StatDisplaySubMenu StatDisplay { get; set; } = new();
+
+    [DefaultValue(false)]
+    [SettingSubText("modoptions_EndHelperModule_DisableQuickRestart_Desc")]
+    public bool DisableQuickRestart { get; set; }
 }
