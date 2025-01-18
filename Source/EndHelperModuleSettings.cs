@@ -9,20 +9,32 @@ public class EndHelperModuleSettings : EverestModuleSettings {
     public ButtonBinding OpenStatDisplayMenu { get; set; }
     public ButtonBinding QuickRetry { get; set; }
 
-    // Room Statistics Displayer
-
+    // Room Statistics Menu
     [SettingSubMenu]
-    public class StatDisplaySubMenu
+    public class RoomStatMenuSubMenu
     {
-        [DefaultValue(false)]
-        public bool ShowRoomName { get; set; }
-        [DefaultValue(false)]
-        public bool ShowDeaths { get; set; }
-        [DefaultValue(false)]
-        public bool ShowTimeSpent { get; set; }
-        [DefaultValue(false)]
+        public enum PauseScenarioEnum { None, Pause, AFK, Both }
+
+        [DefaultValue(PauseScenarioEnum.Pause)]
+        public PauseScenarioEnum PauseOption { get; set; }
+
+
+        [SettingSubText("modoptions_EndHelperModule_MenuMulticolor_Desc")]
+        public bool MenuMulticolor { get; set; } = true;
+
+        [SettingSubText("modoptions_EndHelperModule_MenuSpoilBerries_Desc")]
+        public bool MenuSpoilBerries { get; set; } = true;
+    }
+
+    // Room Statistics Display
+    [SettingSubMenu]
+    public class RoomStatDisplaySubMenu
+    {
+        public bool ShowRoomName { get; set; } = false;
+        public bool ShowDeaths { get; set; } = false;
+        public bool ShowTimeSpent { get; set; } = false;
         [SettingSubText("modoptions_EndHelperModule_ShowStrawberries_Desc")]
-        public bool ShowStrawberries { get; set; }
+        public bool ShowStrawberries { get; set; } = false;
 
         // offset xy and scale
         public enum Justification { Left, Center, Right }
@@ -30,32 +42,20 @@ public class EndHelperModuleSettings : EverestModuleSettings {
         public Justification xJustification { get; set; }
 
         [SettingRange(min: -30, max: 240, largeRange: true)]
-        [DefaultValue(0)]
-        public int OffsetX { get; set; }
+        // [DefaultValue(0)]
+        public int OffsetX { get; set; } = 0;
 
         [SettingRange(min: -30, max: 140, largeRange: true)]
-        [DefaultValue(0)]
-        public int OffsetY { get; set; }
+        public int OffsetY { get; set; } = 0;
 
         [SettingRange(min: 1, max: 20, largeRange: false)]
-        [DefaultValue(10)]
-        public int Size { get; set; }
-
-
-        public enum PauseScenarioEnum { None, Pause, AFK, Both }
-
-        [DefaultValue(PauseScenarioEnum.Pause)]
-        public PauseScenarioEnum PauseOption { get; set; }
-
-
-        [DefaultValue(true)]
-        [SettingSubText("modoptions_EndHelperModule_MenuMulticolor_Desc")]
-        public bool MenuMulticolor { get; set; }
+        public int Size { get; set; } = 10;
     }
 
-    public StatDisplaySubMenu StatDisplay { get; set; } = new();
 
-    [DefaultValue(false)]
+    public RoomStatMenuSubMenu RoomStatMenu { get; set; } = new();
+    public RoomStatDisplaySubMenu RoomStatDisplay { get; set; } = new();
+
     [SettingSubText("modoptions_EndHelperModule_DisableQuickRestart_Desc")]
-    public bool DisableQuickRestart { get; set; }
+    public bool DisableQuickRestart { get; set; } = false;
 }

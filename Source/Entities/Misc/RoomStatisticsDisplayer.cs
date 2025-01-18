@@ -14,7 +14,7 @@ using static Celeste.Mod.EndHelper.EndHelperModule;
 using Celeste.Mod.SpeedrunTool.Message;
 using static Celeste.Mod.UI.CriticalErrorHandler;
 using static Celeste.Mod.EndHelper.Entities.Misc.RoomStatisticsDisplayer;
-using static Celeste.Mod.EndHelper.EndHelperModuleSettings.StatDisplaySubMenu;
+using static Celeste.Mod.EndHelper.EndHelperModuleSettings.RoomStatDisplaySubMenu;
 using NETCoreifier;
 
 
@@ -84,16 +84,16 @@ public class RoomStatisticsDisplayer : Entity
         allowIncrementTimer = true;
 
         if (level.FrozenOrPaused && (
-            EndHelperModule.Settings.StatDisplay.PauseOption == StatDisplaySubMenu.PauseScenarioEnum.Pause ||
-            EndHelperModule.Settings.StatDisplay.PauseOption == StatDisplaySubMenu.PauseScenarioEnum.Both
+            EndHelperModule.Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.PauseScenarioEnum.Pause ||
+            EndHelperModule.Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.PauseScenarioEnum.Both
         ))
         {
             allowIncrementTimer = false;
         }
 
         if (afkDurationFrames > 1800 && (
-            EndHelperModule.Settings.StatDisplay.PauseOption == StatDisplaySubMenu.PauseScenarioEnum.AFK ||
-            EndHelperModule.Settings.StatDisplay.PauseOption == StatDisplaySubMenu.PauseScenarioEnum.Both
+            EndHelperModule.Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.PauseScenarioEnum.AFK ||
+            EndHelperModule.Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.PauseScenarioEnum.Both
         ))
         {
             allowIncrementTimer = false;
@@ -173,9 +173,9 @@ public class RoomStatisticsDisplayer : Entity
 
         // Text Display
 
-        int displayXPos = 15 + EndHelperModule.Settings.StatDisplay.OffsetX * 8;
-        int displayYPos = 15 + EndHelperModule.Settings.StatDisplay.OffsetY * 8;
-        float displayScale = (float)EndHelperModule.Settings.StatDisplay.Size / 20;
+        int displayXPos = 15 + EndHelperModule.Settings.RoomStatDisplay.OffsetX * 8;
+        int displayYPos = 15 + EndHelperModule.Settings.RoomStatDisplay.OffsetY * 8;
+        float displayScale = (float)EndHelperModule.Settings.RoomStatDisplay.Size / 20;
 
         int deathNum = Convert.ToInt32(EndHelperModule.Session.roomStatDict_death[currentRoomName]);
         long timerNum = Convert.ToInt64(EndHelperModule.Session.roomStatDict_timer[currentRoomName]);
@@ -183,11 +183,11 @@ public class RoomStatisticsDisplayer : Entity
 
         Color timerColor = allowIncrementTimer ? Color.White : Color.Gray;
         float xJustification = 0;
-        if (EndHelperModule.Settings.StatDisplay.xJustification == StatDisplaySubMenu.Justification.Center)
+        if (EndHelperModule.Settings.RoomStatDisplay.xJustification == RoomStatDisplaySubMenu.Justification.Center)
         {
             xJustification = 0.5f;
         } 
-        else if (EndHelperModule.Settings.StatDisplay.xJustification == StatDisplaySubMenu.Justification.Right)
+        else if (EndHelperModule.Settings.RoomStatDisplay.xJustification == RoomStatDisplaySubMenu.Justification.Right)
         {
             xJustification = 1f;
         }
@@ -226,7 +226,7 @@ public class RoomStatisticsDisplayer : Entity
             //ActiveFont.DrawOutline(prefix, new Vector2(sectionXPos + xOffset, displayYPos), justification, Vector2.One * displayScale, timerColor, 2f, Color.Black);
         }
 
-        if (!hideRoomName && (EndHelperModule.Settings.StatDisplay.ShowRoomName || showAll))
+        if (!hideRoomName && (EndHelperModule.Settings.RoomStatDisplay.ShowRoomName || showAll))
         {
             string displayMsg = "";
             string shortenedRoomName = currentRoomName;
@@ -239,8 +239,8 @@ public class RoomStatisticsDisplayer : Entity
                 displayMsg += currentRoomName;
             }
 
-            if ( EndHelperModule.Settings.StatDisplay.ShowDeaths || EndHelperModule.Settings.StatDisplay.ShowTimeSpent 
-                || (EndHelperModule.Settings.StatDisplay.ShowStrawberries && strawberriesNum > 0))
+            if ( EndHelperModule.Settings.RoomStatDisplay.ShowDeaths || EndHelperModule.Settings.RoomStatDisplay.ShowTimeSpent 
+                || (EndHelperModule.Settings.RoomStatDisplay.ShowStrawberries && strawberriesNum > 0))
             {
                 displayMsg += ":";
             }
@@ -248,12 +248,12 @@ public class RoomStatisticsDisplayer : Entity
             displayInfoList.Add(new DisplayInfo("roomname", displayMsg, (int)(ActiveFont.WidthToNextLine($"{displayMsg} ", 0) * displayScale)));
         }
 
-        if (showAll || EndHelperModule.Settings.StatDisplay.ShowDeaths)
+        if (showAll || EndHelperModule.Settings.RoomStatDisplay.ShowDeaths)
         {
             string displayMsg = $":EndHelper/uioutline_skull: {deathNum}";
             displayInfoList.Add(new DisplayInfo("deaths", displayMsg, (int)(ActiveFont.WidthToNextLine($"{deathNum}XXX|", 0) * displayScale)));
         }
-        if (showAll || EndHelperModule.Settings.StatDisplay.ShowTimeSpent)
+        if (showAll || EndHelperModule.Settings.RoomStatDisplay.ShowTimeSpent)
         {
             TimeSpan timeSpent = TimeSpan.FromTicks(timerNum);
             string timeString = EndHelperModule.MinimalGameplayFormat(timeSpent);
@@ -274,7 +274,7 @@ public class RoomStatisticsDisplayer : Entity
             }
             displayInfoList.Add(new DisplayInfo("timer", displayMsg, textWidth));
         }
-        if (showAll || EndHelperModule.Settings.StatDisplay.ShowStrawberries)
+        if (showAll || EndHelperModule.Settings.RoomStatDisplay.ShowStrawberries)
         {
             int mapBerryCount = level.Session.MapData.DetectedStrawberries;
             if (strawberriesNum > 0 || (showTotalMapBerryCount && mapBerryCount > 0)) // If player (incl gold/moon) or map (excl gold/moon) has strawberries
@@ -342,7 +342,7 @@ public class RoomStatisticsDisplayer : Entity
         MTexture backgroundTexture = GFX.Gui["misc/EndHelper/statGUI_background"];
         MTexture backgroundTextureShort = GFX.Gui["misc/EndHelper/statGUI_background_short"];
         MTexture pageArrow = GFX.Gui["dotarrow_outline"];
-        if (!EndHelperModule.Settings.StatDisplay.MenuMulticolor)
+        if (!EndHelperModule.Settings.RoomStatMenu.MenuMulticolor)
         {
             backgroundTexture = GFX.Gui["misc/EndHelper/statGUI_background_purple"];
             backgroundTextureShort = GFX.Gui["misc/EndHelper/statGUI_background_short_purple"];
@@ -377,7 +377,8 @@ public class RoomStatisticsDisplayer : Entity
 
         const int bufferX = 10;
 
-        Session session = SceneAs<Level>().Session;
+        Level level = SceneAs<Level>();
+        Session session = level.Session;
         // Map Name Header
         String mapName = session.Area.GetSID();
         if (mapName.StartsWith("Celeste/"))
@@ -456,7 +457,7 @@ public class RoomStatisticsDisplayer : Entity
                 }
 
                 Color bgColor;
-                if (EndHelperModule.Settings.StatDisplay.MenuMulticolor)
+                if (EndHelperModule.Settings.RoomStatMenu.MenuMulticolor)
                 {
                     int colorIndex = Convert.ToInt32(EndHelperModule.Session.roomStatDict_colorIndex[roomName]);
                     switch (colorIndex)
@@ -506,7 +507,13 @@ public class RoomStatisticsDisplayer : Entity
         }
 
         // Total Stats
-        showStats(100, 1010, 0.7f, Color.White, 255, true, 0, true, true, true, "Total: ", "", totalDeaths, totalTimer, totalStrawberries);
+        bool showTotalMapBerryCount = true;
+        if (!EndHelperModule.Settings.RoomStatMenu.MenuSpoilBerries && !level.Completed)
+        {
+            showTotalMapBerryCount = false; // No berry count spoilery
+        }
+
+        showStats(100, 1010, 0.7f, Color.White, 255, true, 0, true, true, showTotalMapBerryCount, "Total: ", "", totalDeaths, totalTimer, totalStrawberries);
 
         //ActiveFont.DrawOutline(displayTotalStatsString, new Vector2(totalXpos, 1010), new Vector2(0f, 0.5f), new Vector2(0.7f, 0.7f), Color.White, 2f, Color.Black);
 

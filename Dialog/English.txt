@@ -6,8 +6,23 @@ modoptions_EndHelperModule_FreeMultiroomWatchtower=Spawn Multi-Room Watchtower
 modoptions_EndHelperModule_OpenStatDisplayMenu=Open Room Statistics Menu
 modoptions_EndHelperModule_QuickRetry=Quick Retry
 
-# Room Display Stuff
-modoptions_EndHelperModule_StatDisplay=Room Statistics Display
+# Room Statistics Menu
+modoptions_EndHelperModule_RoomStatMenu=Room Statistics
+modoptions_EndHelperModule_PauseOption=Pause Timer When
+modoptions_EndHelperModule_PauseOption_None=Never
+modoptions_EndHelperModule_PauseOption_Pause=Game Paused
+modoptions_EndHelperModule_PauseOption_AFK=AFK (No input for 30s)
+modoptions_EndHelperModule_PauseOption_Both=Game Paused or AFK
+
+modoptions_EndHelperModule_MenuMulticolor=Multi-Colored Menu
+modoptions_EndHelperModule_MenuMulticolor_Desc=The Room stats menu's background will be dependent on the room color index.
+
+modoptions_EndHelperModule_MenuSpoilBerries=Spoil Map Berry Count
+modoptions_EndHelperModule_MenuSpoilBerries_Desc=If disabled, the map's total berry count will be shown only at the end of the map, or you have beaten the level before.
+
+
+# Room Statistics Display
+modoptions_EndHelperModule_RoomStatDisplay=Room Statistics GUI Display
 modoptions_EndHelperModule_OffsetX=X-Offset
 modoptions_EndHelperModule_OffsetY=Y-Offset
 modoptions_EndHelperModule_Size=Display Size
@@ -22,16 +37,6 @@ modoptions_EndHelperModule_ShowDeaths=Show Deaths
 modoptions_EndHelperModule_ShowTimeSpent=Show Time Spent
 modoptions_EndHelperModule_ShowStrawberries=Show Strawberries
 modoptions_EndHelperModule_ShowStrawberries_Desc=Only shown when at least one strawberry is collected.
-
-modoptions_EndHelperModule_PauseOption=Pause Timer When
-modoptions_EndHelperModule_PauseOption_None=Never
-modoptions_EndHelperModule_PauseOption_Pause=Game Paused
-modoptions_EndHelperModule_PauseOption_AFK=AFK (No input for 30s)
-modoptions_EndHelperModule_PauseOption_Both=Game Paused or AFK
-
-modoptions_EndHelperModule_MenuMulticolor=Multi-Colored Menu
-modoptions_EndHelperModule_MenuMulticolor_Desc=The Room stats menu's background will be dependent on the room color index.
-
 
 modoptions_EndHelperModule_DisableQuickRestart=Disable Quick Restart Keybind
 modoptions_EndHelperModule_DisableQuickRestart_Desc=Why is this set to R if empty, why is this the everest search key, WWHHHHHYYYYYYYYYYYY
