@@ -164,7 +164,7 @@ public class EndHelperModule : EverestModule {
     private static void hook_LevelUpdate(On.Celeste.Level.orig_Update orig, global::Celeste.Level self)
     {
         Level level = self;
-        if (EndHelperModule.Settings.FreeMultiroomWatchtower.Button.Pressed)
+        if (EndHelperModule.Settings.FreeMultiroomWatchtower.Button.Pressed && !level.FrozenOrPaused)
         {
             spawnMultiroomWatchtower();
         }
