@@ -23,7 +23,7 @@ public class EndHelperModuleSettings : EverestModuleSettings {
         public bool MenuMulticolor { get; set; } = true;
 
         [SettingSubText("modoptions_EndHelperModule_MenuSpoilBerries_Desc")]
-        public bool MenuSpoilBerries { get; set; } = true;
+        public bool MenuSpoilBerries { get; set; } = false;
     }
 
     // Room Statistics Display

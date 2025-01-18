@@ -556,7 +556,6 @@ public class MultiroomWatchtower : Entity
         {
             player.Drop();
         }
-
         player.StateMachine.State = 11;
 
         if (allowAnywhere)

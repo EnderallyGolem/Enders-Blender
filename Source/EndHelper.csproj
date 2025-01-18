@@ -37,6 +37,9 @@
         <Reference Include="SpeedrunTool">
           <HintPath>..\Integrations\SpeedrunTool.dll</HintPath>
         </Reference>
+        <Reference Include="System.Windows.Extensions">
+          <HintPath>..\..\..\System.Windows.Extensions.dll</HintPath>
+        </Reference>
     </ItemGroup>
 
     <ItemGroup>
