@@ -154,7 +154,6 @@ public class RoomStatisticsDisplayer : Entity
             Depth = -9000;
             level.Paused = true;
             scheduleMInputDisable = 3;
-            Logger.Log(LogLevel.Info, "EndHelper/RoomStatisticsDisplayer", $"SET TO DISABLED TRUE {MInput.Disabled}");
         }
         else if (statisticsGuiOpen && !roomNameEditMenuOpen && (!level.Paused || Input.ESC.Pressed || Input.MenuCancel.Pressed || Input.MenuConfirm.Pressed || Input.Pause
             || level.Transitioning || EndHelperModule.Settings.OpenStatDisplayMenu.Button.Pressed))
@@ -170,7 +169,6 @@ public class RoomStatisticsDisplayer : Entity
             consumeInput(Input.ESC, 3);
             consumeInput(Input.Pause, 3);
             scheduleMInputDisable = -3;
-            Logger.Log(LogLevel.Info, "EndHelper/RoomStatisticsDisplayer", $"are you not disabled false {MInput.Disabled}");
 
             if (Input.MenuConfirm.Pressed)
             {
@@ -180,9 +178,10 @@ public class RoomStatisticsDisplayer : Entity
             }
         }
         //MInput.Disabled = false;
-        Logger.Log(LogLevel.Info, "EndHelper/RoomStatisticsDisplayer", $"schedule {scheduleMInputDisable} >> {MInput.Disabled}");
+        //Logger.Log(LogLevel.Info, "EndHelper/RoomStatisticsDisplayer", $"schedule {scheduleMInputDisable} >> {MInput.Disabled}");
 
-        // Stop renaming!!
+        // Exit out of room naming
+        // Pause exits out from both the room naming and the menu, I don't know why but I guess it isn't an issue.
         if ((Input.ESC.Pressed || Input.Pause.Pressed || !statisticsGuiOpen || !level.Paused) && roomNameEditMenuOpen)
         {
             MenuCloseNameEditor();
@@ -190,7 +189,9 @@ public class RoomStatisticsDisplayer : Entity
 
         // Extremely jank. I don't know why this was necessary for it to work... but if 
         // imguihelper can get away with forcing disabled to be false I can get away with this
-        // ...this does not work when mappingutils is on. Unfortunately mappingutils uses that and everyone uses mapperutils ://///
+        //
+        // Unfortunately mappingutils forces disabled to be false (and active to be true)
+        // Can't find a way around that unfortunately...
 
         if (scheduleMInputDisable >= 1)
         {
@@ -632,6 +633,9 @@ public class RoomStatisticsDisplayer : Entity
         } else
         {
             // Rename menu instructions
+            ActiveFont.DrawOutline("Custom names will only be saved for this session!", new Vector2(instructionXPos, instructionYPos), new Vector2(0f, 0.5f), new Vector2(instructionScale, instructionScale), instructionColor, 2f, Color.Black);
+            instructionXPos += (int)(ActiveFont.WidthToNextLine($"Custom names will only be saved for this session!XXXX", 0) * instructionScale);
+
             ActiveFont.DrawOutline("Stop Editing: ", new Vector2(instructionXPos, instructionYPos), new Vector2(0f, 0.5f), new Vector2(instructionScale, instructionScale), instructionColor, 2f, Color.Black);
             instructionXPos += (int)(ActiveFont.WidthToNextLine($"Stop Editing: X", 0) * instructionScale);
             Input.GuiButton(Input.ESC, mode: Input.PrefixMode.Latest).DrawCentered(new Vector2(instructionXPos, instructionYPos), instructionColor, instructionScale, 0);
@@ -731,7 +735,6 @@ public class RoomStatisticsDisplayer : Entity
     private void OnTextInput(char c)
     {
         //Logger.Log(LogLevel.Info, "EndHelper/RoomStatisticsDisplayer", $"i have typed {c}");
-
         String roomCustomName = Convert.ToString(EndHelperModule.Session.roomStatDict_customName[editingRoomName]);
 
         if (c == (char)13 || c == (char)9)
