@@ -55,6 +55,7 @@ public class EndHelperModule : EverestModule {
     public static SessionResetCause lastSessionResetCause = SessionResetCause.None; // Stores the previous cause of reset. Sometimes useful.
 
     // Store information for room stats externally for them to persist through save states
+    public static OrderedDictionary externalRoomStatDict_customName = new OrderedDictionary { };
     public static OrderedDictionary externalRoomStatDict_death = new OrderedDictionary { };
     public static OrderedDictionary externalRoomStatDict_timer = new OrderedDictionary { };
     public static OrderedDictionary externalRoomStatDict_strawberries = new OrderedDictionary { };
@@ -212,7 +213,6 @@ public class EndHelperModule : EverestModule {
                 deadPlayerData.Set("finished", true); // Stop trying to end again if holding confirm
             }
         }
-
         orig(self);
     }
 
@@ -985,6 +985,22 @@ public class EndHelperModule : EverestModule {
             return (int)time.TotalHours + ":" + time.ToString("mm\\:ss");
         }
         return time.ToString("m\\:ss");
+    }
+
+    /// <summary>
+    /// Buffers a VirtualButton for a few frames
+    /// </summary>
+    /// <param name="input"></param>
+    /// <param name="frames"></param>
+    public async static void consumeInput(VirtualButton input, int frames)
+    {
+        while (frames > 0)
+        {
+            input.ConsumePress();
+            input.ConsumeBuffer();
+            frames--;
+            await Task.Delay((int)(Engine.DeltaTime * 1000));
+        }
     }
 
     #endregion

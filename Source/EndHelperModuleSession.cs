@@ -31,6 +31,7 @@ public class EndHelperModuleSession : EverestModuleSession
     // -------------------------------
     // roomStatDicts. Stored here so it retains when resuming session.
     // I tried creating a class for these at first but ran into issues where session will just fail to retain between save & quits =/
+    public OrderedDictionary roomStatDict_customName = new OrderedDictionary { }; // <string, string>
     public OrderedDictionary roomStatDict_death = new OrderedDictionary { }; // <string, int>
     public OrderedDictionary roomStatDict_timer = new OrderedDictionary { }; // <string, long>
     public OrderedDictionary roomStatDict_strawberries = new OrderedDictionary { }; // <string, int>

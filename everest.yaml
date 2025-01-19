@@ -7,8 +7,6 @@
     - Name: Everest
     - Name: EverestCore
       Version: 1.4673.0
-    - Name: ImGuiHelper
-      Version: 0.1.3
   OptionalDependencies: # This is basically useless
     - Name: SpeedrunTool
       Version: 3.23.0
