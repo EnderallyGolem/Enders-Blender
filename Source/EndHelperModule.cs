@@ -198,7 +198,12 @@ public class EndHelperModule : EverestModule {
         // Quick Restart Keybind
         if (EndHelperModule.Settings.QuickRetry.Button.Pressed && level.Tracker.GetEntity<Player>() is Player player && !level.Paused && level.CanPause && level.CanRetry)
         {
-            if (!player.Dead)
+            if (level.Session.GrabbedGolden)
+            {
+                // Don't die if you have a golden. Just play a funny sfx instead.
+                player.Add(new SoundSource("event:/game/general/strawberry_laugh"));
+                return;
+            } else if (!player.Dead)
             {
                 level.Paused = false;
                 level.PauseMainMenuOpen = false;
