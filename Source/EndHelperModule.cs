@@ -19,10 +19,7 @@ using static MonoMod.InlineRT.MonoModRule;
 using static On.Celeste.Level;
 using static On.Celeste.Strawberry;
 using Celeste.Mod.Entities;
-using Microsoft.Xna.Framework;
-using Monocle;
 using System.Runtime.CompilerServices;
-using System;
 using IL.Celeste;
 using Celeste;
 using System.Reflection;
@@ -68,6 +65,10 @@ public class EndHelperModule : EverestModule {
     public static OrderedDictionary externalRoomStatDict_strawberries = new OrderedDictionary { };
     public static OrderedDictionary externalRoomStatDict_colorIndex = new OrderedDictionary { };
 
+    // This is modified by SSMQolIntegration to change multiroom bino speed multiplier
+    // -1 means not integrated
+    public static bool integratingWithSSMQoL = false;
+
     // Event Listener for when room modification occurs
     public static event EventHandler<RoomModificationEventArgs> RoomModificationEvent;
     public static bool enableRoomSwapHooks = false;
@@ -104,6 +105,7 @@ public class EndHelperModule : EverestModule {
         On.Celeste.Strawberry.OnCollect += Hook_CollectStrawberry;
 
         SpeedrunToolIntegration.Load();
+        SSMQoLIntegration.Load();
     }
 
     // Optional, initialize anything after Celeste has initialized itself properly.
@@ -138,6 +140,7 @@ public class EndHelperModule : EverestModule {
         On.Celeste.Strawberry.OnCollect -= Hook_CollectStrawberry;
 
         SpeedrunToolIntegration.Unload();
+        SSMQoLIntegration.Unload();
     }
     #endregion
 
@@ -176,12 +179,12 @@ public class EndHelperModule : EverestModule {
 
         // Handle the dict storing room stat custom name dicts.
         // Move the current map to the front of the list, and trim size if
-        Logger.Log(LogLevel.Info, "EndHelper/main", $"Being the stuff:");
+        //Logger.Log(LogLevel.Info, "EndHelper/main", $"Being the stuff:");
         if (EndHelperModule.Settings.RoomStatMenu.MenuCustomNameStorageCount > 0)
         {
             if (EndHelperModule.SaveData.mapDict_roomStatCustomNameDict.Contains(mapNameSide))
             {
-                Logger.Log(LogLevel.Info, "EndHelper/main", $"Already contains {mapNameSide} => {EndHelperModule.SaveData.mapDict_roomStatCustomNameDict.Count} => {EndHelperModule.SaveData.mapDict_roomStatCustomNameDict[mapNameSide]}. Setting, Removing then Readding:");
+                //Logger.Log(LogLevel.Info, "EndHelper/main", $"Already contains {mapNameSide} => {EndHelperModule.SaveData.mapDict_roomStatCustomNameDict.Count} => {EndHelperModule.SaveData.mapDict_roomStatCustomNameDict[mapNameSide]}. Setting, Removing then Readding:");
                 if (EndHelperModule.SaveData.mapDict_roomStatCustomNameDict[mapNameSide] is Dictionary<string, string>)
                 {
                     EndHelperModule.Session.roomStatDict_customName = (Dictionary<string, string>)EndHelperModule.SaveData.mapDict_roomStatCustomNameDict[mapNameSide];
@@ -191,19 +194,18 @@ public class EndHelperModule : EverestModule {
                 }
                 EndHelperModule.SaveData.mapDict_roomStatCustomNameDict.Remove(mapNameSide);
             }
-            Logger.Log(LogLevel.Info, "EndHelper/main", $"Adding {mapNameSide}.");
+            //Logger.Log(LogLevel.Info, "EndHelper/main", $"Adding {mapNameSide}.");
             EndHelperModule.SaveData.mapDict_roomStatCustomNameDict[mapNameSide] = EndHelperModule.Session.roomStatDict_customName;
         }
         if (EndHelperModule.SaveData.mapDict_roomStatCustomNameDict.Count > EndHelperModule.Settings.RoomStatMenu.MenuCustomNameStorageCount)
         {
-            Logger.Log(LogLevel.Info, "EndHelper/main", $"Too many mapDicts: Removing the earliest.");
+            //Logger.Log(LogLevel.Info, "EndHelper/main", $"Too many mapDicts: Removing the earliest.");
             EndHelperModule.SaveData.mapDict_roomStatCustomNameDict.RemoveAt(0);
         }
     }
 
     public static Dictionary<string, string> ConvertToStringDictionary(Dictionary<object, object> source)
     {
-        Logger.Log(LogLevel.Info, "EndHelper/main", $"begin castinggggg");
         Dictionary<string, string> result = new Dictionary<string, string>();
         foreach (var kvp in source)
         {
@@ -212,7 +214,6 @@ public class EndHelperModule : EverestModule {
             if (key == "" || value == ""){ continue; }
             result[key] = value;
         }
-        Logger.Log(LogLevel.Info, "EndHelper/main", $"DONE CASTING {result}");
         return result;
     }
 
@@ -424,6 +425,7 @@ public class EndHelperModule : EverestModule {
             destroyUponFinishView = true;
             maxSpeedSet *= 2;
             canToggleBlocker = true;
+            doOverlapCheck = false;
         }
         internal static bool Exists => Engine.Scene.Tracker.GetEntity<PortableMultiroomWatchtower>() != null;
     }

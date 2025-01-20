@@ -97,7 +97,8 @@ namespace Celeste.Mod.EndHelper.Integration
 
             if (preloadLevel.Tracker.GetEntity<Player>() is Player player && preloadLevel.Tracker.GetEntity<RoomStatisticsDisplayer>() is RoomStatisticsDisplayer roomStatDisplayer)
             {
-                if (!player.Dead) {
+                if (!player.Dead)
+                {
                     // Add +1 death when loading state, unless the player is already dead. Use the currentRoomName from roomStatDisplayer so it doesn't count multi-room bino
                     EndHelperModule.externalRoomStatDict_death[roomStatDisplayer.currentRoomName] = Convert.ToInt32(EndHelperModule.externalRoomStatDict_death[roomStatDisplayer.currentRoomName]) + 1;
                 }
@@ -119,5 +120,5 @@ namespace Celeste.Mod.EndHelper.Integration
 
 #pragma warning restore IDE0051  // Private method is unused
 
-        }
     }
+}

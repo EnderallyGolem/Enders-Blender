@@ -20,6 +20,7 @@ using Celeste.Mod.SpeedrunTool.Message;
 using Celeste.Mod.SpeedrunTool.SaveLoad;
 using Celeste.Mod.SpeedrunTool;
 using System.Diagnostics.CodeAnalysis;
+using Celeste.Mod.EndHelper.Integration;
 
 // Because I keep forgetting: the vanilla entity is Lookout.
 namespace Celeste.Mod.EndHelper.Entities.Misc;
@@ -412,6 +413,7 @@ public class MultiroomWatchtower : Entity
     public bool destroyUponFinishView = false;
     public bool ignoreBlocker = false;
     public bool canToggleBlocker = false;
+    public bool doOverlapCheck = true;
 
     public EntityData data;
 
@@ -510,11 +512,19 @@ public class MultiroomWatchtower : Entity
         base.Awake(scene);
 
         // Prevent overlapping of multiple watchtowers
-        //Collider = new Hitbox(16, 16, -8, -8);
-
+        // Collider = new Hitbox(16, 16, -8, -8);
 
         MultiroomWatchtower collideWatchtower = CollideFirst<MultiroomWatchtower>();
-        if (collideWatchtower != null && interacting == false && previouslyInteracted == false && !TagCheck(Tags.Persistent))
+
+        //if (collideWatchtower != null)
+        //{
+        //    Logger.Log(LogLevel.Info, "EndHelper/Misc/MultiroomWatchtower", $"ME: {doOverlapCheck} {interacting == false} {previouslyInteracted == false} {!TagCheck(Tags.Persistent)}:");
+        //    Logger.Log(LogLevel.Info, "EndHelper/Misc/MultiroomWatchtower", $"COL: {collideWatchtower.doOverlapCheck} {collideWatchtower.interacting == false} {collideWatchtower.previouslyInteracted == false} {!collideWatchtower.TagCheck(Tags.Persistent)}:");
+        //}
+        // If collides, check if *THIS ENTITY* (not the one it collides with) should be removed
+        // However check if collider is doing overlap check instead (if disabled it is ok with one taking its place)
+        if (collideWatchtower != null && collideWatchtower.doOverlapCheck && interacting == false &&
+            previouslyInteracted == false && !TagCheck(Tags.Persistent))
         {
             RemoveSelf();
         }
@@ -626,8 +636,14 @@ public class MultiroomWatchtower : Entity
         }
 
 
-        float accel = 800f * maxSpeedSet / 240f;
-        float maxspd = maxSpeedSet;
+        float originalAccel = 800f * maxSpeedSet / 240f;
+        float originalMaxspd = maxSpeedSet;
+        float originalTransitionDurationScale = 1f * 240f / maxSpeedSet;
+
+        float accel = originalAccel;
+        float maxspd = originalMaxspd;
+        float transitionDurationScale = originalTransitionDurationScale;
+
         Vector2 camCorner = level.Camera.Position;
         Vector2 speed = Vector2.Zero;
         Vector2 lastDir = Vector2.Zero;
@@ -654,6 +670,14 @@ public class MultiroomWatchtower : Entity
             // Force these to be the correct values. In case other stuff changes these.
             player.Sprite.Visible = false;
             player.Hair.Visible = false;
+
+            if (EndHelperModule.integratingWithSSMQoL)
+            {
+                float multiplier = SSMQoLIntegration.GetMultiplier();
+                accel = originalAccel * multiplier;
+                maxspd = originalMaxspd * multiplier;
+                transitionDurationScale = originalTransitionDurationScale / multiplier;
+            }
 
             // Solely for the keybind multiroom bino
             if (canToggleBlocker && EndHelperModule.Settings.FreeMultiroomWatchtower.Button.Pressed)
@@ -755,6 +779,7 @@ public class MultiroomWatchtower : Entity
                 player.Position = new Vector2(newRoomBounds.Left + 16, newRoomBounds.Bottom - 16);
                 player.CameraAnchor = targetTransitionPos - new Vector2(160f, 90f);
 
+                level.NextTransitionDuration = 0.65f * transitionDurationScale;
                 level.TransitionTo(newRoomLevelData, transitionDirection);
 
                 // If watchtower room, set player position to watchtower, and let the player be active and have collision
