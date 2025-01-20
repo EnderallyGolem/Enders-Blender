@@ -123,7 +123,6 @@ public class RoomSwapBox : Solid
     [MethodImpl(MethodImplOptions.NoInlining)]
     public DashCollisionResults Dashed(Player player, Vector2 dir)
     {
-
         if (!SaveData.Instance.Assists.Invincible)
         {
             if (dir == Vector2.UnitX && spikesLeft)

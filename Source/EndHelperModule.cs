@@ -18,7 +18,13 @@ using static Celeste.Mod.EndHelper.Entities.Misc.RoomStatisticsDisplayer;
 using static MonoMod.InlineRT.MonoModRule;
 using static On.Celeste.Level;
 using static On.Celeste.Strawberry;
-//using VivHelper.Module__Extensions__Etc;
+using Celeste.Mod.Entities;
+using Microsoft.Xna.Framework;
+using Monocle;
+using System.Runtime.CompilerServices;
+using System;
+using IL.Celeste;
+using Celeste;
 
 namespace Celeste.Mod.EndHelper;
 
@@ -219,9 +225,15 @@ public class EndHelperModule : EverestModule {
     public static PlayerDeadBody hook_OnPlayerDeath(On.Celeste.Player.orig_Die orig, global::Celeste.Player self, Vector2 direction, bool evenIfInvincible, bool registerDeathInStats)
     {
         Level level = self.SceneAs<Level>();
-
         //Increment room death count.
-        level.Tracker.GetEntity<RoomStatisticsDisplayer>()?.OnDeath();
+        if (global::Celeste.SaveData.Instance.Assists.Invincible && !evenIfInvincible)
+        {
+            // Assist mode death is not incremented if evenIfInvincible is false
+        } 
+        else
+        {
+            level.Tracker.GetEntity<RoomStatisticsDisplayer>()?.OnDeath();
+        }
 
         return orig(self, direction, evenIfInvincible, registerDeathInStats);
     }
@@ -240,6 +252,7 @@ public class EndHelperModule : EverestModule {
         On.Celeste.Level.orig_TransitionRoutine orig, global::Celeste.Level self, global::Celeste.LevelData next, Vector2 direction
     )
     {
+        // To potentially use in the future
         yield return new SwapImmediately(orig(self, next, direction));
     }
 
@@ -273,6 +286,7 @@ public class EndHelperModule : EverestModule {
         orig(self);
     }
 
+    // Component for strawberries to store its home room
     public class HomeRoom : Component
     {
         public string roomName;

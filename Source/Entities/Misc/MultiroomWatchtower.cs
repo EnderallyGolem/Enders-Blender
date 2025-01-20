@@ -13,7 +13,6 @@ using System.Threading.Tasks;
 using System.Runtime.Intrinsics;
 using System.Linq;
 
-
 using Celeste.Mod.Core;
 using static Celeste.GaussianBlur;
 using static Celeste.WaveDashPage;
