@@ -29,7 +29,8 @@ namespace Celeste.Mod.EndHelper.Integration
         {
             try
             {
-                integratingWithSSMQoL = true;
+                bool dummy = SSMQoLModule.Settings.FastLookout;
+                integratingWithSSMQoL = true; // This will not be set to true if above fails. Yes very crappy code I agree.
             }
             catch (Exception) { }
         }
