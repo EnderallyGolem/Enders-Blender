@@ -179,13 +179,13 @@ public class MultiroomWatchtower : Entity
                 timerDown += Engine.DeltaTime * 6f;
             }
 
-            if (aim == new Vector2(1, -1)) { timerQ1 += Engine.DeltaTime * 12f; }
+            if (aim.X > 0f && aim.Y < 0f) { timerQ1 += Engine.DeltaTime * 12f; }
             else { timerQ1 += Engine.DeltaTime * 6f; }
-            if (aim == new Vector2(-1, -1)) { timerQ2 += Engine.DeltaTime * 12f; }
+            if (aim.X < 0f && aim.Y < 0f) { timerQ2 += Engine.DeltaTime * 12f; }
             else { timerQ2 += Engine.DeltaTime * 6f; }
-            if (aim == new Vector2(-1, 1)) { timerQ3 += Engine.DeltaTime * 12f; }
+            if (aim.X < 0f && aim.Y > 0f) { timerQ3 += Engine.DeltaTime * 12f; }
             else { timerQ3 += Engine.DeltaTime * 6f; }
-            if (aim == new Vector2(1, 1)) { timerQ4 += Engine.DeltaTime * 12f; }
+            if (aim.X > 0f && aim.Y > 0f) { timerQ4 += Engine.DeltaTime * 12f; }
             else { timerQ4 += Engine.DeltaTime * 6f; }
 
 
@@ -320,6 +320,11 @@ public class MultiroomWatchtower : Entity
             // Confirm button for changing rooms
             if (p.lookoutRoom != null && !p.trackMode)
             {
+                // Do this in case of controller.
+                if (inputVector.X > 0) { inputVector.X = 1f; }
+                if (inputVector.Y > 0) { inputVector.Y = 1f; }
+                if (inputVector.X < 0) { inputVector.X = -1f; }
+                if (inputVector.Y < 0) { inputVector.Y = -1f; }
                 switch ((inputVector.X, inputVector.Y))
                 {
                     case (-1, 0):
@@ -712,10 +717,6 @@ public class MultiroomWatchtower : Entity
                 Q2LookoutRoomScroll = Q2LookoutRoom != null && Q2LookoutRoom != upLookoutRoom && Q2LookoutRoom != leftLookoutRoom && !onlyX && !onlyY;
                 Q3LookoutRoomScroll = Q3LookoutRoom != null && Q3LookoutRoom != downLookoutRoom && Q3LookoutRoom != leftLookoutRoom && !onlyX && !onlyY;
                 Q4LookoutRoomScroll = Q4LookoutRoom != null && Q4LookoutRoom != downLookoutRoom && Q4LookoutRoom != rightLookoutRoom && !onlyX && !onlyY;
-
-
-                // Then check whether if the currently held direction (might be none, might be L/R/U/D, might be diagonal) points. If yes, warp prompt
-                Vector2 inputVectorDiagonalCorrect = new Vector2(inputVector.X, inputVector.Y);
 
                 lookoutRoom = findLookoutRoom(inputVector, edgeRoomDataList, out Vector2 roomAimPos);
 
