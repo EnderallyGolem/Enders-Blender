@@ -623,9 +623,6 @@ public class RoomStatisticsDisplayer : Entity
         } else
         {
             // Rename menu instructions
-            ActiveFont.DrawOutline("Custom names will only be saved for this session!", new Vector2(instructionXPos, instructionYPos), new Vector2(0f, 0.5f), new Vector2(instructionScale, instructionScale), instructionColor, 2f, Color.Black);
-            instructionXPos += (int)(ActiveFont.WidthToNextLine($"Custom names will only be saved for this session!XXXX", 0) * instructionScale);
-
             ActiveFont.DrawOutline("Stop Editing: ", new Vector2(instructionXPos, instructionYPos), new Vector2(0f, 0.5f), new Vector2(instructionScale, instructionScale), instructionColor, 2f, Color.Black);
             instructionXPos += (int)(ActiveFont.WidthToNextLine($"Stop Editing: X", 0) * instructionScale);
             Input.GuiButton(Input.ESC, mode: Input.PrefixMode.Latest).DrawCentered(new Vector2(instructionXPos, instructionYPos), instructionColor, instructionScale, 0);

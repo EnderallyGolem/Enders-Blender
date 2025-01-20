@@ -27,12 +27,15 @@ namespace Celeste.Mod.EndHelper.Integration
     {
         internal static void Load()
         {
-            try
+            EverestModuleMetadata SSMQolMetaData = new()
             {
-                bool dummy = SSMQoLModule.Settings.FastLookout;
-                integratingWithSSMQoL = true; // This will not be set to true if above fails. Yes very crappy code I agree.
+                Name = "SSMQoLMod",
+                Version = new Version(1, 2, 1)
+            };
+            if (Everest.Loader.DependencyLoaded(SSMQolMetaData))
+            {
+                integratingWithSSMQoL = true;
             }
-            catch (Exception) { }
         }
 
         internal static void Unload()
