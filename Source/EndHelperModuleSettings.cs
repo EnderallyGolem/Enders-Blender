@@ -24,6 +24,10 @@ public class EndHelperModuleSettings : EverestModuleSettings {
 
         [SettingSubText("modoptions_EndHelperModule_MenuSpoilBerries_Desc")]
         public bool MenuSpoilBerries { get; set; } = false;
+
+        [SettingSubText("modoptions_EndHelperModule_MenuCustomNameStorageCount_Desc")]
+        [SettingRange(min: 0, max: 100, largeRange: true)]
+        public int MenuCustomNameStorageCount { get; set; } = 10;
     }
 
     // Room Statistics Display

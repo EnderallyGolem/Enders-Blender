@@ -20,6 +20,9 @@ modoptions_EndHelperModule_MenuMulticolor_Desc=The Room stats menu's background 
 modoptions_EndHelperModule_MenuSpoilBerries=Spoil Map Berry Count
 modoptions_EndHelperModule_MenuSpoilBerries_Desc=If disabled, the map's total berry count will be shown only at the end of the map, or you have beaten the level before.
 
+modoptions_EndHelperModule_MenuCustomNameStorageCount=Custom Name Storage Size
+modoptions_EndHelperModule_MenuCustomNameStorageCount_Desc=The number of sessions in which custom names will be stored.
+Eg: If 10, custom names for the map's rooms will be kept until you play 10 other maps.
 
 # Room Statistics Display
 modoptions_EndHelperModule_RoomStatDisplay=Room Statistics GUI Display
@@ -54,6 +57,26 @@ poem_EndHelperTest_EndHelperTestMap_A=
 
 
 EndHelperTest_Tutorial_Misc_TileEntity=Tile Entity
+
+
+# ----------------------------------  Room Stats  ----------------------------------------
+EndHelperTest_EndHelperTestMap_bino1=bino1 with a long custom name
+EndHelperTest_EndHelperTestMap_bino2=bino2 with a very very very freaking long name
+EndHelperTest_EndHelperTestMap_bino3=custom names are done by (Folder)_(bin)_(Room Name) btw. So in this case EndHelperTest_EndHelperTestMap_bino3=(name goes here). You can't even read all this probably.
+
+EndHelperTest_Tutorial_StatisticMenuBirb=Room Stats
+EndHelperTest_Tutorial_StatisticMenu=The mod stores the number of deaths, time spent, and strawberries collected in each room.
+The stats for the current room can be shown by enabling it in the mod settings. All stats can be shown with the room menu keybind.
+The color of the menu, unless disabled, corrosponds to the Color ID.
+These stats only last for the current session (though custom room names can be stored longer depending on settings).
+For mod makers, you can have custom names show with {# ffff66}(Folder){#}_{# ffff66}(bin){#}_{# ffff66}(RoomName){#} in the dialog file (Map name format with _{# ffff66}(RoomName){#}).
+This was done for the bino rooms above - check the names with the menu/display and debug mode!
+Don't use the bino to check the names though, the current room does not change when using the multi-room binoculars.
+
+EndHelperTest_Tutorial_RoomStatisticsCountersBirb=Counters
+EndHelperTest_Tutorial_RoomStatisticsCounters=The mod tracks the number of deaths, time spent, and berries collected in each room.
+These can be accessed from the counters {# ffff66}EndHelper_RoomStatistics_{# F94A4A}(currentRoomName){#}_death{#}, {# ffff66}EndHelper_RoomStatistics_{# F94A4A}(currentRoomName){#}_timer{#} (gives time in seconds), and {# ffff66}EndHelper_RoomStatistics_{# F94A4A}(currentRoomName){#}_strawberries{#}.
+Note that the timer will be paused differently depending on settings, so be careful if you ever use it.
 
 # ----------------------------------  Room Swap  ----------------------------------------
 EndHelperTest_Tutorial_RoomSwap_Category=Room-Swap
@@ -109,9 +132,6 @@ EndHelperTest_Tutorial_DeathWarp_Category=Death-Warp
 
 
 # ----------------------------------  Misc  -------------------------------------------
-EndHelperTest_Tutorial_RoomStatisticsCountersBirb=Counters
-EndHelperTest_Tutorial_RoomStatisticsCounters=The mod tracks the number of deaths, time spent, and berries collected in each room.
-These can be accessed from the counters {# ffff66}EndHelper_RoomStatistics_{# F94A4A}(currentRoomName){#}_death{#}, {# ffff66}EndHelper_RoomStatistics_{# F94A4A}(currentRoomName){#}_timer{#} (gives time in seconds), and {# ffff66}EndHelper_RoomStatistics_{# F94A4A}(currentRoomName){#}_strawberries{#}.
 
 
 # ----------------------------------  Credits  ----------------------------------------

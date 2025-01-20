@@ -25,6 +25,7 @@ using System.Runtime.CompilerServices;
 using System;
 using IL.Celeste;
 using Celeste;
+using System.Reflection;
 
 namespace Celeste.Mod.EndHelper;
 
@@ -61,7 +62,7 @@ public class EndHelperModule : EverestModule {
     public static SessionResetCause lastSessionResetCause = SessionResetCause.None; // Stores the previous cause of reset. Sometimes useful.
 
     // Store information for room stats externally for them to persist through save states
-    public static OrderedDictionary externalRoomStatDict_customName = new OrderedDictionary { };
+    public static Dictionary<string, string> externalRoomStatDict_customName = new Dictionary<string, string> { };
     public static OrderedDictionary externalRoomStatDict_death = new OrderedDictionary { };
     public static OrderedDictionary externalRoomStatDict_timer = new OrderedDictionary { };
     public static OrderedDictionary externalRoomStatDict_strawberries = new OrderedDictionary { };
@@ -157,13 +158,62 @@ public class EndHelperModule : EverestModule {
         // If first time (not fromSaveData), check Hook_StartMap since it has access to level
         if (fromSaveData)
         {
-            // Loading from save data
-            String roomName = session.Level;
-
+        String roomName = session.Level;
             // +1 death for save and quit. The reason why this is done here instead of everest onexit event is because
             // as far as I can tell saving and returning to lobby with collabutil saves the session before onexit runs.
             EndHelperModule.Session.roomStatDict_death[roomName] = Convert.ToInt32(EndHelperModule.Session.roomStatDict_death[roomName]) + 1;
+
+            // Handle the custom name savedata dict. This requires fromSaveData as that is AFTER the session is made.
+            SetupCustomNameSaveDataDict(session);
         }
+    }
+
+    static void SetupCustomNameSaveDataDict(global::Celeste.Session session)
+    {
+        String mapNameSide = session.Area.GetSID();
+        if (session.Area.Mode == AreaMode.BSide) { mapNameSide += "_BSide"; }
+        else if (session.Area.Mode == AreaMode.CSide) { mapNameSide += "_CSide"; }
+
+        // Handle the dict storing room stat custom name dicts.
+        // Move the current map to the front of the list, and trim size if
+        Logger.Log(LogLevel.Info, "EndHelper/main", $"Being the stuff:");
+        if (EndHelperModule.Settings.RoomStatMenu.MenuCustomNameStorageCount > 0)
+        {
+            if (EndHelperModule.SaveData.mapDict_roomStatCustomNameDict.Contains(mapNameSide))
+            {
+                Logger.Log(LogLevel.Info, "EndHelper/main", $"Already contains {mapNameSide} => {EndHelperModule.SaveData.mapDict_roomStatCustomNameDict.Count} => {EndHelperModule.SaveData.mapDict_roomStatCustomNameDict[mapNameSide]}. Setting, Removing then Readding:");
+                if (EndHelperModule.SaveData.mapDict_roomStatCustomNameDict[mapNameSide] is Dictionary<string, string>)
+                {
+                    EndHelperModule.Session.roomStatDict_customName = (Dictionary<string, string>)EndHelperModule.SaveData.mapDict_roomStatCustomNameDict[mapNameSide];
+                } else
+                {
+                    EndHelperModule.Session.roomStatDict_customName = ConvertToStringDictionary((Dictionary<object, object>)EndHelperModule.SaveData.mapDict_roomStatCustomNameDict[mapNameSide]);
+                }
+                EndHelperModule.SaveData.mapDict_roomStatCustomNameDict.Remove(mapNameSide);
+            }
+            Logger.Log(LogLevel.Info, "EndHelper/main", $"Adding {mapNameSide}.");
+            EndHelperModule.SaveData.mapDict_roomStatCustomNameDict[mapNameSide] = EndHelperModule.Session.roomStatDict_customName;
+        }
+        if (EndHelperModule.SaveData.mapDict_roomStatCustomNameDict.Count > EndHelperModule.Settings.RoomStatMenu.MenuCustomNameStorageCount)
+        {
+            Logger.Log(LogLevel.Info, "EndHelper/main", $"Too many mapDicts: Removing the earliest.");
+            EndHelperModule.SaveData.mapDict_roomStatCustomNameDict.RemoveAt(0);
+        }
+    }
+
+    public static Dictionary<string, string> ConvertToStringDictionary(Dictionary<object, object> source)
+    {
+        Logger.Log(LogLevel.Info, "EndHelper/main", $"begin castinggggg");
+        Dictionary<string, string> result = new Dictionary<string, string>();
+        foreach (var kvp in source)
+        {
+            string key = kvp.Key?.ToString() ?? "";  // Convert key to string, default to ""
+            string value = kvp.Value?.ToString() ?? ""; // Convert value to string, default to ""
+            if (key == "" || value == ""){ continue; }
+            result[key] = value;
+        }
+        Logger.Log(LogLevel.Info, "EndHelper/main", $"DONE CASTING {result}");
+        return result;
     }
 
     // Using player update instead of level update so nothing happens when the level is loading
@@ -265,6 +315,10 @@ public class EndHelperModule : EverestModule {
     {
         Level level = self.Level;
         level.Add(new RoomStatisticsDisplayer(level));
+
+        // Set up the save data custom name dictionaries if starting a map from the beginning
+        SetupCustomNameSaveDataDict(level.Session);
+
         orig(self);
     }
     private static void Hook_Pause(On.Celeste.Level.orig_Pause orig, global::Celeste.Level self, int startIndex, bool minimal, bool quickReset)
