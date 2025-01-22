@@ -30,9 +30,6 @@ public class RoomStatisticsDisplayer : Entity
 {
     private string clipboardText = "";
     public string currentRoomName = "";
-    private int afkDurationFrames = 0;
-    private int inactiveDurationFrames = 60;
-    public bool allowIncrementTimer = true;
     private bool statisticsGuiOpen = false;
     public bool disableRoomChange = false;
 
@@ -96,61 +93,7 @@ public class RoomStatisticsDisplayer : Entity
             }
         }
 
-        // Check if can increment time spent in room
-        allowIncrementTimer = true;
-        if (level.FrozenOrPaused && (
-            EndHelperModule.Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.PauseScenarioEnum.Pause ||
-            EndHelperModule.Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.PauseScenarioEnum.PauseAFK ||
-            EndHelperModule.Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.PauseScenarioEnum.PauseInactive ||
-            EndHelperModule.Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.PauseScenarioEnum.PauseInactiveAFK
-        ))
-        { allowIncrementTimer = false; }
-
-
-        if (inactiveDurationFrames >= 60 && (
-            EndHelperModule.Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.PauseScenarioEnum.PauseInactive ||
-            EndHelperModule.Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.PauseScenarioEnum.PauseInactiveAFK
-         ))
-        { allowIncrementTimer = false; }
-
-        if (afkDurationFrames >= 1800 && (
-            EndHelperModule.Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.PauseScenarioEnum.AFK ||
-            EndHelperModule.Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.PauseScenarioEnum.PauseAFK ||
-            EndHelperModule.Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.PauseScenarioEnum.PauseInactiveAFK
-        ))
-        { allowIncrementTimer = false; }
-
-        if (!level.TimerStarted || level.TimerStopped || level.Completed)
-        { allowIncrementTimer = false; }
-
-        ensureDictsHaveKey(level);
-
-        //if (allowIncrementTimer)
-        //{
         // Time increment used to be here, but shifted to a On.Celeste.Level.UpdateTime hook to make it as consistent as the regular timer as possible
-        // EndHelperModule.Session.roomStatDict_timer[currentRoomName] = TimeSpanShims.FromSeconds((double)Engine.RawDeltaTime).Ticks + Convert.ToInt64(EndHelperModule.Session.roomStatDict_timer[currentRoomName]);
-        //}
-
-        //AFK Checker
-        if (Input.Aim == Vector2.Zero && Input.Dash.Pressed == false && Input.Grab.Pressed == false && Input.CrouchDash.Pressed == false && Input.Talk.Pressed == false 
-            && Input.MenuCancel.Pressed == false && Input.MenuConfirm.Pressed == false && Input.ESC.Pressed == false && EndHelperModule.Settings.OpenStatDisplayMenu.Button.Pressed == false)
-        {
-            afkDurationFrames++;
-        } else
-        {
-            afkDurationFrames = 0;
-        }
-
-        //Inactive Checker
-        {
-            if (level.Tracker.GetEntity<Player>() is Player player && (player.InControl == false || level.InCutscene))
-            {
-                inactiveDurationFrames++; 
-            } else
-            {
-                inactiveDurationFrames = 0;
-            }
-        }
 
         // Counters for people to use I guess
         // OrderedDict do not handle types well, save & quit converts them into strings for some reason, hence the really dumb Convert.ToInts
@@ -773,7 +716,7 @@ public class RoomStatisticsDisplayer : Entity
         // if (!roomNameEditMenuOpen){ TextInput.OnInput -= OnTextInput; } // this attempted failsafe does not work lol
     }
 
-    void ensureDictsHaveKey(Level level)
+    public void ensureDictsHaveKey(Level level)
     {
         // Custom Names are seperated as additional extra keys can be stored
         // Strawberries are seperated as they are undone during load state unlike the rest.

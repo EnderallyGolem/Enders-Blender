@@ -24,6 +24,7 @@ using IL.Celeste;
 using Celeste;
 using System.Reflection;
 using NETCoreifier;
+using static Celeste.Mod.EndHelper.EndHelperModuleSettings;
 
 namespace Celeste.Mod.EndHelper;
 
@@ -316,6 +317,9 @@ public class EndHelperModule : EverestModule {
 
     // This is here to ensure that (as much as possible) the times are synced
     // If added to the entity, it'll lag behind during the pause animation, and if in level update, it'll be ahead during state change
+    private static int afkDurationFrames = 0;
+    private static int inactiveDurationFrames = 0;
+    public static bool allowIncrementTimer = true;
     private static void Hook_LevelUpdateTime(On.Celeste.Level.orig_UpdateTime orig, global::Celeste.Level self)
     {
         Level level = self;
@@ -325,7 +329,60 @@ public class EndHelperModule : EverestModule {
             {
                 // Timer will be increased here instead of the entity's update as otherwise pause menu appearing will freeze the timer temporarily
                 String incrementRoomName = roomStatDisplayer.currentRoomName;
-                if (roomStatDisplayer.allowIncrementTimer)
+
+                //AFK Checker
+                if (Input.Aim == Vector2.Zero && Input.Dash.Pressed == false && Input.Grab.Pressed == false && Input.CrouchDash.Pressed == false && Input.Talk.Pressed == false
+                    && Input.MenuCancel.Pressed == false && Input.MenuConfirm.Pressed == false && Input.ESC.Pressed == false && EndHelperModule.Settings.OpenStatDisplayMenu.Button.Pressed == false)
+                {
+                    afkDurationFrames++;
+                }
+                else
+                {
+                    afkDurationFrames = 0;
+                }
+
+                //Inactive Checker
+                {
+                    if (level.Tracker.GetEntity<Player>() is Player player && (player.InControl == false || level.InCutscene))
+                    {
+                        inactiveDurationFrames++;
+                    }
+                    else
+                    {
+                        inactiveDurationFrames = 0;
+                    }
+                }
+
+                // Check if can increment time spent in room
+                allowIncrementTimer = true;
+                if (level.FrozenOrPaused && (
+                    EndHelperModule.Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.PauseScenarioEnum.Pause ||
+                    EndHelperModule.Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.PauseScenarioEnum.PauseAFK ||
+                    EndHelperModule.Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.PauseScenarioEnum.PauseInactive ||
+                    EndHelperModule.Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.PauseScenarioEnum.PauseInactiveAFK
+                ))
+                { allowIncrementTimer = false; }
+
+
+                if (inactiveDurationFrames >= 60 && (
+                    EndHelperModule.Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.PauseScenarioEnum.PauseInactive ||
+                    EndHelperModule.Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.PauseScenarioEnum.PauseInactiveAFK
+                 ))
+                { allowIncrementTimer = false; }
+
+                if (afkDurationFrames >= 1800 && (
+                    EndHelperModule.Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.PauseScenarioEnum.AFK ||
+                    EndHelperModule.Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.PauseScenarioEnum.PauseAFK ||
+                    EndHelperModule.Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.PauseScenarioEnum.PauseInactiveAFK
+                ))
+                { allowIncrementTimer = false; }
+
+                if (!level.TimerStarted || level.TimerStopped || level.Completed)
+                { allowIncrementTimer = false; }
+
+                roomStatDisplayer.ensureDictsHaveKey(level);
+
+                if (allowIncrementTimer)
                 {
                     EndHelperModule.Session.roomStatDict_timer[incrementRoomName] = TimeSpanShims.FromSeconds((double)Engine.RawDeltaTime).Ticks + Convert.ToInt64(EndHelperModule.Session.roomStatDict_timer[incrementRoomName]);
                 }
@@ -372,6 +429,7 @@ public class EndHelperModule : EverestModule {
     {
         Level level = self.Level;
         level.Add(new RoomStatisticsDisplayer(level));
+        inactiveDurationFrames = 60; // For maps starting with cutscene. If without, would be set to 0 immediately.
 
         // Set up the save data custom name dictionaries if starting a map from the beginning
         SetupCustomNameSaveDataDict(level.Session);
@@ -454,7 +512,7 @@ public class EndHelperModule : EverestModule {
         {
             return;
         }
-        if (level.Tracker.GetEntity<Player>() is not Player player)
+        if (level.Tracker.GetEntity<Player>() is not Player player || !player.InControl)
         {
             return;
         }
