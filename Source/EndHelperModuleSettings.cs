@@ -13,9 +13,10 @@ public class EndHelperModuleSettings : EverestModuleSettings {
     [SettingSubMenu]
     public class RoomStatMenuSubMenu
     {
-        public enum PauseScenarioEnum { None, Pause, AFK, Both }
+        public enum PauseScenarioEnum { None, Pause, AFK, PauseAFK, PauseInactive, PauseInactiveAFK }
 
         [DefaultValue(PauseScenarioEnum.Pause)]
+        [SettingSubText("modoptions_EndHelperModule_PauseOption_Desc")]
         public PauseScenarioEnum PauseOption { get; set; }
 
 

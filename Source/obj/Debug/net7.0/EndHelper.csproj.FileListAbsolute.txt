@@ -23,3 +23,16 @@ C:\Program Files (x86)\Steam\steamapps\common\Celeste\Mods\EndBlender\Source\obj
 C:\Program Files (x86)\Steam\steamapps\common\Celeste\Mods\EndBlender\Source\obj\Debug\net7.0\EndHelper.pdb
 C:\Program Files (x86)\Steam\steamapps\common\Celeste\Mods\EndBlender\Source\obj\Debug\net7.0\ref\EndHelper.dll
 C:\Program Files (x86)\Steam\steamapps\common\Celeste\Mods\EndBlender\Source\obj\Debug\net7.0\EndHelper.sourcelink.json
+C:\Program Files (x86)\Steam\steamapps\common\Celeste\Mods\EndersBlender\Source\bin\Debug\net7.0\EndHelper.deps.json
+C:\Program Files (x86)\Steam\steamapps\common\Celeste\Mods\EndersBlender\Source\bin\Debug\net7.0\EndHelper.dll
+C:\Program Files (x86)\Steam\steamapps\common\Celeste\Mods\EndersBlender\Source\bin\Debug\net7.0\EndHelper.pdb
+C:\Program Files (x86)\Steam\steamapps\common\Celeste\Mods\EndersBlender\Source\obj\Debug\net7.0\EndHelper.csproj.AssemblyReference.cache
+C:\Program Files (x86)\Steam\steamapps\common\Celeste\Mods\EndersBlender\Source\obj\Debug\net7.0\EndHelper.GeneratedMSBuildEditorConfig.editorconfig
+C:\Program Files (x86)\Steam\steamapps\common\Celeste\Mods\EndersBlender\Source\obj\Debug\net7.0\EndHelper.AssemblyInfoInputs.cache
+C:\Program Files (x86)\Steam\steamapps\common\Celeste\Mods\EndersBlender\Source\obj\Debug\net7.0\EndHelper.AssemblyInfo.cs
+C:\Program Files (x86)\Steam\steamapps\common\Celeste\Mods\EndersBlender\Source\obj\Debug\net7.0\EndHelper.csproj.CoreCompileInputs.cache
+C:\Program Files (x86)\Steam\steamapps\common\Celeste\Mods\EndersBlender\Source\obj\Debug\net7.0\EndHelper.sourcelink.json
+C:\Program Files (x86)\Steam\steamapps\common\Celeste\Mods\EndersBlender\Source\obj\Debug\net7.0\EndHelper.dll
+C:\Program Files (x86)\Steam\steamapps\common\Celeste\Mods\EndersBlender\Source\obj\Debug\net7.0\refint\EndHelper.dll
+C:\Program Files (x86)\Steam\steamapps\common\Celeste\Mods\EndersBlender\Source\obj\Debug\net7.0\EndHelper.pdb
+C:\Program Files (x86)\Steam\steamapps\common\Celeste\Mods\EndersBlender\Source\obj\Debug\net7.0\ref\EndHelper.dll

@@ -95,29 +95,35 @@ public class RoomStatisticsDisplayer : Entity
             }
         }
 
-        //Increment time spent in room
+        // Check if can increment time spent in room
         allowIncrementTimer = true;
-
         if (level.FrozenOrPaused && (
             EndHelperModule.Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.PauseScenarioEnum.Pause ||
-            EndHelperModule.Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.PauseScenarioEnum.Both
+            EndHelperModule.Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.PauseScenarioEnum.PauseAFK ||
+            EndHelperModule.Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.PauseScenarioEnum.PauseInactive ||
+            EndHelperModule.Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.PauseScenarioEnum.PauseInactiveAFK
         ))
-        {
-            allowIncrementTimer = false;
-        }
+        { allowIncrementTimer = false; }
+
+        bool playerInactive = false;
+        if (level.Tracker.GetEntity<Player>() is Player player &&
+            (player.InControl == false || level.InCutscene) 
+         ) { playerInactive = true; }
+        if (playerInactive && (
+            EndHelperModule.Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.PauseScenarioEnum.PauseInactive ||
+            EndHelperModule.Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.PauseScenarioEnum.PauseInactiveAFK
+         ))
+        { allowIncrementTimer = false; }
 
         if (afkDurationFrames > 1800 && (
             EndHelperModule.Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.PauseScenarioEnum.AFK ||
-            EndHelperModule.Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.PauseScenarioEnum.Both
+            EndHelperModule.Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.PauseScenarioEnum.PauseAFK ||
+            EndHelperModule.Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.PauseScenarioEnum.PauseInactiveAFK
         ))
-        {
-            allowIncrementTimer = false;
-        }
+        { allowIncrementTimer = false; }
 
         if (!level.TimerStarted || level.TimerStopped || level.Completed)
-        {
-            allowIncrementTimer = false;
-        }
+        { allowIncrementTimer = false; }
 
         ensureDictsHaveKey(level);
 
@@ -755,7 +761,7 @@ public class RoomStatisticsDisplayer : Entity
         }
         EndHelperModule.Session.roomStatDict_customName[editingRoomName] = roomCustomName;
 
-        if (!roomNameEditMenuOpen){ TextInput.OnInput -= OnTextInput; }
+        // if (!roomNameEditMenuOpen){ TextInput.OnInput -= OnTextInput; } // this attempted failsafe does not work lol
     }
 
     void ensureDictsHaveKey(Level level)

@@ -9,10 +9,13 @@ modoptions_EndHelperModule_QuickRetry=Quick Retry
 # Room Statistics Menu
 modoptions_EndHelperModule_RoomStatMenu=Room Stat Tracker
 modoptions_EndHelperModule_PauseOption=Pause Timer When
+modoptions_EndHelperModule_PauseOption_Desc=AFK: No input for 30s. Inactive: In dummy state (Eg: in cutscene, using watchtower)
 modoptions_EndHelperModule_PauseOption_None=Never
-modoptions_EndHelperModule_PauseOption_Pause=Game Paused
-modoptions_EndHelperModule_PauseOption_AFK=AFK (No input for 30s)
-modoptions_EndHelperModule_PauseOption_Both=Game Paused or AFK
+modoptions_EndHelperModule_PauseOption_Pause=Paused
+modoptions_EndHelperModule_PauseOption_AFK=AFK
+modoptions_EndHelperModule_PauseOption_PauseAFK=Paused / AFK
+modoptions_EndHelperModule_PauseOption_PauseInactive=Paused / Inactive
+modoptions_EndHelperModule_PauseOption_PauseInactiveAFK=Paused / Inactive / AFK
 
 modoptions_EndHelperModule_MenuMulticolor=Multi-Colored Menu
 modoptions_EndHelperModule_MenuMulticolor_Desc=The Room stats menu's background will be dependent on the room color index.
