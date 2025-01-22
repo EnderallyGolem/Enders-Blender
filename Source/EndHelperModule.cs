@@ -66,7 +66,9 @@ public class EndHelperModule : EverestModule {
     public static OrderedDictionary externalRoomStatDict_strawberries = new OrderedDictionary { };
     public static OrderedDictionary externalRoomStatDict_colorIndex = new OrderedDictionary { };
 
-    public bool allowIncrementRoomTimer = true;
+    // Decreases till -ve, enables input if 0 and disables if +
+    // Lets me disable, but ensure it gets re-enabled when I don't need it anymore
+    public static int mInputDisableDuration = 0;
 
     // This is modified by SSMQolIntegration to change multiroom bino speed multiplier
     // -1 means not integrated
@@ -96,10 +98,11 @@ public class EndHelperModule : EverestModule {
         Everest.Events.AssetReload.OnAfterReload += ReloadCompleteFunc;
         Everest.Events.Level.OnEnter += EnterMapFunc;
 
-        On.Celeste.Level.Update += hook_LevelUpdate;
-        On.Celeste.Level.UpdateTime += hook_LevelUpdateTime;
-        On.Celeste.Player.Die += hook_OnPlayerDeath;
-        On.Celeste.Player.IntroRespawnBegin += hook_OnPlayerRespawn;
+        On.Monocle.Engine.Update += Hook_EngineUpdate;
+        On.Celeste.Level.Update += Hook_LevelUpdate;
+        On.Celeste.Level.UpdateTime += Hook_LevelUpdateTime;
+        On.Celeste.Player.Die += Hook_OnPlayerDeath;
+        On.Celeste.Player.IntroRespawnBegin += Hook_OnPlayerRespawn;
         On.Celeste.Level.TransitionRoutine += Hook_TransitionRoutine;
         On.Celeste.LevelLoader.StartLevel += Hook_StartMap;
         On.Celeste.Level.Pause += Hook_Pause;
@@ -132,10 +135,11 @@ public class EndHelperModule : EverestModule {
         Everest.Events.AssetReload.OnAfterReload -= ReloadCompleteFunc;
         Everest.Events.Level.OnEnter -= EnterMapFunc;
 
-        On.Celeste.Level.Update -= hook_LevelUpdate;
-        On.Celeste.Level.UpdateTime -= hook_LevelUpdateTime;
-        On.Celeste.Player.Die -= hook_OnPlayerDeath;
-        On.Celeste.Player.IntroRespawnBegin -= hook_OnPlayerRespawn;
+        On.Monocle.Engine.Update -= Hook_EngineUpdate;
+        On.Celeste.Level.Update -= Hook_LevelUpdate;
+        On.Celeste.Level.UpdateTime -= Hook_LevelUpdateTime;
+        On.Celeste.Player.Die -= Hook_OnPlayerDeath;
+        On.Celeste.Player.IntroRespawnBegin -= Hook_OnPlayerRespawn;
         On.Celeste.Level.TransitionRoutine -= Hook_TransitionRoutine;
         On.Celeste.LevelLoader.StartLevel -= Hook_StartMap;
         On.Celeste.Level.Pause -= Hook_Pause;
@@ -222,9 +226,33 @@ public class EndHelperModule : EverestModule {
         return result;
     }
 
+    // This has to be here so you don't get softlocked if MInput is disabled in UI or something
+    private static void Hook_EngineUpdate(On.Monocle.Engine.orig_Update orig, global::Monocle.Engine self, GameTime gameTime)
+    {
+        bool levelPause = false;
+        if (Engine.Scene is Level level)
+        {
+            levelPause = level.FrozenOrPaused;
+        }
+
+        if (mInputDisableDuration > -3 && !levelPause)
+        {
+            mInputDisableDuration--;
+        }
+        if (mInputDisableDuration >= 1)
+        {
+            MInput.Disabled = true;
+        }
+        if (mInputDisableDuration >= -2 && mInputDisableDuration <= 0)
+        {
+            MInput.Disabled = false;
+        }
+        orig(self, gameTime);
+    }
+
     // Using player update instead of level update so nothing happens when the level is loading
     // Level update screws with the timeSinceSessionReset.
-    private static void hook_LevelUpdate(On.Celeste.Level.orig_Update orig, global::Celeste.Level self)
+    private static void Hook_LevelUpdate(On.Celeste.Level.orig_Update orig, global::Celeste.Level self)
     {
         Level level = self;
 
@@ -288,7 +316,7 @@ public class EndHelperModule : EverestModule {
 
     // This is here to ensure that (as much as possible) the times are synced
     // If added to the entity, it'll lag behind during the pause animation, and if in level update, it'll be ahead during state change
-    private static void hook_LevelUpdateTime(On.Celeste.Level.orig_UpdateTime orig, global::Celeste.Level self)
+    private static void Hook_LevelUpdateTime(On.Celeste.Level.orig_UpdateTime orig, global::Celeste.Level self)
     {
         Level level = self;
         String currentRoomName = level.Session.LevelData.Name;
@@ -306,7 +334,7 @@ public class EndHelperModule : EverestModule {
         orig(self);
     }
 
-    public static PlayerDeadBody hook_OnPlayerDeath(On.Celeste.Player.orig_Die orig, global::Celeste.Player self, Vector2 direction, bool evenIfInvincible, bool registerDeathInStats)
+    public static PlayerDeadBody Hook_OnPlayerDeath(On.Celeste.Player.orig_Die orig, global::Celeste.Player self, Vector2 direction, bool evenIfInvincible, bool registerDeathInStats)
     {
         Level level = self.SceneAs<Level>();
         //Increment room death count.
@@ -322,7 +350,7 @@ public class EndHelperModule : EverestModule {
         return orig(self, direction, evenIfInvincible, registerDeathInStats);
     }
 
-    public static void hook_OnPlayerRespawn(On.Celeste.Player.orig_IntroRespawnBegin orig, global::Celeste.Player self)
+    public static void Hook_OnPlayerRespawn(On.Celeste.Player.orig_IntroRespawnBegin orig, global::Celeste.Player self)
     {
         Level level = self.SceneAs<Level>();
 

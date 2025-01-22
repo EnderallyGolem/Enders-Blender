@@ -3,11 +3,11 @@
 EndHelper_Settings=Ender's Blender's Knobs & Dials
 
 modoptions_EndHelperModule_FreeMultiroomWatchtower=Spawn Multi-Room Watchtower
-modoptions_EndHelperModule_OpenStatDisplayMenu=Open Room Statistics Menu
+modoptions_EndHelperModule_OpenStatDisplayMenu=Open Room Stat Menu
 modoptions_EndHelperModule_QuickRetry=Quick Retry
 
 # Room Statistics Menu
-modoptions_EndHelperModule_RoomStatMenu=Room Statistics
+modoptions_EndHelperModule_RoomStatMenu=Room Stat Tracker
 modoptions_EndHelperModule_PauseOption=Pause Timer When
 modoptions_EndHelperModule_PauseOption_None=Never
 modoptions_EndHelperModule_PauseOption_Pause=Game Paused
@@ -24,8 +24,8 @@ modoptions_EndHelperModule_MenuCustomNameStorageCount=Custom Name Storage Size
 modoptions_EndHelperModule_MenuCustomNameStorageCount_Desc=The number of sessions in which custom names will be stored.
 Eg: If 10, custom names for the map's rooms will be kept until you play 10 other maps.
 
-# Room Statistics Display
-modoptions_EndHelperModule_RoomStatDisplay=Room Statistics GUI Display
+# Room Stat Tracker Display
+modoptions_EndHelperModule_RoomStatDisplay=Room Stat Tracker HUD
 modoptions_EndHelperModule_OffsetX=X-Offset
 modoptions_EndHelperModule_OffsetY=Y-Offset
 modoptions_EndHelperModule_Size=Display Size
@@ -45,7 +45,7 @@ modoptions_EndHelperModule_DisableQuickRestart=Disable Quick Restart Keybind
 modoptions_EndHelperModule_DisableQuickRestart_Desc=Why is this set to R if empty, why is this the everest search key, WWHHHHHYYYYYYYYYYYY
 
 
-EndHelper_Dialog_RoomStatisticsDisplayer_CopiedToClipboard=Copied Statistics to Clipboard
+EndHelper_Dialog_RoomStatisticsDisplayer_CopiedToClipboard=Copied Stats to Clipboard
 EndHelper_Dialog_MultiroomWatchtower_FreeCameraON=Unlock Camera: ON
 EndHelper_Dialog_MultiroomWatchtower_FreeCameraOFF=Unlock Camera: OFF
 

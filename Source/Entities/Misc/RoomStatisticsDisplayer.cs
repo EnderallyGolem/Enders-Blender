@@ -35,11 +35,9 @@ public class RoomStatisticsDisplayer : Entity
     private bool statisticsGuiOpen = false;
     public bool disableRoomChange = false;
 
-    private int scheduleMInputDisable = 0; // Positive for disable, negative for enable
-
     public RoomStatisticsDisplayer(Level level)
     {
-        Tag = (int)Tags.HUD | (int)Tags.Global | (int)Tags.PauseUpdate | (int)Tags.TransitionUpdate | (int)Tags.FrozenUpdate;
+        Tag = (int)Tags.HUD | (int)Tags.Global | (int)Tags.PauseUpdate | (int)Tags.TransitionUpdate;
 
         Depth = -101;
     }
@@ -152,7 +150,6 @@ public class RoomStatisticsDisplayer : Entity
             statisticsGuiOpen = true;
             Depth = -9000;
             level.Paused = true;
-            scheduleMInputDisable = 3;
             Audio.Play("event:/ui/game/pause");
         }
         else if (statisticsGuiOpen && !roomNameEditMenuOpen && (!level.Paused || Input.ESC.Pressed || Input.MenuCancel.Pressed || Input.MenuConfirm.Pressed || Input.Pause
@@ -169,7 +166,6 @@ public class RoomStatisticsDisplayer : Entity
             consumeInput(Input.ESC, 3);
             consumeInput(Input.Pause, 3);
             Audio.Play("event:/ui/game/unpause");
-            scheduleMInputDisable = -3;
 
             if (Input.MenuConfirm.Pressed)
             {
@@ -181,33 +177,16 @@ public class RoomStatisticsDisplayer : Entity
         // MInput.Disabled = false;
         // Logger.Log(LogLevel.Info, "EndHelper/RoomStatisticsDisplayer", $"schedule {scheduleMInputDisable} >> {MInput.Disabled}");
 
-        // Exit out of room naming
-        // Pause exits out from both the room naming and the menu, I don't know why but I guess it isn't an issue.
         if ((Input.ESC.Pressed || Input.Pause.Pressed || !statisticsGuiOpen || !level.Paused) && roomNameEditMenuOpen)
         {
             MenuCloseNameEditor();
         }
 
-        // Extremely jank. I don't know why this was necessary for it to work... but if is.
-        // If imguihelper can get away with forcing disabled to be false I can get away with this
-        //
-        // Unfortunately mappingutils forces disabled to be false (and active to be true)
-        // Can't find a way around that unfortunately...
-        if (scheduleMInputDisable >= 1)
+        if (statisticsGuiOpen)
         {
-            MInput.Disabled = true;
-            if (!level.FrozenOrPaused)
-            {
-                scheduleMInputDisable--;
-            }
+            EndHelperModule.mInputDisableDuration = 3;
         }
-        if (scheduleMInputDisable <= -1) {
-            MInput.Disabled = false;
-            if (!level.FrozenOrPaused)
-            {
-                scheduleMInputDisable++;
-            }
-        }
+
         base.Update();
         // MInput.Disabled = false;
     }
@@ -223,10 +202,6 @@ public class RoomStatisticsDisplayer : Entity
         consumeInput(Input.MenuConfirm, 3);
         roomNameEditMenuOpen = false;
 
-        if (!statisticsGuiOpen)
-        {
-            scheduleMInputDisable = -3;
-        }
         Audio.Play("event:/ui/main/rename_entry_accept");
     }
 
