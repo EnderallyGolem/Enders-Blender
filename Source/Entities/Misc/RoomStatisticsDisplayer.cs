@@ -135,7 +135,7 @@ public class RoomStatisticsDisplayer : Entity
 
         //AFK Checker
         if (Input.Aim == Vector2.Zero && Input.Dash.Pressed == false && Input.Grab.Pressed == false && Input.CrouchDash.Pressed == false && Input.Talk.Pressed == false 
-            && Input.MenuCancel.Pressed == false && Input.MenuConfirm.Pressed == false && EndHelperModule.Settings.OpenStatDisplayMenu.Button.Pressed == false)
+            && Input.MenuCancel.Pressed == false && Input.MenuConfirm.Pressed == false && Input.ESC.Pressed == false && EndHelperModule.Settings.OpenStatDisplayMenu.Button.Pressed == false)
         {
             afkDurationFrames++;
         } else
