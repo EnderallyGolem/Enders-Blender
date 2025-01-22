@@ -19,6 +19,7 @@ using static Celeste.Mod.EndHelper.EndHelperModuleSettings.RoomStatDisplaySubMen
 using NETCoreifier;
 using System.Net.NetworkInformation;
 using FMOD.Studio;
+using static Celeste.Tentacles;
 
 
 namespace Celeste.Mod.EndHelper.Entities.Misc;
@@ -30,7 +31,7 @@ public class RoomStatisticsDisplayer : Entity
     private string clipboardText = "";
     public string currentRoomName = "";
     private int afkDurationFrames = 0;
-    private bool allowIncrementTimer = true;
+    public bool allowIncrementTimer = true;
     private bool statisticsGuiOpen = false;
     public bool disableRoomChange = false;
 
@@ -38,7 +39,7 @@ public class RoomStatisticsDisplayer : Entity
 
     public RoomStatisticsDisplayer(Level level)
     {
-        Tag = (int)Tags.HUD | (int)Tags.Global | (int)Tags.PauseUpdate | (int)Tags.TransitionUpdate;
+        Tag = (int)Tags.HUD | (int)Tags.Global | (int)Tags.PauseUpdate | (int)Tags.TransitionUpdate | (int)Tags.FrozenUpdate;
 
         Depth = -101;
     }
@@ -122,11 +123,11 @@ public class RoomStatisticsDisplayer : Entity
 
         ensureDictsHaveKey(level);
 
-        if (allowIncrementTimer)
-        {
-            // OrderedDict do not handle types well, save & quit converts them into strings for some reason, hence the really dumb Convert.ToInts
-            EndHelperModule.Session.roomStatDict_timer[currentRoomName] = TimeSpanShims.FromSeconds((double)Engine.RawDeltaTime).Ticks + Convert.ToInt64(EndHelperModule.Session.roomStatDict_timer[currentRoomName]);
-        }
+        //if (allowIncrementTimer)
+        //{
+        // Time increment used to be here, but shifted to a On.Celeste.Level.UpdateTime hook to make it as consistent as the regular timer as possible
+        // EndHelperModule.Session.roomStatDict_timer[currentRoomName] = TimeSpanShims.FromSeconds((double)Engine.RawDeltaTime).Ticks + Convert.ToInt64(EndHelperModule.Session.roomStatDict_timer[currentRoomName]);
+        //}
 
         //AFK Checker
         if (Input.Aim == Vector2.Zero && Input.Dash.Pressed == false && Input.Grab.Pressed == false && Input.CrouchDash.Pressed == false && Input.Talk.Pressed == false 
@@ -139,6 +140,7 @@ public class RoomStatisticsDisplayer : Entity
         }
 
         // Counters for people to use I guess
+        // OrderedDict do not handle types well, save & quit converts them into strings for some reason, hence the really dumb Convert.ToInts
         int timeSpentInSeconds = TimeSpan.FromTicks(Convert.ToInt64(EndHelperModule.Session.roomStatDict_timer[currentRoomName])).Seconds;
         level.Session.SetCounter($"EndHelper_RoomStatistics_{currentRoomName}_death", Convert.ToInt32(EndHelperModule.Session.roomStatDict_death[currentRoomName]));
         level.Session.SetCounter($"EndHelper_RoomStatistics_{currentRoomName}_timer", timeSpentInSeconds);
@@ -176,8 +178,8 @@ public class RoomStatisticsDisplayer : Entity
                 TextInput.SetClipboardText(clipboardText);
             }
         }
-        //MInput.Disabled = false;
-        //Logger.Log(LogLevel.Info, "EndHelper/RoomStatisticsDisplayer", $"schedule {scheduleMInputDisable} >> {MInput.Disabled}");
+        // MInput.Disabled = false;
+        // Logger.Log(LogLevel.Info, "EndHelper/RoomStatisticsDisplayer", $"schedule {scheduleMInputDisable} >> {MInput.Disabled}");
 
         // Exit out of room naming
         // Pause exits out from both the room naming and the menu, I don't know why but I guess it isn't an issue.
@@ -186,20 +188,25 @@ public class RoomStatisticsDisplayer : Entity
             MenuCloseNameEditor();
         }
 
-        // Extremely jank. I don't know why this was necessary for it to work... but if 
-        // imguihelper can get away with forcing disabled to be false I can get away with this
+        // Extremely jank. I don't know why this was necessary for it to work... but if is.
+        // If imguihelper can get away with forcing disabled to be false I can get away with this
         //
         // Unfortunately mappingutils forces disabled to be false (and active to be true)
         // Can't find a way around that unfortunately...
-
         if (scheduleMInputDisable >= 1)
         {
             MInput.Disabled = true;
-            scheduleMInputDisable--; 
+            if (!level.FrozenOrPaused)
+            {
+                scheduleMInputDisable--;
+            }
         }
         if (scheduleMInputDisable <= -1) {
-            scheduleMInputDisable++;
             MInput.Disabled = false;
+            if (!level.FrozenOrPaused)
+            {
+                scheduleMInputDisable++;
+            }
         }
         base.Update();
         // MInput.Disabled = false;
@@ -215,6 +222,11 @@ public class RoomStatisticsDisplayer : Entity
         consumeInput(Input.MenuCancel, 3);
         consumeInput(Input.MenuConfirm, 3);
         roomNameEditMenuOpen = false;
+
+        if (!statisticsGuiOpen)
+        {
+            scheduleMInputDisable = -3;
+        }
         Audio.Play("event:/ui/main/rename_entry_accept");
     }
 
@@ -494,8 +506,10 @@ public class RoomStatisticsDisplayer : Entity
 
             if ((customRoomName.Trim().Length == 0 || EndHelperModule.Session.roomStatDict_customName[roomName] is null) && !roomNameEditMenuOpen)
             {
-                String mapName = session.Area.GetSID();
-                EndHelperModule.Session.roomStatDict_customName[roomName] = $"{mapName}_{roomName}".DialogCleanOrNull(Dialog.Languages["english"]) ?? roomName;
+                String mapNameSideDialog = session.Area.GetSID();
+                if (side == AreaMode.BSide){mapNameSideDialog += "_B";}
+                else if (side == AreaMode.CSide){mapNameSideDialog += "_C";}
+                EndHelperModule.Session.roomStatDict_customName[roomName] = $"{mapNameSideDialog}_{roomName}".DialogCleanOrNull(Dialog.Languages["english"]) ?? roomName;
             } // No empty names!
 
             string shortenedRoomName = customRoomName;
@@ -773,8 +787,10 @@ public class RoomStatisticsDisplayer : Entity
         // Strawberries are seperated as they are undone during load state unlike the rest.
         if (!EndHelperModule.Session.roomStatDict_customName.ContainsKey(currentRoomName))
         {
-            String mapName = level.Session.Area.GetSID();
-            EndHelperModule.Session.roomStatDict_customName[currentRoomName] = $"{mapName}_{currentRoomName}".DialogCleanOrNull(Dialog.Languages["english"]) ?? currentRoomName;
+            String mapNameSideDialog = level.Session.Area.GetSID();
+            if (level.Session.Area.Mode == AreaMode.BSide) { mapNameSideDialog += "_B"; }
+            else if (level.Session.Area.Mode == AreaMode.CSide) { mapNameSideDialog += "_C"; }
+            EndHelperModule.Session.roomStatDict_customName[currentRoomName] = $"{mapNameSideDialog}_{currentRoomName}".DialogCleanOrNull(Dialog.Languages["english"]) ?? currentRoomName;
         }
         if (!EndHelperModule.Session.roomStatDict_death.Contains(currentRoomName) || !EndHelperModule.Session.roomStatDict_timer.Contains(currentRoomName) || !EndHelperModule.Session.roomStatDict_colorIndex.Contains(currentRoomName))
         {

@@ -51,18 +51,23 @@ EndHelper_Dialog_MultiroomWatchtower_FreeCameraOFF=Unlock Camera: OFF
 
 # ----------------------------------  Map Stuff  ----------------------------------------
 
-EndHelperTest=Ender's Blender
-EndHelperTest_EndHelperTestMap=Test Jar
-poem_EndHelperTest_EndHelperTestMap_A= 
+EndHelperTest_1=Ender's Blender
+EndHelperTest_1_EndHelperTestMap=Test Jar
+poem_EndHelperTest_1_EndHelperTestMap_A= 
+poem_EndHelperTest_1_EndHelperTestMap_B= 
+
+EndHelperTest_1_EndHelperTestMap_remix=B!!!!!!
+EndHelperTest_1_EndHelperTestMap_remix_artist=this just exists to test b side room names tbh
 
 
 EndHelperTest_Tutorial_Misc_TileEntity=Tile Entity
 
 
 # ----------------------------------  Room Stats  ----------------------------------------
-EndHelperTest_EndHelperTestMap_bino1=bino1 with a long custom name
-EndHelperTest_EndHelperTestMap_bino2=bino2 with a very very very freaking long name
-EndHelperTest_EndHelperTestMap_bino3=custom names are done by (Folder)_(bin)_(Room Name) btw. So in this case EndHelperTest_EndHelperTestMap_bino3=(name goes here). You can't even read all this probably.
+EndHelperTest_1_EndHelperTestMap_bino1=bino1 with a long custom name
+EndHelperTest_1_EndHelperTestMap_bino2=bino2 with a very very very freaking long name
+EndHelperTest_1_EndHelperTestMap_bino3=custom names are done by (Folder)_(bin)_(Room Name) btw. So in this case EndHelperTest_EndHelperTestMap_bino3=(name goes here). For B/C sides, EndHelperTest_EndHelperTestMap_B_bino3=(name goes here). This is far too long for you to read in game. Get trolled!
+EndHelperTest_1_EndHelperTestMap_B_theroom=B-side room with custom name!
 
 EndHelperTest_Tutorial_StatisticMenuBirb=Room Stats
 EndHelperTest_Tutorial_StatisticMenu=The mod stores the number of deaths, time spent, and strawberries collected in each room.
@@ -70,6 +75,7 @@ The stats for the current room can be shown by enabling it in the mod settings. 
 The color of the menu, unless disabled, corrosponds to the Color ID.
 These stats only last for the current session (though custom room names can be stored longer depending on settings).
 For mod makers, you can have custom names show with {# ffff66}(Folder){#}_{# ffff66}(bin){#}_{# ffff66}(RoomName){#} in the dialog file (Map name format with _{# ffff66}(RoomName){#}).
+For B or C sides, this is {# ffff66}(Folder){#}_{# ffff66}(bin){#}_B_{# ffff66}(RoomName){#} or {# ffff66}(Folder){#}_{# ffff66}(bin){#}_C_{# ffff66}(RoomName){#}.
 This was done for the bino rooms above - check the names with the menu/display and debug mode!
 Don't use the bino to check the names though, the current room does not change when using the multi-room binoculars.
 

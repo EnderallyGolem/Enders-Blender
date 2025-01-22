@@ -23,6 +23,7 @@ using System.Runtime.CompilerServices;
 using IL.Celeste;
 using Celeste;
 using System.Reflection;
+using NETCoreifier;
 
 namespace Celeste.Mod.EndHelper;
 
@@ -65,6 +66,8 @@ public class EndHelperModule : EverestModule {
     public static OrderedDictionary externalRoomStatDict_strawberries = new OrderedDictionary { };
     public static OrderedDictionary externalRoomStatDict_colorIndex = new OrderedDictionary { };
 
+    public bool allowIncrementRoomTimer = true;
+
     // This is modified by SSMQolIntegration to change multiroom bino speed multiplier
     // -1 means not integrated
     public static bool integratingWithSSMQoL = false;
@@ -94,6 +97,7 @@ public class EndHelperModule : EverestModule {
         Everest.Events.Level.OnEnter += EnterMapFunc;
 
         On.Celeste.Level.Update += hook_LevelUpdate;
+        On.Celeste.Level.UpdateTime += hook_LevelUpdateTime;
         On.Celeste.Player.Die += hook_OnPlayerDeath;
         On.Celeste.Player.IntroRespawnBegin += hook_OnPlayerRespawn;
         On.Celeste.Level.TransitionRoutine += Hook_TransitionRoutine;
@@ -129,6 +133,7 @@ public class EndHelperModule : EverestModule {
         Everest.Events.Level.OnEnter -= EnterMapFunc;
 
         On.Celeste.Level.Update -= hook_LevelUpdate;
+        On.Celeste.Level.UpdateTime -= hook_LevelUpdateTime;
         On.Celeste.Player.Die -= hook_OnPlayerDeath;
         On.Celeste.Player.IntroRespawnBegin -= hook_OnPlayerRespawn;
         On.Celeste.Level.TransitionRoutine -= Hook_TransitionRoutine;
@@ -222,6 +227,7 @@ public class EndHelperModule : EverestModule {
     private static void hook_LevelUpdate(On.Celeste.Level.orig_Update orig, global::Celeste.Level self)
     {
         Level level = self;
+
         if (EndHelperModule.Settings.FreeMultiroomWatchtower.Button.Pressed && !level.FrozenOrPaused)
         {
             spawnMultiroomWatchtower();
@@ -236,9 +242,11 @@ public class EndHelperModule : EverestModule {
             {
                 ReupdateAllRooms(level); //This only exists so it updates when you respawn from debug. It umm still requires a transition/respawn to work lol
             }
-            if (level.Tracker.GetEntity<RoomStatisticsDisplayer>() is RoomStatisticsDisplayer roomStatDisplayer)
             {
-                roomStatDisplayer.ImportRoomStatInfo();
+                if (level.Tracker.GetEntity<RoomStatisticsDisplayer>() is RoomStatisticsDisplayer roomStatDisplayer)
+                {
+                    roomStatDisplayer.ImportRoomStatInfo();
+                }
             }
         }
         else if (EndHelperModule.timeSinceSessionReset > 1)
@@ -273,6 +281,26 @@ public class EndHelperModule : EverestModule {
                 DynamicData deadPlayerData = DynamicData.For(deadPlayer);
                 level.DoScreenWipe(wipeIn: false, level.Reload);
                 deadPlayerData.Set("finished", true); // Stop trying to end again if holding confirm
+            }
+        }
+        orig(self);
+    }
+
+    // This is here to ensure that (as much as possible) the times are synced
+    // If added to the entity, it'll lag behind during the pause animation, and if in level update, it'll be ahead during state change
+    private static void hook_LevelUpdateTime(On.Celeste.Level.orig_UpdateTime orig, global::Celeste.Level self)
+    {
+        Level level = self;
+        String currentRoomName = level.Session.LevelData.Name;
+
+        {
+            if (level.Tracker.GetEntity<RoomStatisticsDisplayer>() is RoomStatisticsDisplayer roomStatDisplayer)
+            {
+                // Timer will be increased here instead of the entity's update as otherwise pause menu appearing will freeze the timer temporarily
+                if (roomStatDisplayer.allowIncrementTimer)
+                {
+                    EndHelperModule.Session.roomStatDict_timer[currentRoomName] = TimeSpanShims.FromSeconds((double)Engine.RawDeltaTime).Ticks + Convert.ToInt64(EndHelperModule.Session.roomStatDict_timer[currentRoomName]);
+                }
             }
         }
         orig(self);
