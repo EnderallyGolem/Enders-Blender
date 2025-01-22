@@ -319,15 +319,15 @@ public class EndHelperModule : EverestModule {
     private static void Hook_LevelUpdateTime(On.Celeste.Level.orig_UpdateTime orig, global::Celeste.Level self)
     {
         Level level = self;
-        String currentRoomName = level.Session.LevelData.Name;
 
         {
             if (level.Tracker.GetEntity<RoomStatisticsDisplayer>() is RoomStatisticsDisplayer roomStatDisplayer)
             {
                 // Timer will be increased here instead of the entity's update as otherwise pause menu appearing will freeze the timer temporarily
+                String incrementRoomName = roomStatDisplayer.currentRoomName;
                 if (roomStatDisplayer.allowIncrementTimer)
                 {
-                    EndHelperModule.Session.roomStatDict_timer[currentRoomName] = TimeSpanShims.FromSeconds((double)Engine.RawDeltaTime).Ticks + Convert.ToInt64(EndHelperModule.Session.roomStatDict_timer[currentRoomName]);
+                    EndHelperModule.Session.roomStatDict_timer[incrementRoomName] = TimeSpanShims.FromSeconds((double)Engine.RawDeltaTime).Ticks + Convert.ToInt64(EndHelperModule.Session.roomStatDict_timer[incrementRoomName]);
                 }
             }
         }

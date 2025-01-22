@@ -46,8 +46,7 @@
               "RelativeToolTip": "Source\\EndHelperModuleSession.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-01-22T15:32:39.283Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-01-22T15:32:39.283Z"
             },
             {
               "$type": "Document",
@@ -59,8 +58,7 @@
               "RelativeToolTip": "Source\\EndHelperModule.cs",
               "ViewState": "AgIAAAYBAAAAAAAAAAAvwB0BAAB0AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-01-21T07:33:11.041Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-01-21T07:33:11.041Z"
             },
             {
               "$type": "Document",
@@ -68,9 +66,9 @@
               "Title": "RoomStatisticsDisplayer.cs",
               "DocumentMoniker": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Celeste\\Mods\\EndersBlender\\Source\\Entities\\Misc\\RoomStatisticsDisplayer.cs",
               "RelativeDocumentMoniker": "Source\\Entities\\Misc\\RoomStatisticsDisplayer.cs",
-              "ToolTip": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Celeste\\Mods\\EndersBlender\\Source\\Entities\\Misc\\RoomStatisticsDisplayer.cs",
-              "RelativeToolTip": "Source\\Entities\\Misc\\RoomStatisticsDisplayer.cs",
-              "ViewState": "AgIAAFoAAAAAAAAAAAAswHcAAABpAAAAAAAAAA==",
+              "ToolTip": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Celeste\\Mods\\EndersBlender\\Source\\Entities\\Misc\\RoomStatisticsDisplayer.cs*",
+              "RelativeToolTip": "Source\\Entities\\Misc\\RoomStatisticsDisplayer.cs*",
+              "ViewState": "AgIAAAcAAAAAAAAAAADgvyEAAAArAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-01-20T12:43:04.27Z",
               "EditorCaption": ""
@@ -85,8 +83,7 @@
               "RelativeToolTip": "Source\\Entities\\Misc\\MultiroomWatchtower.cs",
               "ViewState": "AgIAANUBAAAAAAAAAAAgwPkBAAAcAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-01-20T13:02:53.056Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-01-20T13:02:53.056Z"
             },
             {
               "$type": "Document",
@@ -98,8 +95,7 @@
               "RelativeToolTip": "Source\\EndHelperModuleSettings.cs",
               "ViewState": "AgIAAAYAAAAAAAAAAAAAABkAAAADAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-01-20T11:19:48.225Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-01-20T11:19:48.225Z"
             }
           ]
         }

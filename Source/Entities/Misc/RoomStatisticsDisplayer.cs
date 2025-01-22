@@ -31,6 +31,7 @@ public class RoomStatisticsDisplayer : Entity
     private string clipboardText = "";
     public string currentRoomName = "";
     private int afkDurationFrames = 0;
+    private int inactiveDurationFrames = 60;
     public bool allowIncrementTimer = true;
     private bool statisticsGuiOpen = false;
     public bool disableRoomChange = false;
@@ -105,17 +106,14 @@ public class RoomStatisticsDisplayer : Entity
         ))
         { allowIncrementTimer = false; }
 
-        bool playerInactive = false;
-        if (level.Tracker.GetEntity<Player>() is Player player &&
-            (player.InControl == false || level.InCutscene) 
-         ) { playerInactive = true; }
-        if (playerInactive && (
+
+        if (inactiveDurationFrames >= 60 && (
             EndHelperModule.Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.PauseScenarioEnum.PauseInactive ||
             EndHelperModule.Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.PauseScenarioEnum.PauseInactiveAFK
          ))
         { allowIncrementTimer = false; }
 
-        if (afkDurationFrames > 1800 && (
+        if (afkDurationFrames >= 1800 && (
             EndHelperModule.Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.PauseScenarioEnum.AFK ||
             EndHelperModule.Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.PauseScenarioEnum.PauseAFK ||
             EndHelperModule.Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.PauseScenarioEnum.PauseInactiveAFK
@@ -141,6 +139,17 @@ public class RoomStatisticsDisplayer : Entity
         } else
         {
             afkDurationFrames = 0;
+        }
+
+        //Inactive Checker
+        {
+            if (level.Tracker.GetEntity<Player>() is Player player && (player.InControl == false || level.InCutscene))
+            {
+                inactiveDurationFrames++; 
+            } else
+            {
+                inactiveDurationFrames = 0;
+            }
         }
 
         // Counters for people to use I guess
