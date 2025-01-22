@@ -754,6 +754,8 @@ public class RoomStatisticsDisplayer : Entity
             roomCustomName = $"{roomCustomName}{c}";
         }
         EndHelperModule.Session.roomStatDict_customName[editingRoomName] = roomCustomName;
+
+        if (!roomNameEditMenuOpen){ TextInput.OnInput -= OnTextInput; }
     }
 
     void ensureDictsHaveKey(Level level)
