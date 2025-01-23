@@ -33,11 +33,15 @@ public class RoomStatisticsDisplayer : Entity
     private bool statisticsGuiOpen = false;
     public bool disableRoomChange = false;
 
+    public Dictionary<string,bool> pauseTypeDict = new Dictionary<string, bool> { };
+
     public RoomStatisticsDisplayer(Level level)
     {
         Tag = (int)Tags.HUD | (int)Tags.Global | (int)Tags.PauseUpdate | (int)Tags.TransitionUpdate;
-
         Depth = -101;
+        pauseTypeDict.Add("Pause", false);
+        pauseTypeDict.Add("Inactive", false);
+        pauseTypeDict.Add("AFK", false);
     }
     public override void Added(Scene scene)
     {
@@ -103,7 +107,7 @@ public class RoomStatisticsDisplayer : Entity
         level.Session.SetCounter($"EndHelper_RoomStatistics_{currentRoomName}_strawberries", Convert.ToInt32(EndHelperModule.Session.roomStatDict_strawberries[currentRoomName]));
 
         // Show/Hide GUI
-        if (EndHelperModule.Settings.OpenStatDisplayMenu.Button.Pressed && !statisticsGuiOpen && !level.Paused)
+        if (EndHelperModule.Settings.OpenStatDisplayMenu.Button.Pressed && !statisticsGuiOpen && !level.Paused && !level.Transitioning)
         {
             statisticsGuiOpen = true;
             Depth = -9000;
@@ -195,7 +199,7 @@ public class RoomStatisticsDisplayer : Entity
 
         if (!statisticsGuiOpen)
         {
-            showStats(displayXPos, displayYPos, displayScale, timerColor, 255, false, xJustification, false, false, false, "", "", deathNum, timerNum, strawberriesNum);
+            showStats(displayXPos, displayYPos, displayScale, timerColor, false, xJustification, false, false, false, "", "", deathNum, timerNum, strawberriesNum);
         }
         
 
@@ -215,7 +219,7 @@ public class RoomStatisticsDisplayer : Entity
         }
     }
 
-    void showStats(int displayXPos, int displayYPos, float displayScale, Color timerColor, int alpha, bool yCentered, float xJustification, bool showAll, bool hideRoomName, bool showTotalMapBerryCount, string prefix, string suffix, int deathNum, long timerNum, int strawberriesNum)
+    void showStats(int displayXPos, int displayYPos, float displayScale, Color timerColor, bool yCentered, float xJustification, bool showAll, bool hideRoomName, bool showTotalMapBerryCount, string prefix, string suffix, int deathNum, long timerNum, int strawberriesNum)
     {
         Level level = SceneAs<Level>();
         Vector2 justification = new Vector2(0, yCentered ? 0.5f : 0f);
@@ -537,7 +541,7 @@ public class RoomStatisticsDisplayer : Entity
             showTotalMapBerryCount = false; // No berry count spoilery
         }
 
-        showStats(100, 1010, 0.7f, Color.White, 255, true, 0, true, true, showTotalMapBerryCount, "Total: ", "", totalDeaths, totalTimer, totalStrawberries);
+        showStats(100, 1010, 0.7f, Color.White, true, 0, true, true, showTotalMapBerryCount, "Total: ", "", totalDeaths, totalTimer, totalStrawberries);
 
         // Instructions
         int instructionXPos = 100;
@@ -586,6 +590,23 @@ public class RoomStatisticsDisplayer : Entity
             Input.GuiButton(Input.MenuRight, mode: Input.PrefixMode.Latest).DrawCentered(new Vector2(instructionXPos, instructionYPos), instructionColor, instructionScale, 0);
             instructionXPos += (int)(ActiveFont.WidthToNextLine($"XXXXX", 0) * instructionScale);
         }
+
+
+        // Timer Freeze Icons
+        String pauseIconMsg = "";
+        if (pauseTypeDict["Pause"])
+        {
+            pauseIconMsg += ":EndHelper/ui_timerfreeze_pause:";
+        }
+        if (pauseTypeDict["Inactive"])
+        {
+            pauseIconMsg += ":EndHelper/ui_timerfreeze_inactive:";
+        }
+        if (pauseTypeDict["AFK"])
+        {
+            pauseIconMsg += ":EndHelper/ui_timerfreeze_afk:";
+        }
+        ActiveFont.DrawOutline(pauseIconMsg, new Vector2(1820, instructionYPos + 80), new Vector2(1f, 0.5f), Vector2.One * 3f, Color.DarkGray, 1f, Color.Black);
 
         string totalTimeString = EndHelperModule.MinimalGameplayFormat(TimeSpan.FromTicks(totalTimer));
         clipboardText += $"\r\n{"Total"}\t{totalDeaths}\t{totalTimeString}\t{totalStrawberries}";

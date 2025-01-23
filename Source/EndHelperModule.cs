@@ -361,21 +361,30 @@ public class EndHelperModule : EverestModule {
                     EndHelperModule.Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.PauseScenarioEnum.PauseInactive ||
                     EndHelperModule.Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.PauseScenarioEnum.PauseInactiveAFK
                 ))
-                { allowIncrementTimer = false; }
+                {
+                    allowIncrementTimer = false;
+                    roomStatDisplayer.pauseTypeDict["Pause"] = true;
+                }
 
 
                 if (inactiveDurationFrames >= 60 && (
                     EndHelperModule.Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.PauseScenarioEnum.PauseInactive ||
                     EndHelperModule.Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.PauseScenarioEnum.PauseInactiveAFK
                  ))
-                { allowIncrementTimer = false; }
+                {
+                    allowIncrementTimer = false;
+                    roomStatDisplayer.pauseTypeDict["Inactive"] = true;
+                }
 
                 if (afkDurationFrames >= 1800 && (
                     EndHelperModule.Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.PauseScenarioEnum.AFK ||
                     EndHelperModule.Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.PauseScenarioEnum.PauseAFK ||
                     EndHelperModule.Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.PauseScenarioEnum.PauseInactiveAFK
                 ))
-                { allowIncrementTimer = false; }
+                {
+                    allowIncrementTimer = false;
+                    roomStatDisplayer.pauseTypeDict["AFK"] = true;
+                }
 
                 if (!level.TimerStarted || level.TimerStopped || level.Completed)
                 { allowIncrementTimer = false; }

@@ -10,6 +10,7 @@ modoptions_EndHelperModule_QuickRetry=Quick Retry
 modoptions_EndHelperModule_RoomStatMenu=Room Stat Tracker
 modoptions_EndHelperModule_PauseOption=Pause Timer When
 modoptions_EndHelperModule_PauseOption_Desc=AFK: No input for 30s. Inactive: In dummy state (Eg: in cutscene, using watchtower)
+The room stat tracker menu will have icons showing which of these have been used.
 modoptions_EndHelperModule_PauseOption_None=Never
 modoptions_EndHelperModule_PauseOption_Pause=Paused
 modoptions_EndHelperModule_PauseOption_AFK=AFK
