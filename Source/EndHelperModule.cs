@@ -25,6 +25,8 @@ using Celeste;
 using System.Reflection;
 using NETCoreifier;
 using static Celeste.Mod.EndHelper.EndHelperModuleSettings;
+using Celeste.Mod.EndHelper.Entities.RoomSwap;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace Celeste.Mod.EndHelper;
 
@@ -363,7 +365,7 @@ public class EndHelperModule : EverestModule {
                 ))
                 {
                     allowIncrementTimer = false;
-                    roomStatDisplayer.pauseTypeDict["Pause"] = true;
+                    EndHelperModule.Session.pauseTypeDict["Pause"] = true;
                 }
 
 
@@ -373,7 +375,8 @@ public class EndHelperModule : EverestModule {
                  ))
                 {
                     allowIncrementTimer = false;
-                    roomStatDisplayer.pauseTypeDict["Inactive"] = true;
+                    if (level.TimerStarted && !level.TimerStopped && !level.Completed)
+                    { EndHelperModule.Session.pauseTypeDict["Inactive"] = true; }
                 }
 
                 if (afkDurationFrames >= 1800 && (
@@ -383,7 +386,7 @@ public class EndHelperModule : EverestModule {
                 ))
                 {
                     allowIncrementTimer = false;
-                    roomStatDisplayer.pauseTypeDict["AFK"] = true;
+                    EndHelperModule.Session.pauseTypeDict["AFK"] = true;
                 }
 
                 if (!level.TimerStarted || level.TimerStopped || level.Completed)
@@ -438,7 +441,7 @@ public class EndHelperModule : EverestModule {
     {
         Level level = self.Level;
         level.Add(new RoomStatisticsDisplayer(level));
-        inactiveDurationFrames = 60; // For maps starting with cutscene. If without, would be set to 0 immediately.
+        inactiveDurationFrames = 60; // For maps starting with cutscene. If without, would be set to 0 immediately. Not even sure if this works lol
 
         // Set up the save data custom name dictionaries if starting a map from the beginning
         SetupCustomNameSaveDataDict(level.Session);
@@ -1117,7 +1120,6 @@ public class EndHelperModule : EverestModule {
             //Logger.Log(LogLevel.Info, "EndHelper/main", $"getTransitionFlagName - Obtained flag name for {roomSwapPrefix} to be {flagName}");
             return flagName;
         }
-
         return succeedModify;
     }
 

@@ -33,15 +33,10 @@ public class RoomStatisticsDisplayer : Entity
     private bool statisticsGuiOpen = false;
     public bool disableRoomChange = false;
 
-    public Dictionary<string,bool> pauseTypeDict = new Dictionary<string, bool> { };
-
     public RoomStatisticsDisplayer(Level level)
     {
         Tag = (int)Tags.HUD | (int)Tags.Global | (int)Tags.PauseUpdate | (int)Tags.TransitionUpdate;
         Depth = -101;
-        pauseTypeDict.Add("Pause", false);
-        pauseTypeDict.Add("Inactive", false);
-        pauseTypeDict.Add("AFK", false);
     }
     public override void Added(Scene scene)
     {
@@ -594,15 +589,20 @@ public class RoomStatisticsDisplayer : Entity
 
         // Timer Freeze Icons
         String pauseIconMsg = "";
-        if (pauseTypeDict["Pause"])
+
+        if (!EndHelperModule.Session.pauseTypeDict.ContainsKey("Pause")){ EndHelperModule.Session.pauseTypeDict["Pause"] = false; }
+        if (!EndHelperModule.Session.pauseTypeDict.ContainsKey("Inactive")) { EndHelperModule.Session.pauseTypeDict["Inactive"] = false; }
+        if (!EndHelperModule.Session.pauseTypeDict.ContainsKey("AFK")) { EndHelperModule.Session.pauseTypeDict["AFK"] = false; }
+
+        if (EndHelperModule.Session.pauseTypeDict["Pause"])
         {
             pauseIconMsg += ":EndHelper/ui_timerfreeze_pause:";
         }
-        if (pauseTypeDict["Inactive"])
+        if (EndHelperModule.Session.pauseTypeDict["Inactive"])
         {
             pauseIconMsg += ":EndHelper/ui_timerfreeze_inactive:";
         }
-        if (pauseTypeDict["AFK"])
+        if (EndHelperModule.Session.pauseTypeDict["AFK"])
         {
             pauseIconMsg += ":EndHelper/ui_timerfreeze_afk:";
         }
