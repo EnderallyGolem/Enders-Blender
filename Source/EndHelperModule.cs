@@ -27,6 +27,7 @@ using NETCoreifier;
 using static Celeste.Mod.EndHelper.EndHelperModuleSettings;
 using Celeste.Mod.EndHelper.Entities.RoomSwap;
 using Microsoft.Xna.Framework.Graphics;
+using Celeste.Mod.ImGuiHelper;
 
 namespace Celeste.Mod.EndHelper;
 
@@ -116,6 +117,7 @@ public class EndHelperModule : EverestModule {
 
         SpeedrunToolIntegration.Load();
         SSMQoLIntegration.Load();
+        //unused_ImGuiHelperIntegration.Load();
     }
 
     // Optional, initialize anything after Celeste has initialized itself properly.
@@ -153,6 +155,7 @@ public class EndHelperModule : EverestModule {
 
         SpeedrunToolIntegration.Unload();
         SSMQoLIntegration.Unload();
+        //unused_ImGuiHelperIntegration.Unload();
     }
     #endregion
 

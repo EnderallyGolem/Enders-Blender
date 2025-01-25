@@ -31,6 +31,9 @@
         <Reference Include="Celeste">
           <HintPath>..\..\..\Celeste.dll</HintPath>
         </Reference>
+        <Reference Include="ImGuiHelper">
+          <HintPath>..\Integrations\ImGuiHelper.dll</HintPath>
+        </Reference>
         <Reference Include="NETCoreifier">
           <HintPath>..\..\..\NETCoreifier.dll</HintPath>
         </Reference>

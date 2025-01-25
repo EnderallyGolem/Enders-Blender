@@ -63,9 +63,6 @@ namespace Celeste.Mod.EndHelper.Integration
                 Hook_TeleportRoomUtils_TeleportTo = new Hook(TeleportRoomUtils_TeleportTo,
                     typeof(SpeedrunToolIntegration).GetMethod("OnTeleportTo", BindingFlags.NonPublic | BindingFlags.Static));
 
-                Hook_TeleportRoomUtils_TeleportTo = new Hook(TeleportRoomUtils_TeleportTo,
-                    typeof(SpeedrunToolIntegration).GetMethod("OnTeleportTo", BindingFlags.NonPublic | BindingFlags.Static));
-
             }
             catch (Exception) { }
         }
@@ -117,8 +114,6 @@ namespace Celeste.Mod.EndHelper.Integration
             //Logger.Log(LogLevel.Info, "EndHelper/SpeedrunToolIntegration", $"onteleport beofre");
             orig(session, fromHistory);
         }
-
-#pragma warning restore IDE0051  // Private method is unused
 
     }
 }
