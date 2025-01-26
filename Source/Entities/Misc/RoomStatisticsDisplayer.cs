@@ -32,6 +32,8 @@ public class RoomStatisticsDisplayer : Entity
     public string currentRoomName = "";
     private bool statisticsGuiOpen = false;
     public bool disableRoomChange = false;
+    private enum roomStatMenuFilter { None, Death0, Death10, Time60s }
+    private roomStatMenuFilter filterSetting = roomStatMenuFilter.None;
 
     public RoomStatisticsDisplayer(Level level)
     {
@@ -101,6 +103,13 @@ public class RoomStatisticsDisplayer : Entity
         level.Session.SetCounter($"EndHelper_RoomStatistics_{currentRoomName}_timer", timeSpentInSeconds);
         level.Session.SetCounter($"EndHelper_RoomStatistics_{currentRoomName}_strawberries", Convert.ToInt32(EndHelperModule.Session.roomStatDict_strawberries[currentRoomName]));
 
+        // Change filter
+        if (statisticsGuiOpen && !roomNameEditMenuOpen && Input.MenuConfirm.Pressed)
+        {
+            filterSetting = (roomStatMenuFilter)(((int)filterSetting + 1) % Enum.GetValues(typeof(roomStatMenuFilter)).Length);
+        }
+
+
         // Show/Hide GUI
         if (EndHelperModule.Settings.OpenStatDisplayMenu.Button.Pressed && !statisticsGuiOpen && !level.Paused && !level.Transitioning)
         {
@@ -109,7 +118,7 @@ public class RoomStatisticsDisplayer : Entity
             level.Paused = true;
             Audio.Play("event:/ui/game/pause");
         }
-        else if (statisticsGuiOpen && !roomNameEditMenuOpen && (!level.Paused || Input.ESC.Pressed || Input.MenuCancel.Pressed || Input.MenuConfirm.Pressed || Input.Pause
+        else if (statisticsGuiOpen && !roomNameEditMenuOpen && (!level.Paused || Input.ESC.Pressed || Input.MenuCancel.Pressed || Input.Pause
             || level.Transitioning || EndHelperModule.Settings.OpenStatDisplayMenu.Button.Pressed))
         {
             statisticsGuiOpen = false;
@@ -124,7 +133,7 @@ public class RoomStatisticsDisplayer : Entity
             consumeInput(Input.Pause, 3);
             Audio.Play("event:/ui/game/unpause");
 
-            if (Input.MenuConfirm.Pressed)
+            if (Input.MenuCancel.Pressed)
             {
                 string clipboardToolTipMsg = Dialog.Get("EndHelper_Dialog_RoomStatisticsDisplayer_CopiedToClipboard");
                 Tooltip.Show(clipboardToolTipMsg, 2f);
@@ -350,7 +359,67 @@ public class RoomStatisticsDisplayer : Entity
         int startX_first = 100;
         const int col2Buffer = 900;
 
-        int dictSize = EndHelperModule.Session.roomStatDict_death.Count;
+        // Create a list of all room names to show
+        List<string> roomNamesToShowList = new List<string>();
+        foreach (string roomName in new ArrayList(EndHelperModule.Session.roomStatDict_death.Keys))
+        {
+            if (roomName == "")
+            {
+                EndHelperModule.Session.roomStatDict_customName.Remove("");
+                EndHelperModule.Session.roomStatDict_death.Remove("");
+                EndHelperModule.Session.roomStatDict_timer.Remove("");
+                EndHelperModule.Session.roomStatDict_strawberries.Remove("");
+                EndHelperModule.Session.roomStatDict_colorIndex.Remove("");
+                continue;
+            }
+
+            int roomDeaths = Convert.ToInt32(EndHelperModule.Session.roomStatDict_death[roomName]);
+            TimeSpan roomTimeSpan = TimeSpan.FromTicks(Convert.ToInt64(EndHelperModule.Session.roomStatDict_timer[roomName]));
+            string roomTimeString = EndHelperModule.MinimalGameplayFormat(roomTimeSpan);
+            int roomStrawberriesCollected = Convert.ToInt32(EndHelperModule.Session.roomStatDict_strawberries[roomName]);
+
+            // Filtering
+            switch (filterSetting)
+            {
+                case roomStatMenuFilter.Death0:
+                    if (roomDeaths <= 0) { continue; }
+                    break;
+
+                case roomStatMenuFilter.Death10:
+                    if (roomDeaths <= 10) { continue; }
+                    break;
+
+                case roomStatMenuFilter.Time60s:
+                    if (roomTimeSpan.TotalSeconds <= 60) { continue; }
+                    break;
+
+                default:
+                    // Nothing!!
+                    break;
+            }
+            roomNamesToShowList.Add(roomName);
+        }
+        String filterString;
+        switch (filterSetting)
+        {
+            case roomStatMenuFilter.Death0:
+                filterString = "≥1 Death";
+                break;
+
+            case roomStatMenuFilter.Death10:
+                filterString = "≥10 Deaths";
+                break;
+
+            case roomStatMenuFilter.Time60s:
+                filterString = "≥60s";
+                break;
+
+            default:
+                filterString = "All";
+                break;
+        }
+
+        int dictSize = roomNamesToShowList.Count;
 
         if (dictSize - firstRowShown > roomsPerColumn)
         {
@@ -407,17 +476,12 @@ public class RoomStatisticsDisplayer : Entity
         int totalStrawberries = 0;
         clipboardText = $"Room\tDeaths\tTime\tBerries";
 
-        foreach (string roomName in new ArrayList(EndHelperModule.Session.roomStatDict_death.Keys))
+        foreach (string roomName in roomNamesToShowList)
         {
-            if(roomName == "")
-            {
-                EndHelperModule.Session.roomStatDict_customName.Remove("");
-                EndHelperModule.Session.roomStatDict_death.Remove("");
-                EndHelperModule.Session.roomStatDict_timer.Remove("");
-                EndHelperModule.Session.roomStatDict_strawberries.Remove("");
-                EndHelperModule.Session.roomStatDict_colorIndex.Remove("");
-                continue;
-            }
+            int roomDeaths = Convert.ToInt32(EndHelperModule.Session.roomStatDict_death[roomName]);
+            TimeSpan roomTimeSpan = TimeSpan.FromTicks(Convert.ToInt64(EndHelperModule.Session.roomStatDict_timer[roomName]));
+            string roomTimeString = EndHelperModule.MinimalGameplayFormat(roomTimeSpan);
+            int roomStrawberriesCollected = Convert.ToInt32(EndHelperModule.Session.roomStatDict_strawberries[roomName]);
 
             if (!roomNameEditMenuOpen && currentRoomName == roomName) // if closed, set editingRoomIndex to current room
             {
@@ -425,14 +489,9 @@ public class RoomStatisticsDisplayer : Entity
                 editingRoomName = roomName;
             }
 
-
             totalDeaths += Convert.ToInt32(EndHelperModule.Session.roomStatDict_death[roomName]);
             totalTimer += Convert.ToInt64(EndHelperModule.Session.roomStatDict_timer[roomName]);
             totalStrawberries += Convert.ToInt32(EndHelperModule.Session.roomStatDict_strawberries[roomName]);
-
-            int roomDeaths = Convert.ToInt32(EndHelperModule.Session.roomStatDict_death[roomName]);
-            string roomTimeString = EndHelperModule.MinimalGameplayFormat(TimeSpan.FromTicks(Convert.ToInt64(EndHelperModule.Session.roomStatDict_timer[roomName])));
-            int roomStrawberriesCollected = Convert.ToInt32(EndHelperModule.Session.roomStatDict_strawberries[roomName]);
 
             string customRoomName = Convert.ToString(EndHelperModule.Session.roomStatDict_customName[roomName]);
 
@@ -518,7 +577,6 @@ public class RoomStatisticsDisplayer : Entity
                     ActiveFont.DrawOutline($"{roomStrawberriesCollected}", new Vector2(startX_strawberry + col2BufferCurrent, startY + heightBetweenRows * displayRow + heightBetweenRows / 2), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Color.White, 2f, Color.Black);
                 }
             }
-            currentItemIndex++;
             if(roomStrawberriesCollected == 0)
             {
                 clipboardText += $"\r\n{shortenedRoomName}\t{roomDeaths}\t{roomTimeString}\t";
@@ -527,6 +585,7 @@ public class RoomStatisticsDisplayer : Entity
             {
                 clipboardText += $"\r\n{shortenedRoomName}\t{roomDeaths}\t{roomTimeString}\t{roomStrawberriesCollected}";
             }
+            currentItemIndex++;
         }
 
         // Total Stats
@@ -536,7 +595,9 @@ public class RoomStatisticsDisplayer : Entity
             showTotalMapBerryCount = false; // No berry count spoilery
         }
 
-        showStats(100, 1010, 0.7f, Color.White, true, 0, true, true, showTotalMapBerryCount, "Total: ", "", totalDeaths, totalTimer, totalStrawberries);
+        String totalText = "Total";
+        if (filterSetting != roomStatMenuFilter.None){ totalText += $" [{filterString}]"; }
+        showStats(100, 1010, 0.7f, Color.White, true, 0, true, true, showTotalMapBerryCount, $"{totalText}: ", "", totalDeaths, totalTimer, totalStrawberries);
 
         // Instructions
         int instructionXPos = 100;
@@ -548,19 +609,24 @@ public class RoomStatisticsDisplayer : Entity
         {
             // Normal room stats instructions
             ActiveFont.DrawOutline("Edit Room Name: ", new Vector2(instructionXPos, instructionYPos), new Vector2(0f, 0.5f), new Vector2(instructionScale, instructionScale), instructionColor, 2f, Color.Black);
-            instructionXPos += (int)(ActiveFont.WidthToNextLine($"Edit Room Name: X", 0) * instructionScale);
+            instructionXPos += (int)(ActiveFont.WidthToNextLine($"Edit Room Name: XI", 0) * instructionScale);
             Input.GuiButton(Input.QuickRestart, mode: Input.PrefixMode.Latest).DrawCentered(new Vector2(instructionXPos, instructionYPos), instructionColor, instructionScale, 0);
             instructionXPos += (int)(ActiveFont.WidthToNextLine($"XXXXX", 0) * instructionScale);
 
             ActiveFont.DrawOutline("Copy to Clipboard: ", new Vector2(instructionXPos, instructionYPos), new Vector2(0f, 0.5f), new Vector2(instructionScale, instructionScale), instructionColor, 2f, Color.Black);
-            instructionXPos += (int)(ActiveFont.WidthToNextLine($"Copy to Clipboard: X", 0) * instructionScale);
+            instructionXPos += (int)(ActiveFont.WidthToNextLine($"Copy to Clipboard: XI", 0) * instructionScale);
+            Input.GuiButton(Input.MenuCancel, mode: Input.PrefixMode.Latest).DrawCentered(new Vector2(instructionXPos, instructionYPos), instructionColor, instructionScale, 0);
+            instructionXPos += (int)(ActiveFont.WidthToNextLine($"XXXXX", 0) * instructionScale);
+
+            ActiveFont.DrawOutline($"Filter [{filterString}]:", new Vector2(instructionXPos, instructionYPos), new Vector2(0f, 0.5f), new Vector2(instructionScale, instructionScale), instructionColor, 2f, Color.Black);
+            instructionXPos += (int)(ActiveFont.WidthToNextLine($"Filter [{filterString}]: XI", 0) * instructionScale);
             Input.GuiButton(Input.MenuConfirm, mode: Input.PrefixMode.Latest).DrawCentered(new Vector2(instructionXPos, instructionYPos), instructionColor, instructionScale, 0);
             instructionXPos += (int)(ActiveFont.WidthToNextLine($"XXXXX", 0) * instructionScale);
 
             if (dictSize > roomsPerColumn * 2)
             {
                 ActiveFont.DrawOutline("Change Page: ", new Vector2(instructionXPos, instructionYPos), new Vector2(0f, 0.5f), new Vector2(instructionScale, instructionScale), instructionColor, 2f, Color.Black);
-                instructionXPos += (int)(ActiveFont.WidthToNextLine($"Change Page: X", 0) * instructionScale);
+                instructionXPos += (int)(ActiveFont.WidthToNextLine($"Change Page: XI", 0) * instructionScale);
                 Input.GuiButton(Input.MenuLeft, mode: Input.PrefixMode.Latest).DrawCentered(new Vector2(instructionXPos, instructionYPos), instructionColor, instructionScale, 0);
                 instructionXPos += (int)(ActiveFont.WidthToNextLine($"XX", 0) * instructionScale);
                 Input.GuiButton(Input.MenuRight, mode: Input.PrefixMode.Latest).DrawCentered(new Vector2(instructionXPos, instructionYPos), instructionColor, instructionScale, 0);
@@ -570,12 +636,12 @@ public class RoomStatisticsDisplayer : Entity
         {
             // Rename menu instructions
             ActiveFont.DrawOutline("Stop Editing: ", new Vector2(instructionXPos, instructionYPos), new Vector2(0f, 0.5f), new Vector2(instructionScale, instructionScale), instructionColor, 2f, Color.Black);
-            instructionXPos += (int)(ActiveFont.WidthToNextLine($"Stop Editing: X", 0) * instructionScale);
+            instructionXPos += (int)(ActiveFont.WidthToNextLine($"Stop Editing: XI", 0) * instructionScale);
             Input.GuiButton(Input.ESC, mode: Input.PrefixMode.Latest).DrawCentered(new Vector2(instructionXPos, instructionYPos), instructionColor, instructionScale, 0);
             instructionXPos += (int)(ActiveFont.WidthToNextLine($"XXXXX", 0) * instructionScale);
 
             ActiveFont.DrawOutline("Change Selection: ", new Vector2(instructionXPos, instructionYPos), new Vector2(0f, 0.5f), new Vector2(instructionScale, instructionScale), instructionColor, 2f, Color.Black);
-            instructionXPos += (int)(ActiveFont.WidthToNextLine($"Change Selection: X", 0) * instructionScale);
+            instructionXPos += (int)(ActiveFont.WidthToNextLine($"Change Selection: XI", 0) * instructionScale);
             Input.GuiButton(Input.MenuUp, mode: Input.PrefixMode.Latest).DrawCentered(new Vector2(instructionXPos, instructionYPos), instructionColor, instructionScale, 0);
             instructionXPos += (int)(ActiveFont.WidthToNextLine($"XX", 0) * instructionScale);
             Input.GuiButton(Input.MenuDown, mode: Input.PrefixMode.Latest).DrawCentered(new Vector2(instructionXPos, instructionYPos), instructionColor, instructionScale, 0);

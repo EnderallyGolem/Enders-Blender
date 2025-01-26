@@ -18,7 +18,7 @@ using System.Collections;
 using System.Collections.Specialized;
 using static Celeste.Mod.EndHelper.EndHelperModule;
 using static Celeste.TrackSpinner;
-using Celeste.Mod.ImGuiHelper;
+//using Celeste.Mod.ImGuiHelper;
 using Microsoft.Xna.Framework;
 using Celeste.Mod.SpeedrunTool.TeleportRoom;
 

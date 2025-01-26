@@ -27,7 +27,6 @@ using NETCoreifier;
 using static Celeste.Mod.EndHelper.EndHelperModuleSettings;
 using Celeste.Mod.EndHelper.Entities.RoomSwap;
 using Microsoft.Xna.Framework.Graphics;
-using Celeste.Mod.ImGuiHelper;
 
 namespace Celeste.Mod.EndHelper;
 
