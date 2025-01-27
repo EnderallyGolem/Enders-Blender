@@ -5,7 +5,7 @@
     <version>1.0.0</version>
     <authors>EndHelper</authors>
     <description>Package Description</description>
-    <repository type="git" commit="6b283c6250e73869efccd242bfc8889e0ce99623" />
+    <repository type="git" commit="cc57e971072e19f03c1f14403a2124b132cff0bd" />
     <dependencies>
       <group targetFramework="net7.0" />
     </dependencies>

@@ -415,7 +415,10 @@ public class EndHelperModule : EverestModule {
         } 
         else
         {
-            level.Tracker.GetEntity<RoomStatisticsDisplayer>()?.OnDeath();
+            if (registerDeathInStats)
+            {
+                level.Tracker.GetEntity<RoomStatisticsDisplayer>()?.OnDeath();
+            }
         }
 
         return orig(self, direction, evenIfInvincible, registerDeathInStats);
