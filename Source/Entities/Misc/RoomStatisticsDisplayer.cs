@@ -32,7 +32,9 @@ public class RoomStatisticsDisplayer : Entity
     public string currentRoomName = "";
     private bool statisticsGuiOpen = false;
     public bool disableRoomChange = false;
-    private enum roomStatMenuFilter { None, Death0, Death10, Time60s }
+    public string mapNameSide = "";
+    public Color mapNameColor;
+    private enum roomStatMenuFilter { None, Death0, Death10, Time60s, Renamed }
     private roomStatMenuFilter filterSetting = roomStatMenuFilter.None;
 
     public RoomStatisticsDisplayer(Level level)
@@ -43,6 +45,36 @@ public class RoomStatisticsDisplayer : Entity
     public override void Added(Scene scene)
     {
         base.Added(scene);
+
+        Level level = SceneAs<Level>();
+        Session session = level.Session;
+
+        // Get map name header text
+        mapNameSide = session.Area.GetSID();
+        if (mapNameSide.StartsWith("Celeste/"))
+        {
+            int mapID = session.Area.ID;
+            mapNameSide = $"AREA_{mapID}";
+        }
+
+        mapNameColor = Color.Lime;
+        if (mapNameSide.ToLower().Contains("beginner")) { mapNameColor = Color.Aqua; }
+        else if (mapNameSide.ToLower().Contains("intermediate")) { mapNameColor = Color.PaleVioletRed; }
+        else if (mapNameSide.ToLower().Contains("advanced")) { mapNameColor = Color.Yellow; }
+        else if (mapNameSide.ToLower().Contains("expert")) { mapNameColor = Color.Orange; }
+        else if (mapNameSide.ToLower().Contains("grandmaster")) { mapNameColor = Color.Magenta; }
+
+        mapNameSide = mapNameSide.DialogCleanOrNull(Dialog.Languages["english"]) ?? mapNameSide;
+
+        AreaMode side = session.Area.Mode;
+        if (side == AreaMode.BSide)
+        {
+            mapNameSide += " B";
+        }
+        else if (side == AreaMode.CSide)
+        {
+            mapNameSide += " C";
+        }
     }
 
     public void ImportRoomStatInfo()
@@ -341,6 +373,9 @@ public class RoomStatisticsDisplayer : Entity
     string editingRoomName = null;
     void statisticGUI()
     {
+        Level level = SceneAs<Level>();
+        Session session = level.Session;
+
         MTexture backgroundTexture = GFX.Gui["misc/EndHelper/statGUI_background"];
         MTexture backgroundTextureShort = GFX.Gui["misc/EndHelper/statGUI_background_short"];
         MTexture pageArrow = GFX.Gui["dotarrow_outline"];
@@ -393,6 +428,16 @@ public class RoomStatisticsDisplayer : Entity
                     if (roomTimeSpan.TotalSeconds <= 60) { continue; }
                     break;
 
+                case roomStatMenuFilter.Renamed:
+                    String defaultName = roomName;
+                    String mapNameSideDialog = session.Area.GetSID();
+                    if (session.Area.Mode == AreaMode.BSide) { mapNameSideDialog += "_B"; }
+                    else if (session.Area.Mode == AreaMode.CSide) { mapNameSideDialog += "_C"; }
+                    defaultName = $"{mapNameSideDialog}_{roomName}".DialogCleanOrNull(Dialog.Languages["english"]) ?? roomName;
+
+                    if (defaultName == Convert.ToString(EndHelperModule.Session.roomStatDict_customName[roomName])) { continue; }
+                    break;
+
                 default:
                     // Nothing!!
                     break;
@@ -412,6 +457,10 @@ public class RoomStatisticsDisplayer : Entity
 
             case roomStatMenuFilter.Time60s:
                 filterString = "≥60s";
+                break;
+
+            case roomStatMenuFilter.Renamed:
+                filterString = "Renamed";
                 break;
 
             default:
@@ -439,26 +488,8 @@ public class RoomStatisticsDisplayer : Entity
 
         const int bufferX = 10;
 
-        Level level = SceneAs<Level>();
-        Session session = level.Session;
         // Map Name Header
-        String mapNameSide = session.Area.GetSID();
-        if (mapNameSide.StartsWith("Celeste/"))
-        {
-            int mapID = session.Area.ID;
-            mapNameSide = $"AREA_{mapID}";
-        }
-        mapNameSide = mapNameSide.DialogCleanOrNull(Dialog.Languages["english"]) ?? mapNameSide;
-
-        AreaMode side = session.Area.Mode;
-        if (side == AreaMode.BSide)
-        {
-            mapNameSide += " B";
-        } else if (side == AreaMode.CSide)
-        {
-            mapNameSide += " C";
-        }
-        ActiveFont.DrawOutline($"{mapNameSide}", new Vector2(980, 5), new Vector2(0.5f, 0f), new Vector2(0.7f, 0.7f), Color.Orange, 2f, Color.Black);
+        ActiveFont.DrawOutline($"{mapNameSide}", new Vector2(980, 5), new Vector2(0.5f, 0f), new Vector2(0.7f, 0.7f), mapNameColor, 2f, Color.Black);
 
 
         // The table headers (aka just death and timer icons)
@@ -498,8 +529,8 @@ public class RoomStatisticsDisplayer : Entity
             if ((customRoomName.Trim().Length == 0 || EndHelperModule.Session.roomStatDict_customName[roomName] is null) && !roomNameEditMenuOpen)
             {
                 String mapNameSideDialog = session.Area.GetSID();
-                if (side == AreaMode.BSide){mapNameSideDialog += "_B";}
-                else if (side == AreaMode.CSide){mapNameSideDialog += "_C";}
+                if (session.Area.Mode == AreaMode.BSide){mapNameSideDialog += "_B";}
+                else if (session.Area.Mode == AreaMode.CSide){mapNameSideDialog += "_C";}
                 EndHelperModule.Session.roomStatDict_customName[roomName] = $"{mapNameSideDialog}_{roomName}".DialogCleanOrNull(Dialog.Languages["english"]) ?? roomName;
             } // No empty names!
 

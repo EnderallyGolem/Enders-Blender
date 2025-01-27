@@ -1,6 +1,6 @@
 - DLL: bin/EndHelper.dll
   Name: EndersBlender
-  Version: 1.0.0
+  Version: 1.0.1
   Dependencies:
     - Name: CherryHelper
       Version: 1.8.1
