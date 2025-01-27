@@ -57,12 +57,12 @@ public class RoomStatisticsDisplayer : Entity
             mapNameSide = $"AREA_{mapID}";
         }
 
-        mapNameColor = Color.Lime;
+        mapNameColor = Color.Lime; // No else so if multiple appears for some reason it picks the hardest
         if (mapNameSide.ToLower().Contains("beginner")) { mapNameColor = Color.Aqua; }
-        else if (mapNameSide.ToLower().Contains("intermediate")) { mapNameColor = Color.PaleVioletRed; }
-        else if (mapNameSide.ToLower().Contains("advanced")) { mapNameColor = Color.Yellow; }
-        else if (mapNameSide.ToLower().Contains("expert")) { mapNameColor = Color.Orange; }
-        else if (mapNameSide.ToLower().Contains("grandmaster")) { mapNameColor = Color.Magenta; }
+        if (mapNameSide.ToLower().Contains("intermediate")) { mapNameColor = Color.PaleVioletRed; }
+        if (mapNameSide.ToLower().Contains("advanced")) { mapNameColor = Color.Yellow; }
+        if (mapNameSide.ToLower().Contains("expert")) { mapNameColor = Color.Orange; }
+        if (mapNameSide.ToLower().Contains("grandmaster")) { mapNameColor = Color.Magenta; }
 
         mapNameSide = mapNameSide.DialogCleanOrNull(Dialog.Languages["english"]) ?? mapNameSide;
 
