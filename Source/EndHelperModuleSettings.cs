@@ -19,6 +19,9 @@ public class EndHelperModuleSettings : EverestModuleSettings {
         [SettingSubText("modoptions_EndHelperModule_PauseOption_Desc")]
         public PauseScenarioEnum PauseOption { get; set; }
 
+        [SettingSubText("modoptions_EndHelperModule_DeathIgnoreLoadAfterDeath_Desc")]
+        public bool DeathIgnoreLoadAfterDeath { get; set; } = false;
+
 
         [SettingSubText("modoptions_EndHelperModule_MenuMulticolor_Desc")]
         public bool MenuMulticolor { get; set; } = true;

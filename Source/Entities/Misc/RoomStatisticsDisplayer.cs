@@ -83,6 +83,7 @@ public class RoomStatisticsDisplayer : Entity
         EndHelperModule.Session.roomStatDict_death = EndHelperModule.externalRoomStatDict_death;
         EndHelperModule.Session.roomStatDict_timer = EndHelperModule.externalRoomStatDict_timer;
         EndHelperModule.Session.roomStatDict_colorIndex = EndHelperModule.externalRoomStatDict_colorIndex;
+        EndHelperModule.Session.pauseTypeDict = EndHelperModule.externalDict_pauseTypeDict;
 
         // Only keep for debug. Load state also un-collects the berry so let the berry count be loaded.
         if (EndHelperModule.lastSessionResetCause == SessionResetCause.Debug)
@@ -114,6 +115,7 @@ public class RoomStatisticsDisplayer : Entity
             EndHelperModule.externalRoomStatDict_timer = EndHelperModule.Session.roomStatDict_timer;
             EndHelperModule.externalRoomStatDict_strawberries = EndHelperModule.Session.roomStatDict_strawberries;
             EndHelperModule.externalRoomStatDict_colorIndex = EndHelperModule.Session.roomStatDict_colorIndex;
+            EndHelperModule.externalDict_pauseTypeDict = EndHelperModule.Session.pauseTypeDict;
 
             // Export custom names to SaveData
             if (EndHelperModule.Settings.RoomStatMenu.MenuCustomNameStorageCount > 0)
@@ -235,7 +237,7 @@ public class RoomStatisticsDisplayer : Entity
 
         if (!statisticsGuiOpen)
         {
-            showStats(displayXPos, displayYPos, displayScale, timerColor, false, xJustification, false, false, false, "", "", deathNum, timerNum, strawberriesNum);
+            showStats(displayXPos, displayYPos, displayScale, timerColor, false, xJustification, false, false, false, $"", $"", deathNum, timerNum, strawberriesNum);
         }
         
 
@@ -684,13 +686,18 @@ public class RoomStatisticsDisplayer : Entity
         }
 
 
-        // Timer Freeze Icons
+        // Timer and Death Count Freeze Icons
         String pauseIconMsg = "";
 
         if (!EndHelperModule.Session.pauseTypeDict.ContainsKey("Pause")){ EndHelperModule.Session.pauseTypeDict["Pause"] = false; }
         if (!EndHelperModule.Session.pauseTypeDict.ContainsKey("Inactive")) { EndHelperModule.Session.pauseTypeDict["Inactive"] = false; }
         if (!EndHelperModule.Session.pauseTypeDict.ContainsKey("AFK")) { EndHelperModule.Session.pauseTypeDict["AFK"] = false; }
+        if (!EndHelperModule.Session.pauseTypeDict.ContainsKey("LoadNoDeath")) { EndHelperModule.Session.pauseTypeDict["LoadNoDeath"] = false; }
 
+        if (EndHelperModule.Session.pauseTypeDict["LoadNoDeath"])
+        {
+            pauseIconMsg += ":EndHelper/ui_deathfreeze_loadstaterespawn:";
+        }
         if (EndHelperModule.Session.pauseTypeDict["Pause"])
         {
             pauseIconMsg += ":EndHelper/ui_timerfreeze_pause:";
@@ -708,7 +715,6 @@ public class RoomStatisticsDisplayer : Entity
         string totalTimeString = EndHelperModule.MinimalGameplayFormat(TimeSpan.FromTicks(totalTimer));
         clipboardText += $"\r\n{"Total"}\t{totalDeaths}\t{totalTimeString}\t{totalStrawberries}";
 
-        //ActiveFont.DrawOutline(displayTotalStatsString, new Vector2(totalXpos, 1010), new Vector2(0f, 0.5f), new Vector2(0.7f, 0.7f), Color.White, 2f, Color.Black);
 
         // Page Number
         int currentPage = (int)Math.Ceiling((float)(firstRowShown+1) / (roomsPerColumn * 2));
@@ -735,17 +741,18 @@ public class RoomStatisticsDisplayer : Entity
         }
 
         // Scroll Down
-        // Logger.Log(LogLevel.Info, "EndHelper/RoomStatisticsDisplayer", $"menu: currentItem {currentItem} dictSize {dictSize}");
         MInput.Disabled = false;
         if (firstRowShown < dictSize - roomsPerColumn*2 && (Input.MenuDown.Pressed || Input.MenuRight.Pressed) && !roomNameEditMenuOpen)
         {
             firstRowShown += roomsPerColumn * 2;
         }
+        if (firstRowShown < 0){ firstRowShown = 0; }
         // Scroll Up
         if (firstRowShown > 0 && (Input.MenuUp.Pressed || Input.MenuLeft.Pressed) && !roomNameEditMenuOpen)
         {
             firstRowShown -= roomsPerColumn * 2;
         }
+        while (firstRowShown >= dictSize && dictSize > 0){ firstRowShown -= roomsPerColumn * 2; }
 
         // Renaming current room
         if (Input.QuickRestart.Pressed && !roomNameEditMenuOpen)

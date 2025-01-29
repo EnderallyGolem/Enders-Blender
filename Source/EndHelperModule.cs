@@ -60,6 +60,7 @@ public class EndHelperModule : EverestModule {
     // Debug mode is annoying
     public enum SessionResetCause { None, LoadState, Debug }
     public static int timeSinceSessionReset = 2;                                    // If == 1, correct for resets if needed. Starts from 2 so it does not cause a reset when loading!
+    public static int timeSinceRespawn = 0;                                         // Set to 0 when dying, incremented if player is alive and not "just respawned". Not changed during load state!
     public static SessionResetCause lastSessionResetCause = SessionResetCause.None; // Stores the previous cause of reset. Sometimes useful.
 
     // Store information for room stats externally for them to persist through save states
@@ -68,6 +69,7 @@ public class EndHelperModule : EverestModule {
     public static OrderedDictionary externalRoomStatDict_timer = new OrderedDictionary { };
     public static OrderedDictionary externalRoomStatDict_strawberries = new OrderedDictionary { };
     public static OrderedDictionary externalRoomStatDict_colorIndex = new OrderedDictionary { };
+    public static Dictionary<string, bool> externalDict_pauseTypeDict = new Dictionary<string, bool> { };
 
     // Decreases till -ve, enables input if 0 and disables if +
     // Lets me disable, but ensure it gets re-enabled when I don't need it anymore
@@ -288,34 +290,45 @@ public class EndHelperModule : EverestModule {
         }
 
         // Quick Restart Keybind
-        if (EndHelperModule.Settings.QuickRetry.Button.Pressed && level.Tracker.GetEntity<Player>() is Player player && !level.Paused && level.CanPause && level.CanRetry)
         {
-            if (level.Session.GrabbedGolden)
+            if (EndHelperModule.Settings.QuickRetry.Button.Pressed && level.Tracker.GetEntity<Player>() is Player player && !level.Paused && level.CanPause && level.CanRetry)
             {
-                // Don't die if you have a golden. Just play a funny sfx instead.
-                player.Add(new SoundSource("event:/game/general/strawberry_laugh"));
-                return;
-            } else if (!player.Dead)
-            {
-                level.Paused = false;
-                level.PauseMainMenuOpen = false;
-                Engine.TimeRate = 1f;
-                Distort.GameRate = 1f;
-                Distort.Anxiety = 0f;
-                level.InCutscene = (level.SkippingCutscene = false);
-                foreach (LevelEndingHook component in level.Tracker.GetComponents<LevelEndingHook>())
+                if (level.Session.GrabbedGolden)
                 {
-                    if (component.OnEnd != null)
+                    // Don't die if you have a golden. Just play a funny sfx instead.
+                    player.Add(new SoundSource("event:/game/general/strawberry_laugh"));
+                    return;
+                } else if (!player.Dead)
+                {
+                    level.Paused = false;
+                    level.PauseMainMenuOpen = false;
+                    Engine.TimeRate = 1f;
+                    Distort.GameRate = 1f;
+                    Distort.Anxiety = 0f;
+                    level.InCutscene = (level.SkippingCutscene = false);
+                    foreach (LevelEndingHook component in level.Tracker.GetComponents<LevelEndingHook>())
                     {
-                        component.OnEnd();
+                        if (component.OnEnd != null)
+                        {
+                            component.OnEnd();
+                        }
                     }
+                    PlayerDeadBody deadPlayer = player.Die(Vector2.Zero, evenIfInvincible: true);
+                    DynamicData deadPlayerData = DynamicData.For(deadPlayer);
+                    level.DoScreenWipe(wipeIn: false, level.Reload);
+                    deadPlayerData.Set("finished", true); // Stop trying to end again if holding confirm
                 }
-                PlayerDeadBody deadPlayer = player.Die(Vector2.Zero, evenIfInvincible: true);
-                DynamicData deadPlayerData = DynamicData.For(deadPlayer);
-                level.DoScreenWipe(wipeIn: false, level.Reload);
-                deadPlayerData.Set("finished", true); // Stop trying to end again if holding confirm
-            }
+            } 
         }
+
+        { 
+            // Increment timeSinceRespawn if player is alive. and also not paused
+            if (level.Tracker.GetEntity<Player>() is Player player && !player.Dead && !player.JustRespawned && !level.FrozenOrPaused)
+            {
+                timeSinceRespawn++;
+            } 
+        }
+
         orig(self);
     }
 
@@ -411,10 +424,11 @@ public class EndHelperModule : EverestModule {
         //Increment room death count.
         if (global::Celeste.SaveData.Instance.Assists.Invincible && !evenIfInvincible)
         {
-            // Assist mode death is not incremented if evenIfInvincible is false
+            // Assist mode death is not counted if evenIfInvincible is false
         } 
         else
         {
+            timeSinceRespawn = 0;
             if (registerDeathInStats)
             {
                 level.Tracker.GetEntity<RoomStatisticsDisplayer>()?.OnDeath();
