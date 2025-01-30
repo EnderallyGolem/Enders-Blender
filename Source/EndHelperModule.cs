@@ -421,12 +421,10 @@ public class EndHelperModule : EverestModule {
     public static PlayerDeadBody Hook_OnPlayerDeath(On.Celeste.Player.orig_Die orig, global::Celeste.Player self, Vector2 direction, bool evenIfInvincible, bool registerDeathInStats)
     {
         Level level = self.SceneAs<Level>();
-        //Increment room death count.
-        if (global::Celeste.SaveData.Instance.Assists.Invincible && !evenIfInvincible)
-        {
-            // Assist mode death is not counted if evenIfInvincible is false
-        } 
-        else
+        bool invincibleCountDeathFlag = !evenIfInvincible && global::Celeste.SaveData.Instance.Assists.Invincible;
+
+        // Increment room death count. Same condition as sessionDeath++
+        if (!self.Dead && !invincibleCountDeathFlag && self.StateMachine.State != 18)
         {
             timeSinceRespawn = 0;
             if (registerDeathInStats)
