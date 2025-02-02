@@ -372,7 +372,11 @@ public class EndHelperModule : EverestModule {
 
                 // Check if can increment time spent in room
                 allowIncrementTimer = true;
-                if (level.FrozenOrPaused && (
+
+                if (!level.TimerStarted || level.TimerStopped || level.Completed)
+                { allowIncrementTimer = false; }
+
+                if (allowIncrementTimer && level.FrozenOrPaused && (
                     EndHelperModule.Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.PauseScenarioEnum.Pause ||
                     EndHelperModule.Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.PauseScenarioEnum.PauseAFK ||
                     EndHelperModule.Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.PauseScenarioEnum.PauseInactive ||
@@ -384,7 +388,7 @@ public class EndHelperModule : EverestModule {
                 }
 
 
-                if (inactiveDurationFrames >= 60 && (
+                if (allowIncrementTimer && inactiveDurationFrames >= 60 && (
                     EndHelperModule.Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.PauseScenarioEnum.PauseInactive ||
                     EndHelperModule.Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.PauseScenarioEnum.PauseInactiveAFK
                  ))
@@ -394,7 +398,7 @@ public class EndHelperModule : EverestModule {
                     { EndHelperModule.Session.pauseTypeDict["Inactive"] = true; }
                 }
 
-                if (afkDurationFrames >= 1800 && (
+                if (allowIncrementTimer && afkDurationFrames >= 1800 && (
                     EndHelperModule.Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.PauseScenarioEnum.AFK ||
                     EndHelperModule.Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.PauseScenarioEnum.PauseAFK ||
                     EndHelperModule.Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.PauseScenarioEnum.PauseInactiveAFK
@@ -403,9 +407,6 @@ public class EndHelperModule : EverestModule {
                     allowIncrementTimer = false;
                     EndHelperModule.Session.pauseTypeDict["AFK"] = true;
                 }
-
-                if (!level.TimerStarted || level.TimerStopped || level.Completed)
-                { allowIncrementTimer = false; }
 
                 roomStatDisplayer.ensureDictsHaveKey(level);
 

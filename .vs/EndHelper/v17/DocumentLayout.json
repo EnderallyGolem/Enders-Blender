@@ -34,9 +34,9 @@
               "Title": "EndHelperModule.cs",
               "DocumentMoniker": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Celeste\\Mods\\EndersBlender\\Source\\EndHelperModule.cs",
               "RelativeDocumentMoniker": "Source\\EndHelperModule.cs",
-              "ToolTip": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Celeste\\Mods\\EndersBlender\\Source\\EndHelperModule.cs",
-              "RelativeToolTip": "Source\\EndHelperModule.cs",
-              "ViewState": "AgIAAJoBAAAAAAAAAAAiwLABAAANAAAAAAAAAA==",
+              "ToolTip": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Celeste\\Mods\\EndersBlender\\Source\\EndHelperModule.cs*",
+              "RelativeToolTip": "Source\\EndHelperModule.cs*",
+              "ViewState": "AgIAAGwBAAAAAAAAAAAiwJABAAAnAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-01-23T13:52:13.652Z",
               "EditorCaption": ""
@@ -51,8 +51,7 @@
               "RelativeToolTip": "Source\\Integration\\SpeedrunToolIntegration.cs",
               "ViewState": "AgIAAFEAAAAAAAAAAAAiwF4AAABJAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-01-30T12:12:25.251Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-01-30T12:12:25.251Z"
             },
             {
               "$type": "Document",
@@ -64,8 +63,7 @@
               "RelativeToolTip": "Source\\Entities\\Misc\\RoomStatisticsDisplayer.cs",
               "ViewState": "AgIAAFsBAAAAAAAAAAAYwG0BAAAQAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-01-26T15:45:58.471Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-01-26T15:45:58.471Z"
             }
           ]
         }
