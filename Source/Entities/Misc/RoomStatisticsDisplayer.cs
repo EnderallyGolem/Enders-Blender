@@ -157,6 +157,7 @@ public class RoomStatisticsDisplayer : Entity
         {
             statisticsGuiOpen = false;
             level.Paused = false;
+            EndHelperModule.afkDurationFrames = 0;
 
             // Directly consuming doesn't do it for long enough
             consumeInput(Input.Jump, 2);
@@ -202,6 +203,7 @@ public class RoomStatisticsDisplayer : Entity
         consumeInput(Input.MenuConfirm, 3);
         roomNameEditMenuOpen = false;
 
+        EndHelperModule.afkDurationFrames = 0;
         Audio.Play("event:/ui/main/rename_entry_accept");
     }
 

@@ -334,8 +334,8 @@ public class EndHelperModule : EverestModule {
 
     // This is here to ensure that (as much as possible) the times are synced
     // If added to the entity, it'll lag behind during the pause animation, and if in level update, it'll be ahead during state change
-    private static int afkDurationFrames = 0;
-    private static int inactiveDurationFrames = 0;
+    public static int afkDurationFrames = 0;
+    public static int inactiveDurationFrames = 0;
     public static bool allowIncrementTimer = true;
     private static void Hook_LevelUpdateTime(On.Celeste.Level.orig_UpdateTime orig, global::Celeste.Level self)
     {
