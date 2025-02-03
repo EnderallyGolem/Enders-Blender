@@ -1,23 +1,25 @@
 using Microsoft.Xna.Framework.Input;
 using System.ComponentModel;
+using static Celeste.Mod.EndHelper.EndHelperModuleSettings.RoomStatMenuSubMenu;
 
 namespace Celeste.Mod.EndHelper;
 
 [SettingName("EndHelper_Settings")]
 public class EndHelperModuleSettings : EverestModuleSettings {
-    public ButtonBinding FreeMultiroomWatchtower { get; set; }
     public ButtonBinding OpenStatDisplayMenu { get; set; }
     public ButtonBinding QuickRetry { get; set; }
+    public ButtonBinding FreeMultiroomWatchtower { get; set; }
+
 
     // Room Statistics Menu
     [SettingSubMenu]
     public class RoomStatMenuSubMenu
     {
-        public enum PauseScenarioEnum { None, Pause, AFK, PauseAFK, PauseInactive, PauseInactiveAFK }
+        public enum RoomPauseScenarioEnum { None, Pause, AFK, PauseAFK, PauseInactive, PauseInactiveAFK }
 
-        [DefaultValue(PauseScenarioEnum.Pause)]
+        [DefaultValue(RoomPauseScenarioEnum.Pause)]
         [SettingSubText("modoptions_EndHelperModule_PauseOption_Desc")]
-        public PauseScenarioEnum PauseOption { get; set; }
+        public RoomPauseScenarioEnum PauseOption { get; set; }
 
         [SettingSubText("modoptions_EndHelperModule_DeathIgnoreLoadAfterDeath_Desc")]
         public bool DeathIgnoreLoadAfterDeath { get; set; } = false;
@@ -61,9 +63,15 @@ public class EndHelperModuleSettings : EverestModuleSettings {
     }
 
 
-    public RoomStatMenuSubMenu RoomStatMenu { get; set; } = new();
-    public RoomStatDisplaySubMenu RoomStatDisplay { get; set; } = new();
+    // The settings
+    public enum LevelPauseScenarioEnum { None, Pause, AFK, PauseAFK }
+    [DefaultValue(LevelPauseScenarioEnum.None)]
+    [SettingSubText("modoptions_EndHelperModule_PauseOptionLevel_Desc")]
+    public LevelPauseScenarioEnum PauseOptionLevel { get; set; }
 
     [SettingSubText("modoptions_EndHelperModule_DisableQuickRestart_Desc")]
     public bool DisableQuickRestart { get; set; } = false;
+
+    public RoomStatMenuSubMenu RoomStatMenu { get; set; } = new();
+    public RoomStatDisplaySubMenu RoomStatDisplay { get; set; } = new();
 }

@@ -36,13 +36,13 @@ public class EndHelperModule : EverestModule {
     public static EndHelperModule Instance { get; private set; }
 
     public override Type SettingsType => typeof(EndHelperModuleSettings);
-    public static EndHelperModuleSettings Settings => (EndHelperModuleSettings) Instance._Settings;
+    public static EndHelperModuleSettings Settings => (EndHelperModuleSettings)Instance._Settings;
 
     public override Type SessionType => typeof(EndHelperModuleSession);
-    public static EndHelperModuleSession Session => (EndHelperModuleSession) Instance._Session;
+    public static EndHelperModuleSession Session => (EndHelperModuleSession)Instance._Session;
 
     public override Type SaveDataType => typeof(EndHelperModuleSaveData);
-    public static EndHelperModuleSaveData SaveData => (EndHelperModuleSaveData) Instance._SaveData;
+    public static EndHelperModuleSaveData SaveData => (EndHelperModuleSaveData)Instance._SaveData;
 
     public EndHelperModule()
     {
@@ -122,7 +122,7 @@ public class EndHelperModule : EverestModule {
     }
 
     // Optional, initialize anything after Celeste has initialized itself properly.
-    public override void Initialize(){
+    public override void Initialize() {
 
     }
 
@@ -177,7 +177,7 @@ public class EndHelperModule : EverestModule {
         // If first time (not fromSaveData), check Hook_StartMap since it has access to level
         if (fromSaveData)
         {
-        String roomName = session.Level;
+            String roomName = session.Level;
             // +1 death for save and quit. The reason why this is done here instead of everest onexit event is because
             // as far as I can tell saving and returning to lobby with collabutil saves the session before onexit runs.
             EndHelperModule.Session.roomStatDict_death[roomName] = Convert.ToInt32(EndHelperModule.Session.roomStatDict_death[roomName]) + 1;
@@ -227,7 +227,7 @@ public class EndHelperModule : EverestModule {
         {
             string key = kvp.Key?.ToString() ?? "";  // Convert key to string, default to ""
             string value = kvp.Value?.ToString() ?? ""; // Convert value to string, default to ""
-            if (key == "" || value == ""){ continue; }
+            if (key == "" || value == "") { continue; }
             result[key] = value;
         }
         return result;
@@ -290,6 +290,7 @@ public class EndHelperModule : EverestModule {
         }
 
         // Quick Restart Keybind
+        bool forceCloseMenuAfter = false;
         {
             if (EndHelperModule.Settings.QuickRetry.Button.Pressed && level.Tracker.GetEntity<Player>() is Player player && !level.Paused && level.CanPause && level.CanRetry)
             {
@@ -314,32 +315,52 @@ public class EndHelperModule : EverestModule {
                         }
                     }
                     PlayerDeadBody deadPlayer = player.Die(Vector2.Zero, evenIfInvincible: true);
-                    DynamicData deadPlayerData = DynamicData.For(deadPlayer);
-                    level.DoScreenWipe(wipeIn: false, level.Reload);
-                    deadPlayerData.Set("finished", true); // Stop trying to end again if holding confirm
+
+                    // This sometimes fails if you spam retry lol
+                    try
+                    {
+                        DynamicData deadPlayerData = DynamicData.For(deadPlayer);
+                        level.DoScreenWipe(wipeIn: false, level.Reload);
+                        deadPlayerData.Set("finished", true); // Stop trying to end again if holding confirm
+                    }
+                    catch (Exception)
+                    {
+                        forceCloseMenuAfter = true;
+                    }
                 }
-            } 
+            }
         }
 
-        { 
+        {
             // Increment timeSinceRespawn if player is alive. and also not paused
             if (level.Tracker.GetEntity<Player>() is Player player && !player.Dead && !player.JustRespawned && !level.FrozenOrPaused)
             {
                 timeSinceRespawn++;
-            } 
+            }
         }
 
         orig(self);
+
+        if (forceCloseMenuAfter)
+        {
+            level.Unpause();
+        }
     }
 
     // This is here to ensure that (as much as possible) the times are synced
     // If added to the entity, it'll lag behind during the pause animation, and if in level update, it'll be ahead during state change
     public static int afkDurationFrames = 0;
     public static int inactiveDurationFrames = 0;
-    public static bool allowIncrementTimer = true;
+    public static bool allowIncrementRoomTimer = true;
+    public static long previousSessionTime;
+    public static long previousSaveDataTime;
+    public static bool allowIncrementLevelTimer = true;
     private static void Hook_LevelUpdateTime(On.Celeste.Level.orig_UpdateTime orig, global::Celeste.Level self)
     {
         Level level = self;
+        previousSessionTime = level.Session.Time;
+        AreaKey area = level.Session.Area;
+        previousSaveDataTime = global::Celeste.SaveData.Instance.Areas_Safe[area.ID].Modes[(int)area.Mode].TimePlayed;
 
         {
             if (level.Tracker.GetEntity<RoomStatisticsDisplayer>() is RoomStatisticsDisplayer roomStatDisplayer)
@@ -371,52 +392,73 @@ public class EndHelperModule : EverestModule {
                 }
 
                 // Check if can increment time spent in room
-                allowIncrementTimer = true;
+                allowIncrementRoomTimer = true;
 
                 if (!level.TimerStarted || level.TimerStopped || level.Completed)
-                { allowIncrementTimer = false; }
+                { allowIncrementRoomTimer = false; }
 
-                if (allowIncrementTimer && level.FrozenOrPaused && (
-                    EndHelperModule.Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.PauseScenarioEnum.Pause ||
-                    EndHelperModule.Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.PauseScenarioEnum.PauseAFK ||
-                    EndHelperModule.Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.PauseScenarioEnum.PauseInactive ||
-                    EndHelperModule.Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.PauseScenarioEnum.PauseInactiveAFK
+                if (allowIncrementRoomTimer && level.FrozenOrPaused && (
+                    EndHelperModule.Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.RoomPauseScenarioEnum.Pause ||
+                    EndHelperModule.Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.RoomPauseScenarioEnum.PauseAFK ||
+                    EndHelperModule.Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.RoomPauseScenarioEnum.PauseInactive ||
+                    EndHelperModule.Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.RoomPauseScenarioEnum.PauseInactiveAFK
                 ))
                 {
-                    allowIncrementTimer = false;
+                    allowIncrementRoomTimer = false;
                     EndHelperModule.Session.pauseTypeDict["Pause"] = true;
                 }
 
 
-                if (allowIncrementTimer && inactiveDurationFrames >= 60 && (
-                    EndHelperModule.Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.PauseScenarioEnum.PauseInactive ||
-                    EndHelperModule.Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.PauseScenarioEnum.PauseInactiveAFK
+                if (allowIncrementRoomTimer && inactiveDurationFrames >= 60 && (
+                    EndHelperModule.Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.RoomPauseScenarioEnum.PauseInactive ||
+                    EndHelperModule.Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.RoomPauseScenarioEnum.PauseInactiveAFK
                  ))
                 {
-                    allowIncrementTimer = false;
+                    allowIncrementRoomTimer = false;
                     if (level.TimerStarted && !level.TimerStopped && !level.Completed)
                     { EndHelperModule.Session.pauseTypeDict["Inactive"] = true; }
                 }
 
-                if (allowIncrementTimer && afkDurationFrames >= 1800 && (
-                    EndHelperModule.Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.PauseScenarioEnum.AFK ||
-                    EndHelperModule.Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.PauseScenarioEnum.PauseAFK ||
-                    EndHelperModule.Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.PauseScenarioEnum.PauseInactiveAFK
+                if (allowIncrementRoomTimer && afkDurationFrames >= 1800 && (
+                    EndHelperModule.Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.RoomPauseScenarioEnum.AFK ||
+                    EndHelperModule.Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.RoomPauseScenarioEnum.PauseAFK ||
+                    EndHelperModule.Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.RoomPauseScenarioEnum.PauseInactiveAFK
                 ))
                 {
-                    allowIncrementTimer = false;
+                    allowIncrementRoomTimer = false;
                     EndHelperModule.Session.pauseTypeDict["AFK"] = true;
                 }
 
                 roomStatDisplayer.ensureDictsHaveKey(level);
 
-                if (allowIncrementTimer)
+                if (allowIncrementRoomTimer)
                 {
                     EndHelperModule.Session.roomStatDict_timer[incrementRoomName] = TimeSpanShims.FromSeconds((double)Engine.RawDeltaTime).Ticks + Convert.ToInt64(EndHelperModule.Session.roomStatDict_timer[incrementRoomName]);
                 }
             }
         }
         orig(self);
+
+        // Prevent level timer from increasing if pause/afk
+        // Check if can increment time spent in room
+        allowIncrementLevelTimer = true;
+        if (allowIncrementLevelTimer && level.Paused && (
+            EndHelperModule.Settings.PauseOptionLevel == LevelPauseScenarioEnum.Pause ||
+            EndHelperModule.Settings.PauseOptionLevel == LevelPauseScenarioEnum.PauseAFK
+        ))
+        { allowIncrementLevelTimer = false; }
+
+        if (allowIncrementLevelTimer && afkDurationFrames >= 1800 && (
+            EndHelperModule.Settings.PauseOptionLevel == LevelPauseScenarioEnum.AFK ||
+            EndHelperModule.Settings.PauseOptionLevel == LevelPauseScenarioEnum.PauseAFK
+        ))
+        { allowIncrementLevelTimer = false; }
+
+        if (!allowIncrementLevelTimer)
+        {
+            level.Session.Time = previousSessionTime;
+            global::Celeste.SaveData.Instance.Areas_Safe[area.ID].Modes[(int)area.Mode].TimePlayed = previousSaveDataTime;
+        }
     }
 
     public static PlayerDeadBody Hook_OnPlayerDeath(On.Celeste.Player.orig_Die orig, global::Celeste.Player self, Vector2 direction, bool evenIfInvincible, bool registerDeathInStats)
@@ -472,13 +514,13 @@ public class EndHelperModule : EverestModule {
 
         if (quickReset)
         {
-            if (EndHelperModule.Settings.DisableQuickRestart ||
+            { if (EndHelperModule.Settings.DisableQuickRestart ||
                 (EndHelperModule.Settings.QuickRetry.Button.Pressed && level.Tracker.GetEntity<Player>() is Player player && !level.Paused && level.CanPause && level.CanRetry)
                )
             {
                 // Do not quick reset if you are quick dying (or if disabled)
                 return;
-            }
+            }}
         }
         orig(self, startIndex, minimal, quickReset);
     }

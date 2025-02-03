@@ -8,7 +8,7 @@ modoptions_EndHelperModule_QuickRetry=Quick Retry
 
 # Room Statistics Menu
 modoptions_EndHelperModule_RoomStatMenu=Room Stat Tracker
-modoptions_EndHelperModule_PauseOption=Pause Timer When
+modoptions_EndHelperModule_PauseOption=Freeze Room Timer When
 modoptions_EndHelperModule_PauseOption_Desc=AFK: No input for 30s. Inactive: In dummy state (Eg: in cutscene, using watchtower)
 The room stat tracker menu will display icons if these have been used.
 modoptions_EndHelperModule_PauseOption_None=Never
@@ -29,7 +29,7 @@ modoptions_EndHelperModule_MenuSpoilBerries=Spoil Map Berry Count
 modoptions_EndHelperModule_MenuSpoilBerries_Desc=If disabled, the map's total berry count will be shown only at the end of the map, or you have beaten the level before.
 
 modoptions_EndHelperModule_MenuCustomNameStorageCount=Custom Name Storage Size
-modoptions_EndHelperModule_MenuCustomNameStorageCount_Desc=The number of sessions in which custom names will be stored.
+modoptions_EndHelperModule_MenuCustomNameStorageCount_Desc=The number of sessions in which custom room names will be stored.
 Eg: If 10, custom names for the map's rooms will be kept until you play 10 other maps.
 
 # Room Stat Tracker Display
@@ -56,6 +56,15 @@ modoptions_EndHelperModule_DisableQuickRestart_Desc=Why is this set to R if empt
 EndHelper_Dialog_RoomStatisticsDisplayer_CopiedToClipboard=Copied Stats to Clipboard
 EndHelper_Dialog_MultiroomWatchtower_FreeCameraON=Unlock Camera: ON
 EndHelper_Dialog_MultiroomWatchtower_FreeCameraOFF=Unlock Camera: OFF
+
+
+
+modoptions_EndHelperModule_PauseOptionLevel=Freeze Level Timer When
+modoptions_EndHelperModule_PauseOptionLevel_Desc=Does not affect the File time. This also affects Journal times! AFK: No input for 30s.
+modoptions_EndHelperModule_PauseOptionLevel_None=Never
+modoptions_EndHelperModule_PauseOptionLevel_Pause=Paused
+modoptions_EndHelperModule_PauseOptionLevel_AFK=AFK
+modoptions_EndHelperModule_PauseOptionLevel_PauseAFK=Paused / AFK
 
 # ----------------------------------  Map Stuff  ----------------------------------------
 

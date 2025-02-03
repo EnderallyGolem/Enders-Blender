@@ -226,7 +226,7 @@ public class RoomStatisticsDisplayer : Entity
         long timerNum = Convert.ToInt64(EndHelperModule.Session.roomStatDict_timer[currentRoomName]);
         int strawberriesNum = Convert.ToInt32(EndHelperModule.Session.roomStatDict_strawberries[currentRoomName]);
 
-        Color timerColor = allowIncrementTimer ? Color.White : Color.Gray;
+        Color timerColor = allowIncrementRoomTimer ? Color.White : Color.Gray;
         float xJustification = 0;
         if (EndHelperModule.Settings.RoomStatDisplay.xJustification == RoomStatDisplaySubMenu.Justification.Center)
         {
