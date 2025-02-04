@@ -30,7 +30,7 @@ public class RoomStatisticsDisplayer : Entity
 {
     private string clipboardText = "";
     public string currentRoomName = "";
-    private bool statisticsGuiOpen = false;
+    public bool statisticsGuiOpen = false;
     public bool disableRoomChange = false;
     public string mapNameSide = "";
     public Color mapNameColor;

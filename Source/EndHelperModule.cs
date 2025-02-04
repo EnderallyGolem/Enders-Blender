@@ -115,6 +115,7 @@ public class EndHelperModule : EverestModule {
         On.Celeste.Editor.MapEditor.Update += Hook_UsingMapEditor;
         On.Celeste.Strawberry.Added += Hook_StrawberryAddedToLevel;
         On.Celeste.Strawberry.OnCollect += Hook_CollectStrawberry;
+        On.Celeste.SpeedrunTimerDisplay.Render += Hook_SpeedrunTimerRender;
 
         SpeedrunToolIntegration.Load();
         SSMQoLIntegration.Load();
@@ -153,6 +154,7 @@ public class EndHelperModule : EverestModule {
         On.Celeste.Editor.MapEditor.Update -= Hook_UsingMapEditor;
         On.Celeste.Strawberry.Added -= Hook_StrawberryAddedToLevel;
         On.Celeste.Strawberry.OnCollect -= Hook_CollectStrawberry;
+        On.Celeste.SpeedrunTimerDisplay.Render -= Hook_SpeedrunTimerRender;
 
         SpeedrunToolIntegration.Unload();
         SSMQoLIntegration.Unload();
@@ -446,13 +448,19 @@ public class EndHelperModule : EverestModule {
             EndHelperModule.Settings.PauseOptionLevel == LevelPauseScenarioEnum.Pause ||
             EndHelperModule.Settings.PauseOptionLevel == LevelPauseScenarioEnum.PauseAFK
         ))
-        { allowIncrementLevelTimer = false; }
+        { 
+            allowIncrementLevelTimer = false;
+            EndHelperModule.Session.pauseTypeDict["LevelTimer_Pause"] = true;
+        }
 
         if (allowIncrementLevelTimer && afkDurationFrames >= 1800 && (
             EndHelperModule.Settings.PauseOptionLevel == LevelPauseScenarioEnum.AFK ||
             EndHelperModule.Settings.PauseOptionLevel == LevelPauseScenarioEnum.PauseAFK
         ))
-        { allowIncrementLevelTimer = false; }
+        { 
+            allowIncrementLevelTimer = false;
+            EndHelperModule.Session.pauseTypeDict["LevelTimer_AFK"] = true;
+        }
 
         if (!allowIncrementLevelTimer)
         {
@@ -572,6 +580,62 @@ public class EndHelperModule : EverestModule {
         EndHelperModule.Session.roomStatDict_strawberries[roomName] = Convert.ToInt32(EndHelperModule.Session.roomStatDict_strawberries[roomName]) + 1;
 
         orig(self);
+    }
+
+    private static void Hook_SpeedrunTimerRender(On.Celeste.SpeedrunTimerDisplay.orig_Render orig, global::Celeste.SpeedrunTimerDisplay self)
+    {
+        // Display pause/afk icons if necessary
+        if (!EndHelperModule.Session.pauseTypeDict.ContainsKey("LevelTimer_Pause")) { EndHelperModule.Session.pauseTypeDict["LevelTimer_Pause"] = false; }
+        if (!EndHelperModule.Session.pauseTypeDict.ContainsKey("LevelTimer_AFK")) { EndHelperModule.Session.pauseTypeDict["LevelTimer_AFK"] = false; }
+        bool freezedByPause = EndHelperModule.Session.pauseTypeDict["LevelTimer_Pause"];
+        bool freezedByAfk = EndHelperModule.Session.pauseTypeDict["LevelTimer_AFK"];
+        String pauseIconMsg = ":EndHelper/ui_timerfreeze_pause:";
+        String afkIconMsg = ":EndHelper/ui_timerfreeze_afk:";
+
+        bool renderTimer = true;
+        if (Engine.Scene is Level level && level.Tracker.GetEntity<RoomStatisticsDisplayer>() is RoomStatisticsDisplayer roomStatDisplayer && roomStatDisplayer.statisticsGuiOpen)
+        {
+            renderTimer = false;
+        }
+
+        if (renderTimer)
+        {
+            if (self.Visible && global::Celeste.Settings.Instance.SpeedrunClock == SpeedrunType.Chapter)
+            {
+                const int xPos = 13; const int xPosDiff = 20; const int yPos = 162;
+                if (freezedByPause && freezedByAfk)
+                {
+                    ActiveFont.DrawOutline(pauseIconMsg, new Vector2(xPos, yPos), new Vector2(0.5f, 0.5f), Vector2.One * 2f, Color.DarkGray, 1f, Color.Black);
+                    ActiveFont.DrawOutline(afkIconMsg, new Vector2(xPos + xPosDiff, yPos), new Vector2(0.5f, 0.5f), Vector2.One * 2f, Color.DarkGray, 1f, Color.Black);
+                }
+                else if (freezedByPause)
+                {
+                    ActiveFont.DrawOutline(pauseIconMsg, new Vector2(xPos, yPos), new Vector2(0.5f, 0.5f), Vector2.One * 2f, Color.DarkGray, 1f, Color.Black);
+                }
+                else if (freezedByAfk)
+                {
+                    ActiveFont.DrawOutline(afkIconMsg, new Vector2(xPos, yPos), new Vector2(0.5f, 0.5f), Vector2.One * 2f, Color.DarkGray, 1f, Color.Black);
+                }
+            }
+            else if (self.Visible && global::Celeste.Settings.Instance.SpeedrunClock == SpeedrunType.File)
+            {
+                const int xPos = 13; const int xPosDiff = 20; const int yPos = 185;
+                if (freezedByPause && freezedByAfk)
+                {
+                    ActiveFont.DrawOutline(pauseIconMsg, new Vector2(xPos, yPos), new Vector2(0.5f, 0.5f), Vector2.One * 2f, Color.DarkGray, 1f, Color.Black);
+                    ActiveFont.DrawOutline(afkIconMsg, new Vector2(xPos + xPosDiff, yPos), new Vector2(0.5f, 0.5f), Vector2.One * 2f, Color.DarkGray, 1f, Color.Black);
+                }
+                else if (freezedByPause)
+                {
+                    ActiveFont.DrawOutline(pauseIconMsg, new Vector2(xPos, yPos), new Vector2(0.5f, 0.5f), Vector2.One * 2f, Color.DarkGray, 1f, Color.Black);
+                }
+                else if (freezedByAfk)
+                {
+                    ActiveFont.DrawOutline(afkIconMsg, new Vector2(xPos, yPos), new Vector2(0.5f, 0.5f), Vector2.One * 2f, Color.DarkGray, 1f, Color.Black);
+                }
+            }
+            orig(self);
+        }
     }
 
     #endregion

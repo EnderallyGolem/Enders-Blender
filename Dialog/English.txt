@@ -61,6 +61,7 @@ EndHelper_Dialog_MultiroomWatchtower_FreeCameraOFF=Unlock Camera: OFF
 
 modoptions_EndHelperModule_PauseOptionLevel=Freeze Level Timer When
 modoptions_EndHelperModule_PauseOptionLevel_Desc=Does not affect the File time. This also affects Journal times! AFK: No input for 30s.
+Icons will be displayed under the speedrun timer if these have been used.
 modoptions_EndHelperModule_PauseOptionLevel_None=Never
 modoptions_EndHelperModule_PauseOptionLevel_Pause=Paused
 modoptions_EndHelperModule_PauseOptionLevel_AFK=AFK
