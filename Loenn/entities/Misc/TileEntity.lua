@@ -23,6 +23,7 @@ local tileEntity = {
                 offDL = true,
                 offL = true,
                 offUL = true,
+                locationSeeded = false,
                 --BackgroundTile = false,
             }
         }

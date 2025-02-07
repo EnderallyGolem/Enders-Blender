@@ -25,6 +25,8 @@ public class TileEntity : Solid
     private bool extendOffscreen;
     private bool noEdges;
 
+    private bool locationSeeded;
+
     private List<bool> offDirecBoolList;
 
     private TileEntity master;
@@ -32,7 +34,6 @@ public class TileEntity : Solid
     public List<TileEntity> Group;
 
     public Point GroupBoundsMin;
-
     public Point GroupBoundsMax;
 
     public bool HasGroup
@@ -47,9 +48,11 @@ public class TileEntity : Solid
         private set;
     }
 
-    public TileEntity(Vector2 position, float width, float height, char tileType, char tiletypeOffscreen, int depth, bool bg, bool blockLights = true, bool allowMergeDifferentType = false, bool allowMerge = true, bool extendOffscreen = false, bool noEdges = false, List<bool> offDirecBoolList = null)
+    public TileEntity(Vector2 position, float width, float height, char tileType, char tiletypeOffscreen, int depth, bool bg, bool blockLights = true, bool allowMergeDifferentType = false, bool allowMerge = true, 
+        bool extendOffscreen = false, bool noEdges = false, List<bool> offDirecBoolList = null, bool locationSeeded = false)
     : base(position, width, height, safe: true)
     {
+        
         this.tileType = tileType;
         this.tiletypeOffscreen = tiletypeOffscreen;
         Depth = Calc.Clamp(depth, -300000, 20000);
@@ -59,6 +62,7 @@ public class TileEntity : Solid
         this.extendOffscreen = extendOffscreen;
         this.noEdges = noEdges;
         this.offDirecBoolList = offDirecBoolList ?? new List<bool>([true, true, true, true, true, true, true, true]); //Start at top, go CW
+        this.locationSeeded = locationSeeded;
 
         if (bg)
         {
@@ -70,10 +74,14 @@ public class TileEntity : Solid
             SurfaceSoundIndex = SurfaceIndex.Brick;
     }
 
+
+    private Vector2 relativePos;
+
     public TileEntity(EntityData data, Vector2 offset)
         : this(data.Position + offset, data.Width, data.Height, data.Char("tiletype", '3'), data.Char("tiletypeOffscreen", '◯'), data.Int("Depth", -9000), data.Bool("BackgroundTile", false), data.Bool("BlockLights", true), data.Bool("allowMergeDifferentType", false), data.Bool("allowMerge", true), data.Bool("extendOffscreen", true), data.Bool("noEdges", false),
-              [data.Bool("offU", true), data.Bool("offUR", true), data.Bool("offR", true), data.Bool("offDR", true), data.Bool("offD", true), data.Bool("offDL", true), data.Bool("offL", true), data.Bool("offUL", true)])
+              [data.Bool("offU", true), data.Bool("offUR", true), data.Bool("offR", true), data.Bool("offDR", true), data.Bool("offD", true), data.Bool("offDL", true), data.Bool("offL", true), data.Bool("offUL", true)], data.Bool("locationSeeded", false))
     {
+        relativePos = data.Position;
     }
 
     public override void Awake(Scene scene)
@@ -171,6 +179,7 @@ public class TileEntity : Solid
                 }
             }
             //Logger.Log(LogLevel.Info, "EndHelper/Misc/TileEntity", $"{virtualMap}");
+            if (locationSeeded) { Calc.PushRandom((int)(relativePos.X * relativePos.Y + Width + Height)); }
             Autotiler tiler = bg ? GFX.BGAutotiler : GFX.FGAutotiler;
             tiles = tiler.GenerateMap(virtualMap, new Autotiler.Behaviour
             {
@@ -181,6 +190,7 @@ public class TileEntity : Solid
             tiles.Position = new Vector2(GroupBoundsMin.X - X - 8, GroupBoundsMin.Y - Y - 8);
             tiles.VisualExtend = 32;
             Add(tiles);
+            if (locationSeeded) { Calc.PopRandom(); }
         }
     }
 
