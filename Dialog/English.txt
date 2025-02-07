@@ -2,9 +2,11 @@
 
 EndHelper_Settings=Ender's Blender's Knobs & Dials
 
+# Keybinds
 modoptions_EndHelperModule_FreeMultiroomWatchtower=Spawn Multi-Room Watchtower
 modoptions_EndHelperModule_OpenStatDisplayMenu=Open Room Stat Menu
 modoptions_EndHelperModule_QuickRetry=Quick Retry
+
 
 # Room Statistics Menu
 modoptions_EndHelperModule_RoomStatMenu=Room Stat Tracker
@@ -54,6 +56,13 @@ modoptions_EndHelperModule_DisableQuickRestart_Desc=Why is this set to R if empt
 
 
 EndHelper_Dialog_RoomStatisticsDisplayer_CopiedToClipboard=Copied Stats to Clipboard
+EndHelper_Dialog_RoomStatisticsDisplayer_SegmentRoomHeader=SEGMENT CURRENT ROOM?
+EndHelper_Dialog_RoomStatisticsDisplayer_SegmentRoomSubHeader=The room will be split into a new segment where the stats would count towards.
+Previous segments cannot be changed or removed.
+EndHelper_Dialog_RoomStatisticsDisplayer_SegmentRoomSubHeader2=
+EndHelper_Dialog_RoomStatisticsDisplayer_SegmentRoomConfirm=Segment
+EndHelper_Dialog_RoomStatisticsDisplayer_SegmentRoomCancel=Cancel
+
 EndHelper_Dialog_MultiroomWatchtower_FreeCameraON=Unlock Camera: ON
 EndHelper_Dialog_MultiroomWatchtower_FreeCameraOFF=Unlock Camera: OFF
 

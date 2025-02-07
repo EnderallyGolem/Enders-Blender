@@ -577,7 +577,12 @@ public class EndHelperModule : EverestModule {
             //Logger.Log(LogLevel.Info, "EndHelper/main", $"strawberry homeroom = {roomName}");
         }
 
-        EndHelperModule.Session.roomStatDict_strawberries[roomName] = Convert.ToInt32(EndHelperModule.Session.roomStatDict_strawberries[roomName]) + 1;
+        String roomNameSeg = roomName;
+        if (level.Tracker.GetEntity<RoomStatisticsDisplayer>() is RoomStatisticsDisplayer roomStatDisplayer)
+        {
+            roomNameSeg = roomStatDisplayer.getRoomNameLatestSeg(roomName);
+        }
+        EndHelperModule.Session.roomStatDict_strawberries[roomNameSeg] = Convert.ToInt32(EndHelperModule.Session.roomStatDict_strawberries[roomNameSeg]) + 1;
 
         orig(self);
     }

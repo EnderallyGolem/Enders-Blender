@@ -90,7 +90,7 @@ namespace Celeste.Mod.EndHelper.Integration
         {
             // +1 to death count =) unless prevented
             Level preloadLevel = Monocle.Engine.Scene as Level;
-            //String reloadRoomName = preloadLevel.Session.LevelData.Name;
+            //String reloadRoomName = preloadLevel.Session.LevelData.Name; //This is unused but if it ever gets used please make it work with segments
 
             if (preloadLevel.Tracker.GetEntity<Player>() is Player player && preloadLevel.Tracker.GetEntity<RoomStatisticsDisplayer>() is RoomStatisticsDisplayer roomStatDisplayer)
             {
