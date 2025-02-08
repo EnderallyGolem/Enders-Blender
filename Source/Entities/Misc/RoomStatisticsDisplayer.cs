@@ -252,6 +252,8 @@ public class RoomStatisticsDisplayer : Entity
 
     void showStats(int displayXPos, int displayYPos, float displayScale, Color timerColor, bool yCentered, float xJustification, bool showAll, bool hideRoomName, bool showTotalMapBerryCount, string prefix, string suffix, int deathNum, long timerNum, int strawberriesNum)
     {
+        var roomDisplaySettings = EndHelperModule.Settings.RoomStatDisplay;
+
         Level level = SceneAs<Level>();
         Vector2 justification = new Vector2(0, yCentered ? 0.5f : 0f);
         List<DisplayInfo> displayInfoList = [];
@@ -262,7 +264,7 @@ public class RoomStatisticsDisplayer : Entity
             //ActiveFont.DrawOutline(prefix, new Vector2(sectionXPos + xOffset, displayYPos), justification, Vector2.One * displayScale, timerColor, 2f, Color.Black);
         }
 
-        if (!hideRoomName && (EndHelperModule.Settings.RoomStatDisplay.ShowRoomName || showAll))
+        if (!hideRoomName && (roomDisplaySettings.ShowRoomName || showAll))
         {
             string displayMsg = "";
             string customRoomName = Convert.ToString(EndHelperModule.Session.roomStatDict_customName[currentRoomName]);
@@ -276,8 +278,8 @@ public class RoomStatisticsDisplayer : Entity
                 displayMsg += customRoomName;
             }
 
-            if ( EndHelperModule.Settings.RoomStatDisplay.ShowDeaths || EndHelperModule.Settings.RoomStatDisplay.ShowTimeSpent 
-                || (EndHelperModule.Settings.RoomStatDisplay.ShowStrawberries && strawberriesNum > 0))
+            if (roomDisplaySettings.ShowDeaths || roomDisplaySettings.ShowTimeSpent 
+                || (roomDisplaySettings.ShowStrawberries && strawberriesNum > 0))
             {
                 displayMsg += ":";
             }
@@ -285,12 +287,12 @@ public class RoomStatisticsDisplayer : Entity
             displayInfoList.Add(new DisplayInfo("roomname", displayMsg, (int)(ActiveFont.WidthToNextLine($"{displayMsg} ", 0) * displayScale)));
         }
 
-        if (showAll || EndHelperModule.Settings.RoomStatDisplay.ShowDeaths)
+        if (showAll || roomDisplaySettings.ShowDeaths)
         {
             string displayMsg = $":EndHelper/uioutline_skull: {deathNum}";
             displayInfoList.Add(new DisplayInfo("deaths", displayMsg, (int)(ActiveFont.WidthToNextLine($"{deathNum}XXX|", 0) * displayScale)));
         }
-        if (showAll || EndHelperModule.Settings.RoomStatDisplay.ShowTimeSpent)
+        if (showAll || roomDisplaySettings.ShowTimeSpent)
         {
             TimeSpan timeSpent = TimeSpan.FromTicks(timerNum);
             string timeString = EndHelperModule.MinimalGameplayFormat(timeSpent);
@@ -311,7 +313,7 @@ public class RoomStatisticsDisplayer : Entity
             }
             displayInfoList.Add(new DisplayInfo("timer", displayMsg, textWidth));
         }
-        if (showAll || EndHelperModule.Settings.RoomStatDisplay.ShowStrawberries)
+        if (showAll || roomDisplaySettings.ShowStrawberries)
         {
             int mapBerryCount = level.Session.MapData.DetectedStrawberries;
             if (strawberriesNum > 0 || (showTotalMapBerryCount && mapBerryCount > 0)) // If player (incl gold/moon) or map (excl gold/moon) has strawberries
@@ -951,8 +953,11 @@ public class RoomStatisticsDisplayer : Entity
     {
         if (roomName.Contains("%seg"))
         {
-            while (!roomName.EndsWith("%seg") && roomName.Contains("%seg")) { roomName = roomName.Substring(0, roomName.Length - 1); } // Remove numbers
-            roomName = roomName.Substring(0, roomName.Length - 4); // Remove %seg
+            int segIndex = roomName.LastIndexOf("%seg");
+            if (segIndex > -1)
+            {
+                roomName = roomName.Substring(0, segIndex); // Remove everything from %seg onwards
+            }
         }
         return roomName;
     }

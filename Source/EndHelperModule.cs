@@ -27,6 +27,10 @@ using NETCoreifier;
 using static Celeste.Mod.EndHelper.EndHelperModuleSettings;
 using Celeste.Mod.EndHelper.Entities.RoomSwap;
 using Microsoft.Xna.Framework.Graphics;
+using MonoMod.Cil;
+using Mono.Cecil.Cil;
+using MonoMod.RuntimeDetour;
+using static On.Celeste.Player;
 
 namespace Celeste.Mod.EndHelper;
 
@@ -96,6 +100,9 @@ public class EndHelperModule : EverestModule {
         RoomModificationEvent?.Invoke(null, new RoomModificationEventArgs(gridID));
     }
 
+
+    private static ILHook Loadhook_Player_DashCoroutine;
+
     public override void Load() {
         //On.Celeste.Level.TransitionRoutine += Hook_TransitionRoutine;
         Everest.Events.AssetReload.OnReloadLevel += ReupdateAllRooms;
@@ -112,26 +119,19 @@ public class EndHelperModule : EverestModule {
         On.Celeste.LevelLoader.StartLevel += Hook_StartMap;
         On.Celeste.Level.Pause += Hook_Pause;
 
+
         On.Celeste.Editor.MapEditor.Update += Hook_UsingMapEditor;
         On.Celeste.Strawberry.Added += Hook_StrawberryAddedToLevel;
         On.Celeste.Strawberry.OnCollect += Hook_CollectStrawberry;
         On.Celeste.SpeedrunTimerDisplay.Render += Hook_SpeedrunTimerRender;
 
+        On.Celeste.Player.DashBegin += Hook_DashBegin;
+        MethodInfo ILDashCoroutine = typeof(Player).GetMethod("DashCoroutine", BindingFlags.NonPublic | BindingFlags.Instance).GetStateMachineTarget();
+        Loadhook_Player_DashCoroutine = new ILHook(ILDashCoroutine, Hook_IL_DashCoroutine); // Pass ILContext to Hook_IL_DashCoroutine
+
         SpeedrunToolIntegration.Load();
         SSMQoLIntegration.Load();
         //unused_ImGuiHelperIntegration.Load();
-    }
-
-    // Optional, initialize anything after Celeste has initialized itself properly.
-    public override void Initialize() {
-
-    }
-
-    // Optional, do anything requiring either the Celeste or mod content here.
-    public override void LoadContent(bool firstLoad)
-    {
-        base.LoadContent(firstLoad);
-        _CustomEntitySpriteBank = new SpriteBank(GFX.Game, "Graphics/EndHelper/Sprites.xml");
     }
 
     // Unload the entirety of your mod's content. Free up any native resources.
@@ -156,9 +156,23 @@ public class EndHelperModule : EverestModule {
         On.Celeste.Strawberry.OnCollect -= Hook_CollectStrawberry;
         On.Celeste.SpeedrunTimerDisplay.Render -= Hook_SpeedrunTimerRender;
 
+        On.Celeste.Player.DashBegin -= Hook_DashBegin;
+        Loadhook_Player_DashCoroutine?.Dispose(); Loadhook_Player_DashCoroutine = null;
+
         SpeedrunToolIntegration.Unload();
         SSMQoLIntegration.Unload();
         //unused_ImGuiHelperIntegration.Unload();
+    }
+
+    // Optional, initialize anything after Celeste has initialized itself properly.
+    public override void Initialize()
+    { }
+
+    // Optional, do anything requiring either the Celeste or mod content here.
+    public override void LoadContent(bool firstLoad)
+    {
+        base.LoadContent(firstLoad);
+        _CustomEntitySpriteBank = new SpriteBank(GFX.Game, "Graphics/EndHelper/Sprites.xml");
     }
     #endregion
 
@@ -531,6 +545,51 @@ public class EndHelperModule : EverestModule {
             }}
         }
         orig(self, startIndex, minimal, quickReset);
+    }
+
+    private static Vector2 preRedirectDashDir = Vector2.Zero;
+    private static void Hook_DashBegin(On.Celeste.Player.orig_DashBegin orig, global::Celeste.Player self)
+    {
+        preRedirectDashDir = Input.LastAim;
+        orig(self);
+    }
+
+    private static void Hook_IL_DashCoroutine(ILContext il)
+    {
+        ILCursor cursor = new ILCursor(il);
+
+        // Move the cursor to right after lastAim is obtained, but before lastAim is set.
+        if (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdfld<Player>("lastAim")))
+        {
+            cursor.EmitDelegate(preventDownRedirect); // Redirects the aim if necessary. My first IL hook :lilysass:
+        }
+    }
+
+    public static Vector2 preventDownRedirect(Vector2 redirectedVector)
+    {
+        //Logger.Log(LogLevel.Info, "EndHelper/main", $"pre-redirected vector: {preRedirectDashDir}");
+        //Logger.Log(LogLevel.Info, "EndHelper/main", $"redirected vector: {redirectedVector}");
+        //Logger.Log(LogLevel.Info, "EndHelper/main", $"current aim: {Input.Aim.PreviousValue}");
+
+        Vector2 currentAim = Input.Aim.PreviousValue;
+
+        // If down direction was redirected to neutral, add it back during redirection //global::Celeste.SaveData.Instance.Assists.Invincible
+        if (EndHelperModule.Settings.convertDemo != ConvertDemoEnum.Disabled && !global::Celeste.SaveData.Instance.Assists.ThreeSixtyDashing
+            && preRedirectDashDir.Y > 0.01 && redirectedVector.Y == 0)
+        {
+            redirectedVector.Y = preRedirectDashDir.Y;
+
+            // If this happens, last aim will probably be left/right. Check current aim to see if it should be downwards or diagonal, unless forced diagonal
+            if (EndHelperModule.Settings.convertDemo == ConvertDemoEnum.EnabledNormal && currentAim.X == 0)
+            {
+                redirectedVector.X = 0;
+            }
+
+            redirectedVector = redirectedVector.EightWayNormal(); // Normalise lol
+        }
+
+        //Logger.Log(LogLevel.Info, "EndHelper/main", $"final vector: {redirectedVector}");
+        return redirectedVector;
     }
 
     public static void Hook_UsingMapEditor(On.Celeste.Editor.MapEditor.orig_Update orig, global::Celeste.Editor.MapEditor self)

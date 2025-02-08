@@ -72,6 +72,11 @@ public class EndHelperModuleSettings : EverestModuleSettings {
     [SettingSubText("modoptions_EndHelperModule_DisableQuickRestart_Desc")]
     public bool DisableQuickRestart { get; set; } = false;
 
+    public enum ConvertDemoEnum { Disabled, EnabledNormal, EnabledDiagonal }
+    [DefaultValue(ConvertDemoEnum.Disabled)]
+    [SettingSubText("modoptions_EndHelperModule_ConvertDemo_Desc")]
+    public ConvertDemoEnum convertDemo { get; set; }
+
     public RoomStatMenuSubMenu RoomStatMenu { get; set; } = new();
     public RoomStatDisplaySubMenu RoomStatDisplay { get; set; } = new();
 }

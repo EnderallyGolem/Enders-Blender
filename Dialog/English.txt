@@ -52,8 +52,17 @@ modoptions_EndHelperModule_ShowStrawberries=Show Strawberries
 modoptions_EndHelperModule_ShowStrawberries_Desc=Only shown when at least one strawberry is collected.
 
 modoptions_EndHelperModule_DisableQuickRestart=Disable Quick Restart Keybind
-modoptions_EndHelperModule_DisableQuickRestart_Desc=Why is this set to R if empty, why is this the everest search key, WWHHHHHYYYYYYYYYYYY
+modoptions_EndHelperModule_DisableQuickRestart_Desc=Why is this set to R if empty
+why is this the everest search key, WWHHHHHYYYYYYYYYYYY
 
+modoptions_EndHelperModule_ConvertDemo=Prevent Down Dash Redirects
+modoptions_EndHelperModule_ConvertDemo_Desc=This converts manual demos into down / down diagonal dashes.
+This has no effect if 360 Dashing is enabled.
+If set to Diagonal, manual demos always become diagonal downwards dashes.
+
+modoptions_EndHelperModule_ConvertDemo_Disabled=Disabled
+modoptions_EndHelperModule_ConvertDemo_EnabledNormal=Enabled (Normal)
+modoptions_EndHelperModule_ConvertDemo_EnabledDiagonal=Enabled (Diagonal)
 
 EndHelper_Dialog_RoomStatisticsDisplayer_CopiedToClipboard=Copied Stats to Clipboard
 EndHelper_Dialog_RoomStatisticsDisplayer_SegmentRoomHeader=SEGMENT CURRENT ROOM?
@@ -165,7 +174,13 @@ EndHelperTest_Tutorial_DeathWarp_Category=Death-Warp
 
 
 # ----------------------------------  Misc  -------------------------------------------
-
+endhelper_convertdemoexplanation=The mod menu contains a setting to prevent downward dash redirects.
+It converts manual demos into down or down diagonal dashes.
+The technical info for this is: After inputting a dash, you have a couple frames to redirect them.
+A manual demo occurs when down dashes are redirected away from going downwards during that time.
+If the mod setting is enabled, if the pre-redirected dash contains a downwards component and the redirected dash has 0 vertical component, the vertical component of dashes won't be redirected to 0.
+The downward dash redirect is NOT prevented if the redirected dash's vertical component is upwards, so upward demos can still happen like normal.
+This also only affects the vertical component. Any horizontal component will get redirected like normal.
 
 # ----------------------------------  Credits  ----------------------------------------
 endhelper_credits={~}Additional credits:{/~}
