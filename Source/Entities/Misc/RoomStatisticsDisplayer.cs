@@ -131,9 +131,13 @@ public class RoomStatisticsDisplayer : Entity
         // Counters for people to use I guess
         // OrderedDict do not handle types well, save & quit converts them into strings for some reason, hence the really dumb Convert.ToInts
         int timeSpentInSeconds = TimeSpan.FromTicks(Convert.ToInt64(EndHelperModule.Session.roomStatDict_timer[currentRoomName])).Seconds;
-        level.Session.SetCounter($"EndHelper_RoomStatistics_{currentRoomName}_death", Convert.ToInt32(EndHelperModule.Session.roomStatDict_death[currentRoomName]));
-        level.Session.SetCounter($"EndHelper_RoomStatistics_{currentRoomName}_timer", timeSpentInSeconds);
-        level.Session.SetCounter($"EndHelper_RoomStatistics_{currentRoomName}_strawberries", Convert.ToInt32(EndHelperModule.Session.roomStatDict_strawberries[currentRoomName]));
+
+        String counterFriendlyRoomName = currentRoomName;
+        counterFriendlyRoomName = counterFriendlyRoomName.Replace("%", "_"); // %s in %segment causes issues lol
+
+        level.Session.SetCounter($"EndHelper_RoomStatistics_{counterFriendlyRoomName}_death", Convert.ToInt32(EndHelperModule.Session.roomStatDict_death[currentRoomName]));
+        level.Session.SetCounter($"EndHelper_RoomStatistics_{counterFriendlyRoomName}_timer", timeSpentInSeconds);
+        level.Session.SetCounter($"EndHelper_RoomStatistics_{counterFriendlyRoomName}_strawberries", Convert.ToInt32(EndHelperModule.Session.roomStatDict_strawberries[currentRoomName]));
 
         // Show/Hide GUI
         if (EndHelperModule.Settings.OpenStatDisplayMenu.Button.Pressed && !statisticsGuiOpen && !level.Paused && !level.Transitioning)

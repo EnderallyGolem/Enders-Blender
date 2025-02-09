@@ -131,7 +131,7 @@ public class EndHelperModule : EverestModule {
 
         SpeedrunToolIntegration.Load();
         SSMQoLIntegration.Load();
-        //unused_ImGuiHelperIntegration.Load();
+        ImGuiHelperIntegration.Load();
     }
 
     // Unload the entirety of your mod's content. Free up any native resources.
@@ -161,7 +161,7 @@ public class EndHelperModule : EverestModule {
 
         SpeedrunToolIntegration.Unload();
         SSMQoLIntegration.Unload();
-        //unused_ImGuiHelperIntegration.Unload();
+        ImGuiHelperIntegration.Unload();
     }
 
     // Optional, initialize anything after Celeste has initialized itself properly.

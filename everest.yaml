@@ -12,3 +12,5 @@
       Version: 3.23.0
     - Name: SSMQoLMod # Allows the lookout speed multiplier to work on multi-room bino
       Version: 1.2.1
+    - Name: ImGuiHelper # Stupid
+      Version: 0.1.3

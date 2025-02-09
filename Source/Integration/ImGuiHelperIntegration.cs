@@ -18,13 +18,13 @@ using System.Collections;
 using System.Collections.Specialized;
 using static Celeste.Mod.EndHelper.EndHelperModule;
 using static Celeste.TrackSpinner;
-//using Celeste.Mod.ImGuiHelper;
+using Celeste.Mod.ImGuiHelper;
 using Microsoft.Xna.Framework;
 using Celeste.Mod.SpeedrunTool.TeleportRoom;
 
 namespace Celeste.Mod.EndHelper.Integration
 {
-    public static class unused_ImGuiHelperIntegration
+    public static class ImGuiHelperIntegration
     {
         private static Hook Hook_ImGuiEngineUpdate;
         internal static void Load()
@@ -40,7 +40,7 @@ namespace Celeste.Mod.EndHelper.Integration
                 Type typeOfThatDumbFunc = Type.GetType("Celeste.Mod.ImGuiHelper.ImGuiHelperModule,ImGuiHelper");
 
                 MethodInfo targetMethod = typeOfThatDumbFunc.GetMethod("Engine_Update", BindingFlags.Static | BindingFlags.NonPublic);
-                Hook_ImGuiEngineUpdate = new Hook(targetMethod, typeof(unused_ImGuiHelperIntegration).GetMethod("Engine_Update_Hook", BindingFlags.Static | BindingFlags.NonPublic));
+                Hook_ImGuiEngineUpdate = new Hook(targetMethod, typeof(ImGuiHelperIntegration).GetMethod("Engine_Update_Hook", BindingFlags.Static | BindingFlags.NonPublic));
             }
         }
 
@@ -53,23 +53,16 @@ namespace Celeste.Mod.EndHelper.Integration
 
         private static void Engine_Update_Hook(Action<On.Monocle.Engine.orig_Update, Monocle.Engine, GameTime> orig, On.Monocle.Engine.orig_Update ogorig, Monocle.Engine self, GameTime gametime)
         {
-            //
-            // THIS DOES NOT FREAKING WORK.
-            // I GIVE UP.
-            //
-            Monocle.MInput.Disabled = true;
-            Monocle.MInput.Active = false;
-            Monocle.Engine.Commands.Enabled = false;
-            Logger.Log(LogLevel.Info, "EndHelper/ImGuiHelperIntegration", $"the integration 1. umm {Monocle.MInput.Disabled}");
-            orig(ogorig, self, gametime);
+            // This is here to get ImGuiHelper to stop forcing MInput Disable to be false when I need it to be true ):<
             if (mInputDisableDuration >= 1)
             {
                 Monocle.MInput.Disabled = true;
+                ogorig(self, gametime);
+            } 
+            else
+            {
+                orig(ogorig, self, gametime);
             }
-            Logger.Log(LogLevel.Info, "EndHelper/ImGuiHelperIntegration", $"the integration 2. umm {Monocle.MInput.Disabled}");
-            Monocle.MInput.Disabled = true;
-            Monocle.MInput.Active = false;
-            Monocle.Engine.Commands.Enabled = false;
         }
     }
 }
