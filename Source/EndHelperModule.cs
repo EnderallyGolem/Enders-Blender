@@ -75,6 +75,9 @@ public class EndHelperModule : EverestModule {
     public static OrderedDictionary externalRoomStatDict_colorIndex = new OrderedDictionary { };
     public static Dictionary<string, bool> externalDict_pauseTypeDict = new Dictionary<string, bool> { };
 
+    
+    public static bool toggleifyEnabled = false; // Toggle-ify enabling
+
     // Decreases till -ve, enables input if 0 and disables if +
     // Lets me disable, but ensure it gets re-enabled when I don't need it anymore
     public static int mInputDisableDuration = 0;
@@ -102,6 +105,7 @@ public class EndHelperModule : EverestModule {
 
 
     private static ILHook Loadhook_Player_DashCoroutine;
+    private static ILHook Loadhook_Input_GrabCheckGet;
 
     public override void Load() {
         //On.Celeste.Level.TransitionRoutine += Hook_TransitionRoutine;
@@ -128,6 +132,9 @@ public class EndHelperModule : EverestModule {
         On.Celeste.Player.DashBegin += Hook_DashBegin;
         MethodInfo ILDashCoroutine = typeof(Player).GetMethod("DashCoroutine", BindingFlags.NonPublic | BindingFlags.Instance).GetStateMachineTarget();
         Loadhook_Player_DashCoroutine = new ILHook(ILDashCoroutine, Hook_IL_DashCoroutine); // Pass ILContext to Hook_IL_DashCoroutine
+
+        MethodInfo ILInputGrabCheckGet = typeof(Input).GetProperty("GrabCheck").GetGetMethod();
+        Loadhook_Input_GrabCheckGet = new ILHook(ILInputGrabCheckGet, Hook_IL_GrabCheckGet); // Pass ILContext to Hook_IL_DashCoroutine
 
         SpeedrunToolIntegration.Load();
         SSMQoLIntegration.Load();
@@ -158,6 +165,7 @@ public class EndHelperModule : EverestModule {
 
         On.Celeste.Player.DashBegin -= Hook_DashBegin;
         Loadhook_Player_DashCoroutine?.Dispose(); Loadhook_Player_DashCoroutine = null;
+        Loadhook_Input_GrabCheckGet?.Dispose(); Loadhook_Input_GrabCheckGet = null;
 
         SpeedrunToolIntegration.Unload();
         SSMQoLIntegration.Unload();
@@ -201,6 +209,9 @@ public class EndHelperModule : EverestModule {
             // Handle the custom name savedata dict. This requires fromSaveData as that is AFTER the session is made.
             SetupCustomNameSaveDataDict(session);
         }
+
+        // Reset toggleifyEnabled
+        toggleifyEnabled = false;
     }
 
     static void SetupCustomNameSaveDataDict(global::Celeste.Session session)
@@ -279,13 +290,8 @@ public class EndHelperModule : EverestModule {
     {
         Level level = self;
 
-        if (EndHelperModule.Settings.FreeMultiroomWatchtower.Button.Pressed && !level.FrozenOrPaused)
-        {
-            spawnMultiroomWatchtower();
-        }
-
+        // Session Reset Checker
         EndHelperModule.timeSinceSessionReset++;
-
         if (EndHelperModule.timeSinceSessionReset == 1)
         {
             // This occurs when reset happens
@@ -303,6 +309,20 @@ public class EndHelperModule : EverestModule {
         else if (EndHelperModule.timeSinceSessionReset > 1)
         {
             // Store data to use during reset
+        }
+
+        {
+            // Increment timeSinceRespawn if player is alive. and also not paused
+            if (level.Tracker.GetEntity<Player>() is Player player && !player.Dead && !player.JustRespawned && !level.FrozenOrPaused)
+            {
+                timeSinceRespawn++;
+            }
+        }
+
+        // Multi-room Bino Keybind
+        if (EndHelperModule.Settings.FreeMultiroomWatchtower.Button.Pressed && !level.FrozenOrPaused)
+        {
+            spawnMultiroomWatchtower();
         }
 
         // Quick Restart Keybind
@@ -347,12 +367,27 @@ public class EndHelperModule : EverestModule {
             }
         }
 
+        // Toggle-ify Keybind
+        if (EndHelperModule.Settings.ToggleGrab.Button.Pressed) 
+        { 
+            toggleifyEnabled = !toggleifyEnabled;
+
+            // Set to false first
+            GrabFakeTogglePressPressed = false;
+
+            if (EndHelperModule.Settings.ToggleGrabMenu.toggleGrabBehaviour == ToggleGrabSubMenu.ToggleGrabBehaviourEnum.TurnGrabToTogglePress)
+            { GrabFakeTogglePressPressed = true; }
+        }
+
+        if (Input.Grab.Pressed && EndHelperModule.Settings.ToggleGrabMenu.toggleGrabBehaviour != ToggleGrabSubMenu.ToggleGrabBehaviourEnum.NothingIfGrab)
         {
-            // Increment timeSinceRespawn if player is alive. and also not paused
-            if (level.Tracker.GetEntity<Player>() is Player player && !player.Dead && !player.JustRespawned && !level.FrozenOrPaused)
-            {
-                timeSinceRespawn++;
-            }
+            // Convert this too, unless NothingIfGrab
+            GrabFakeTogglePressPressed = !GrabFakeTogglePressPressed;
+        }
+        if (toggleifyEnabled && Input.Grab.Pressed && EndHelperModule.Settings.ToggleGrabMenu.toggleGrabBehaviour == ToggleGrabSubMenu.ToggleGrabBehaviourEnum.NothingIfGrab
+            && global::Celeste.Settings.Instance.GrabMode == GrabModes.Toggle)
+        {
+            Input.UpdateGrab(); // If NothingIfGrab and Toggle Grab, LOCK THIS during toggleify. (Locking being just update twice)
         }
 
         orig(self);
@@ -498,6 +533,9 @@ public class EndHelperModule : EverestModule {
             }
         }
 
+        // Untoggle-ify if set to do so on death
+        if (EndHelperModule.Settings.ToggleGrabMenu.UntoggleUponDeath) { toggleifyEnabled = false; }
+
         return orig(self, direction, evenIfInvincible, registerDeathInStats);
     }
 
@@ -590,6 +628,91 @@ public class EndHelperModule : EverestModule {
 
         //Logger.Log(LogLevel.Info, "EndHelper/main", $"final vector: {redirectedVector}");
         return redirectedVector;
+    }
+
+    private static void Hook_IL_GrabCheckGet(ILContext il)
+    {
+        ILCursor cursor = new ILCursor(il);
+
+        // Move to where the switch starts
+        if (cursor.TryGotoNext(instr => instr.MatchSwitch(out ILLabel[] switchLabel)))
+        {
+            while (cursor.TryGotoNext(MoveType.Before, instr => instr.MatchRet()))
+            { 
+                cursor.EmitDelegate<Func<bool, bool>>(ToggleifyModifyGrab); // Loop across all 3 grab type checks
+                cursor.Index++;
+            }
+        }
+    }
+
+    private static bool GrabFakeTogglePressPressed;
+    private static bool ToggleGrabRanNothing = false;
+    public static bool ToggleifyModifyGrab(bool grabbing)
+    {
+        GrabModes grabMode = global::Celeste.Settings.Instance.GrabMode;
+        bool pressedGrab = Input.Grab.Pressed;
+
+        if (toggleifyEnabled)
+        {
+            switch (EndHelperModule.Settings.ToggleGrabMenu.toggleGrabBehaviour)
+            {
+                case ToggleGrabSubMenu.ToggleGrabBehaviourEnum.UntoggleOnGrab:
+                    if (pressedGrab)  { toggleifyEnabled = false; } 
+                    else { grabbing = !grabbing; }
+                    GrabFakeTogglePressPressed = false;
+                    ToggleGrabRanNothing = false;
+                    break;
+
+                case ToggleGrabSubMenu.ToggleGrabBehaviourEnum.InvertDuringGrab:
+                    grabbing = !grabbing; // Simplest behaviour lol
+                    GrabFakeTogglePressPressed = false;
+                    ToggleGrabRanNothing = false;
+                    break;
+
+                case ToggleGrabSubMenu.ToggleGrabBehaviourEnum.TurnGrabToToggle:
+                    if (!GrabFakeTogglePressPressed && grabMode == GrabModes.Hold) { grabbing = false; } // Set grabbing dependent on GrabFakeTogglePressPressed
+                    else if (GrabFakeTogglePressPressed && grabMode == GrabModes.Hold) { grabbing = true; }
+                    else if (!GrabFakeTogglePressPressed && grabMode == GrabModes.Invert) { grabbing = true; }
+                    else if (GrabFakeTogglePressPressed && grabMode == GrabModes.Invert) { grabbing = false; }
+                    ToggleGrabRanNothing = false;
+                    // Nothing happens if you're using toggle grab, because like, yeah sure i change the toggle grab into a toggle grab
+                    break;
+
+                case ToggleGrabSubMenu.ToggleGrabBehaviourEnum.TurnGrabToTogglePress: // Same as above (Press handled in level update)
+                    if (!GrabFakeTogglePressPressed && grabMode == GrabModes.Hold) { grabbing = false; }  // Set grabbing dependent on GrabFakeTogglePressPressed
+                    else if (GrabFakeTogglePressPressed && grabMode == GrabModes.Hold) { grabbing = true; }
+                    else if (!GrabFakeTogglePressPressed && grabMode == GrabModes.Invert) { grabbing = true; }
+                    else if (GrabFakeTogglePressPressed && grabMode == GrabModes.Invert) { grabbing = false; }
+                    ToggleGrabRanNothing = false;
+                    break;
+
+                case ToggleGrabSubMenu.ToggleGrabBehaviourEnum.NothingIfGrab:
+                    if (grabMode == GrabModes.Hold) { grabbing = true; }
+                    else if (grabMode == GrabModes.Invert) { grabbing = false; }
+                    else if (grabMode == GrabModes.Toggle) { 
+                        if (ToggleGrabRanNothing == false)
+                        {
+                            GrabFakeTogglePressPressed = !grabbing; // Store OPPOSITE grab mode before toggle-ifier in here
+                            ToggleGrabRanNothing = true;
+                        } 
+                        else
+                        {
+                            grabbing = GrabFakeTogglePressPressed;
+                        }
+                    }
+                    break;
+                default:
+                    GrabFakeTogglePressPressed = false;
+                    ToggleGrabRanNothing = false;
+                    break;
+            }
+        } else
+        {
+            ToggleGrabRanNothing = false;
+            GrabFakeTogglePressPressed = false;
+        }
+
+        return grabbing;
     }
 
     public static void Hook_UsingMapEditor(On.Celeste.Editor.MapEditor.orig_Update orig, global::Celeste.Editor.MapEditor self)

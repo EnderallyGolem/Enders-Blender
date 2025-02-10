@@ -6,6 +6,7 @@ EndHelper_Settings=Ender's Blender's Knobs & Dials
 modoptions_EndHelperModule_FreeMultiroomWatchtower=Spawn Multi-Room Watchtower
 modoptions_EndHelperModule_OpenStatDisplayMenu=Open Room Stat Menu
 modoptions_EndHelperModule_QuickRetry=Quick Retry
+modoptions_EndHelperModule_ToggleGrab=Toggle-ify Grab
 
 
 # Room Statistics Menu
@@ -34,8 +35,9 @@ modoptions_EndHelperModule_MenuCustomNameStorageCount=Custom Name Storage Size
 modoptions_EndHelperModule_MenuCustomNameStorageCount_Desc=The number of sessions in which custom room names will be stored.
 Eg: If 10, custom names for the map's rooms will be kept until you play 10 other maps.
 
+
 # Room Stat Tracker Display
-modoptions_EndHelperModule_RoomStatDisplay=Room Stat Tracker HUD
+modoptions_EndHelperModule_RoomStatDisplayMenu=Room Stat Tracker HUD
 modoptions_EndHelperModule_OffsetX=X-Offset
 modoptions_EndHelperModule_OffsetY=Y-Offset
 modoptions_EndHelperModule_Size=Display Size
@@ -75,6 +77,25 @@ EndHelper_Dialog_RoomStatisticsDisplayer_SegmentRoomCancel=Cancel
 EndHelper_Dialog_MultiroomWatchtower_FreeCameraON=Unlock Camera: ON
 EndHelper_Dialog_MultiroomWatchtower_FreeCameraOFF=Unlock Camera: OFF
 
+
+# Toggle Grab Key
+modoptions_EndHelperModule_ToggleGrabMenu=Toggle-ify Grab Key
+modoptions_EndHelperModule_GrabOffsetX=Icon X-Offset
+modoptions_EndHelperModule_GrabOffsetY=Icon Y-Offset
+modoptions_EndHelperModule_GrabSize=Icon Size
+modoptions_EndHelperModule_HideWhenPause=Hide While Paused
+modoptions_EndHelperModule_UntoggleUponDeath=Untoggle-ify upon death
+modoptions_EndHelperModule_toggleGrabBehaviour=Grab Behaviour
+modoptions_EndHelperModule_toggleGrabBehaviour_UntoggleOnGrab=Untoggle-ify
+modoptions_EndHelperModule_toggleGrabBehaviour_InvertDuringGrab=Invert
+modoptions_EndHelperModule_toggleGrabBehaviour_TurnGrabToToggle=Toggle
+modoptions_EndHelperModule_toggleGrabBehaviour_TurnGrabToTogglePress=Toggle + Press
+modoptions_EndHelperModule_toggleGrabBehaviour_NothingIfGrab=Nothing
+modoptions_EndHelperModule_toggleGrabBehaviour_Desc=Untoggle-ify: If grab is pressed, toggle-ify is set to off
+Invert: Toggle-ify inverts grab (holding grab when Toggle-ify is on disables grab)
+Toggle: Toggle-ify makes grab work like toggle grab.
+Toggle + Press: Same as above, but also changes the grab toggle.
+Nothing: If Toggle-ify is on, pressing grab does not do anything
 
 
 modoptions_EndHelperModule_PauseOptionLevel=Freeze Level Timer When

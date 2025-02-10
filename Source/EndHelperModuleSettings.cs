@@ -9,6 +9,7 @@ public class EndHelperModuleSettings : EverestModuleSettings {
     public ButtonBinding OpenStatDisplayMenu { get; set; }
     public ButtonBinding QuickRetry { get; set; }
     public ButtonBinding FreeMultiroomWatchtower { get; set; }
+    public ButtonBinding ToggleGrab { get; set; }
 
 
     // Room Statistics Menu
@@ -63,6 +64,31 @@ public class EndHelperModuleSettings : EverestModuleSettings {
     }
 
 
+    // Toggle Grab Key
+    [SettingSubMenu]
+    [SettingName("modoptions_EndHelperModule_ToggleGrab")]
+    public class ToggleGrabSubMenu
+    {
+        [SettingRange(min: -30, max: 240, largeRange: true)]
+        public int GrabOffsetX { get; set; } = 225;
+
+        [SettingRange(min: -30, max: 140, largeRange: true)]
+        public int GrabOffsetY { get; set; } = 120;
+
+        [SettingRange(min: 1, max: 30, largeRange: false)]
+        public int GrabSize { get; set; } = 15;
+
+        public bool HideWhenPause { get; set; } = true;
+        public bool UntoggleUponDeath { get; set; } = false;
+
+        // offset xy and scale
+        public enum ToggleGrabBehaviourEnum { UntoggleOnGrab, InvertDuringGrab, TurnGrabToToggle, TurnGrabToTogglePress, NothingIfGrab }
+        [DefaultValue(ToggleGrabBehaviourEnum.TurnGrabToToggle)]
+        [SettingSubText("modoptions_EndHelperModule_toggleGrabBehaviour_Desc")]
+        public ToggleGrabBehaviourEnum toggleGrabBehaviour { get; set; }
+    }
+
+
     // The settings
     public enum LevelPauseScenarioEnum { None, Pause, AFK, PauseAFK }
     [DefaultValue(LevelPauseScenarioEnum.None)]
@@ -78,5 +104,6 @@ public class EndHelperModuleSettings : EverestModuleSettings {
     public ConvertDemoEnum convertDemo { get; set; }
 
     public RoomStatMenuSubMenu RoomStatMenu { get; set; } = new();
-    public RoomStatDisplaySubMenu RoomStatDisplay { get; set; } = new();
+    public RoomStatDisplaySubMenu RoomStatDisplayMenu { get; set; } = new();
+    public ToggleGrabSubMenu ToggleGrabMenu { get; set; } = new();
 }

@@ -213,9 +213,9 @@ public class RoomStatisticsDisplayer : Entity
         }
 
         // Text Display
-        int displayXPos = 15 + EndHelperModule.Settings.RoomStatDisplay.OffsetX * 8;
-        int displayYPos = 15 + EndHelperModule.Settings.RoomStatDisplay.OffsetY * 8;
-        float displayScale = (float)EndHelperModule.Settings.RoomStatDisplay.Size / 20;
+        int displayXPos = 15 + EndHelperModule.Settings.RoomStatDisplayMenu.OffsetX * 8;
+        int displayYPos = 15 + EndHelperModule.Settings.RoomStatDisplayMenu.OffsetY * 8;
+        float displayScale = (float)EndHelperModule.Settings.RoomStatDisplayMenu.Size / 20;
 
         int deathNum = Convert.ToInt32(EndHelperModule.Session.roomStatDict_death[currentRoomName]);
         long timerNum = Convert.ToInt64(EndHelperModule.Session.roomStatDict_timer[currentRoomName]);
@@ -223,11 +223,11 @@ public class RoomStatisticsDisplayer : Entity
 
         Color timerColor = allowIncrementRoomTimer ? Color.White : Color.Gray;
         float xJustification = 0;
-        if (EndHelperModule.Settings.RoomStatDisplay.xJustification == RoomStatDisplaySubMenu.Justification.Center)
+        if (EndHelperModule.Settings.RoomStatDisplayMenu.xJustification == RoomStatDisplaySubMenu.Justification.Center)
         {
             xJustification = 0.5f;
         } 
-        else if (EndHelperModule.Settings.RoomStatDisplay.xJustification == RoomStatDisplaySubMenu.Justification.Right)
+        else if (EndHelperModule.Settings.RoomStatDisplayMenu.xJustification == RoomStatDisplaySubMenu.Justification.Right)
         {
             xJustification = 1f;
         }
@@ -236,7 +236,8 @@ public class RoomStatisticsDisplayer : Entity
         {
             showStats(displayXPos, displayYPos, displayScale, timerColor, false, xJustification, false, false, false, $"", $"", deathNum, timerNum, strawberriesNum);
         }
-        
+
+        RenderOtherStuffCompletelyUnrelatedToRoomStatsButAddedHereDueToConvenience(level);
 
         base.Render();
     }
@@ -256,7 +257,7 @@ public class RoomStatisticsDisplayer : Entity
 
     void showStats(int displayXPos, int displayYPos, float displayScale, Color timerColor, bool yCentered, float xJustification, bool showAll, bool hideRoomName, bool showTotalMapBerryCount, string prefix, string suffix, int deathNum, long timerNum, int strawberriesNum)
     {
-        var roomDisplaySettings = EndHelperModule.Settings.RoomStatDisplay;
+        var roomDisplaySettings = EndHelperModule.Settings.RoomStatDisplayMenu;
 
         Level level = SceneAs<Level>();
         Vector2 justification = new Vector2(0, yCentered ? 0.5f : 0f);
@@ -903,19 +904,19 @@ public class RoomStatisticsDisplayer : Entity
     }
 
     // Unused
-    private void cloneRoomData(Level level, String fromRoomName, String toRoomName, String toRoomNameCustomSuffix = "", bool resetFromRoom = true, bool doNotResetCustomName = true)
-    {
+    //private void cloneRoomData(Level level, String fromRoomName, String toRoomName, String toRoomNameCustomSuffix = "", bool resetFromRoom = true, bool doNotResetCustomName = true)
+    //{
 
-        ensureDictsHaveKey(level, toRoomName);
+    //    ensureDictsHaveKey(level, toRoomName);
 
-        EndHelperModule.Session.roomStatDict_customName[toRoomName] = $"{EndHelperModule.Session.roomStatDict_customName[fromRoomName]}{toRoomNameCustomSuffix}";
-        EndHelperModule.Session.roomStatDict_death[toRoomName] = EndHelperModule.Session.roomStatDict_death[fromRoomName];
-        EndHelperModule.Session.roomStatDict_timer[toRoomName] = EndHelperModule.Session.roomStatDict_timer[fromRoomName];
-        EndHelperModule.Session.roomStatDict_strawberries[toRoomName] = EndHelperModule.Session.roomStatDict_strawberries[fromRoomName];
-        EndHelperModule.Session.roomStatDict_colorIndex[toRoomName] = EndHelperModule.Session.roomStatDict_colorIndex[fromRoomName];
+    //    EndHelperModule.Session.roomStatDict_customName[toRoomName] = $"{EndHelperModule.Session.roomStatDict_customName[fromRoomName]}{toRoomNameCustomSuffix}";
+    //    EndHelperModule.Session.roomStatDict_death[toRoomName] = EndHelperModule.Session.roomStatDict_death[fromRoomName];
+    //    EndHelperModule.Session.roomStatDict_timer[toRoomName] = EndHelperModule.Session.roomStatDict_timer[fromRoomName];
+    //    EndHelperModule.Session.roomStatDict_strawberries[toRoomName] = EndHelperModule.Session.roomStatDict_strawberries[fromRoomName];
+    //    EndHelperModule.Session.roomStatDict_colorIndex[toRoomName] = EndHelperModule.Session.roomStatDict_colorIndex[fromRoomName];
 
-        if (resetFromRoom) { removeRoomData(fromRoomName, false); }
-    }
+    //    if (resetFromRoom) { removeRoomData(fromRoomName, false); }
+    //}
 
     private void createRoomSeg(Level level, String roomName)
     {
@@ -1029,4 +1030,18 @@ public class RoomStatisticsDisplayer : Entity
             consumeInput(Input.MenuCancel, 3);
         }
     }
+
+    private void RenderOtherStuffCompletelyUnrelatedToRoomStatsButAddedHereDueToConvenience(Level level)
+    {
+        // Toggle-ify
+        if (EndHelperModule.toggleifyEnabled && !(EndHelperModule.Settings.ToggleGrabMenu.HideWhenPause && level.Paused))
+        {
+            MTexture toggleifyIcon = GFX.Gui["misc/EndHelper/ToggleGrabkeyIcon"];
+            int displayXPos = 15 + EndHelperModule.Settings.ToggleGrabMenu.GrabOffsetX * 8;
+            int displayYPos = 15 + EndHelperModule.Settings.ToggleGrabMenu.GrabOffsetY * 8;
+            float displayScale = (float)EndHelperModule.Settings.ToggleGrabMenu.GrabSize / 10;
+            toggleifyIcon.Draw(new Vector2(displayXPos, displayYPos), Vector2.Zero, Color.White, displayScale);
+        }
+    }
+
 }
