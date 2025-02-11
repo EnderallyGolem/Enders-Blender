@@ -82,7 +82,7 @@ public class EndHelperModuleSettings : EverestModuleSettings {
         public bool UntoggleUponDeath { get; set; } = false;
 
         // offset xy and scale
-        public enum ToggleGrabBehaviourEnum { UntoggleOnGrab, InvertDuringGrab, TurnGrabToToggle, TurnGrabToTogglePress, NothingIfGrab }
+        public enum ToggleGrabBehaviourEnum { InvertDuringGrab, UntoggleOnGrab, TurnGrabToToggle, TurnGrabToTogglePress, NothingIfGrab }
         [DefaultValue(ToggleGrabBehaviourEnum.TurnGrabToToggle)]
         [SettingSubText("modoptions_EndHelperModule_toggleGrabBehaviour_Desc")]
         public ToggleGrabBehaviourEnum toggleGrabBehaviour { get; set; }

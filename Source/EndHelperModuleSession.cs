@@ -40,4 +40,11 @@ public class EndHelperModuleSession : EverestModuleSession
     public OrderedDictionary roomStatDict_colorIndex = new OrderedDictionary { }; // <string, int>
 
     public Dictionary<string, bool> pauseTypeDict = new Dictionary<string, bool> { }; // Stores the type of pauses used
+
+
+
+    // Grabby. Here mostly so they are affected by states tbh
+    public bool toggleifyEnabled = false;
+    public bool GrabFakeTogglePressPressed = false;
+    public bool ToggleGrabRanNothing = false;
 }

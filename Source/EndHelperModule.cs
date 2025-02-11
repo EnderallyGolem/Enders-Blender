@@ -75,9 +75,6 @@ public class EndHelperModule : EverestModule {
     public static OrderedDictionary externalRoomStatDict_colorIndex = new OrderedDictionary { };
     public static Dictionary<string, bool> externalDict_pauseTypeDict = new Dictionary<string, bool> { };
 
-    
-    public static bool toggleifyEnabled = false; // Toggle-ify enabling
-
     // Decreases till -ve, enables input if 0 and disables if +
     // Lets me disable, but ensure it gets re-enabled when I don't need it anymore
     public static int mInputDisableDuration = 0;
@@ -128,6 +125,7 @@ public class EndHelperModule : EverestModule {
         On.Celeste.Strawberry.Added += Hook_StrawberryAddedToLevel;
         On.Celeste.Strawberry.OnCollect += Hook_CollectStrawberry;
         On.Celeste.SpeedrunTimerDisplay.Render += Hook_SpeedrunTimerRender;
+        IL.Celeste.GrabbyIcon.Update += ILHook_GrabbyIconUpdate;
 
         On.Celeste.Player.DashBegin += Hook_DashBegin;
         MethodInfo ILDashCoroutine = typeof(Player).GetMethod("DashCoroutine", BindingFlags.NonPublic | BindingFlags.Instance).GetStateMachineTarget();
@@ -162,6 +160,7 @@ public class EndHelperModule : EverestModule {
         On.Celeste.Strawberry.Added -= Hook_StrawberryAddedToLevel;
         On.Celeste.Strawberry.OnCollect -= Hook_CollectStrawberry;
         On.Celeste.SpeedrunTimerDisplay.Render -= Hook_SpeedrunTimerRender;
+        IL.Celeste.GrabbyIcon.Update -= ILHook_GrabbyIconUpdate;
 
         On.Celeste.Player.DashBegin -= Hook_DashBegin;
         Loadhook_Player_DashCoroutine?.Dispose(); Loadhook_Player_DashCoroutine = null;
@@ -209,9 +208,6 @@ public class EndHelperModule : EverestModule {
             // Handle the custom name savedata dict. This requires fromSaveData as that is AFTER the session is made.
             SetupCustomNameSaveDataDict(session);
         }
-
-        // Reset toggleifyEnabled
-        toggleifyEnabled = false;
     }
 
     static void SetupCustomNameSaveDataDict(global::Celeste.Session session)
@@ -369,22 +365,25 @@ public class EndHelperModule : EverestModule {
 
         // Toggle-ify Keybind
         if (EndHelperModule.Settings.ToggleGrab.Button.Pressed) 
-        { 
-            toggleifyEnabled = !toggleifyEnabled;
+        {
+            Session.toggleifyEnabled = !Session.toggleifyEnabled;
 
             // Set to false first
-            GrabFakeTogglePressPressed = false;
+            Session.GrabFakeTogglePressPressed = false;
 
             if (EndHelperModule.Settings.ToggleGrabMenu.toggleGrabBehaviour == ToggleGrabSubMenu.ToggleGrabBehaviourEnum.TurnGrabToTogglePress)
-            { GrabFakeTogglePressPressed = true; }
+            { Session.GrabFakeTogglePressPressed = !Input.Grab; }
+
+            if (EndHelperModule.Settings.ToggleGrabMenu.toggleGrabBehaviour == ToggleGrabSubMenu.ToggleGrabBehaviourEnum.TurnGrabToToggle)
+            { Session.GrabFakeTogglePressPressed = Input.Grab; }
         }
 
         if (Input.Grab.Pressed && EndHelperModule.Settings.ToggleGrabMenu.toggleGrabBehaviour != ToggleGrabSubMenu.ToggleGrabBehaviourEnum.NothingIfGrab)
         {
             // Convert this too, unless NothingIfGrab
-            GrabFakeTogglePressPressed = !GrabFakeTogglePressPressed;
+            Session.GrabFakeTogglePressPressed = !Session.GrabFakeTogglePressPressed;
         }
-        if (toggleifyEnabled && Input.Grab.Pressed && EndHelperModule.Settings.ToggleGrabMenu.toggleGrabBehaviour == ToggleGrabSubMenu.ToggleGrabBehaviourEnum.NothingIfGrab
+        if (Session.toggleifyEnabled && Input.Grab.Pressed && EndHelperModule.Settings.ToggleGrabMenu.toggleGrabBehaviour == ToggleGrabSubMenu.ToggleGrabBehaviourEnum.NothingIfGrab
             && global::Celeste.Settings.Instance.GrabMode == GrabModes.Toggle)
         {
             Input.UpdateGrab(); // If NothingIfGrab and Toggle Grab, LOCK THIS during toggleify. (Locking being just update twice)
@@ -534,7 +533,7 @@ public class EndHelperModule : EverestModule {
         }
 
         // Untoggle-ify if set to do so on death
-        if (EndHelperModule.Settings.ToggleGrabMenu.UntoggleUponDeath) { toggleifyEnabled = false; }
+        if (EndHelperModule.Settings.ToggleGrabMenu.UntoggleUponDeath) { Session.toggleifyEnabled = false; }
 
         return orig(self, direction, evenIfInvincible, registerDeathInStats);
     }
@@ -645,71 +644,69 @@ public class EndHelperModule : EverestModule {
         }
     }
 
-    private static bool GrabFakeTogglePressPressed;
-    private static bool ToggleGrabRanNothing = false;
     public static bool ToggleifyModifyGrab(bool grabbing)
     {
         GrabModes grabMode = global::Celeste.Settings.Instance.GrabMode;
         bool pressedGrab = Input.Grab.Pressed;
 
-        if (toggleifyEnabled)
+        if (Session.toggleifyEnabled)
         {
             switch (EndHelperModule.Settings.ToggleGrabMenu.toggleGrabBehaviour)
             {
                 case ToggleGrabSubMenu.ToggleGrabBehaviourEnum.UntoggleOnGrab:
-                    if (pressedGrab)  { toggleifyEnabled = false; } 
+                    if (pressedGrab)  { Session.toggleifyEnabled = false; } 
                     else { grabbing = !grabbing; }
-                    GrabFakeTogglePressPressed = false;
-                    ToggleGrabRanNothing = false;
+                    Session.GrabFakeTogglePressPressed = false;
+                    Session.ToggleGrabRanNothing = false;
                     break;
 
                 case ToggleGrabSubMenu.ToggleGrabBehaviourEnum.InvertDuringGrab:
                     grabbing = !grabbing; // Simplest behaviour lol
-                    GrabFakeTogglePressPressed = false;
-                    ToggleGrabRanNothing = false;
+                    Session.GrabFakeTogglePressPressed = false;
+                    Session.ToggleGrabRanNothing = false;
                     break;
 
                 case ToggleGrabSubMenu.ToggleGrabBehaviourEnum.TurnGrabToToggle:
-                    if (!GrabFakeTogglePressPressed && grabMode == GrabModes.Hold) { grabbing = false; } // Set grabbing dependent on GrabFakeTogglePressPressed
-                    else if (GrabFakeTogglePressPressed && grabMode == GrabModes.Hold) { grabbing = true; }
-                    else if (!GrabFakeTogglePressPressed && grabMode == GrabModes.Invert) { grabbing = true; }
-                    else if (GrabFakeTogglePressPressed && grabMode == GrabModes.Invert) { grabbing = false; }
-                    ToggleGrabRanNothing = false;
+                    if (!Session.GrabFakeTogglePressPressed && grabMode == GrabModes.Hold) { grabbing = false; } // Set grabbing dependent on GrabFakeTogglePressPressed
+                    else if (Session.GrabFakeTogglePressPressed && grabMode == GrabModes.Hold) { grabbing = true; }
+                    else if (!Session.GrabFakeTogglePressPressed && grabMode == GrabModes.Invert) { grabbing = true; }
+                    else if (Session.GrabFakeTogglePressPressed && grabMode == GrabModes.Invert) { grabbing = false; }
+                    Session.ToggleGrabRanNothing = false;
                     // Nothing happens if you're using toggle grab, because like, yeah sure i change the toggle grab into a toggle grab
                     break;
 
                 case ToggleGrabSubMenu.ToggleGrabBehaviourEnum.TurnGrabToTogglePress: // Same as above (Press handled in level update)
-                    if (!GrabFakeTogglePressPressed && grabMode == GrabModes.Hold) { grabbing = false; }  // Set grabbing dependent on GrabFakeTogglePressPressed
-                    else if (GrabFakeTogglePressPressed && grabMode == GrabModes.Hold) { grabbing = true; }
-                    else if (!GrabFakeTogglePressPressed && grabMode == GrabModes.Invert) { grabbing = true; }
-                    else if (GrabFakeTogglePressPressed && grabMode == GrabModes.Invert) { grabbing = false; }
-                    ToggleGrabRanNothing = false;
+                    if (!Session.GrabFakeTogglePressPressed && grabMode == GrabModes.Hold) { grabbing = false; }  // Set grabbing dependent on GrabFakeTogglePressPressed
+                    else if (Session.GrabFakeTogglePressPressed && grabMode == GrabModes.Hold) { grabbing = true; }
+                    else if (!Session.GrabFakeTogglePressPressed && grabMode == GrabModes.Invert) { grabbing = true; }
+                    else if (Session.GrabFakeTogglePressPressed && grabMode == GrabModes.Invert) { grabbing = false; }
+                    Session.ToggleGrabRanNothing = false;
                     break;
 
                 case ToggleGrabSubMenu.ToggleGrabBehaviourEnum.NothingIfGrab:
                     if (grabMode == GrabModes.Hold) { grabbing = true; }
                     else if (grabMode == GrabModes.Invert) { grabbing = false; }
                     else if (grabMode == GrabModes.Toggle) { 
-                        if (ToggleGrabRanNothing == false)
+                        if (Session.ToggleGrabRanNothing == false)
                         {
-                            GrabFakeTogglePressPressed = !grabbing; // Store OPPOSITE grab mode before toggle-ifier in here
-                            ToggleGrabRanNothing = true;
+                            Session.GrabFakeTogglePressPressed = !grabbing; // Store OPPOSITE grab mode before toggle-ifier in here
+                            Session.ToggleGrabRanNothing = true;
                         } 
                         else
                         {
-                            grabbing = GrabFakeTogglePressPressed;
+                            grabbing = Session.GrabFakeTogglePressPressed;
                         }
                     }
                     break;
                 default:
-                    GrabFakeTogglePressPressed = false;
-                    ToggleGrabRanNothing = false;
+                    Session.GrabFakeTogglePressPressed = false;
+                    Session.ToggleGrabRanNothing = false;
                     break;
             }
         } else
         {
-            ToggleGrabRanNothing = false;
-            GrabFakeTogglePressPressed = false;
+            Session.ToggleGrabRanNothing = false;
+            Session.GrabFakeTogglePressPressed = false;
         }
 
         return grabbing;
@@ -823,6 +820,40 @@ public class EndHelperModule : EverestModule {
             }
             orig(self);
         }
+    }
+    private static void ILHook_GrabbyIconUpdate(ILContext il)
+    {
+        ILCursor cursor = new ILCursor(il);
+
+        // Recast is using grab toggle, set grab mode to grab toggle
+        // I shouldn't need to IL hook the Input.GrabCheck == true since grab check itself is already hooked
+        if (!cursor.TryGotoNext(MoveType.After,
+            // Find Settings.Instance.GrabMode
+            instr => instr.MatchLdsfld<Settings>("Instance"),
+            instr => instr.MatchLdfld<Settings>("GrabMode")
+        ))
+        {
+            // This means cannot find both in a row
+            return;
+        }
+
+        // Replace Settings.Instance.GrabMode with this check
+        cursor.EmitDelegate<Func<GrabModes, GrabModes>>(replaceGrabModeGrabbyIconCheck);
+    }
+
+    private static GrabModes replaceGrabModeGrabbyIconCheck(GrabModes grabMode)
+    {
+        // If Recast is enabled and set to TurnGrabToToggle(Press), this is as good as grab mode being on.
+        // So for purposes of the icon, return grabMode as toggle.
+
+        if (Session.toggleifyEnabled && (
+            EndHelperModule.Settings.ToggleGrabMenu.toggleGrabBehaviour == ToggleGrabSubMenu.ToggleGrabBehaviourEnum.TurnGrabToToggle
+            || EndHelperModule.Settings.ToggleGrabMenu.toggleGrabBehaviour == ToggleGrabSubMenu.ToggleGrabBehaviourEnum.TurnGrabToTogglePress
+        ))
+        {
+            grabMode = GrabModes.Toggle;
+        }
+        return grabMode;
     }
 
     #endregion

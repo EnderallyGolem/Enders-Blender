@@ -6,7 +6,7 @@ EndHelper_Settings=Ender's Blender's Knobs & Dials
 modoptions_EndHelperModule_FreeMultiroomWatchtower=Spawn Multi-Room Watchtower
 modoptions_EndHelperModule_OpenStatDisplayMenu=Open Room Stat Menu
 modoptions_EndHelperModule_QuickRetry=Quick Retry
-modoptions_EndHelperModule_ToggleGrab=Toggle-ify Grab
+modoptions_EndHelperModule_ToggleGrab=Grab Recast
 
 
 # Room Statistics Menu
@@ -79,23 +79,23 @@ EndHelper_Dialog_MultiroomWatchtower_FreeCameraOFF=Unlock Camera: OFF
 
 
 # Toggle Grab Key
-modoptions_EndHelperModule_ToggleGrabMenu=Toggle-ify Grab Key
+modoptions_EndHelperModule_ToggleGrabMenu=Grab Recast Key
 modoptions_EndHelperModule_GrabOffsetX=Icon X-Offset
 modoptions_EndHelperModule_GrabOffsetY=Icon Y-Offset
 modoptions_EndHelperModule_GrabSize=Icon Size
 modoptions_EndHelperModule_HideWhenPause=Hide While Paused
-modoptions_EndHelperModule_UntoggleUponDeath=Untoggle-ify upon death
-modoptions_EndHelperModule_toggleGrabBehaviour=Grab Behaviour
-modoptions_EndHelperModule_toggleGrabBehaviour_UntoggleOnGrab=Untoggle-ify
+modoptions_EndHelperModule_UntoggleUponDeath=Remove Recast Upon Death
+modoptions_EndHelperModule_toggleGrabBehaviour=Grab Recast Behaviour
 modoptions_EndHelperModule_toggleGrabBehaviour_InvertDuringGrab=Invert
+modoptions_EndHelperModule_toggleGrabBehaviour_UntoggleOnGrab=Invert (Temp)
 modoptions_EndHelperModule_toggleGrabBehaviour_TurnGrabToToggle=Toggle
-modoptions_EndHelperModule_toggleGrabBehaviour_TurnGrabToTogglePress=Toggle + Press
-modoptions_EndHelperModule_toggleGrabBehaviour_NothingIfGrab=Nothing
-modoptions_EndHelperModule_toggleGrabBehaviour_Desc=Untoggle-ify: If grab is pressed, toggle-ify is set to off
-Invert: Toggle-ify inverts grab (holding grab when Toggle-ify is on disables grab)
-Toggle: Toggle-ify makes grab work like toggle grab.
-Toggle + Press: Same as above, but also changes the grab toggle.
-Nothing: If Toggle-ify is on, pressing grab does not do anything
+modoptions_EndHelperModule_toggleGrabBehaviour_TurnGrabToTogglePress=Toggle (Press)
+modoptions_EndHelperModule_toggleGrabBehaviour_NothingIfGrab=Toggle (Lock)
+modoptions_EndHelperModule_toggleGrabBehaviour_Desc=Invert: Pressing Recast inverts Grab
+Invert (Temp): Pressing Recast inverts Grab, pressing Grab removes Recast
+Toggle: Recast makes Grab function as toggle grab
+Toggle (Press): Same as above, but also changes the Grab toggle state.
+Toggle (Lock): Changes and locks the Grab state (Grab won't do anything)
 
 
 modoptions_EndHelperModule_PauseOptionLevel=Freeze Level Timer When
@@ -205,7 +205,7 @@ This also only affects the vertical component. Any horizontal component will get
 
 # ----------------------------------  Credits  ----------------------------------------
 endhelper_credits={~}Additional credits:{/~}
-The sprites for the Room-Swap map, map upgrade, and box and were by Pakyjenace.
+The sprites for the Room-Swap Map, Map Upgrade, Transition Box, and Grab Recast Icon were made by Pakyjenace.
 A lot of code was blatantly plagur-{0.5} i mean modified from SpeedrunTools, VivHelper, and DeathTracker
 
 

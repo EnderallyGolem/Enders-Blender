@@ -1034,7 +1034,7 @@ public class RoomStatisticsDisplayer : Entity
     private void RenderOtherStuffCompletelyUnrelatedToRoomStatsButAddedHereDueToConvenience(Level level)
     {
         // Toggle-ify
-        if (EndHelperModule.toggleifyEnabled && !(EndHelperModule.Settings.ToggleGrabMenu.HideWhenPause && level.Paused))
+        if (EndHelperModule.Session.toggleifyEnabled && !(EndHelperModule.Settings.ToggleGrabMenu.HideWhenPause && level.Paused))
         {
             MTexture toggleifyIcon = GFX.Gui["misc/EndHelper/ToggleGrabkeyIcon"];
             int displayXPos = 15 + EndHelperModule.Settings.ToggleGrabMenu.GrabOffsetX * 8;
