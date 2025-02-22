@@ -27,6 +27,23 @@ entities.EndHelper/MultiroomWatchtower.placements.description.normal=Watchtower 
 entities.EndHelper/MultiroomWatchtower.attributes.description.modifiedInterpolation=If you're using nodes, uses Catmull-Rom Splines instead of whatever vanilla uses for the watchtower path,\nwhich have the advantage of ensuring the camera always goes past nodes, but is less smooth.\nBecareful if this is disabled, if the path does not go through a location where the camera can fit in the room,\nthe watchtower cannot access it and any future rooms!
 entities.EndHelper/MultiroomWatchtower.attributes.description.ignoreLookoutBlocker=The lookout bypasses Lookout Blockers.\nThis allows both scrolling past the blockers and looking at rooms past the blockers.\nThis has no effect if nodes are used.
 
+# Cassette Manager Trigger
+triggers.EndHelper/CassetteManagerTrigger.placements.name.normal=Cassette Manager Trigger
+triggers.EndHelper/CassetteManagerTrigger.placements.description.normal=Lets you create cassette music with changing tempo,\nor force a cassette theme to move to a certain beat.
+triggers.EndHelper/CassetteManagerTrigger.attributes.description.wonkyCassettes=If this should work for Wonky Cassettes (Quantum Mechanics mod) rather than vanilla cassettes
+triggers.EndHelper/CassetteManagerTrigger.attributes.description.showDebugInfo=If enabled, displays debug info regarding current beat/bar/etc
+triggers.EndHelper/CassetteManagerTrigger.attributes.description.multiplyTempoAtBeat=For music with varying tempo. takes in [beatNum]|[TempoMultiplier] separated by commas.\nEtc: 1|1,16|2,40|1.5 plays normal speed on beats 0-15, x2 speed on beats 16-49, x1.5 speed on beats 40+.\nMultiplier of 0 freezes the track, negative numbers reset to x1.
+triggers.EndHelper/CassetteManagerTrigger.attributes.description.multiplyTempoExisting=If enabled, Multiply Tempo At Beat does not set the multiplier, but multiplies the existing one.\nEg: 1|1,16|2,40|1.5 plays x1 speed from beat 0-15, x2 speed on beats 16-49, x3 speed on frames 40+.\nIf not reset (with a negative number), this can infinitely increase in speed between loops.
+triggers.EndHelper/CassetteManagerTrigger.attributes.description.multiplyTempoOnEnter=If enabled, tempo multipliers will only be set when entering. If disabled, tempo is set upon entering room.\nNote: If Multiply Tempo Existing is checked, the tempo will only actually change when the specified beats are reached.
+triggers.EndHelper/CassetteManagerTrigger.attributes.description.setBeatOnEnter=Starts playing the music at this beat of the track upon entering the trigger, if within the Set Only If Beat range.\nTo disable, set to larger than maximum beat count.
+triggers.EndHelper/CassetteManagerTrigger.attributes.description.setBeatOnLeave=Starts playing the music at this beat of the track upon leaving the trigger, if within the Set Only If Beat range.\nTo disable, set to larger than maximum beat count.
+triggers.EndHelper/CassetteManagerTrigger.attributes.description.setBeatInside=Starts playing the music at this beat of the track while in the trigger, if within the Set Only If Beat range.\nThis should be set outside the Set Only If Beat range.\nCan be used to create smaller loops!.\nTo disable, set to larger than maximum beat count.
+triggers.EndHelper/CassetteManagerTrigger.attributes.description.setBeatOnlyIfAbove=Set Beat On/Inside will only function when the current beat is above or equal to this number.\nNegative numbers = Leading beats.
+triggers.EndHelper/CassetteManagerTrigger.attributes.description.setBeatOnlyIfUnder=Set Beat On/Inside will only function when the current beat is below or equal to this number.\nNegative numbers = Leading beats.
+triggers.EndHelper/CassetteManagerTrigger.attributes.description.doNotSetIfWithinRange=Do not change the beat if doing so will change the beat index by X beats.\nFor instance, if this is set to 3, and you want to set the beat to 10, the beat won't change if the current beat is between 8 to 12.\nThis can be used to set the beat to a value only if the current beat is far off from that value.\nNegative values will invert this (-3 means only change if current beat is within 3 beats of to-set beat.)
+triggers.EndHelper/CassetteManagerTrigger.attributes.description.addInsteadOfSet=Offsets the current beat index by a value rather than setting it to that value
+
+
 
 
 

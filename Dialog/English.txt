@@ -203,6 +203,18 @@ If the mod setting is enabled, if the pre-redirected dash contains a downwards c
 The downward dash redirect is NOT prevented if the redirected dash's vertical component is upwards, so upward demos can still happen like normal.
 This also only affects the vertical component. Any horizontal component will get redirected like normal.
 
+EndHelperTest_Tutorial_CassetteMisc_Category=Cassette
+EndHelperTest_Tutorial_CassetteMisc_InitialTempo=Set Initial Tempo
+EndHelperTest_Tutorial_CassetteMisc_ChangeTempo=Set Tempo On Enter
+EndHelperTest_Tutorial_CassetteMisc_SetBeatEnter=Set Beat On Enter
+EndHelperTest_Tutorial_CassetteMisc_SetBeatInside=Set Beat Inside
+EndHelperTest_Tutorial_CassetteMisc_Reset=Reset
+EndHelperTest_Tutorial_CassetteMisc_SeemlessLoop=Short Loop
+EndHelperTest_Tutorial_CassetteMisc_Info=The triggers in this room are all the same triggers, with different parameters.
+In short, they allow you to set the music tempo and/or change the current beat.
+Check out their settings in lönn to understand them better!
+(add info about the beat move blocks here!!! when done ofc. by the way the bird should totally move with the block)
+
 # ----------------------------------  Credits  ----------------------------------------
 endhelper_credits={~}Additional credits:{/~}
 The sprites for the Room-Swap Map, Map Upgrade, Transition Box, and Grab Recast Icon were made by Pakyjenace.

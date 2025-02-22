@@ -37,6 +37,9 @@
         <Reference Include="NETCoreifier">
           <HintPath>..\..\..\NETCoreifier.dll</HintPath>
         </Reference>
+        <Reference Include="QuantumMechanics">
+          <HintPath>..\Integrations\QuantumMechanics.dll</HintPath>
+        </Reference>
         <Reference Include="SpeedrunTool">
           <HintPath>..\Integrations\SpeedrunTool.dll</HintPath>
         </Reference>
