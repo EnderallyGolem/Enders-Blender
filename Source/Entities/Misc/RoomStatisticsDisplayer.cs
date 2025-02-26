@@ -387,6 +387,13 @@ public class RoomStatisticsDisplayer : Entity
             backgroundTextureShort = GFX.Gui["misc/EndHelper/statGUI_background_short_purple"];
         }
         MTexture backgroundTextureEdit = GFX.Gui["misc/EndHelper/statGUI_background_edit"];
+
+        MTexture upKey = GFX.Gui["controls/keyboard/up"];
+        MTexture downKey = GFX.Gui["controls/keyboard/down"];
+        MTexture leftKey = GFX.Gui["controls/keyboard/left"];
+        MTexture rightKey = GFX.Gui["controls/keyboard/right"];
+        //MTexture deleteKey = GFX.Gui["controls/keyboard/delete"];
+
         const int roomsPerColumn = 16;
         int lastRowShown = firstRowShown + 2*roomsPerColumn;
 
@@ -512,6 +519,9 @@ public class RoomStatisticsDisplayer : Entity
         {
             foreach (string roomName in roomNamesToShowList)
             {
+                // Just in case. This sometimes errors out when rebuilding, but as a safeguard in case it occurs elsewhere im gonna ensure the key exist.
+                ensureDictsHaveKey(level, roomName);
+
                 int roomDeaths = Convert.ToInt32(EndHelperModule.Session.roomStatDict_death[roomName]);
                 TimeSpan roomTimeSpan = TimeSpan.FromTicks(Convert.ToInt64(EndHelperModule.Session.roomStatDict_timer[roomName]));
                 string roomTimeString = EndHelperModule.MinimalGameplayFormat(roomTimeSpan);
@@ -685,13 +695,13 @@ public class RoomStatisticsDisplayer : Entity
 
             ActiveFont.DrawOutline("Change Selection: ", new Vector2(instructionXPos, instructionYPos), new Vector2(0f, 0.5f), new Vector2(instructionScale, instructionScale), instructionColor, 2f, Color.Black);
             instructionXPos += (int)(ActiveFont.WidthToNextLine($"Change Selection: XI", 0) * instructionScale);
-            Input.GuiButton(Input.MenuUp, mode: Input.PrefixMode.Latest).DrawCentered(new Vector2(instructionXPos, instructionYPos), instructionColor, instructionScale, 0);
+            upKey.DrawCentered(new Vector2(instructionXPos, instructionYPos), instructionColor, instructionScale, 0);
             instructionXPos += (int)(ActiveFont.WidthToNextLine($"XX", 0) * instructionScale);
-            Input.GuiButton(Input.MenuDown, mode: Input.PrefixMode.Latest).DrawCentered(new Vector2(instructionXPos, instructionYPos), instructionColor, instructionScale, 0);
+            downKey.DrawCentered(new Vector2(instructionXPos, instructionYPos), instructionColor, instructionScale, 0);
             instructionXPos += (int)(ActiveFont.WidthToNextLine($"XX", 0) * instructionScale);
-            Input.GuiButton(Input.MenuLeft, mode: Input.PrefixMode.Latest).DrawCentered(new Vector2(instructionXPos, instructionYPos), instructionColor, instructionScale, 0);
+            leftKey.DrawCentered(new Vector2(instructionXPos, instructionYPos), instructionColor, instructionScale, 0);
             instructionXPos += (int)(ActiveFont.WidthToNextLine($"XX", 0) * instructionScale);
-            Input.GuiButton(Input.MenuRight, mode: Input.PrefixMode.Latest).DrawCentered(new Vector2(instructionXPos, instructionYPos), instructionColor, instructionScale, 0);
+            rightKey.DrawCentered(new Vector2(instructionXPos, instructionYPos), instructionColor, instructionScale, 0);
             instructionXPos += (int)(ActiveFont.WidthToNextLine($"XXXXX", 0) * instructionScale);
         }
 
@@ -775,10 +785,10 @@ public class RoomStatisticsDisplayer : Entity
             if (roomNameEditMenuOpen)
             {
                 // Allow changing rooms
-                if (Input.MenuUp.Pressed) { editingRoomIndex--; Audio.Play("event:/ui/main/savefile_rollover_up"); }
-                if (Input.MenuDown.Pressed) { editingRoomIndex++; Audio.Play("event:/ui/main/savefile_rollover_down"); }
-                if (Input.MenuRight.Pressed) { editingRoomIndex += roomsPerColumn; Audio.Play("event:/ui/main/savefile_rollover_down"); }
-                if (Input.MenuLeft.Pressed) { editingRoomIndex -= roomsPerColumn; Audio.Play("event:/ui/main/savefile_rollover_up"); }
+                if (MInput.Keyboard.Pressed(Microsoft.Xna.Framework.Input.Keys.Up) || MInput.Keyboard.Pressed(Microsoft.Xna.Framework.Input.Keys.PageUp)) { editingRoomIndex--; Audio.Play("event:/ui/main/savefile_rollover_up"); }
+                if (MInput.Keyboard.Pressed(Microsoft.Xna.Framework.Input.Keys.Down) || MInput.Keyboard.Pressed(Microsoft.Xna.Framework.Input.Keys.PageDown)) { editingRoomIndex++; Audio.Play("event:/ui/main/savefile_rollover_down"); }
+                if (MInput.Keyboard.Pressed(Microsoft.Xna.Framework.Input.Keys.Right)) { editingRoomIndex += roomsPerColumn; Audio.Play("event:/ui/main/savefile_rollover_down"); }
+                if (MInput.Keyboard.Pressed(Microsoft.Xna.Framework.Input.Keys.Left)) { editingRoomIndex -= roomsPerColumn; Audio.Play("event:/ui/main/savefile_rollover_up"); }
                 if (editingRoomIndex < 0) { editingRoomIndex = 0; }
                 if (editingRoomIndex > dictSize - 1) { editingRoomIndex = dictSize - 1; }
 

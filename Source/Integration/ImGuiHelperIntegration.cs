@@ -46,7 +46,7 @@ namespace Celeste.Mod.EndHelper.Integration
 
         internal static void Unload()
         {
-            Hook_ImGuiEngineUpdate?.Dispose();
+            Hook_ImGuiEngineUpdate?.Dispose(); Hook_ImGuiEngineUpdate = null;
         }
 
 #pragma warning disable  // Private method is unused

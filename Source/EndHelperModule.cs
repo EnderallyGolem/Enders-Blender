@@ -142,6 +142,7 @@ public class EndHelperModule : EverestModule {
         SpeedrunToolIntegration.Load();
         SSMQoLIntegration.Load();
         ImGuiHelperIntegration.Load();
+        QuantumMechanicsIntegration.Load();
     }
 
     // Unload the entirety of your mod's content. Free up any native resources.
@@ -178,6 +179,7 @@ public class EndHelperModule : EverestModule {
         SpeedrunToolIntegration.Unload();
         SSMQoLIntegration.Unload();
         ImGuiHelperIntegration.Unload();
+        QuantumMechanicsIntegration.Unload();
     }
 
     // Optional, initialize anything after Celeste has initialized itself properly.
@@ -340,7 +342,8 @@ public class EndHelperModule : EverestModule {
                     // Don't die if you have a golden. Just play a funny sfx instead.
                     player.Add(new SoundSource("event:/game/general/strawberry_laugh"));
                     return;
-                } else if (!player.Dead)
+                } 
+                else if (!player.Dead)
                 {
                     level.Paused = false;
                     level.PauseMainMenuOpen = false;
@@ -881,6 +884,9 @@ public class EndHelperModule : EverestModule {
         DynamicData cassetteManagerData = DynamicData.For(self);
         cassetteManagerData.Set("EndHelper_CassetteHaveCheckedBeat", int.MinValue);
         cassetteManagerData.Set("EndHelper_CassettePreviousTempoNum", 1f);
+        cassetteManagerData.Set("EndHelper_CassetteManagerTriggerTempoMultiplierMultiplyOnTop", false);
+        List<List<object>> tempoChangeTimeDefault = [];
+        cassetteManagerData.Set("EndHelper_CassetteManagerTriggerTempoMultiplierList", tempoChangeTimeDefault);
         cassetteManagerData.Set("EndHelper_CassetteStartedSFX", false);
         orig(self, scene);
     }
