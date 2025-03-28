@@ -16,9 +16,6 @@ using System.Linq;
 using Celeste.Mod.Core;
 using static Celeste.GaussianBlur;
 using static Celeste.WaveDashPage;
-using Celeste.Mod.SpeedrunTool.Message;
-using Celeste.Mod.SpeedrunTool.SaveLoad;
-using Celeste.Mod.SpeedrunTool;
 using System.Diagnostics.CodeAnalysis;
 using Celeste.Mod.EndHelper.Integration;
 
@@ -105,8 +102,7 @@ public class MultiroomWatchtower : Entity
             Vector2 position = level.Camera.Position;
             Rectangle bounds = level.Bounds;
 
-            int num = 320;
-            int num2 = 180;
+            Vector2 screenSize = new Vector2(level.Camera.Right - level.Camera.Left, level.Camera.Bottom - level.Camera.Top);
 
             bool flagLeftEdge, flagRightEdge, flagUpEdge, flagDownEdge;
 
@@ -119,16 +115,16 @@ public class MultiroomWatchtower : Entity
             } 
             else
             {
-                flagLeftEdge = level.CollideCheck<LookoutBlocker>(new Rectangle((int)(position.X - 8f), (int)position.Y, num, num2));
-                flagRightEdge = level.CollideCheck<LookoutBlocker>(new Rectangle((int)(position.X + 8f), (int)position.Y, num, num2));
-                flagUpEdge = p.trackMode && p.trackPercent >= 1f || level.CollideCheck<LookoutBlocker>(new Rectangle((int)position.X, (int)(position.Y - 8f), num, num2));
-                flagDownEdge = p.trackMode && p.trackPercent <= 0f || level.CollideCheck<LookoutBlocker>(new Rectangle((int)position.X, (int)(position.Y + 8f), num, num2));
+                flagLeftEdge = level.CollideCheck<LookoutBlocker>(new Rectangle((int)(position.X - 8f), (int)position.Y, (int)screenSize.X, (int)screenSize.Y));
+                flagRightEdge = level.CollideCheck<LookoutBlocker>(new Rectangle((int)(position.X + 8f), (int)position.Y, (int)screenSize.X, (int)screenSize.Y));
+                flagUpEdge = p.trackMode && p.trackPercent >= 1f || level.CollideCheck<LookoutBlocker>(new Rectangle((int)position.X, (int)(position.Y - 8f), (int)screenSize.X, (int)screenSize.Y));
+                flagDownEdge = p.trackMode && p.trackPercent <= 0f || level.CollideCheck<LookoutBlocker>(new Rectangle((int)position.X, (int)(position.Y + 8f), (int)screenSize.X, (int)screenSize.Y));
             }
 
             leftScrollHUD = Calc.Approach(leftScrollHUD, p.leftLookoutRoomScroll || !flagLeftEdge && position.X > bounds.Left + 2 ? 1 : 0, Engine.DeltaTime * 8f);
-            rightScrollHUD = Calc.Approach(rightScrollHUD, p.rightLookoutRoomScroll || !flagRightEdge && position.X + num < bounds.Right - 2 ? 1 : 0, Engine.DeltaTime * 8f);
+            rightScrollHUD = Calc.Approach(rightScrollHUD, p.rightLookoutRoomScroll || !flagRightEdge && position.X + (int)screenSize.X < bounds.Right - 2 ? 1 : 0, Engine.DeltaTime * 8f);
             upScrollHUD = Calc.Approach(upScrollHUD, p.upLookoutRoomScroll || p.trackMode && p.trackPercent < 1f || !flagUpEdge && position.Y > bounds.Top + 2 ? 1 : 0, Engine.DeltaTime * 8f);
-            downScrollHUD = Calc.Approach(downScrollHUD, p.downLookoutRoomScroll || p.trackMode && p.trackPercent > 0f || !flagDownEdge && position.Y + num2 < bounds.Bottom - 2 ? 1 : 0, Engine.DeltaTime * 8f);
+            downScrollHUD = Calc.Approach(downScrollHUD, p.downLookoutRoomScroll || p.trackMode && p.trackPercent > 0f || !flagDownEdge && position.Y + (int)screenSize.Y < bounds.Bottom - 2 ? 1 : 0, Engine.DeltaTime * 8f);
 
             Q1ScrollHUD = Calc.Approach(Q1ScrollHUD, p.Q1LookoutRoomScroll ? 1 : 0, Engine.DeltaTime * 8f);
             Q2ScrollHUD = Calc.Approach(Q2ScrollHUD, p.Q2LookoutRoomScroll ? 1 : 0, Engine.DeltaTime * 8f);
@@ -417,6 +413,8 @@ public class MultiroomWatchtower : Entity
 
     public EntityData data;
 
+    public Vector2 screenCenterOffset;
+
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     public MultiroomWatchtower(EntityData data, Vector2 offset)
@@ -559,6 +557,7 @@ public class MultiroomWatchtower : Entity
     {
         trackPercent = 0f;
         Level level = SceneAs<Level>();
+        screenCenterOffset = new Vector2(level.Camera.Right - level.Camera.Left, level.Camera.Bottom - level.Camera.Top) * 0.5f;
 
         SandwichLava sandwichLava = level.Entities.FindFirst<SandwichLava>();
         if (sandwichLava != null)
@@ -652,7 +651,7 @@ public class MultiroomWatchtower : Entity
         string camStartRoomName = camStartLevelData.Name;
 
         Vector2 camStart = level.Camera.Position;
-        Vector2 camStartCenter = camStart + new Vector2(160f, 90f);
+        Vector2 camStartCenter = camStart + screenCenterOffset;
 
         LevelData currentRoomLevelData = level.Session.LevelData;
         Rectangle currentRoomBounds = currentRoomLevelData.Bounds;
@@ -670,6 +669,7 @@ public class MultiroomWatchtower : Entity
             // Force these to be the correct values. In case other stuff changes these.
             player.Sprite.Visible = false;
             player.Hair.Visible = false;
+            screenCenterOffset = new Vector2(level.Camera.Right - level.Camera.Left, level.Camera.Bottom - level.Camera.Top) * 0.5f;
 
             if (EndHelperModule.integratingWithSSMQoL)
             {
@@ -691,7 +691,7 @@ public class MultiroomWatchtower : Entity
                 {
                     message = Dialog.Get("EndHelper_Dialog_MultiroomWatchtower_FreeCameraOFF");
                 }
-                Tooltip.Show(message, 1.5f);
+                RoomStatisticsDisplayer.ShowTooltip(message, 1.5f);
             }
 
 
@@ -757,8 +757,8 @@ public class MultiroomWatchtower : Entity
 
                     // Update the current level (and camera) after a frame
                     // Do it twice, cause sometimes the first one fails
-                    updateLevelAfterFrame(1, newTargetPositionPos - new Vector2(160f, 90f));
-                    updateLevelAfterFrame(2, newTargetPositionPos - new Vector2(160f, 90f));
+                    updateLevelAfterFrame(1, newTargetPositionPos - screenCenterOffset);
+                    updateLevelAfterFrame(2, newTargetPositionPos - screenCenterOffset);
 
                     pleaseStopFlickeringThankYou(); // padding please freaking stay on
                 }
@@ -766,18 +766,18 @@ public class MultiroomWatchtower : Entity
 
             void transitionToTarget(Vector2 targetTransitionPos, LevelData newRoomLevelData, out Vector2 newTargetPositionPos)
             {
-                Vector2 camCenter = camCorner + new Vector2(160f, 90f);
+                Vector2 camCenter = camCorner + screenCenterOffset;
 
                 // Modify targetTransitionPos so that it's not at the edge of the room, but rather somewhere the camera center can reach
                 Rectangle newRoomBounds = newRoomLevelData.Bounds;
-                targetTransitionPos.X = Calc.Clamp(targetTransitionPos.X, newRoomBounds.Left + 160, newRoomBounds.Right - 160);
-                targetTransitionPos.Y = Calc.Clamp(targetTransitionPos.Y, newRoomBounds.Top + 90, newRoomBounds.Bottom - 90);
+                targetTransitionPos.X = Calc.Clamp(targetTransitionPos.X, newRoomBounds.Left + screenCenterOffset.X, newRoomBounds.Right - screenCenterOffset.X);
+                targetTransitionPos.Y = Calc.Clamp(targetTransitionPos.Y, newRoomBounds.Top + screenCenterOffset.Y, newRoomBounds.Bottom - screenCenterOffset.Y);
 
                 Vector2 transitionDirection = (targetTransitionPos - camCenter).SafeNormalize();
 
                 //ResetCameraTrackSettings(level, player, false);
                 player.Position = new Vector2(newRoomBounds.Left + 16, newRoomBounds.Bottom - 16);
-                player.CameraAnchor = targetTransitionPos - new Vector2(160f, 90f);
+                player.CameraAnchor = targetTransitionPos - screenCenterOffset;
 
                 level.NextTransitionDuration = 0.65f * transitionDurationScale;
                 level.TransitionTo(newRoomLevelData, transitionDirection);
@@ -852,7 +852,8 @@ public class MultiroomWatchtower : Entity
 
                 foreach (Entity blockerEntity in lookoutBlockerEntityList)
                 {
-                    if (position.X > blockerEntity.Left && position.X < blockerEntity.Right && position.Y > blockerEntity.Top && position.Y < blockerEntity.Bottom)
+                    //Logger.Log(LogLevel.Info, "EndHelper/Misc/MultiroomWatchtower", $"Checking {position} for {blockerEntity.Position}: ({position.X >= blockerEntity.Left && position.X <= blockerEntity.Right && position.Y >= blockerEntity.Top && position.Y <= blockerEntity.Bottom}) {position.X >= blockerEntity.Left} {position.X <= blockerEntity.Right} {position.Y >= blockerEntity.Top} {position.Y <= blockerEntity.Bottom}");
+                    if (position.X >= blockerEntity.Left && position.X <= blockerEntity.Right && position.Y >= blockerEntity.Top && position.Y <= blockerEntity.Bottom)
                     {
                         return true;
                     }
@@ -862,7 +863,7 @@ public class MultiroomWatchtower : Entity
 
             LevelData findLookoutRoom(Vector2 lookDirection, List<LevelData> edgeRoomDataList, out Vector2 roomAimPos)
             {
-                roomAimPos = level.Camera.Position + new Vector2(160f, 90f);
+                roomAimPos = level.Camera.Position + screenCenterOffset;
                 // Get room that the lookDirection is pointing towards
                 if (lookDirection != Vector2.Zero)
                 {
@@ -926,7 +927,8 @@ public class MultiroomWatchtower : Entity
                     if (roomAimPos.X < levelDataBounds.Right + 7 && roomAimPos.X > levelDataBounds.Left - 7
                         && roomAimPos.Y > levelDataBounds.Top - 7 && roomAimPos.Y < levelDataBounds.Bottom + 7)
                     {
-                        return levelData; //Found room that this position aims at
+                        return levelData; // Found room that this position aims at
+                                          // Trace check not needed since it's the exact point, so no avoiding blocker due to search leniency
                     }
                 }
 
@@ -936,7 +938,10 @@ public class MultiroomWatchtower : Entity
                     Rectangle levelDataBounds = levelData.Bounds;
                     if (checkRectHalfAbsolute.Intersects(levelDataBounds))
                     {
-                        return levelData; //Found room that this position aims at
+                        if (checkBlockerInLine(camCorner + screenCenterOffset, levelDataBounds.Center.ToVector2()) == false) // Trace line to room to check if there are blockers
+                        {
+                            return levelData; //Found room that this position aims at
+                        }
                     }
                 }
 
@@ -946,12 +951,35 @@ public class MultiroomWatchtower : Entity
                     Rectangle levelDataBounds = levelData.Bounds;
                     if (checkRectAbsolute.Intersects(levelDataBounds))
                     {
-                        return levelData; //Found room that this position aims at
+                        if (checkBlockerInLine(camCorner + screenCenterOffset, levelDataBounds.Center.ToVector2()) == false) // Trace line to room to check if there are blockers
+                        {
+                            return levelData; //Found room that this position aims at
+                        }
                     }
                 }
 
                 // if **STILL** no room found, return null
                 return null;
+            }
+
+            bool checkBlockerInLine(Vector2 startPos, Vector2 endPos)
+            {
+                // Continue until reach endPos (even if exceed room bounds, in case offscreen blockers)
+                Vector2 currentCheckPos = startPos;
+
+                if (endPos == startPos) { return false; }
+
+                Vector2 lookDirection = (endPos - startPos) / (endPos - startPos).Length();
+
+                while ((currentCheckPos - endPos).Length() > 8)
+                {
+                    currentCheckPos += lookDirection * 8;
+                    if (checkBlockerAtPos(currentCheckPos, level))
+                    {
+                        return true; //Blocker found! Return true
+                    }
+                }
+                return false;
             }
 
             lastDir = inputVector;
@@ -1028,11 +1056,11 @@ public class MultiroomWatchtower : Entity
                 camCorner.X += speed.X * Engine.DeltaTime;
                 camCorner.Y += speed.Y * Engine.DeltaTime;
 
-                if (camCorner.X < level.Bounds.Left || camCorner.X + 320f > level.Bounds.Right)
+                if (camCorner.X < level.Bounds.Left || camCorner.X + screenCenterOffset.X * 2 > level.Bounds.Right)
                 {
                     speed.X = 0f;
                 }
-                if (camCorner.Y < level.Bounds.Top || camCorner.Y + 180f > level.Bounds.Bottom)
+                if (camCorner.Y < level.Bounds.Top || camCorner.Y + screenCenterOffset.Y * 2 > level.Bounds.Bottom)
                 {
                     speed.Y = 0f;
                 }
@@ -1041,12 +1069,12 @@ public class MultiroomWatchtower : Entity
                 {
                     foreach (Entity blockerEntity in lookoutBlockerEntityList)
                     {
-                        if (camCorner.X + 320f > blockerEntity.Left && camCorner.Y + 180f > blockerEntity.Top && camCorner.X < blockerEntity.Right && camCorner.Y < blockerEntity.Bottom)
+                        if (camCorner.X + (int)screenCenterOffset.X * 2 > blockerEntity.Left && camCorner.Y + (int)screenCenterOffset.Y * 2 > blockerEntity.Top && camCorner.X < blockerEntity.Right && camCorner.Y < blockerEntity.Bottom)
                         {
                             camCorner.X = vector.X;
                             speed.X = 0f;
                         }
-                        if (camCorner.X + 320f > blockerEntity.Left && camCorner.Y + 180f > blockerEntity.Top && camCorner.X < blockerEntity.Right && camCorner.Y < blockerEntity.Bottom)
+                        if (camCorner.X + (int)screenCenterOffset.X * 2 > blockerEntity.Left && camCorner.Y + (int)screenCenterOffset.Y * 2 > blockerEntity.Top && camCorner.X < blockerEntity.Right && camCorner.Y < blockerEntity.Bottom)
                         {
                             camCorner.Y = vector.Y;
                             speed.Y = 0f;
@@ -1054,8 +1082,8 @@ public class MultiroomWatchtower : Entity
                     }
                 }
 
-                camCorner.X = Calc.Clamp(camCorner.X, level.Bounds.Left, level.Bounds.Right - 320);
-                camCorner.Y = Calc.Clamp(camCorner.Y, level.Bounds.Top, level.Bounds.Bottom - 180);
+                camCorner.X = Calc.Clamp(camCorner.X, level.Bounds.Left, level.Bounds.Right - (int)screenCenterOffset.X * 2);
+                camCorner.Y = Calc.Clamp(camCorner.Y, level.Bounds.Top, level.Bounds.Bottom - (int)screenCenterOffset.Y * 2);
 
                 level.Camera.Position = camCorner;
             }
@@ -1117,7 +1145,7 @@ public class MultiroomWatchtower : Entity
                             }
                         }
 
-                        camCorner += new Vector2(-160f, -90f); //TopLeftCorner-ify
+                        camCorner -= screenCenterOffset; //TopLeftCorner-ify
                     }
 
                     Vector2 CatmullRomInterpolation(Vector2 p0, Vector2 p1, Vector2 p2, Vector2 p3, float t)
@@ -1193,9 +1221,9 @@ public class MultiroomWatchtower : Entity
                         // Inner box only requires y or x coordinate to be within the room - this is here to try making node placements not as strict
                         int buffer = 2;
                         int bufferInner = 8;
-                        Vector2 camCenter = camCorner + new Vector2(160f, 90f);
-                        Rectangle checkRequireTransitionBox = new Rectangle((int)camCorner.X + 8 * buffer, (int)camCorner.Y + 8 * buffer, 320 - 16 * buffer, 180 - 16 * buffer);
-                        Rectangle checkRequireTransitionBoxInner = new Rectangle((int)camCorner.X + 8 * bufferInner, (int)camCorner.Y + 8 * bufferInner, 320 - 16 * bufferInner, 180 - 16 * bufferInner);
+                        Vector2 camCenter = camCorner + screenCenterOffset;
+                        Rectangle checkRequireTransitionBox = new Rectangle((int)camCorner.X + 8 * buffer, (int)camCorner.Y + 8 * buffer, (int)screenCenterOffset.X*2 - 16 * buffer, (int)screenCenterOffset.Y*2 - 16 * buffer);
+                        Rectangle checkRequireTransitionBoxInner = new Rectangle((int)camCorner.X + 8 * bufferInner, (int)camCorner.Y + 8 * bufferInner, (int)screenCenterOffset.X*2 - 16 * bufferInner, (int)screenCenterOffset.Y*2 - 16 * bufferInner);
 
                         if (trackPercent >= 0f && trackPercent <= 1f
                             && !(
@@ -1230,12 +1258,12 @@ public class MultiroomWatchtower : Entity
                                     setCamera(); //Fixes some smoothness jank
 
                                     // Transition camera to target pos (slightly farther that roomAimPos)
-                                    transitionToTarget(camCorner + new Vector2(160, 90), room, out Vector2 transitionPosTarget);
+                                    transitionToTarget(camCorner + screenCenterOffset, room, out Vector2 transitionPosTarget);
 
                                     // Update the current level (and camera) after a frame
                                     // Do it twice, cause sometimes the first one fails
 
-                                    camCorner = transitionPosTarget - new Vector2(160, 90);
+                                    camCorner = transitionPosTarget - screenCenterOffset;
 
                                     updateLevelAfterFrame(1, camCorner);
                                     updateLevelAfterFrame(2, camCorner);
@@ -1258,8 +1286,8 @@ public class MultiroomWatchtower : Entity
                 }
                 if (changeRoomCooldown == 0)
                 {
-                    camCorner.X = Calc.Clamp(camCorner.X, level.Bounds.Left, level.Bounds.Right - 320);
-                    camCorner.Y = Calc.Clamp(camCorner.Y, level.Bounds.Top, level.Bounds.Bottom - 180);
+                    camCorner.X = Calc.Clamp(camCorner.X, level.Bounds.Left, level.Bounds.Right - (int)screenCenterOffset.X * 2);
+                    camCorner.Y = Calc.Clamp(camCorner.Y, level.Bounds.Top, level.Bounds.Bottom - (int)screenCenterOffset.Y * 2);
                     level.Camera.Position = camCorner;
                 }
             }
@@ -1282,7 +1310,7 @@ public class MultiroomWatchtower : Entity
             yield return 0.5f;
             float duration2 = 3f;
             float approach2 = 0f;
-            Coroutine component = new Coroutine(level.ZoomTo(new Vector2(160f, 90f), 2f, duration2));
+            Coroutine component = new Coroutine(level.ZoomTo(screenCenterOffset, 2f, duration2));
             Add(component);
             while (!Input.MenuCancel.Pressed && !Input.MenuConfirm.Pressed && !Input.Dash.Pressed && !Input.Jump.Pressed && !Input.Pause.Pressed && !Input.ESC.Pressed && interacting)
             {

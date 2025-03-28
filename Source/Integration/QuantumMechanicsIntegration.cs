@@ -9,7 +9,6 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
-using Celeste.Mod.SpeedrunTool.SaveLoad;
 using Celeste.Mod.EndHelper.Entities.Misc;
 using IL.Monocle;
 using static Celeste.Mod.EndHelper.Entities.Misc.RoomStatisticsDisplayer;
@@ -18,7 +17,6 @@ using System.Collections;
 using System.Collections.Specialized;
 using static Celeste.Mod.EndHelper.EndHelperModule;
 using static Celeste.TrackSpinner;
-using Celeste.Mod.ImGuiHelper;
 using Microsoft.Xna.Framework;
 using Celeste.Mod.QuantumMechanics;
 using MonoMod.Utils;
@@ -35,30 +33,35 @@ namespace Celeste.Mod.EndHelper.Integration
         private static Hook LoadHook_WonkyCassetteBlockManagerAwake;
         private static Hook LoadHook_WonkyCassetteBlockAwake;
 
+        private static Type Type_WonkyCassetteBlock;
+        private static Type Type_WonkyCassetteController;
+
         internal static void Load()
         {
             EverestModuleMetadata QuantumMechanicsMetaData = new()
             {
                 Name = "QuantumMechanics",
-                Version = new Version(1, 0, 8)
+                Version = new Version(1, 3, 0)
             };
+            Logger.Log(LogLevel.Info, "EndHelper/main", $"running load. now checking if dependancyloaded");
             if (Everest.Loader.DependencyLoaded(QuantumMechanicsMetaData))
             {
                 // Do the important stuff here
                 allowQuantumMechanicsIntegration = true; // Check if loaded
 
+                Type_WonkyCassetteBlock = Type.GetType("Celeste.Mod.QuantumMechanics.Entities.WonkyCassetteBlock,QuantumMechanics");
+                Type_WonkyCassetteController = Type.GetType("Celeste.Mod.QuantumMechanics.Entities.WonkyCassetteBlockController,QuantumMechanics");
+
                 // Wonky Cassettes: On Hook awake
-                Type typeOfThatDumbFuncCassetteyBlocke = Type.GetType("Celeste.Mod.QuantumMechanics.Entities.WonkyCassetteBlock,QuantumMechanics");
-                MethodInfo targetMethodCassetteBlock = typeOfThatDumbFuncCassetteyBlocke.GetMethod("Awake", BindingFlags.Instance | BindingFlags.Public);
+                MethodInfo targetMethodCassetteBlock = Type_WonkyCassetteBlock.GetMethod("Awake", BindingFlags.Instance | BindingFlags.Public);
                 LoadHook_WonkyCassetteBlockAwake = new Hook(targetMethodCassetteBlock, typeof(QuantumMechanicsIntegration).GetMethod("WonkyCassetteBlockAwakeHook", BindingFlags.Static | BindingFlags.NonPublic));
 
                 // Wonky Controller: On Hook awake
-                Type typeOfThatDumbFunc = Type.GetType("Celeste.Mod.QuantumMechanics.Entities.WonkyCassetteBlockController,QuantumMechanics");
-                MethodInfo targetMethod = typeOfThatDumbFunc.GetMethod("Awake", BindingFlags.Instance | BindingFlags.Public);
+                MethodInfo targetMethod = Type_WonkyCassetteController.GetMethod("Awake", BindingFlags.Instance | BindingFlags.Public);
                 LoadHook_WonkyCassetteBlockManagerAwake = new Hook(targetMethod, typeof(QuantumMechanicsIntegration).GetMethod("WonkyCassetteControllerAwakeHook", BindingFlags.Static | BindingFlags.NonPublic));
 
                 // Wonky Controller: IL Hook AdvanceMusic
-                MethodInfo ILWonkyCassetteManagerAdv = typeof(WonkyCassetteBlockController).GetMethod("AdvanceMusic", BindingFlags.NonPublic | BindingFlags.Instance);
+                MethodInfo ILWonkyCassetteManagerAdv = Type_WonkyCassetteController.GetMethod("AdvanceMusic", BindingFlags.NonPublic | BindingFlags.Instance);
                 LoadHook_WonkyCassetteBlockManagerAdvMusic = new ILHook(ILWonkyCassetteManagerAdv, ILHook_WonkyCassetteBlockManagerAdvMusic); // Pass ILContext to Hook_IL_DashCoroutine
             }
         }
@@ -157,11 +160,19 @@ namespace Celeste.Mod.EndHelper.Integration
                     int cassetteHaveCheckedBeatGet = wonkyCassetteManagerData.Get<int>("EndHelper_CassetteHaveCheckedBeat");
                     float cassettePreviousTempoNumGet = wonkyCassetteManagerData.Get<float>("EndHelper_CassettePreviousTempoNum");
 
-                    //Logger.Log(LogLevel.Info, "EndHelper/main", $"checkedbeatget == effectivebeatindex {cassetteHaveCheckedBeatGet} == {effectiveBeatIndex}");
+                    //Logger.Log(LogLevel.Info, "EndHelper/main", $"checkedbeatget == beatIndex {cassetteHaveCheckedBeatGet} == {beatIndex}");
                     if (cassetteHaveCheckedBeatGet != beatIndex) // Check if this beat has already been checked
                     {
-                        wonkyCassetteManagerData.Set("EndHelper_CassetteHaveCheckedBeat", beatIndex);
                         // Check if the current beat matches. This should never skip since the cassette block manager can only increase by 1 beat at a time
+                        wonkyCassetteManagerData.Set("EndHelper_CassetteHaveCheckedBeat", beatIndex);
+
+                        // For CassetteBeatGates: Run IncrementBeatCheckMove
+                        int c_barLength = wonkyCassetteBlockManager.barLength;
+                        int c_beatLength = wonkyCassetteBlockManager.beatLength;
+                        foreach (CassetteBeatGate cassetteBeatGate in level.Tracker.GetEntities<CassetteBeatGate>())
+                        {
+                            cassetteBeatGate.IncrementBeatCheckMove(currentBeat: beatIndex, totalCycleBeats: c_barLength * c_beatLength);
+                        }
 
                         int minBeatsFromCurrent = int.MaxValue;
 
@@ -242,7 +253,7 @@ namespace Celeste.Mod.EndHelper.Integration
                 }
                 catch (Exception e)
                 {
-                    Logger.Log(LogLevel.Warn, "EndHelper/main", $"Cassette ManagerMultiplyCassetteSpeed error: {e}");
+                    Logger.Log(LogLevel.Warn, "EndHelper/QuantumMechanicsIntegration", $"Cassette ManagerMultiplyCassetteSpeed error: {e}");
                 }
             }
 
@@ -267,6 +278,21 @@ namespace Celeste.Mod.EndHelper.Integration
             DynamicData wonkyCassetteBlockData = DynamicData.For(self);
             wonkyCassetteBlockData.Set("EndHelper_CassetteInitialPos", self.Position);
             orig(self, scene);
+
+            List<StaticMover> c_staticMovers = wonkyCassetteBlockData.Get<List<StaticMover>>("staticMovers");
+            foreach (StaticMover staticMover in c_staticMovers)
+            {
+                if (staticMover.Entity is Spikes spikes)
+                {
+                    DynamicData spikeData = DynamicData.For(spikes);
+                    spikeData.Set("EndHelper_CassetteInitialPos", spikes.Position);
+                }
+                if (staticMover.Entity is Spring spring)
+                {
+                    DynamicData springData = DynamicData.For(spring);
+                    springData.Set("EndHelper_CassetteInitialPos", spring.Position);
+                }
+            }
         }
 
     }

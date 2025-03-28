@@ -1,6 +1,5 @@
 ﻿using Celeste.Mod.EndHelper.Entities.Misc;
 using Celeste.Mod.EndHelper.Integration;
-using Celeste.Mod.SpeedrunTool.Message;
 using Microsoft.Xna.Framework;
 using Monocle;
 using MonoMod.Utils;
@@ -32,6 +31,7 @@ using Mono.Cecil.Cil;
 using MonoMod.RuntimeDetour;
 using static On.Celeste.Player;
 using FMOD.Studio;
+using static Celeste.DashSwitch;
 
 namespace Celeste.Mod.EndHelper;
 
@@ -573,9 +573,11 @@ public class EndHelperModule : EverestModule {
 
     private static void Hook_StartMap(On.Celeste.LevelLoader.orig_StartLevel orig, global::Celeste.LevelLoader self)
     {
+        timeSinceSessionReset = 2; // Set this to the default value which ISN'T 1. This shouldn't be necessary, but add it just in case!
         Level level = self.Level;
         level.Add(new RoomStatisticsDisplayer(level));
         inactiveDurationFrames = 60; // For maps starting with cutscene. If without, would be set to 0 immediately. Not even sure if this works lol
+
 
         // Set up the save data custom name dictionaries if starting a map from the beginning
         SetupCustomNameSaveDataDict(level.Session);
@@ -793,9 +795,9 @@ public class EndHelperModule : EverestModule {
 
         bool renderTimer = true;
         if (Engine.Scene is Level level && level.Tracker.GetEntity<RoomStatisticsDisplayer>() is RoomStatisticsDisplayer roomStatDisplayer && roomStatDisplayer.statisticsGuiOpen)
-        {
-            renderTimer = false;
-        }
+        { renderTimer = false; }
+
+        if (!self.Active || self.DrawLerp <= 0) { renderTimer = false; }
 
         if (renderTimer)
         {
@@ -875,7 +877,24 @@ public class EndHelperModule : EverestModule {
         // Set initial dynamic data stuff
         DynamicData cassetteBlockData = DynamicData.For(self);
         cassetteBlockData.Set("EndHelper_CassetteInitialPos", self.Position);
+
         orig(self, scene);
+
+        // Do it for spikes and springs attached too
+        List<StaticMover> c_staticMovers = cassetteBlockData.Get<List<StaticMover>>("staticMovers");
+        foreach (StaticMover staticMover in c_staticMovers)
+        {
+            if (staticMover.Entity is Spikes spikes)
+            {
+                DynamicData spikeData = DynamicData.For(spikes);
+                spikeData.Set("EndHelper_CassetteInitialPos", spikes.Position);
+            }
+            if (staticMover.Entity is Spring spring)
+            {
+                DynamicData springData = DynamicData.For(spring);
+                springData.Set("EndHelper_CassetteInitialPos", spring.Position);
+            }
+        }
     }
 
     private static void Hook_CassetteBlockManagerAwake(On.Celeste.CassetteBlockManager.orig_Awake orig, global::Celeste.CassetteBlockManager self, Scene scene)
@@ -888,6 +907,17 @@ public class EndHelperModule : EverestModule {
         List<List<object>> tempoChangeTimeDefault = [];
         cassetteManagerData.Set("EndHelper_CassetteManagerTriggerTempoMultiplierList", tempoChangeTimeDefault);
         cassetteManagerData.Set("EndHelper_CassetteStartedSFX", false);
+
+        // effectivebeatindex lol
+        int c_beatIndex = cassetteManagerData.Get<int>("beatIndex");
+        int effectiveBeatIndex = c_beatIndex;
+        int c_leadBeats = cassetteManagerData.Get<int>("leadBeats");
+        if (c_leadBeats > 0)
+        {
+            effectiveBeatIndex = -c_leadBeats;
+        }
+        cassetteManagerData.Set("EndHelper_CassetteManagerTriggerEffectiveBeatIndex", effectiveBeatIndex);
+
         orig(self, scene);
     }
 
@@ -986,8 +1016,18 @@ public class EndHelperModule : EverestModule {
                 //Logger.Log(LogLevel.Info, "EndHelper/main", $"checkedbeatget == effectivebeatindex {cassetteHaveCheckedBeatGet} == {effectiveBeatIndex}");
                 if (cassetteHaveCheckedBeatGet != effectiveBeatIndex) // Check if this beat has already been checked
                 {
-                    cassetteManagerData.Set("EndHelper_CassetteHaveCheckedBeat", effectiveBeatIndex);
                     // Check if the current beat matches. This should never skip since the cassette block manager can only increase by 1 beat at a time
+                    cassetteManagerData.Set("EndHelper_CassetteHaveCheckedBeat", effectiveBeatIndex);
+
+                    // For CassetteBeatGates: Run IncrementBeatCheckMove
+                    int c_beatIndex = cassetteManagerData.Get<int>("beatIndex");
+                    int c_beatsPerTick = cassetteManagerData.Get<int>("beatsPerTick");
+                    int c_ticksPerSwap = cassetteManagerData.Get<int>("ticksPerSwap");
+                    int c_maxBeat = cassetteManagerData.Get<int>("maxBeat");
+                    foreach (CassetteBeatGate cassetteBeatGate in level.Tracker.GetEntities<CassetteBeatGate>()) 
+                    {
+                        cassetteBeatGate.IncrementBeatCheckMove(currentBeat: c_beatIndex, totalCycleBeats: c_beatsPerTick * c_ticksPerSwap * c_maxBeat);
+                    }
 
                     int minBeatsFromCurrent = int.MaxValue;
 
@@ -1473,9 +1513,15 @@ public class EndHelperModule : EverestModule {
                 //set_11_12_21_22
                 case string s when s.StartsWith("Set_"):
                     {
-                        int roomCol = GetPosFromRoomName(currentRoomName)[1];
-                        int roomRow = GetPosFromRoomName(currentRoomName)[0];
-                        string oldTemplateRoomAtThisPos = EndHelperModule.Session.roomSwapOrderList[gridID][roomRow - 1][roomCol - 1];
+                        string oldTemplateRoomAtThisPos = "";
+                        int roomCol = 0; int roomRow = 0;
+                        if (currentTemplateRoomName != null)
+                        {
+                            roomCol = GetPosFromRoomName(currentRoomName)[1];
+                            roomRow = GetPosFromRoomName(currentRoomName)[0];
+                            Logger.Log(LogLevel.Info, "EndHelper/main", $"------------- room name {currentRoomName}. col row {roomCol} {roomRow} and gridID {gridID}");
+                            oldTemplateRoomAtThisPos = EndHelperModule.Session.roomSwapOrderList[gridID][roomRow - 1][roomCol - 1];
+                        }
 
                         string[] splittedArr = s.Split("_");
                         int row = 1;
@@ -1509,14 +1555,24 @@ public class EndHelperModule : EverestModule {
                         {
 
                             UpdateRooms();
-                            // There can be multiple of the same template room. First check if the current room is the same
-                            string newTemplateRoomAtThisPos = EndHelperModule.Session.roomSwapOrderList[gridID][roomRow - 1][roomCol - 1];
 
-                            //Logger.Log(LogLevel.Info, "EndHelper/Main", $"current {oldTemplateRoomAtThisPos} new {newTemplateRoomAtThisPos}");
-                            if (oldTemplateRoomAtThisPos != newTemplateRoomAtThisPos)
+                            // Teleport the player if it is triggered in a room that gets changed from setting
+                            // First, check if the player is even in the grid
+                            if (oldTemplateRoomAtThisPos == "")
                             {
-                                // Only teleport if the template room at the same position is different
-                                TeleportToRoom(getSwapRoomFromTemplateRoom(currentTemplateRoomName), player, level);
+                                // Player is not in a room in the grid. Stop checking.
+                            }
+                            else
+                            {
+                                // There can be multiple of the same template room. First check if the current room is the same
+                                string newTemplateRoomAtThisPos = EndHelperModule.Session.roomSwapOrderList[gridID][roomRow - 1][roomCol - 1];
+
+                                //Logger.Log(LogLevel.Info, "EndHelper/Main", $"current {oldTemplateRoomAtThisPos} new {newTemplateRoomAtThisPos}");
+                                if (oldTemplateRoomAtThisPos != newTemplateRoomAtThisPos)
+                                {
+                                    // Only teleport if the template room at the same position is different
+                                    TeleportToRoom(getSwapRoomFromTemplateRoom(currentTemplateRoomName), player, level);
+                                }
                             }
                         }
                     }
@@ -1626,10 +1682,10 @@ public class EndHelperModule : EverestModule {
                 String templateRoomName = roomList[rowIndex][colIndex];
                 return templateRoomName;
             }
-            //This means the current room is not a swap room, so just return something invalid
+            //This means the current room is not a swap room
             //If the template room can't be found it means modifyRoom was triggered from outside the swap grid
-            //If the swap effect doesn't depend on the current room this will run with no issues!
-            return "no such template room name...";
+            //If the swap effect doesn't depend on the current room this will run with no issues! (Null check for Set)
+            return null;
         }
 
         void swapEffects()
@@ -1753,6 +1809,60 @@ public class EndHelperModule : EverestModule {
             await Task.Delay((int)(Engine.DeltaTime * 1000));
         }
     }
+
+    /// <summary>
+    /// Takes in a path set in loenn, outputs a path that can be used as an Image.
+    /// </summary>
+    /// <param name="path"></param>
+    /// <param name="defaultPath"></param>
+    /// <returns></returns>
+    public static string TrimPath(string path, string defaultPath)
+    {
+        if (path == "") { path = defaultPath; }
+        while (path.StartsWith("objects") == false)
+        {
+            path = path.Substring(path.IndexOf('/') + 1);
+        }
+        if (path.IndexOf(".") > -1)
+        {
+            path = path.Substring(0, path.IndexOf("."));
+        }
+        return path;
+    }
+
+    /// <summary>
+    /// Checks if the specified flag is enabled, negation if ! is in front. Returns boolIfEmpty (default true) if empty.
+    /// </summary>
+    /// <param name="session"></param>
+    /// <param name="flag"></param>
+    /// <param name="boolIfEmpty"></param>
+    /// <returns></returns>
+    public static bool IsFlagEnabled(Session session, string flag, bool boolIfEmpty = true)
+    {
+        //Logger.Log(LogLevel.Info, "EndHelper/main", $"IsFlagEnabled - Flag {flag}, boolIfEmpty {boolIfEmpty}");
+        if (flag == "")
+        {
+            //Logger.Log(LogLevel.Info, "EndHelper/main", $"Flag is empty! Returning {boolIfEmpty}");
+            return boolIfEmpty;
+        }
+        else
+        {
+            // Check if first character is !
+            if (flag.StartsWith('!'))
+            {
+                flag = flag.Substring(1);
+                //Logger.Log(LogLevel.Info, "EndHelper/main", $"Flag starts with !, checking if {flag} exists: {session.GetFlag(flag)} (returning opposite)");
+                return !session.GetFlag(flag);
+            }
+            else
+            {
+                //Logger.Log(LogLevel.Info, "EndHelper/main", $"Flag starts with !, checking if {flag} exists: {session.GetFlag(flag)}");
+                return session.GetFlag(flag);
+            }
+        }
+    }
+
+    // TO-DO: Split, check comma, use everywhere
 
     #endregion
 

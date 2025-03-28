@@ -7,9 +7,12 @@ local CassetteManagerTrigger = {
             data = {
                 wonkyCassettes = false,
                 showDebugInfo = false,
-                multiplyTempoAtBeat = "",
+                multiplyTempoEnterRoom = "",
+                multiplyTempoOnEnter = "",
+                multiplyTempoInside = "",
+                multiplyTempoOnLeave = "",
                 multiplyTempoExisting = false,
-                multiplyTempoOnEnter = false,
+                setBeatEnterRoom = 99999,
                 setBeatOnEnter = 99999,
                 setBeatOnLeave = 99999,
                 setBeatInside = 99999,
@@ -17,10 +20,14 @@ local CassetteManagerTrigger = {
                 setBeatOnlyIfUnder = 99999,
                 doNotSetIfWithinRange = 0,
                 addInsteadOfSet = false,
+                removeImmediately = false,
+                setBeatResetCassettePos = true,
+                requireFlag = "",
             }
         },
     },
     fieldInformation = {
+        setBeatEnterRoom = { fieldType = "integer"},
         setBeatOnEnter = { fieldType = "integer"},
         setBeatOnLeave = { fieldType = "integer"},
         setBeatInside = { fieldType = "integer"},
@@ -30,9 +37,10 @@ local CassetteManagerTrigger = {
     },
     fieldOrder = {
         "x", "y", "height", "width", "editorLayer",
-        "multiplyTempoAtBeat",
-        "setBeatOnEnter", "setBeatOnLeave", "setBeatInside", "setBeatOnlyIfAbove", "setBeatOnlyIfUnder", "doNotSetIfWithinRange",
-        "multiplyTempoExisting", "multiplyTempoOnEnter", "addInsteadOfSet",
+        "requireFlag",
+        "multiplyTempoEnterRoom", "multiplyTempoOnEnter", "multiplyTempoInside", "multiplyTempoOnLeave", "multiplyTempoExisting", "",
+        "setBeatEnterRoom", "setBeatOnEnter", "setBeatOnLeave", "setBeatInside", "setBeatOnlyIfAbove", "setBeatOnlyIfUnder", "doNotSetIfWithinRange",
+        "addInsteadOfSet",
         "wonkyCassettes", "showDebugInfo",
     },
 }

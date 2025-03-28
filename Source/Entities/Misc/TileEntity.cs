@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 using Monocle;
 using Microsoft.Xna.Framework;
 using Celeste.Mod.Entities;
+using System.Runtime.CompilerServices;
+using System.ComponentModel.Design.Serialization;
 
 namespace Celeste.Mod.EndHelper.Entities.Misc;
 [Tracked]
@@ -14,6 +16,7 @@ namespace Celeste.Mod.EndHelper.Entities.Misc;
 // This is largely PLAGIARIZED from VivHelper because i really needed a good tile entity =[
 public class TileEntity : Solid
 {
+    private EntityID id;
     private TileGrid tiles;
 
     private char tileType;
@@ -36,33 +39,46 @@ public class TileEntity : Solid
     public Point GroupBoundsMin;
     public Point GroupBoundsMax;
 
+    private bool dashBlock;
+    private bool dashBlockPermament;
+    private string dashBlockBreakSound;
+
     public bool HasGroup
     {
         get;
         private set;
     }
 
-    public bool MasterOfGroup
+    public bool isMasterOfGroup
     {
         get;
         private set;
     }
 
-    public TileEntity(Vector2 position, float width, float height, char tileType, char tiletypeOffscreen, int depth, bool bg, bool blockLights = true, bool allowMergeDifferentType = false, bool allowMerge = true, 
-        bool extendOffscreen = false, bool noEdges = false, List<bool> offDirecBoolList = null, bool locationSeeded = false)
+    private TileEntity getMasterOfGroup;
+
+    public TileEntity(Vector2 position, float width, float height, EntityID id, char tileType, char tiletypeOffscreen, int depth, bool bg, bool blockLights = true, bool allowMergeDifferentType = false, bool allowMerge = true, 
+        bool extendOffscreen = false, bool noEdges = false, List<bool> offDirecBoolList = null, bool locationSeeded = false,
+        bool dashBlock = false, bool dashBlockPermament = false, String dashBlockBreakSound = "")
     : base(position, width, height, safe: true)
     {
         
         this.tileType = tileType;
         this.tiletypeOffscreen = tiletypeOffscreen;
         Depth = Calc.Clamp(depth, -300000, 20000);
-        this.bg = bg;
+        this.bg = bg; // Unused
         this.allowMergeDifferentType = allowMergeDifferentType;
         this.allowMerge = allowMerge;
         this.extendOffscreen = extendOffscreen;
         this.noEdges = noEdges;
         this.offDirecBoolList = offDirecBoolList ?? new List<bool>([true, true, true, true, true, true, true, true]); //Start at top, go CW
         this.locationSeeded = locationSeeded;
+
+        this.dashBlock = dashBlock;
+        this.dashBlockPermament = dashBlockPermament;
+        this.dashBlockBreakSound = dashBlockBreakSound;
+
+        this.id = id;
 
         if (bg)
         {
@@ -72,16 +88,23 @@ public class TileEntity : Solid
             Add(new LightOcclude());
         if (!SurfaceIndex.TileToIndex.TryGetValue(tileType, out SurfaceSoundIndex))
             SurfaceSoundIndex = SurfaceIndex.Brick;
+
+        OnDashCollide = OnDashed;
     }
 
 
     private Vector2 relativePos;
 
-    public TileEntity(EntityData data, Vector2 offset)
-        : this(data.Position + offset, data.Width, data.Height, data.Char("tiletype", '3'), data.Char("tiletypeOffscreen", '◯'), data.Int("Depth", -9000), data.Bool("BackgroundTile", false), data.Bool("BlockLights", true), data.Bool("allowMergeDifferentType", false), data.Bool("allowMerge", true), data.Bool("extendOffscreen", true), data.Bool("noEdges", false),
-              [data.Bool("offU", true), data.Bool("offUR", true), data.Bool("offR", true), data.Bool("offDR", true), data.Bool("offD", true), data.Bool("offDL", true), data.Bool("offL", true), data.Bool("offUL", true)], data.Bool("locationSeeded", false))
+    public TileEntity(EntityData data, Vector2 offset, EntityID id)
+        : this(data.Position + offset, data.Width, data.Height, id, data.Char("tiletype", '3'), data.Char("tiletypeOffscreen", '◯'), data.Int("Depth", -9000), data.Bool("BackgroundTile", false), data.Bool("BlockLights", true), data.Bool("allowMergeDifferentType", false), data.Bool("allowMerge", true), data.Bool("extendOffscreen", true), data.Bool("noEdges", false),
+              [data.Bool("offU", true), data.Bool("offUR", true), data.Bool("offR", true), data.Bool("offDR", true), data.Bool("offD", true), data.Bool("offDL", true), data.Bool("offL", true), data.Bool("offUL", true)], data.Bool("locationSeeded", false),
+              data.Bool("dashBlock", false), data.Bool("dashBlockPermament", true), data.Attr("dashBlockBreakSound", "")
+        )
     {
         relativePos = data.Position;
+
+        int surfaceSoundIndexSet = data.Int("surfaceSoundIndex", -1);
+        if (surfaceSoundIndexSet >= 0) { SurfaceSoundIndex = surfaceSoundIndexSet; }
     }
 
     public override void Awake(Scene scene)
@@ -89,7 +112,7 @@ public class TileEntity : Solid
         base.Awake(scene);
         if (!HasGroup)
         {
-            MasterOfGroup = true;
+            isMasterOfGroup = true;
             Group = new List<TileEntity>();
             GroupBoundsMin = new Point((int)X, (int)Y);
             GroupBoundsMax = new Point((int)Right, (int)Bottom);
@@ -196,6 +219,11 @@ public class TileEntity : Solid
 
     private void AddToGroupAndFindChildren(TileEntity from, List<Entity> entities = null)
     {
+        // This function is repeatedly ran by the master until all the nearby blocks are found!
+
+        from.getMasterOfGroup = this;
+        //Logger.Log(LogLevel.Info, "EndHelper/Misc/TileEntity", $"{id}: set {getMasterOfGroup.id} as master");
+
         if (from.X < GroupBoundsMin.X)
         {
             GroupBoundsMin.X = (int)from.X;
@@ -220,10 +248,13 @@ public class TileEntity : Solid
         }
         // Implement variable entities so that it doesn't pull from hash per tileentity in the chain
         if (entities == null && !Scene.Tracker.TryGetEntities<TileEntity>(out entities))
+        {
             return;
+        }
         foreach (TileEntity entity in entities)
         {
-            if (allowMerge && entity.allowMerge && !entity.HasGroup && entity.bg == bg && (Scene.CollideCheck(new Rectangle((int)from.X - 1, (int)from.Y, (int)from.Width + 2, (int)from.Height), entity) || Scene.CollideCheck(new Rectangle((int)from.X, (int)from.Y - 1, (int)from.Width, (int)from.Height + 2), entity)))
+            if (allowMerge && entity.allowMerge && !entity.HasGroup && entity.bg == bg && entity.dashBlock == dashBlock
+                && (Scene.CollideCheck(new Rectangle((int)from.X - 1, (int)from.Y, (int)from.Width + 2, (int)from.Height), entity) || Scene.CollideCheck(new Rectangle((int)from.X, (int)from.Y - 1, (int)from.Width, (int)from.Height + 2), entity)))
             {
                 if (allowMergeDifferentType && entity.allowMergeDifferentType)
                 {
@@ -237,6 +268,63 @@ public class TileEntity : Solid
 
             }
         }
+    }
+    public void Break(Vector2 from, Vector2 direction, bool playSound = true)
+    {
+        if (playSound && dashBlockBreakSound != "")
+        {
+            Audio.Play(dashBlockBreakSound, Position);
+        }
+
+        if (isMasterOfGroup)
+        {
+            foreach (TileEntity tileEntity in Group)
+            {
+                for (int i = 0; (float)i < tileEntity.Width / 8f; i++)
+                {
+                    for (int j = 0; (float)j < tileEntity.Height / 8f; j++)
+                    {
+                        base.Scene.Add(Engine.Pooler.Create<Debris>().Init(tileEntity.Position + new Vector2(4 + i * 8, 4 + j * 8), tileEntity.tileType, true).BlastFrom(from));
+                    }
+                }
+
+                if (tileEntity.dashBlockPermament)
+                {
+                    tileEntity.RemoveAndFlagAsGone();
+                }
+                else
+                {
+                    tileEntity.RemoveSelf();
+                }
+            }
+        }
+        else if (getMasterOfGroup is TileEntity)
+        {
+            getMasterOfGroup.Break(from, direction, false);
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public void RemoveAndFlagAsGone()
+    {
+        RemoveSelf();
+        SceneAs<Level>().Session.DoNotLoad.Add(id);
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private DashCollisionResults OnDashed(Player player, Vector2 direction)
+    {
+        if (!dashBlock)
+        {
+            if (player.StateMachine.State == 5) //Get out of the booster
+            {
+                player.StateMachine.State = 0;
+            }
+            return DashCollisionResults.NormalCollision;
+        }
+
+        Break(player.Center, direction);
+        return DashCollisionResults.Rebound;
     }
 }
 

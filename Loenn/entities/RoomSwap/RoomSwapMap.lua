@@ -18,7 +18,7 @@ local roomSwapMap = {
                 mapCurrentPosFileName = "current",
                 mapIconFilePrefix = "icon_",
                 floatAmplitude = 0.1,
-                animationSpeedMultiplier = 0.1,
+                animationSpeedMultiplier = 0.1
             },
         },
     },

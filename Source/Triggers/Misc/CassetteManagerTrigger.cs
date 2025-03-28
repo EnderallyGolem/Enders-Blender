@@ -16,25 +16,32 @@ namespace Celeste.Mod.EndHelper.Triggers.RoomSwap;
 [CustomEntity("EndHelper/CassetteManagerTrigger")]
 public class CassetteManagerTrigger : Trigger
 {
-    private Vector2 dataOffset;
-    private EntityData entityData;
-
-    private bool wonkyCassettes = false;
-    private bool showDebugInfo = false;
+    private readonly bool wonkyCassettes = false;
+    private readonly bool showDebugInfo = false;
     private String debugInfo = "";
     private String debugInfo2 = "";
 
-    private String multiplyTempoAtBeat = "";
-    private bool multiplyTempoExisting = false;
-    private bool multiplyTempoOnEnter = false;
+    private readonly String multiplyTempoEnterRoom = "";
+    private readonly String multiplyTempoOnEnter = "";
+    private readonly String multiplyTempoInside = "";
+    private readonly String multiplyTempoOnLeave = "";
+    private readonly bool multiplyTempoExisting = false;
 
-    private int setBeatOnEnter = 1;
-    private int setBeatOnLeave = 1;
-    private int setBeatInside = 1;
-    private int setBeatOnlyIfAbove = 0;
-    private int setBeatOnlyIfUnder = -1;
-    private bool addInsteadOfSet = false;
-    private int doNotSetIfWithinRange = 0;
+    private readonly int setBeatEnterRoom = 99999;
+    private readonly int setBeatOnEnter = 99999;
+    private readonly int setBeatOnLeave = 99999;
+    private readonly int setBeatInside = 99999;
+    private readonly int setBeatOnlyIfAbove = 0;
+    private readonly int setBeatOnlyIfUnder = -1;
+    private readonly bool addInsteadOfSet = false;
+    private readonly int doNotSetIfWithinRange = 0;
+
+    int initialLeadBeat = int.MinValue;
+    private bool removeImmediately = false;
+    int delayedAwakeCountdown = 2;
+    private readonly bool setBeatResetCassettePos = true;
+    private readonly String requireFlag = "";
+    private bool allowFunctionality = true;
 
 
     [MethodImpl(MethodImplOptions.NoInlining)]
@@ -44,22 +51,27 @@ public class CassetteManagerTrigger : Trigger
         wonkyCassettes = data.Bool("wonkyCassettes", false);
         showDebugInfo = data.Bool("showDebugInfo", false);
 
-        multiplyTempoAtBeat = data.Attr("multiplyTempoAtBeat", "");
+        multiplyTempoEnterRoom = data.Attr("multiplyTempoEnterRoom", "");
+        multiplyTempoOnEnter = data.Attr("multiplyTempoOnEnter", "");
+        multiplyTempoInside = data.Attr("multiplyTempoInside", "");
+        multiplyTempoOnLeave = data.Attr("multiplyTempoOnLeave", "");
         multiplyTempoExisting = data.Bool("multiplyTempoExisting", false);
-        multiplyTempoOnEnter = data.Bool("multiplyTempoOnEnter", false);
 
-        setBeatOnEnter = data.Int("setBeatOnEnter", 1);
-        setBeatOnLeave = data.Int("setBeatOnLeave", 1);
-        setBeatInside = data.Int("setBeatInside", 1);
+        setBeatEnterRoom = data.Int("setBeatEnterRoom", 99999);
+        setBeatOnEnter = data.Int("setBeatOnEnter", 99999);
+        setBeatOnLeave = data.Int("setBeatOnLeave", 99999);
+        setBeatInside = data.Int("setBeatInside", 99999);
         addInsteadOfSet = data.Bool("addInsteadOfSet", false);
 
         setBeatOnlyIfAbove = data.Int("setBeatOnlyIfAbove", 0);
         setBeatOnlyIfUnder = data.Int("setBeatOnlyIfUnder", -1);
         doNotSetIfWithinRange = data.Int("doNotSetIfWithinRange", 0);
+        removeImmediately = data.Bool("removeImmediately", false);
+        setBeatResetCassettePos = data.Bool("setBeatResetCassettePos", true);
+
+        requireFlag = data.Attr("requireFlag", "");
 
         Collider = new Hitbox(data.Width, data.Height);
-        entityData = data;
-        dataOffset = offset;
         Visible = Active = true;
     }
 
@@ -80,17 +92,52 @@ public class CassetteManagerTrigger : Trigger
             throw new ArgumentException($"A Cassette Manager Trigger is set to use Wonky Cassettes, but the Quantum Mechanics mod required for it cannot be found!");
         }
 
+        Level level = SceneAs<Level>();
 
-        if (!multiplyTempoOnEnter)
+        allowFunctionality = EndHelperModule.IsFlagEnabled(level.Session, requireFlag, true);
+        if (allowFunctionality)
         {
-            setTempoMultiplier(multiplyTempoAtBeat, multiplyTempoExisting);
+            setTempoMultiplier(multiplyTempoEnterRoom, multiplyTempoExisting, true);
         }
+
         base.Awake(scene);
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    public override void OnEnter(Player player)
+    {
+        if (allowFunctionality)
+        {
+            SetBeatToIfAllow(setBeatOnEnter);
+            setTempoMultiplier(multiplyTempoOnEnter, multiplyTempoExisting, true);
+        }
+        base.OnEnter(player);
+    }
+
+    public override void OnStay(Player player)
+    {
+        if (allowFunctionality)
+        {
+            SetBeatToIfAllow(setBeatInside);
+            setTempoMultiplier(multiplyTempoInside, multiplyTempoExisting, false);
+        }
+        base.OnStay(player);
+    }
+
+    public override void OnLeave(Player player)
+    {
+        if (allowFunctionality)
+        {
+            SetBeatToIfAllow(setBeatOnLeave);
+            setTempoMultiplier(multiplyTempoOnLeave, multiplyTempoExisting, true);
+        }
+        base.OnLeave(player);
     }
 
     public override void Update()
     {
         Level level = SceneAs<Level>();
+        allowFunctionality = EndHelperModule.IsFlagEnabled(level.Session, requireFlag, true);
 
         if (!wonkyCassettes && level.Tracker.GetEntity<CassetteBlockManager>() is CassetteBlockManager cassetteBlockManager)
         {
@@ -110,6 +157,11 @@ public class CassetteManagerTrigger : Trigger
             int c_beatIndexOffset = cassetteManagerData.Get<int>("beatIndexOffset");
             int c_beatsPerTick = cassetteManagerData.Get<int>("beatsPerTick");
             int c_ticksPerSwap = cassetteManagerData.Get<int>("ticksPerSwap");
+
+            if (initialLeadBeat == int.MinValue)
+            {
+                initialLeadBeat = c_leadBeats;
+            }
 
 
             int effectiveBeatIndex = c_beatIndex;
@@ -136,7 +188,8 @@ public class CassetteManagerTrigger : Trigger
 
             if (showDebugInfo)
             {
-                debugInfo = $"Index: {c_currentIndex}/{c_maxBeat} | BeatIndex: {effectiveBeatIndex}/{c_beatIndexMax} | Swap every {c_beatsPerTick}*{c_ticksPerSwap}={c_beatsPerTick * c_ticksPerSwap} beats | TempoMult: {c_tempoMult}{additionalMultiplierText}{beatTimerText}";
+                int cycleBeatCount = c_beatsPerTick * c_ticksPerSwap * c_maxBeat;
+                debugInfo = $"Cycle: {c_currentIndex+1}/{c_maxBeat} ({c_beatIndex % cycleBeatCount}/{cycleBeatCount}) | Beat Index: {effectiveBeatIndex}/{c_beatIndexMax} | Swap every {c_beatsPerTick}*{c_ticksPerSwap}={c_beatsPerTick * c_ticksPerSwap} beats | TempoMult: {c_tempoMult}{additionalMultiplierText}{beatTimerText}";
                 debugInfo2 = "Tempo Change Times:    ";
 
                 bool multiplyOnTop = cassetteManagerData.Get<bool>("EndHelper_CassetteManagerTriggerTempoMultiplierMultiplyOnTop");
@@ -171,10 +224,14 @@ public class CassetteManagerTrigger : Trigger
             int s_cassetteBeatIndex = QuantumMechanicsIntegration.QMInte_CassetteBeatIndex();
             int c_maxBeats = wonkyCassetteManagerData.Get<int>("maxBeats");
 
-            int c_bpm = wonkyCassetteManagerData.Get<int>("bpm");
-            float c_beatIncrement = wonkyCassetteManagerData.Get<float>("beatIncrement");
+            int c_bpm = wonkyCassetteBlockManager.bpm;
+            float c_beatIncrement = wonkyCassetteBlockManager.beatIncrement;
             float s_cassetteBeatTimer = QuantumMechanicsIntegration.QMInte_CassetteBeatTimer();
             float s_musicBeatTimer = QuantumMechanicsIntegration.QMInte_MusicBeatTimer();
+
+            int c_barLength = wonkyCassetteBlockManager.barLength;
+            int c_beatLength = wonkyCassetteBlockManager.beatLength;
+            int cycleLength = c_barLength * c_beatLength;
 
             String additionalMultiplierText = "";
             float cassettePreviousTempoNum = wonkyCassetteManagerData.Get<float>("EndHelper_CassettePreviousTempoNum");
@@ -187,16 +244,16 @@ public class CassetteManagerTrigger : Trigger
             }
             if (s_cassetteBeatTimer > c_beatIncrement * 2)
             {
-                QuantumMechanicsIntegration.QMInte_CassetteBeatTimer(c_beatIncrement); // Prevent beatTimer overflow for cassette timer
+                QuantumMechanicsIntegration.QMInte_CassetteBeatTimer(c_beatIncrement * 2); // Prevent beatTimer overflow for cassette timer
             }
             if (s_musicBeatTimer > c_beatIncrement * 2)
             {
-                QuantumMechanicsIntegration.QMInte_MusicBeatTimer(c_beatIncrement); // Prevent beatTimer overflow for music timer
+                QuantumMechanicsIntegration.QMInte_MusicBeatTimer(c_beatIncrement * 2); // Prevent beatTimer overflow for music timer
             }
 
             if (showDebugInfo)
             {
-                debugInfo = $"MusicBeatIndex: {s_musicBeatIndex}/{c_maxBeats} [Loop: {c_introBeats}] | CassetteBeatIndex: {s_cassetteBeatIndex} | BPM: {c_bpm}{additionalMultiplierText}{beatTimerText}";
+                debugInfo = $"Music Beat Index: {s_musicBeatIndex}/{c_maxBeats} [Loop: {c_introBeats}] | Cassette Beat Index: {s_cassetteBeatIndex} | Cycle: {Math.Floor(s_cassetteBeatIndex / c_beatLength * 1f) % c_barLength + 1}/{c_barLength} ({s_musicBeatIndex % cycleLength}/{cycleLength}) | BPM: {c_bpm}{additionalMultiplierText}{beatTimerText}";
                 debugInfo2 = "Tempo Change Times:    ";
 
                 bool multiplyOnTop = wonkyCassetteManagerData.Get<bool>("EndHelper_CassetteManagerTriggerTempoMultiplierMultiplyOnTop");
@@ -222,6 +279,21 @@ public class CassetteManagerTrigger : Trigger
             }
         }
 
+        // Run stuff that should be ran almost immediately, but a bit after awake
+        if (delayedAwakeCountdown >= 0)
+        {
+            delayedAwakeCountdown--;
+        }
+        if (delayedAwakeCountdown == 0)
+        {
+            SetBeatToIfAllow(setBeatEnterRoom);
+            if (removeImmediately)
+            {
+                Active = false; Collidable = false; // No more updates! Don't worry about allowFunctionality getting reset to enabled
+                allowFunctionality = false;         // This was done instead of removing the entity cause removing could lead to crash
+            }
+        }
+
         base.Update();
     }
 
@@ -235,28 +307,6 @@ public class CassetteManagerTrigger : Trigger
         base.Render();
     }
 
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    public override void OnEnter(Player player)
-    {
-        if (multiplyTempoOnEnter)
-        { setTempoMultiplier(multiplyTempoAtBeat, multiplyTempoExisting); }
-
-        SetBeatToIfAllow(setBeatOnEnter);
-        base.OnEnter(player);
-    }
-
-    public override void OnStay(Player player)
-    {
-        SetBeatToIfAllow(setBeatInside);
-        base.OnStay(player);
-    }
-
-    public override void OnLeave(Player player)
-    {
-        SetBeatToIfAllow(setBeatOnLeave);
-        base.OnLeave(player);
-    }
-
     public void SetBeatToIfAllow(int setBeat)
     {
         Level level = SceneAs<Level>();
@@ -264,15 +314,27 @@ public class CassetteManagerTrigger : Trigger
         {
             DynamicData cassetteManagerData = DynamicData.For(cassetteBlockManager);
             int c_beatIndexMax = cassetteManagerData.Get<int>("beatIndexMax");
-            int effectiveBeatIndex = cassetteManagerData.Get<int>("EndHelper_CassetteManagerTriggerEffectiveBeatIndex");
+            int effectiveBeatIndex = 0;
+
+            effectiveBeatIndex = cassetteManagerData.Get<int>("EndHelper_CassetteManagerTriggerEffectiveBeatIndex");
 
             // Exit if larger than beatIndexMax
             if (setBeat > c_beatIndexMax)
             { return; }
 
             // Check if outside setBeatOnlyIfAbove/Under range
-            if (effectiveBeatIndex < setBeatOnlyIfAbove || effectiveBeatIndex > setBeatOnlyIfUnder)
-            { return; }
+            if (setBeatOnlyIfUnder < setBeatOnlyIfAbove)
+            {
+                // Range is under OR above. Return if between.
+                if (effectiveBeatIndex < setBeatOnlyIfAbove && effectiveBeatIndex > setBeatOnlyIfUnder)
+                { return; }
+            }
+            else
+            {
+                // Range is BETWEEN. Return if not between.
+                if (effectiveBeatIndex < setBeatOnlyIfAbove || effectiveBeatIndex > setBeatOnlyIfUnder)
+                { return; }
+            }
 
             // Check doNotSetIfWithinRange. +ve: Cannot be within that range. -ve: MUST be within that range.
             if (doNotSetIfWithinRange != 0)
@@ -304,7 +366,6 @@ public class CassetteManagerTrigger : Trigger
                     if (diff > checkRange) { return; }
                 }
             }
-
 
             // Change setBeat to the actual set value if addInsteadOfSet
             if (addInsteadOfSet && setBeat != 0)
@@ -403,10 +464,15 @@ public class CassetteManagerTrigger : Trigger
             int c_ticksPerSwap = cassetteManagerData.Get<int>("ticksPerSwap");
 
             // Set beat. Different option for negative and positive beats
+
+            int positiveSetBeat = setBeat;
+            int beatsPerSwap = c_beatsPerTick * c_ticksPerSwap;
+            while (positiveSetBeat < 0) { positiveSetBeat += beatsPerSwap * c_maxBeat; }
+
             if (setBeat < 0)
             {
                 cassetteManagerData.Set("leadBeats", -setBeat);
-                cassetteManagerData.Set("beatIndex", 0);
+                cassetteManagerData.Set("beatIndex", positiveSetBeat);
             }
             else
             {
@@ -415,14 +481,14 @@ public class CassetteManagerTrigger : Trigger
             }
 
             // Set currentIndex (depending on beatsPerTick * ticksPerSwap) to ensure cassette blocks gets synced
-            int beatsPerSwap = c_beatsPerTick * c_ticksPerSwap;
-            int newCurrentIndex = (int)(Math.Floor(setBeat/beatsPerSwap * 1f) % c_beatsPerTick);
+            int newCurrentIndex = (int)(Math.Floor(positiveSetBeat / beatsPerSwap * 1f + (initialLeadBeat/beatsPerSwap - 1)) % c_beatsPerTick);
+            if (newCurrentIndex < 0) { newCurrentIndex += c_beatsPerTick; } // Possible negative if initialLeadBeat is less than beatsPerSwap
+
             int newCurrentIndexNext = (newCurrentIndex + 1) % c_beatsPerTick;
             cassetteManagerData.Set("currentIndex", newCurrentIndex);
 
-
-            // Correct for dumb cassette height stuff
-            bool swapToChanging = (setBeat + 1) % beatsPerSwap == 0;
+            // Correct for dumb cassette height stuff.
+            bool swapToChanging = (positiveSetBeat + 1) % beatsPerSwap == 0;
 
 
             // If not swapping next beat and also newCurrentIndex is the same as currentIndex then we don't have to do anything.
@@ -437,7 +503,10 @@ public class CassetteManagerTrigger : Trigger
             {
                 DynamicData cassetteBlockData = DynamicData.For(cassetteBlock);
                 Vector2 initialPos = cassetteBlockData.Get<Vector2>("EndHelper_CassetteInitialPos") + new Vector2(0, 2);
-                cassetteBlockData.Set("Position", initialPos);
+                if (setBeatResetCassettePos)
+                {
+                    cassetteBlockData.Set("Position", initialPos);
+                }
                 cassetteBlockData.Set("blockHeight", 0);
 
                 cassetteBlock.Activated = false; // Stop activating.
@@ -446,6 +515,33 @@ public class CassetteManagerTrigger : Trigger
             foreach (CassetteListener component in base.Scene.Tracker.GetComponents<CassetteListener>())
             {
                 component.Activated = false; // Just no.
+            }
+
+            // Reset the stuff attached to the cassette block too
+            if (setBeatResetCassettePos)
+            {
+                foreach (CassetteBlock cassetteBlock in base.Scene.Tracker.GetEntities<CassetteBlock>())
+                {
+                    DynamicData cassetteBlockData = DynamicData.For(cassetteBlock);
+                    List<StaticMover> staticMoverList = cassetteBlockData.Get<List<StaticMover>>("staticMovers");
+                    foreach (StaticMover staticMover in staticMoverList)
+                    {
+                        if (staticMover.Entity is Spikes spikes)
+                        {
+                            DynamicData spikeData = DynamicData.For(spikes);
+                            spikes.Position = spikeData.Get<Vector2>("EndHelper_CassetteInitialPos");
+                            spikes.Position += new Vector2(0, 2);
+                            spikeData.Invoke("OnDisable");
+                        }
+                        if (staticMover.Entity is Spring spring)
+                        {
+                            DynamicData springData = DynamicData.For(spring);
+                            spring.Position = springData.Get<Vector2>("EndHelper_CassetteInitialPos");
+                            spring.Position += new Vector2(0, 2);
+                            springData.Invoke("OnDisable");
+                        }
+                    }
+                }
             }
 
 
@@ -459,6 +555,7 @@ public class CassetteManagerTrigger : Trigger
                 // Do not set will activate, because that already happens here.
                 // Instead, set the will activate to the NEXT one. Umm my brain is too mush to figure out why but it works so shut up
                 cassetteBlockManager.SetWillActivate(newCurrentIndexNext);
+
             }
             else
             {
@@ -471,8 +568,11 @@ public class CassetteManagerTrigger : Trigger
             // Set Beats
             DynamicData wonkyCassetteManagerData = DynamicData.For(wonkyCassetteBlockManager);
             int c_introBeats = wonkyCassetteManagerData.Get<int>("introBeats");
+            int s_cassetteBeatIndex = QuantumMechanicsIntegration.QMInte_CassetteBeatIndex();
+
             QuantumMechanicsIntegration.QMInte_MusicBeatIndex(setBeat);
             QuantumMechanicsIntegration.QMInte_CassetteBeatIndex(setBeat);
+
 
             if (setBeat < c_introBeats)
             { QuantumMechanicsIntegration.QMInte_setMusicLoopStarted(false); /* If set to before loop, set MusicLoopStarted to false */ }
@@ -483,33 +583,99 @@ public class CassetteManagerTrigger : Trigger
             // Good news: Wonky cassettes auto-sync when I change the beats. All I have to do is ensure the cassettes reset back to their original positions!
             // Unfortunately that is the hard part!
 
-            // TO-DO:::: toggle nicely pls
+
+            int cassetteWonkyBeatIndex = QuantumMechanicsIntegration.QMInte_MusicBeatIndex();
+            int c_beatLength = wonkyCassetteBlockManager.beatLength;
+            int c_barLength = wonkyCassetteBlockManager.barLength;
+            int c_maxBeats = wonkyCassetteManagerData.Get<int>("maxBeats");
+
+
+            // Correct for dumb cassette height stuff.
+            int cycleLength = c_barLength * c_beatLength;
+
+            bool swapToChanging = (setBeat + 1) % cycleLength == 0; // If this is true, special case
+            int cycleIndex = (int)Math.Floor(setBeat / c_beatLength * 1f) % c_barLength;
+
 
             // Step 1: Reset and Disable everything!
             foreach (WonkyCassetteBlock cassetteBlock in base.Scene.Tracker.GetEntities<WonkyCassetteBlock>())
             {
                 DynamicData cassetteBlockData = DynamicData.For(cassetteBlock);
                 Vector2 initialPos = cassetteBlockData.Get<Vector2>("EndHelper_CassetteInitialPos") + new Vector2(0, 2);
-                cassetteBlockData.Set("Position", initialPos);
+                if (setBeatResetCassettePos)
+                {
+                    cassetteBlockData.Set("Position", initialPos);
+                }
                 cassetteBlockData.Set("blockHeight", 0);
 
-                cassetteBlock.Activated = false; // Stop activating.
+                if (swapToChanging)
+                {
+                    // Stop activating, unless the next beat changes swap. Then we have to manually check if it should be activated.
+                    bool cassetteToSwap = cassetteBlock.OnAtBeats.Contains<int>(cycleIndex);
+                    if (cassetteToSwap)
+                    {
+                        cassetteBlock.Activated = true; // Active if after swapping, this should be activated.
+                    }
+                    else
+                    {
+                        cassetteBlock.Activated = false; // Deactive otherwise
+                    }
+                }
+                else
+                {
+                    cassetteBlock.Activated = false; // Stop activating.
+                }
                 cassetteBlock.Collidable = false;
             }
-            foreach (WonkyCassetteListener component in base.Scene.Tracker.GetComponents<WonkyCassetteListener>())
+            foreach (WonkyCassetteListener wonkyListener in base.Scene.Tracker.GetComponents<WonkyCassetteListener>())
             {
-                component.Activated = false; // Just no.
+                wonkyListener.Activated = false; // Just no.
+            }
+
+            // Reset the stuff attached to the cassette block too
+            if (setBeatResetCassettePos)
+            {
+                foreach (WonkyCassetteBlock cassetteBlock in base.Scene.Tracker.GetEntities<WonkyCassetteBlock>())
+                {
+                    DynamicData cassetteBlockData = DynamicData.For(cassetteBlock);
+                    List<StaticMover> staticMoverList = cassetteBlockData.Get<List<StaticMover>>("staticMovers");
+                    foreach (StaticMover staticMover in staticMoverList)
+                    {
+                        if (staticMover.Entity is Spikes spikes)
+                        {
+                            DynamicData spikeData = DynamicData.For(spikes);
+                            spikes.Position = spikeData.Get<Vector2>("EndHelper_CassetteInitialPos");
+                            spikes.Position += new Vector2(0, 2);
+                            spikeData.Invoke("OnDisable");
+                        }
+                        if (staticMover.Entity is Spring spring)
+                        {
+                            DynamicData springData = DynamicData.For(spring);
+                            spring.Position = springData.Get<Vector2>("EndHelper_CassetteInitialPos");
+                            spring.Position += new Vector2(0, 2);
+                            springData.Invoke("OnDisable");
+                        }
+                    }
+                }
             }
 
 
             // Step 2: Appear Properly
             // Since each cassette block has its own swap beats this is going to be tougher :w
 
+            int beatInBar = cassetteWonkyBeatIndex / (16 / c_beatLength) % c_barLength;
 
+            foreach (WonkyCassetteListener wonkyListener in base.Scene.Tracker.GetComponents<WonkyCassetteListener>())
+            {
+                if (wonkyListener.ShouldBeActive(beatInBar) && !wonkyListener.Activated)
+                {
+                    wonkyListener.WillToggle();
+                }
+            }
         }
     }
 
-    public void setTempoMultiplier(String tempoBeatString, bool multiplyOnTop)
+    public void setTempoMultiplier(String tempoBeatString, bool multiplyOnTop, bool resetCheckedBeat)
     {
         if (tempoBeatString == "" || tempoBeatString == null)
         { return; }
@@ -543,19 +709,28 @@ public class CassetteManagerTrigger : Trigger
                 DynamicData cassetteManagerData = DynamicData.For(cassetteBlockManager);
                 cassetteManagerData.Set("EndHelper_CassetteManagerTriggerTempoMultiplierList", tempoChangeTime);
                 cassetteManagerData.Set("EndHelper_CassetteManagerTriggerTempoMultiplierMultiplyOnTop", multiplyOnTop);
-                cassetteManagerData.Set("EndHelper_CassetteHaveCheckedBeat", int.MinValue); // This normally prevents rechecking same beat. If changing multiplier, unset this.
+
+                // This normally prevents rechecking same beat. If changing multiplier, unset this, UNLESS resetCheckedBeat is false (the case for multiply tempo inside)
+                if (resetCheckedBeat)
+                {
+                    cassetteManagerData.Set("EndHelper_CassetteHaveCheckedBeat", int.MinValue);
+                }
+                
             }
 
             else if (wonkyCassettes && level.Tracker.GetEntity<WonkyCassetteBlockController>() is WonkyCassetteBlockController wonkyCassetteBlockManager)
             {
                 foreach (WonkyCassetteBlockController wonkyCasseteController in level.Tracker.GetEntities<WonkyCassetteBlockController>())
                 {
-                    Logger.Log(LogLevel.Info, "EndHelper/CassetteManagerTrigger", $"id {wonkyCasseteController.ID}: HEY ARE YOU SETTING THE {tempoBeatString}");
-
                     DynamicData wonkyCassetteManagerData = DynamicData.For(wonkyCasseteController);
                     wonkyCassetteManagerData.Set("EndHelper_CassetteManagerTriggerTempoMultiplierList", tempoChangeTime);
                     wonkyCassetteManagerData.Set("EndHelper_CassetteManagerTriggerTempoMultiplierMultiplyOnTop", multiplyOnTop);
-                    wonkyCassetteManagerData.Set("EndHelper_CassetteHaveCheckedBeat", int.MinValue); // This normally prevents rechecking same beat. If changing multiplier, unset this.
+
+                    // same as above but for wonky cassettes
+                    if (resetCheckedBeat)
+                    {
+                        wonkyCassetteManagerData.Set("EndHelper_CassetteHaveCheckedBeat", int.MinValue);
+                    }
                 }
             }
         }

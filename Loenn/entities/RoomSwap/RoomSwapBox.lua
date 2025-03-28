@@ -169,8 +169,10 @@ function roomSwapBox.texture(room, entity)
     
     else defaultBoxTexture = "objects/EndHelper/RoomSwapBox/loenn" end
 
-    if entity.texturePath == "heart" or entity.texturePath == "Heart" 
-    then defaultBoxTexture = "objects/EndHelper/RoomSwapBox/transitionBoxHeart"
+    if entity.texturePath == "heart" or entity.texturePath == "Heart"
+    then
+        defaultBoxTexture = "objects/EndHelper/RoomSwapBox/transitionBoxHeart"
+        return "objects/EndHelper/RoomSwapBox/transitionBoxHeart"
     end
 
     local returnPath = miscFuncs.trimPath(entity.texturePath, defaultBoxTexture)

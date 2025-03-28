@@ -15,10 +15,13 @@ public class RoomSwapChangeRespawnTrigger : Trigger
     private Vector2 dataOffset;
     private EntityData entityData;
 
+    private bool checkSolid = true;
+
     [MethodImpl(MethodImplOptions.NoInlining)]
     public RoomSwapChangeRespawnTrigger(EntityData data, Vector2 offset)
         : base(data, offset)
     {
+        checkSolid = data.Bool("checkSolid", true);
         Collider = new Hitbox(data.Width, data.Height);
         entityData = data;
         dataOffset = offset;
@@ -52,7 +55,7 @@ public class RoomSwapChangeRespawnTrigger : Trigger
 
         base.OnEnter(player);
         Session session = (Scene as Level).Session;
-        if (SolidCheck() && (!session.RespawnPoint.HasValue || session.RespawnPoint.Value != Target))
+        if (NoSolidCheck() && (!session.RespawnPoint.HasValue || session.RespawnPoint.Value != Target))
         {
             session.HitCheckpoint = true;
             session.RespawnPoint = Target;
@@ -62,8 +65,13 @@ public class RoomSwapChangeRespawnTrigger : Trigger
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private bool SolidCheck()
+    private bool NoSolidCheck()
     {
+        if (!checkSolid)
+        {
+            return true; // Avoid any checks for solid. Always return true (no solids)
+        }
+
         Vector2 point = Target + Vector2.UnitY * -4f;
         if (Scene.CollideCheck<Solid>(point))
         {

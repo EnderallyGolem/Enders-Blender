@@ -12,7 +12,6 @@ using static On.Celeste.Level;
 using System.Threading.Tasks;
 using static Celeste.Mod.EndHelper.EndHelperModuleSettings;
 using static Celeste.Mod.EndHelper.EndHelperModule;
-using Celeste.Mod.SpeedrunTool.Message;
 using static Celeste.Mod.UI.CriticalErrorHandler;
 using static Celeste.Mod.EndHelper.Entities.Misc.RoomStatisticsDisplayer;
 using static Celeste.Mod.EndHelper.EndHelperModuleSettings.RoomStatDisplaySubMenu;
@@ -20,6 +19,8 @@ using NETCoreifier;
 using System.Net.NetworkInformation;
 using FMOD.Studio;
 using static Celeste.Tentacles;
+using Microsoft.Xna.Framework.Graphics.PackedVector;
+using Celeste.Mod.EndHelper.Integration;
 
 
 namespace Celeste.Mod.EndHelper.Entities.Misc;
@@ -58,10 +59,13 @@ public class RoomStatisticsDisplayer : Entity
         }
 
         mapNameColor = Color.Lime; // No else so if multiple appears for some reason it picks the hardest
+        if (mapNameSide.ToLower().Contains("easy")) { mapNameColor = Color.LimeGreen; }
         if (mapNameSide.ToLower().Contains("beginner")) { mapNameColor = Color.Aqua; }
-        if (mapNameSide.ToLower().Contains("intermediate")) { mapNameColor = Color.PaleVioletRed; }
+        if (mapNameSide.ToLower().Contains("intermediate")) { mapNameColor = Color.IndianRed; }
+        if (mapNameSide.ToLower().Contains("medium")) { mapNameColor = Color.PaleVioletRed; }
         if (mapNameSide.ToLower().Contains("advanced")) { mapNameColor = Color.Yellow; }
         if (mapNameSide.ToLower().Contains("expert")) { mapNameColor = Color.Orange; }
+        if (mapNameSide.ToLower().Contains("hard")) { mapNameColor = Color.MediumPurple; }
         if (mapNameSide.ToLower().Contains("grandmaster")) { mapNameColor = Color.Magenta; }
 
         mapNameSide = mapNameSide.DialogCleanOrNull(Dialog.Languages["english"]) ?? mapNameSide;
@@ -75,6 +79,19 @@ public class RoomStatisticsDisplayer : Entity
         {
             mapNameSide += " C";
         }
+
+    }
+
+    public override void Awake(Scene scene)
+    {
+        base.Awake(scene);
+
+        // Do not get affected by save states. This umm doesn't work. Commenting this out so it doesn't break if it works.
+        //if (SpeedrunToolIntegration.SpeedrunToolInstalled)
+        //{
+        //    SpeedrunToolImport.IgnoreSaveState?.Invoke(this, true);
+        //    Logger.Log(LogLevel.Info, "EndHelper/RoomStatisticsDisplayer", $"ignore save state !!!!!!!!!");
+        //}
     }
 
     public void ImportRoomStatInfo()
@@ -166,7 +183,7 @@ public class RoomStatisticsDisplayer : Entity
             if (Input.MenuCancel.Pressed)
             {
                 string clipboardToolTipMsg = Dialog.Get("EndHelper_Dialog_RoomStatisticsDisplayer_CopiedToClipboard");
-                Tooltip.Show(clipboardToolTipMsg, 2f);
+                RoomStatisticsDisplayer.ShowTooltip(clipboardToolTipMsg, 2f);
                 TextInput.SetClipboardText(clipboardText);
             }
         }
@@ -1052,6 +1069,26 @@ public class RoomStatisticsDisplayer : Entity
             float displayScale = (float)EndHelperModule.Settings.ToggleGrabMenu.GrabSize / 10;
             toggleifyIcon.Draw(new Vector2(displayXPos, displayYPos), Vector2.Zero, Color.White, displayScale);
         }
+
+        //Logger.Log(LogLevel.Info, "EndHelper/RoomStatisticsDisplayer", $"tooltipDuration {tooltipDuration} alpha {alpha} tooltiptext {tooltipText}");
+        if (tooltipDuration > -60)
+        {
+            ActiveFont.DrawOutline(tooltipText, new Vector2(100, 950), Vector2.Zero, Vector2.One, Color.White * alpha, 2, Color.Black * alpha);
+            tooltipDuration--;
+        }
+        if (tooltipDuration > 10 && alpha < 1) { alpha += 0.1f; }
+        if (tooltipDuration < 0 && alpha > 0) { alpha -= 0.03f; }
+    }
+
+    public static string tooltipText = "";
+    public static int tooltipDuration = 0;
+    private static float alpha = 0;
+
+    public static void ShowTooltip(String message, float durationSeconds)
+    {
+        tooltipText = message;
+        tooltipDuration = (int)durationSeconds * 60;
+        //Logger.Log(LogLevel.Info, "EndHelper/RoomStatisticsDisplayer", $"Show tooltip {message} for {durationSeconds} seconds.");
     }
 
 }

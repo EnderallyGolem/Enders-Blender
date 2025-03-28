@@ -9,7 +9,6 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
-using Celeste.Mod.SpeedrunTool.SaveLoad;
 using Celeste.Mod.EndHelper.Entities.Misc;
 using IL.Monocle;
 using static Celeste.Mod.EndHelper.Entities.Misc.RoomStatisticsDisplayer;
@@ -17,80 +16,88 @@ using System.Reflection.PortableExecutable;
 using System.Collections;
 using System.Collections.Specialized;
 using static Celeste.Mod.EndHelper.EndHelperModule;
+using MonoMod.ModInterop;
+using On.Monocle;
+using MonoMod.Utils;
+using Microsoft.Xna.Framework.Input;
 
 namespace Celeste.Mod.EndHelper.Integration
 {
+    [ModImportName("SpeedrunTool.SaveLoad")]
+    public static class SpeedrunToolImport
+    {
+        public static Func<Action<Dictionary<Type, Dictionary<string, object>>, Level>, Action<Dictionary<Type, Dictionary<string, object>>, Level>, Action, Action<Level>, Action<Level>, Action, object> RegisterSaveLoadAction;
+        public static Action<Monocle.Entity, bool> IgnoreSaveState;
+        public static Action<object> Unregister;
+    }
+
     public static class SpeedrunToolIntegration
     {
-
-        private static Type StateManager;
-        private static Type TeleportRoomUtils;
-
-        private static MethodInfo StateManager_SaveState;
-        private static MethodInfo StateManager_LoadState;
-        private static MethodInfo TeleportRoomUtils_TeleportTo;
-
-        private static Hook Hook_StateManager_SaveState;
-        private static Hook Hook_StateManager_LoadState;
-        private static Hook Hook_TeleportRoomUtils_TeleportTo;
-
+        public static bool SpeedrunToolInstalled;
+        private static object action;
         internal static void Load()
         {
-            try
-            {
-                // Get type info and functions
-                StateManager = Type.GetType("Celeste.Mod.SpeedrunTool.SaveLoad.StateManager,SpeedrunTool");
-                if (StateManager == null)
-                {
-                    return;
-                }
-                StateManager_SaveState = StateManager.GetMethod(
-                    "SaveState", BindingFlags.NonPublic | BindingFlags.Instance,
-                    Type.DefaultBinder, new Type[] { typeof(bool) }, null);
-                StateManager_LoadState = StateManager.GetMethod(
-                    "LoadState", BindingFlags.NonPublic | BindingFlags.Instance,
-                    Type.DefaultBinder, new Type[] { typeof(bool) }, null);
-
-                TeleportRoomUtils = Type.GetType("Celeste.Mod.SpeedrunTool.TeleportRoom.TeleportRoomUtils,SpeedrunTool");
-                TeleportRoomUtils_TeleportTo = TeleportRoomUtils.GetMethod("TeleportTo", BindingFlags.NonPublic | BindingFlags.Static);
-
-
-                // Set up hooks
-                Hook_StateManager_SaveState = new Hook(StateManager_SaveState,
-                    typeof(SpeedrunToolIntegration).GetMethod("OnSaveState", BindingFlags.NonPublic | BindingFlags.Static));
-                Hook_StateManager_LoadState = new Hook(StateManager_LoadState,
-                    typeof(SpeedrunToolIntegration).GetMethod("OnLoadState", BindingFlags.NonPublic | BindingFlags.Static));
-                Hook_TeleportRoomUtils_TeleportTo = new Hook(TeleportRoomUtils_TeleportTo,
-                    typeof(SpeedrunToolIntegration).GetMethod("OnTeleportTo", BindingFlags.NonPublic | BindingFlags.Static));
-
-            }
-            catch (Exception) { }
+            typeof(SpeedrunToolImport).ModInterop();
+            SpeedrunToolInstalled = SpeedrunToolImport.IgnoreSaveState is not null;
+            AddSaveLoadAction();
+            Logger.Log(LogLevel.Info, "EndHelper/SpeedrunToolIntegration", $"initialise stuff perhaps. {SpeedrunToolInstalled}");
         }
 
         internal static void Unload()
         {
-            Hook_StateManager_SaveState?.Dispose();
-            Hook_StateManager_SaveState = null;
-            Hook_StateManager_LoadState?.Dispose();
-            Hook_StateManager_LoadState = null;
-            Hook_TeleportRoomUtils_TeleportTo?.Dispose();
-            Hook_TeleportRoomUtils_TeleportTo = null;
+            RemoveSaveLoadAction();
+        }
+
+        private static void AddSaveLoadAction()
+        {
+            if (!SpeedrunToolInstalled)
+            {
+                return;
+            }
+            Logger.Log(LogLevel.Info, "EndHelper/SpeedrunToolIntegration", $"hmmm");
+
+            action = SpeedrunToolImport.RegisterSaveLoadAction(
+                // Save State - Action<Dictionary<Type, Dictionary<string, object>>
+                (_, level) => {
+
+                },
+
+                // Load State - Action<Dictionary<Type, Dictionary<string, object>>, Level>
+                (_, level) => {
+
+                },
+
+                // Clear State - Action
+                null,
+
+                // Level before Save State - Action<Level>
+                null,
+
+                // Level before Load State - Action<Level>
+                (level) =>
+                {
+                    OnLoadState(level);
+                },
+
+                // preCloneEntities - Action
+                null
+            );
+        }
+
+        private static void RemoveSaveLoadAction()
+        {
+            if (SpeedrunToolInstalled)
+            {
+                SpeedrunToolImport.Unregister(action);
+            }
         }
 
 #pragma warning disable IDE0051  // Private method is unused
 
-        private static bool OnSaveState(Func<object, bool, bool> orig, object stateManager, bool tas)
-        {
-            bool result = orig(stateManager, tas);
 
-            return result;
-        }
-
-        private static bool OnLoadState(Func<object, bool, bool> orig, object stateManager, bool tas)
+        private static void OnLoadState(Level preloadLevel)
         {
             // +1 to death count =) unless prevented
-            Level preloadLevel = Monocle.Engine.Scene as Level;
-            //String reloadRoomName = preloadLevel.Session.LevelData.Name; //This is unused but if it ever gets used please make it work with segments
 
             if (preloadLevel.Tracker.GetEntity<Player>() is Player player && preloadLevel.Tracker.GetEntity<RoomStatisticsDisplayer>() is RoomStatisticsDisplayer roomStatDisplayer)
             {
@@ -109,19 +116,8 @@ namespace Celeste.Mod.EndHelper.Integration
                 }
             }
 
-            bool result = orig(stateManager, tas);
-
             EndHelperModule.timeSinceSessionReset = 0; // Call for reset
             lastSessionResetCause = SessionResetCause.LoadState;
-
-            return result;
         }
-
-        private static void OnTeleportTo(Action<Session, bool> orig, Session session, bool fromHistory)
-        {
-            //Logger.Log(LogLevel.Info, "EndHelper/SpeedrunToolIntegration", $"onteleport beofre");
-            orig(session, fromHistory);
-        }
-
     }
 }

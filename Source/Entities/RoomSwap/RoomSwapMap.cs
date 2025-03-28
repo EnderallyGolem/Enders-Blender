@@ -13,6 +13,7 @@ using static MonoMod.InlineRT.MonoModRule;
 using System.Threading.Tasks;
 using static Celeste.Mod.EndHelper.EndHelperModule;
 using System.Data.Common;
+using AsmResolver.PE.DotNet.ReadyToRun;
 
 
 
@@ -30,6 +31,8 @@ public class RoomSwapMap : Entity
     private SineWave sine;
 
     private EntityData entityData;
+    private Vector2 offset;
+    private Vector2 hudRenderPos;
 
     private Image backgroundTexture;
     private string currentRoomPosFileName;
@@ -49,14 +52,17 @@ public class RoomSwapMap : Entity
     private List<List<float>> iconAnimListCurrent;
     private List<List<string>> roomPosSuffixList;
 
+    private bool hudLayer;
+
     public RoomSwapMap(EntityData data, Vector2 offset) : base(data.Position + offset)
     {
-
         entityData = data;
+        this.offset = offset;
         gridID = data.Attr("gridId", "1");
         iconFilePrefix = entityData.Attr("mapIconFilePrefix");
         iconFilePrefixLevel = iconFilePrefix;
         animationSpeedMultiplier = entityData.Float("animationSpeedMultiplier", 0.1f);
+        hudLayer = data.Bool("hudLayer", false);
 
         //Add(RoomSwapModule.SpriteBank.Create("transitionController"));
         Collider = new Hitbox(16, 16, -8, -8);
@@ -70,7 +76,7 @@ public class RoomSwapMap : Entity
         sine = new SineWave(0.5f, MathF.PI / 2);
         Add(sine);
 
-        folderPath = trimPath(folderPath, "objects/EndHelper/RoomSwapMap");
+        folderPath = EndHelperModule.TrimPath(folderPath, "objects/EndHelper/RoomSwapMap");
     }
 
     public override void Update()
@@ -95,6 +101,14 @@ public class RoomSwapMap : Entity
         backgroundTexture.Scale = scale;
         mapWidth = backgroundTexture.Width * scale.X;
         mapHeight = backgroundTexture.Height * scale.Y;
+
+        if (hudLayer)
+        {
+            AddTag(Tags.HUD);
+            AddTag(Tags.TransitionUpdate);
+            backgroundTexture.Scale *= 6;
+            backgroundTexture.RenderPosition = hudRenderPos;
+        }
         backgroundTexture.Position -= new Vector2(mapWidth / 2, mapHeight / 2);
 
         //Current Location Indicator
@@ -105,6 +119,11 @@ public class RoomSwapMap : Entity
         {
             currentRoomPos = GetPosFromRoomName(currentRoomName);
             string currentRoomPosSuffix = $"{currentRoomPos[0].ToString()}{currentRoomPos[1].ToString()}";
+        }
+
+        if (hudLayer)
+        {
+            
         }
     }
 
@@ -126,6 +145,23 @@ public class RoomSwapMap : Entity
 
     public override void Render()
     {
+        if (hudLayer)
+        {
+            Camera camera = SceneAs<Level>().Camera;
+            hudRenderPos = new Vector2((entityData.Position.X - (camera.X - offset.X)) * 6f, (entityData.Position.Y - (camera.Y - offset.Y)) * 6f);
+            hudRenderPos += new Vector2(0, sine.Value * entityData.Float("floatAmplitude", 0.1f) * 180f);
+
+            backgroundTexture.RenderPosition = hudRenderPos;
+            backgroundTexture.RenderPosition -= new Vector2(mapWidth / 2, mapHeight / 2) * 6;
+
+            if (currentRoomImage != null)
+            {
+                currentRoomImage.RenderPosition = hudRenderPos;
+                currentRoomImage.RenderPosition -= new Vector2(mapWidth / 2, mapHeight / 2) * 6;
+                currentRoomImage.RenderPosition += new Vector2(iconWidthDivide * currentRoomPos[1], iconHeightDivide * currentRoomPos[0]) * 6;
+            }
+        }
+
         if (EndHelperModule.Session.roomSwapOrderList.ContainsKey(gridID) && EndHelperModule.Session.roomTransitionTime.ContainsKey(gridID))
         {
             //Logger.Log(LogLevel.Info, "EndHelper/RoomSwap/TransitionMap", $"refreshNextRenderCycle {refreshNextRenderCycle}");
@@ -136,7 +172,6 @@ public class RoomSwapMap : Entity
 
                 //Background Image
                 Add(backgroundTexture);
-
 
                 roomSwapOrderList = EndHelperModule.Session.roomSwapOrderList[gridID];
                 iconWidthDivide = mapWidth / (EndHelperModule.Session.roomSwapColumn[gridID] + 1);
@@ -165,7 +200,7 @@ public class RoomSwapMap : Entity
 
                         //Try get folderpath/iconprefix_XY_# then see how many # are there
 
-                        //if can't,get folderpath/iconprefix_XY
+                        //if can't, get folderpath/iconprefix_XY
 
                         int frameIndex = -1;
                         MTexture iconTexture;
@@ -199,6 +234,14 @@ public class RoomSwapMap : Entity
                         iconImage.Position += new Vector2(iconWidthDivide * col, iconHeightDivide * row);
                         Add(iconImage);
 
+                        if (hudLayer)
+                        {
+                            iconImage.Scale *= 6f;
+                            iconImage.RenderPosition = hudRenderPos;
+                            iconImage.RenderPosition -= new Vector2(mapWidth / 2, mapHeight / 2) * 6;
+                            iconImage.RenderPosition += new Vector2(iconWidthDivide * col, iconHeightDivide * row) * 6;
+                        }
+
                         iconAnimListRow.Add(frameIndex);
                         iconAnimListCurrentRow.Add(0);
                         roomPosSuffixListRow.Add(roomPosSuffix);
@@ -218,6 +261,12 @@ public class RoomSwapMap : Entity
                     currentRoomImage.CenterOrigin();
                     currentRoomImage.Position -= new Vector2(mapWidth / 2, mapHeight / 2);
                     currentRoomImage.Position += new Vector2(iconWidthDivide * currentRoomPos[1], iconHeightDivide * currentRoomPos[0]);
+
+                    if (hudLayer)
+                    {
+                        currentRoomImage.Scale *= 6f;
+                    }
+
                     Add(currentRoomImage);
                 }
                 refreshNextRenderCycle = false;
@@ -273,7 +322,15 @@ public class RoomSwapMap : Entity
 
                         //Move them so they're evenly spaced
                         iconImage.Position += new Vector2(iconWidthDivide * col, iconHeightDivide * row);
+
                         Add(iconImage);
+                        if (hudLayer)
+                        {
+                            iconImage.Scale *= 6f;
+                            iconImage.RenderPosition = hudRenderPos;
+                            iconImage.RenderPosition -= new Vector2(mapWidth / 2, mapHeight / 2) * 6;
+                            iconImage.RenderPosition += new Vector2(iconWidthDivide * col, iconHeightDivide * row) * 6;
+                        }
                     }
                 }
 
@@ -285,19 +342,5 @@ public class RoomSwapMap : Entity
             }
         }
         base.Render();
-    }
-
-    private string trimPath(string path, string defaultPath)
-    {
-        if (path == "") { path = defaultPath; }
-        while (path.StartsWith("objects") == false)
-        {
-            path = path.Substring(path.IndexOf('/') + 1);
-        }
-        if (path.IndexOf(".") > -1)
-        {
-            path = path.Substring(0, path.IndexOf("."));
-        }
-        return path;
     }
 }

@@ -11,14 +11,20 @@ entities.EndHelper/TileEntity.attributes.description.allowMerge=Allows the tiles
 entities.EndHelper/TileEntity.attributes.description.allowMergeDifferentType=Allows DIFFERENT tiles to connect to each other.\nBoth tile entities must have this and Allow Merge enabled for them to connect.\nNote: Groups of multiple tiles sometimes only connect to those with this enabled (depending on connection order),\neven if the part of the group share the same time.
 entities.EndHelper/TileEntity.attributes.description.noEdge=If true, the tiles will have no edge (all parts look like the middle of the tile).\nNote: When merged, as long as one of the parts have this enabled, \nthe full block will act as though this is enabled.
 entities.EndHelper/TileEntity.attributes.description.locationSeeded=If true, the tile's seed will depend on its position relative to the room (and width and height).\nThus the randomisation will stay consistent upon room swaps,\nor if teleporting to a room with the tile entity in the same location.
-entities.EndHelper/TileEntity.attributes.description.offU=The offscreen tiletype will be used if it extends offscreen to the top
-entities.EndHelper/TileEntity.attributes.description.offUR=The offscreen tiletype will be used if it extends offscreen to the top right
-entities.EndHelper/TileEntity.attributes.description.offR=The offscreen tiletype will be used if it extends offscreen to the right
-entities.EndHelper/TileEntity.attributes.description.offDR=The offscreen tiletype will be used if it extends offscreen to the bottom right
-entities.EndHelper/TileEntity.attributes.description.offD=The offscreen tiletype will be used if it extends offscreen to the bottom
-entities.EndHelper/TileEntity.attributes.description.offDL=The offscreen tiletype will be used if it extends offscreen to the bottom left
-entities.EndHelper/TileEntity.attributes.description.offL=The offscreen tiletype will be used if it extends offscreen to the left
-entities.EndHelper/TileEntity.attributes.description.offUL=The offscreen tiletype will be used if it extends offscreen to the top left
+entities.EndHelper/TileEntity.attributes.description.surfaceSoundIndex=Overrides the surfaceSoundIndex (sfx when stepping on the block).\nSet to -1 to use default value.
+entities.EndHelper/TileEntity.attributes.description.dashBlock=Turns the Tile Entity into a Dash Block (broken when dashed into).\nDash Blocks will not connect with non-Dash Blocks!
+entities.EndHelper/TileEntity.attributes.description.dashBlockPermament=For Dash Blocks: If the block stays broken after room reload.\nIf connected blocks are partially permament and partially not,\nonly the non-permament parts will reappear on reload.
+entities.EndHelper/TileEntity.attributes.description.dashBlockBreakSound=For Dash Blocks: Sound event which plays when broken.\nIf connected, the sound will depend on which segment was broken.
+entities.EndHelper/TileEntity.attributes.description.offU=The offscreen tiletype will be used if it extends offscreen to the top.
+entities.EndHelper/TileEntity.attributes.description.offUR=The offscreen tiletype will be used if it extends offscreen to the top right.
+entities.EndHelper/TileEntity.attributes.description.offR=The offscreen tiletype will be used if it extends offscreen to the right.
+entities.EndHelper/TileEntity.attributes.description.offDR=The offscreen tiletype will be used if it extends offscreen to the bottom right.
+entities.EndHelper/TileEntity.attributes.description.offD=The offscreen tiletype will be used if it extends offscreen to the bottom.
+entities.EndHelper/TileEntity.attributes.description.offDL=The offscreen tiletype will be used if it extends offscreen to the bottom left.
+entities.EndHelper/TileEntity.attributes.description.offL=The offscreen tiletype will be used if it extends offscreen to the left.
+entities.EndHelper/TileEntity.attributes.description.offUL=The offscreen tiletype will be used if it extends offscreen to the top left.
+
+
 
 
 # Multiroom Watchtower
@@ -32,17 +38,45 @@ triggers.EndHelper/CassetteManagerTrigger.placements.name.normal=Cassette Manage
 triggers.EndHelper/CassetteManagerTrigger.placements.description.normal=Lets you create cassette music with changing tempo,\nor force a cassette theme to move to a certain beat.
 triggers.EndHelper/CassetteManagerTrigger.attributes.description.wonkyCassettes=If this should work for Wonky Cassettes (Quantum Mechanics mod) rather than vanilla cassettes.\nThese only affect the main cassette controller.
 triggers.EndHelper/CassetteManagerTrigger.attributes.description.showDebugInfo=If enabled, displays debug info regarding current beat/bar/etc
-triggers.EndHelper/CassetteManagerTrigger.attributes.description.multiplyTempoAtBeat=For music with varying tempo. takes in [beatNum]|[TempoMultiplier] separated by commas.\nEtc: 1|1,16|2,40|1.5 plays normal speed on beats 0-15, x2 speed on beats 16-49, x1.5 speed on beats 40+.\nMultiplier of 0 freezes the track, negative numbers reset to x1.
+triggers.EndHelper/CassetteManagerTrigger.attributes.description.multiplyTempoEnterRoom=Sets tempo multipliers when entering room, for music with varying tempo. takes in [beatNum]|[TempoMultiplier] separated by commas.\nEtc: 1|1,16|2,40|1.5 plays normal speed on beats 0-15, x2 speed on beats 16-49, x1.5 speed on beats 40+.\nMultiplier of 0 freezes the track, negative numbers reset to x1.
+triggers.EndHelper/CassetteManagerTrigger.attributes.description.multiplyTempoOnEnter=Sets tempo multipliers when entering the trigger, for music with varying tempo. takes in [beatNum]|[TempoMultiplier] separated by commas.\nEtc: 1|1,16|2,40|1.5 plays normal speed on beats 0-15, x2 speed on beats 16-49, x1.5 speed on beats 40+.\nMultiplier of 0 freezes the track, negative numbers reset to x1.\nNote: If Multiply Tempo Existing is checked, the tempo will only actually change when the specified beats are reached.
+triggers.EndHelper/CassetteManagerTrigger.attributes.description.multiplyTempoInside=Sets tempo multipliers when inside the trigger, for music with varying tempo. takes in [beatNum]|[TempoMultiplier] separated by commas.\nEtc: 1|1,16|2,40|1.5 plays normal speed on beats 0-15, x2 speed on beats 16-49, x1.5 speed on beats 40+.\nMultiplier of 0 freezes the track, negative numbers reset to x1.\nNote: If Multiply Tempo Existing is checked, the tempo will only actually change when the specified beats are reached.
+triggers.EndHelper/CassetteManagerTrigger.attributes.description.multiplyTempoOnLeave=Sets tempo multipliers when exiting the trigger, for music with varying tempo. takes in [beatNum]|[TempoMultiplier] separated by commas.\nEtc: 1|1,16|2,40|1.5 plays normal speed on beats 0-15, x2 speed on beats 16-49, x1.5 speed on beats 40+.\nMultiplier of 0 freezes the track, negative numbers reset to x1.\nNote: If Multiply Tempo Existing is checked, the tempo will only actually change when the specified beats are reached.
 triggers.EndHelper/CassetteManagerTrigger.attributes.description.multiplyTempoExisting=If enabled, Multiply Tempo At Beat does not set the multiplier, but multiplies the existing one.\nEg: 1|1,16|2,40|1.5 plays x1 speed from beat 0-15, x2 speed on beats 16-49, x3 speed on frames 40+.\nIf not reset (with a negative number), this can infinitely increase in speed between loops.
-triggers.EndHelper/CassetteManagerTrigger.attributes.description.multiplyTempoOnEnter=If enabled, tempo multipliers will only be set when entering THE TRIGGER. If disabled, tempo is set upon ENTERING ROOM.\nNote: If Multiply Tempo Existing is checked, the tempo will only actually change when the specified beats are reached.
+triggers.EndHelper/CassetteManagerTrigger.attributes.description.setBeatEnterRoom=Starts playing the music at this beat of the track upon entering the room, if within the Set Only If Beat range.\nTo disable, set to larger than maximum beat count.
 triggers.EndHelper/CassetteManagerTrigger.attributes.description.setBeatOnEnter=Starts playing the music at this beat of the track upon entering the trigger, if within the Set Only If Beat range.\nTo disable, set to larger than maximum beat count.
 triggers.EndHelper/CassetteManagerTrigger.attributes.description.setBeatOnLeave=Starts playing the music at this beat of the track upon leaving the trigger, if within the Set Only If Beat range.\nTo disable, set to larger than maximum beat count.
 triggers.EndHelper/CassetteManagerTrigger.attributes.description.setBeatInside=Starts playing the music at this beat of the track while in the trigger, if within the Set Only If Beat range.\nThis should be set outside the Set Only If Beat range.\nCan be used to create smaller loops!.\nTo disable, set to larger than maximum beat count.
-triggers.EndHelper/CassetteManagerTrigger.attributes.description.setBeatOnlyIfAbove=Set Beat On/Inside will only function when the current beat is above or equal to this number.\nNegative numbers = Leading beats.
-triggers.EndHelper/CassetteManagerTrigger.attributes.description.setBeatOnlyIfUnder=Set Beat On/Inside will only function when the current beat is below or equal to this number.\nNegative numbers = Leading beats.
-triggers.EndHelper/CassetteManagerTrigger.attributes.description.doNotSetIfWithinRange=Do not change the beat if doing so will change the beat index by X beats.\nFor instance, if this is set to 3, and you want to set the beat to 10, the beat won't change if the current beat is between 8 to 12.\nThis can be used to set the beat to a value only if the current beat is far off from that value.\nNegative values will invert this (-3 means only change if current beat is within 3 beats of to-set beat.)
-triggers.EndHelper/CassetteManagerTrigger.attributes.description.addInsteadOfSet=Offsets the current beat index by a value rather than setting it to that value
+triggers.EndHelper/CassetteManagerTrigger.attributes.description.setBeatOnlyIfAbove=Set Beat On/Inside will only function when the current beat is above or equal to this number.\nNegative numbers = Leading beats.\nIf larger than Set Beat Only If Under, beat will be set if either condition is fulfilled, otherwise both must be fulfilled.
+triggers.EndHelper/CassetteManagerTrigger.attributes.description.setBeatOnlyIfUnder=Set Beat On/Inside will only function when the current beat is below or equal to this number.\nNegative numbers = Leading beats.\nIf smaller than Set Beat Only If Above, beat will be set if either condition is fulfilled, otherwise both must be fulfilled.
+triggers.EndHelper/CassetteManagerTrigger.attributes.description.doNotSetIfWithinRange=Do not change the beat if doing so will change the beat index by X beats.\nFor instance, if this is set to 3, and you want to set the beat to 10, the beat won't change if the current beat is between 8 to 12.\nThis can be used to set the beat to a value only if the current beat is far off from that value.\nNegative values will invert this. (-3 means only change if current beat is within 3 beats of to-set beat.)
+triggers.EndHelper/CassetteManagerTrigger.attributes.description.addInsteadOfSet=Offsets the current beat index by a value rather than setting it to that value.
+triggers.EndHelper/CassetteManagerTrigger.attributes.description.removeImmediately=Trigger is removed after a few frames.\nMeant to be placed at respawn points to only set beat if the player respawns there.
+triggers.EndHelper/CassetteManagerTrigger.attributes.description.setBeatResetCassettePos=If enabled, when setting a beat, reset cassette blocks to their initial position.\nThis prevents cassette raising upon changing beats, but prevents you from moving the cassette block without issues.
+triggers.EndHelper/CassetteManagerTrigger.attributes.description.requireFlag=If specified, the tempo and beat will only be set/changed if this flag is enabled.
 
+# Cassette Beat Block
+entities.EndHelper/CassetteBeatGate.placements.name.normal=Cassette Beat Block
+entities.EndHelper/CassetteBeatGate.placements.name.blue=Cassette Beat Block (Blue)
+entities.EndHelper/CassetteBeatGate.placements.name.red=Cassette Beat Block (Red)
+entities.EndHelper/CassetteBeatGate.placements.name.yellow=Cassette Beat Block (Yellow)
+entities.EndHelper/CassetteBeatGate.placements.name.green=Cassette Beat Block (Green)
+entities.EndHelper/CassetteBeatGate.placements.description.normal=Multi-noded Block that moves in time with cassette beats.
+entities.EndHelper/CassetteBeatGate.attributes.description.moveTime=The time it takes for the block to move between each node, in seconds.
+entities.EndHelper/CassetteBeatGate.attributes.description.texturePath=9-slice texture used for the block (Size = 24x24, use switchgates as reference).\nMake sure it is under Graphics\Atlases\Gameplay\objects
+entities.EndHelper/CassetteBeatGate.attributes.description.moveSound=The SFX played when the block begins moving.
+entities.EndHelper/CassetteBeatGate.attributes.description.moveLoopBeat=The beats in a full loop which the block will move.\nFormat is [beatNum]|[nodeNum] separated by commas.\nEg: 20|0,40|1,60|2,80|3\nIf this occurs at the same time as a cycle beat movement, this runs second.
+entities.EndHelper/CassetteBeatGate.attributes.description.moveCycleBeat=The beats within each cycle in which the block will move.\nFormat is [beatNum]|[nodeNum] separated by commas.\nEg: 0|0,8|1,16|2,24|3
+entities.EndHelper/CassetteBeatGate.attributes.description.firstNode=The block will immediately and instantly move to this node when the room loads.\nIf using Entity Mover, you can use this to put the block and entities you want to move off-screen,\nthen immediately shift them to the location you want them to start at.
+entities.EndHelper/CassetteBeatGate.attributes.description.entityMover=The block won't be solid, but instead be an invisible zone that moves any entity (fully) inside it when the room is loaded apart from other Cassette Beat Blocks.\nThis includes stuff like triggers, decals, and the player.
+entities.EndHelper/CassetteBeatGate.attributes.description.entityMoverPlatformOnly=If Entity Mover is enabled, restricts movement to only move the Platforms class.
+entities.EndHelper/CassetteBeatGate.attributes.description.surfaceSoundIndex=Overrides the surfaceSoundIndex (sfx when stepping on the block).\nSet to -1 to use default value.
+entities.EndHelper/CassetteBeatGate.attributes.description.particleColour1=1st particle colour emitted when the block moves.
+entities.EndHelper/CassetteBeatGate.attributes.description.particleColour2=2nd particle colour emitted when the block moves.
+entities.EndHelper/CassetteBeatGate.attributes.description.particleColour2=2nd particle colour emitted when the block moves.
+entities.EndHelper/CassetteBeatGate.attributes.description.changeInsteadOfSet=If Move Loop Beat and Move Cycle Beats should specify change in node number, rather than setting it.\nFormat is changed to [beatNum]|[Change in nodeNum], negative changes means go to previous node.
+entities.EndHelper/CassetteBeatGate.attributes.description.loopNodes=If going above the highest node loops you back to the first node (and vice versa), rather than capping there.
+entities.EndHelper/CassetteBeatGate.attributes.description.requireFlag=If specified, the block will only move if this flag is enabled.
 
 
 
@@ -53,13 +87,13 @@ triggers.EndHelper/CassetteManagerTrigger.attributes.description.addInsteadOfSet
 entities.EndHelper/RoomSwapController.placements.name.normal=Room-Swap Controller
 entities.EndHelper/RoomSwapController.placements.description.normal=Informs the level on how many rows/cols to swap.\nThis should be loaded once before entering any swap-zones (load it at the start of the map, or global load it).\nThe zones DO NOT swap FG/BG tiles.\nRoom-Swap Respawn Force Same Room Triggers should be added in each template room for respawn points to work properly, and Room-Swap Change Respawn Triggers should be used in place of the regular ones.\nCollectables/Gates/etc don't properly save between swaps (are room dependent) so don't use them!
 entities.EndHelper/RoomSwapController.attributes.description.gridId=The identifier (any string) for this set of moveable grid. One Room-Swap controller sets information for 1 moveable grid.
-entities.EndHelper/RoomSwapController.attributes.description.totalRows=The total number of rows in the moveable grid
-entities.EndHelper/RoomSwapController.attributes.description.totalColumns=The total number of columns in the moveable grid
+entities.EndHelper/RoomSwapController.attributes.description.totalRows=The total number of rows in the moveable grid.
+entities.EndHelper/RoomSwapController.attributes.description.totalColumns=The total number of columns in the moveable grid.
 entities.EndHelper/RoomSwapController.attributes.description.swapRoomNamePrefix=Rooms with {prefix}{row}{col} will have their room layout changed. Eg: swap11
 entities.EndHelper/RoomSwapController.attributes.description.templateRoomNamePrefix=Room layouts will be based off rooms with the name {prefix}{row}{col}. Eg: template11
-entities.EndHelper/RoomSwapController.attributes.description.roomTransitionTime=Time (in seconds) room transitions will take when the room you're in is moved
-entities.EndHelper/RoomSwapController.attributes.description.activateSoundEvent1=Sound event that plays when room changing occurs
-entities.EndHelper/RoomSwapController.attributes.description.activateSoundEvent2=2nd Sound event that plays when room changing occurs
+entities.EndHelper/RoomSwapController.attributes.description.roomTransitionTime=Time (in seconds) room transitions will take when the room you're in is moved.
+entities.EndHelper/RoomSwapController.attributes.description.activateSoundEvent1=Sound event that plays when room changing occurs.
+entities.EndHelper/RoomSwapController.attributes.description.activateSoundEvent2=2nd Sound event that plays when room changing occurs.
 
 # RoomSwap Breaker Box
 entities.EndHelper/RoomSwapBox.placements.name.normal=Room-Swap Breaker Box
@@ -69,10 +103,10 @@ entities.EndHelper/RoomSwapBox.attributes.description.modificationTypeLeft=Room 
 entities.EndHelper/RoomSwapBox.attributes.description.modificationTypeRight=Room order modification when box is hit from the right.\nFor Set To Order, the format is _{row1}{col1}_{row2}{col2}_{row3}{col3}_... from left to right, top down.
 entities.EndHelper/RoomSwapBox.attributes.description.modificationTypeUp=Room order modification when box is hit from the top.\nFor Set To Order, the format is _{row1}{col1}_{row2}{col2}_{row3}{col3}_... from left to right, top down.
 entities.EndHelper/RoomSwapBox.attributes.description.modificationTypeDown=Room order modification when box is hit from the bottom.\nFor Set To Order, the format is _{row1}{col1}_{row2}{col2}_{row3}{col3}_... from left to right, top down.
-entities.EndHelper/RoomSwapBox.attributes.description.particleColour1=1st particle colour emitted when box is hit
-entities.EndHelper/RoomSwapBox.attributes.description.particleColour2=2nd particle colour emitted when box is hit
+entities.EndHelper/RoomSwapBox.attributes.description.particleColour1=1st particle colour emitted when box is hit.
+entities.EndHelper/RoomSwapBox.attributes.description.particleColour2=2nd particle colour emitted when box is hit.
 entities.EndHelper/RoomSwapBox.attributes.description.texturePath=Texture used for the box (Recommended size = 32x32).\nMake sure it is under Graphics\Atlases\Gameplay\objects\nIf blank, default textures are chosen depending on Left modification type.\nPut "heart" for heart texture.
-entities.EndHelper/RoomSwapBox.attributes.description.flagCheck=If not empty, the trigger only activates if this flag is set (or unset)
+entities.EndHelper/RoomSwapBox.attributes.description.flagCheck=If not empty, the trigger only activates if this flag is set (or unset).
 entities.EndHelper/RoomSwapBox.attributes.description.flagRequire=True means flag must be set for trigger to activate.\nFalse means flag must be unset for trigger to activate.
 entities.EndHelper/RoomSwapBox.attributes.description.flagToggle=If true, the flag's state (set or unset) will be changed when the trigger activates.
 entities.EndHelper/RoomSwapBox.attributes.description.flashEffect=Flashes the screen when room modification occurs.
@@ -82,13 +116,14 @@ entities.EndHelper/RoomSwapBox.attributes.description.preset=Sets the Modificati
 entities.EndHelper/RoomSwapMap.placements.name.normal=Room-Swap Map
 entities.EndHelper/RoomSwapMap.placements.description.normal=A dynamically changing map that shows the current room order.\nYou can check for a specific arrangement with the flag\n{Swap Room Name Prefix}_{row1}{col1}_{row2}{col2}_{row3}{col3}_...\nfrom left to right, top down. Eg: swap_11_12_13_21_22_23_31_32_33
 entities.EndHelper/RoomSwapMap.attributes.description.gridId=The identifier for the moveable grid this map displays.
-entities.EndHelper/RoomSwapMap.attributes.description.scale=Factor that the map is scaled by
-entities.EndHelper/RoomSwapMap.attributes.description.floatAmplitude=Factor to scale the floatingness by
+entities.EndHelper/RoomSwapMap.attributes.description.scale=Factor that the map is scaled by.
+entities.EndHelper/RoomSwapMap.attributes.description.floatAmplitude=Factor to scale the floatingness by.
 entities.EndHelper/RoomSwapMap.attributes.description.folderPath=Folder that all the files for the map will be in.\nMake sure it is under Graphics\Atlases\Gameplay\objects
 entities.EndHelper/RoomSwapMap.attributes.description.mapBackgroundFileName=The name of the file in the folder path used for the map's background.\nMap size will be dependent on size of this image.
 entities.EndHelper/RoomSwapMap.attributes.description.mapCurrentPosFileName=The name of the file in the folder path used to show the current location.\nKeep it the same/slightly larger than the icon image!\nEmpty = No current position higlight.
 entities.EndHelper/RoomSwapMap.attributes.description.mapIconFilePrefix=The PREFIX of the file in the folder path used for the map's icons.\nIcon size will be dependent on size of this image.\nEg: For prefix="icon_" the file name for row 2 col 3 room is "icon_23".
 entities.EndHelper/RoomSwapMap.attributes.description.animationSpeedMultiplier=Change the rate animated map icons animate.\nYou can turn any icon into an animated icon by adding _{integer} to the end of it, starting from 0.\nEg: icon_23_0, icon_23_1, icon_23_2 for 3 frames of animation.\nNegative multipliers make the animation play backwards.
+entities.EndHelper/RoomSwapMap.attributes.description.hudLayer=Causes the map to display on the HUD layer.\nThis means that it can be scaled down without looking pixelated, but\nwill contain some artifacts like always rendering in front of the player\nand not being darkened when paused.
 
 # RoomSwap MapUpgrade
 entities.EndHelper/RoomSwapMapUpgrade.placements.name.normal=Room-Swap Map Upgrade
@@ -98,7 +133,7 @@ entities.EndHelper/RoomSwapMapUpgrade.attributes.description.texturePath=Texture
 entities.EndHelper/RoomSwapMapUpgrade.attributes.description.floatAmplitude=Factor to scale the floatingness by
 entities.EndHelper/RoomSwapMapUpgrade.attributes.description.changeLevel=Number to increase the map level by. Levels are positive integers or 0.
 entities.EndHelper/RoomSwapMapUpgrade.attributes.description.setLevel=If ticked, sets the level to a value (0 or positive integer) insteads of increasing it.
-entities.EndHelper/RoomSwapMapUpgrade.attributes.description.obtainSoundEvent=Sound event that plays when the map is obtained
+entities.EndHelper/RoomSwapMapUpgrade.attributes.description.obtainSoundEvent=Sound event that plays when the map is obtained.
 entities.EndHelper/RoomSwapMapUpgrade.attributes.description.oneTime=If ticked, the map permamently disappears when obtained.\nOtherwise, it respawns when the room is re-entered.
 
 
@@ -109,7 +144,7 @@ triggers.EndHelper/RoomSwapModifyRoomTrigger.placements.description.normal=Trigg
 triggers.EndHelper/RoomSwapModifyRoomTrigger.attributes.description.gridId=The identifier for the moveable grid this trigger affects.
 triggers.EndHelper/RoomSwapModifyRoomTrigger.attributes.description.modificationType=How does entering this trigger affect the room order?\nFor Set To Order, the format is _{row1}{col1}_{row2}{col2}_{row3}{col3}_... from left to right, top down.
 triggers.EndHelper/RoomSwapModifyRoomTrigger.attributes.description.modifySilently=Modify without any sound/visual effects.
-triggers.EndHelper/RoomSwapModifyRoomTrigger.attributes.description.flagCheck=If not empty, the trigger only activates if this flag is set (or unset)
+triggers.EndHelper/RoomSwapModifyRoomTrigger.attributes.description.flagCheck=If not empty, the trigger only activates if this flag is set (or unset).
 triggers.EndHelper/RoomSwapModifyRoomTrigger.attributes.description.flagRequire=True means flag must be set for trigger to activate.\nFalse means flag must be unset for trigger to activate.
 triggers.EndHelper/RoomSwapModifyRoomTrigger.attributes.description.flagToggle=If true, the flag's state (set or unset) will be changed when the trigger activates.
 triggers.EndHelper/RoomSwapModifyRoomTrigger.attributes.description.flashEffect=Flashes the screen when room modification occurs.
@@ -122,3 +157,4 @@ triggers.EndHelper/RoomSwapRespawnForceSameRoomTrigger.attributes.description.on
 # RoomSwap Change Respawn Trigger
 triggers.EndHelper/RoomSwapChangeRespawnTrigger.placements.name.normal=Room-Swap Change Respawn Trigger
 triggers.EndHelper/RoomSwapChangeRespawnTrigger.placements.description.normal=Change respawn trigger that rechecks for spawnpoints when the player enters.\nThis ensures the trigger sets the correct spawnpoint, even when it is moved.
+triggers.EndHelper/RoomSwapChangeRespawnTrigger.attributes.description.checkSolid=If disabled, avoids checking if the respawn point is available before setting the respawn point to there.
