@@ -6,10 +6,18 @@ namespace Celeste.Mod.EndHelper;
 
 [SettingName("EndHelper_Settings")]
 public class EndHelperModuleSettings : EverestModuleSettings {
+
+    [SettingSubHeader("modoptions_EndHelperModule_SubHeader_RoomStat")]
     public ButtonBinding OpenStatDisplayMenu { get; set; }
-    public ButtonBinding QuickRetry { get; set; }
-    public ButtonBinding FreeMultiroomWatchtower { get; set; }
+
+    [SettingSubHeader("modoptions_EndHelperModule_SubHeader_GameplayTweaks")]
     public ButtonBinding ToggleGrab { get; set; }
+
+    public ButtonBinding NeutralDrop { get; set; }
+
+    [SettingSubHeader("modoptions_EndHelperModule_SubHeader_QOLTweaks")]
+    public ButtonBinding QuickRetry { get; set; }[SettingSubText("modoptions_EndHelperModule_DisableFrequentScreenShake_Desc")]
+    public ButtonBinding FreeMultiroomWatchtower { get; set; }
 
 
     // Room Statistics Menu
@@ -25,6 +33,8 @@ public class EndHelperModuleSettings : EverestModuleSettings {
         [SettingSubText("modoptions_EndHelperModule_DeathIgnoreLoadAfterDeath_Desc")]
         public bool DeathIgnoreLoadAfterDeath { get; set; } = false;
 
+        [SettingSubText("modoptions_EndHelperModule_MenuShowFirstClear_Desc")]
+        public bool MenuShowFirstClear { get; set; } = false;
 
         [SettingSubText("modoptions_EndHelperModule_MenuMulticolor_Desc")]
         public bool MenuMulticolor { get; set; } = true;
@@ -32,9 +42,9 @@ public class EndHelperModuleSettings : EverestModuleSettings {
         [SettingSubText("modoptions_EndHelperModule_MenuSpoilBerries_Desc")]
         public bool MenuSpoilBerries { get; set; } = false;
 
-        [SettingSubText("modoptions_EndHelperModule_MenuCustomNameStorageCount_Desc")]
-        [SettingRange(min: 0, max: 100, largeRange: true)]
-        public int MenuCustomNameStorageCount { get; set; } = 10;
+        [SettingSubText("modoptions_EndHelperModule_MenuTrackerStorageCount_Desc")]
+        [SettingRange(min: -1, max: 10000, largeRange: true)]
+        public int MenuTrackerStorageCount { get; set; } = -1;
     }
 
     // Room Statistics Display
@@ -44,8 +54,15 @@ public class EndHelperModuleSettings : EverestModuleSettings {
         public bool ShowRoomName { get; set; } = false;
         public bool ShowDeaths { get; set; } = false;
         public bool ShowTimeSpent { get; set; } = false;
+
         [SettingSubText("modoptions_EndHelperModule_ShowStrawberries_Desc")]
         public bool ShowStrawberries { get; set; } = false;
+
+        [SettingSubText("modoptions_EndHelperModule_ShowAliveTime_Desc")]
+        public bool ShowAliveTime { get; set; } = false;
+
+        [SettingSubText("modoptions_EndHelperModule_HideIfGolden_Desc")]
+        public bool HideIfGolden { get; set; } = false;
 
         // offset xy and scale
         public enum Justification { Left, Center, Right }
@@ -88,22 +105,47 @@ public class EndHelperModuleSettings : EverestModuleSettings {
         public ToggleGrabBehaviourEnum toggleGrabBehaviour { get; set; }
     }
 
+    [SettingSubMenu]
+    public class GameplayTweaks
+    {
+        public enum ConvertDemoEnum { Disabled, EnabledNormal, EnabledDiagonal }
+        [DefaultValue(ConvertDemoEnum.Disabled)]
+        [SettingSubText("modoptions_EndHelperModule_ConvertDemo_Desc")]
+        public ConvertDemoEnum ConvertDemo { get; set; }
+    }
+
+    [SettingSubMenu]
+    public class QOLTweaks
+    {
+        [SettingSubText("modoptions_EndHelperModule_DisableQuickRestart_Desc")]
+        public bool DisableQuickRestart { get; set; } = false;
+
+        [SettingSubText("modoptions_EndHelperModule_DisableFrequentScreenShake_Desc")]
+        public bool DisableFrequentScreenShake { get; set; } = false;
+
+        public enum PreventAccidentalQuitEnum { Disabled, TimeSmall, TimeHalf, Time1, Time1Half, Time2, Time3 }
+        [DefaultValue(PreventAccidentalQuitEnum.Disabled)]
+        [SettingSubText("modoptions_EndHelperModule_PreventAccidentalQuit_Desc")]
+        public PreventAccidentalQuitEnum PreventAccidentalQuit { get; set; }
+    }
+
 
     // The settings
     public enum LevelPauseScenarioEnum { None, Pause, AFK, PauseAFK }
     [DefaultValue(LevelPauseScenarioEnum.None)]
+    //[SettingSubHeader("modoptions_EndHelperModule_SubHeader_Misc")]
     [SettingSubText("modoptions_EndHelperModule_PauseOptionLevel_Desc")]
     public LevelPauseScenarioEnum PauseOptionLevel { get; set; }
 
-    [SettingSubText("modoptions_EndHelperModule_DisableQuickRestart_Desc")]
-    public bool DisableQuickRestart { get; set; } = false;
 
-    public enum ConvertDemoEnum { Disabled, EnabledNormal, EnabledDiagonal }
-    [DefaultValue(ConvertDemoEnum.Disabled)]
-    [SettingSubText("modoptions_EndHelperModule_ConvertDemo_Desc")]
-    public ConvertDemoEnum convertDemo { get; set; }
-
+    [SettingSubHeader("modoptions_EndHelperModule_SubHeader_RoomStat")]
     public RoomStatMenuSubMenu RoomStatMenu { get; set; } = new();
     public RoomStatDisplaySubMenu RoomStatDisplayMenu { get; set; } = new();
+
+    [SettingSubHeader("modoptions_EndHelperModule_SubHeader_GameplayTweaks")]
     public ToggleGrabSubMenu ToggleGrabMenu { get; set; } = new();
+    public GameplayTweaks GameplayTweaksMenu { get; set; } = new();
+
+    [SettingSubHeader("modoptions_EndHelperModule_SubHeader_QOLTweaks")]
+    public QOLTweaks QOLTweaksMenu { get; set; } = new();
 }

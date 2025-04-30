@@ -7,7 +7,7 @@ local roomSwapController = {
             name = "normal",
             data = {
                 gridId = "1",
-                
+
                 totalRows = 0,
                 totalColumns = 0,
                 swapRoomNamePrefix = "swap",

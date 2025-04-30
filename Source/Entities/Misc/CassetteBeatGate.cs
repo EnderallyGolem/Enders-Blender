@@ -13,6 +13,7 @@ using Celeste.Mod.EndHelper.Integration;
 using Celeste.Mod.QuantumMechanics.Entities;
 using MonoMod.Utils;
 using Celeste.Mod.EndHelper.Entities.RoomSwap;
+using Celeste.Mod.EndHelper.Utils;
 
 namespace Celeste.Mod.EndHelper.Entities.Misc
 {
@@ -107,7 +108,7 @@ namespace Celeste.Mod.EndHelper.Entities.Misc
 
             // initialize the gate texture
             string blockTexturePath = data.Attr("texturePath", "");
-            blockTexturePath = EndHelperModule.TrimPath(blockTexturePath, "objects/EndHelper/CassetteBeatBlock/YellowBeatBlock");
+            blockTexturePath = Utils_General.TrimPath(blockTexturePath, "objects/EndHelper/CassetteBeatBlock/YellowBeatBlock");
             texture = GFX.Game[blockTexturePath];
 
             if (entityMover)
@@ -200,7 +201,7 @@ namespace Celeste.Mod.EndHelper.Entities.Misc
         {
             // Compare newNodeIndex with previous nodeIndex. Move if different
             // Only do it if flag is found though
-            if (newNodeIndex != nodeIndex && EndHelperModule.IsFlagEnabled(SceneAs<Level>().Session, requireFlag))
+            if (newNodeIndex != nodeIndex && Utils_General.AreFlagsEnabled(SceneAs<Level>().Session, requireFlag))
             {
                 // Go to the new node.
                 nodeIndex = newNodeIndex;

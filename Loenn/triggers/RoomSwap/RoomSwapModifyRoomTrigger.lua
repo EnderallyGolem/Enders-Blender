@@ -7,9 +7,12 @@ local roomSwapModifyRoomTrigger = {
                 gridId = "1",
                 modificationType = "None",
                 modifySilently = false,
-                flagCheck = "",
-                flagRequire = true,
-                flagToggle = false,
+                --OLD BEHAVIOUR
+                --flagCheck = "",
+                --flagRequire = true,
+                --flagToggle = false,
+                requireFlag = "",
+                toggleFlag = "",
                 flashEffect = false
             },
         },

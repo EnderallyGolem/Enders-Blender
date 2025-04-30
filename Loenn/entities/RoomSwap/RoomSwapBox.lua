@@ -26,9 +26,12 @@ local roomSwapBox = {
                 modifySilently = false,
                 texturePath = "",
                 
-                flagCheck = "",
-                flagRequire = true,
-                flagToggle = false,
+                --OLD BEHAVIOUR
+                --flagCheck = "",
+                --flagRequire = true,
+                --flagToggle = false,
+                requireFlag = "",
+                toggleFlag = "",
                 flashEffect = false,
             },
         },
@@ -43,14 +46,14 @@ local roomSwapBox = {
         particleColour1 = {fieldType = "color"},
         particleColour2 = {fieldType = "color"},
         preset = { fieldType = "string", editable = false,
-        options = {
-            {"Custom", "Custom"},
-            {"Reset", "Reset"},
-            {"Slider (No warp)", "Slider (No warp)"},
-            {"Slider (Warp)", "Slider (Warp)"},
-            {"Swapper ", "Swapper"},
-        }
-    },
+            options = {
+                {"Custom", "Custom"},
+                {"Reset", "Reset"},
+                {"Slider (No warp)", "Slider (No warp)"},
+                {"Slider (Warp)", "Slider (Warp)"},
+                {"Swapper ", "Swapper"},
+            }
+        },
         modificationTypeLeft = { fieldType = "string", 
             options = {
                 {"None", "None"},

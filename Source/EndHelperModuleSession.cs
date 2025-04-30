@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using static Celeste.Mod.EndHelper.Entities.Misc.RoomStatisticsDisplayer;
 using Celeste.Mod.EndHelper.Entities.Misc;
 using System.Collections.Specialized;
+using static Celeste.Mod.EndHelper.EndHelperModuleSettings.GameplayTweaks;
 
 namespace Celeste.Mod.EndHelper;
 
@@ -18,6 +19,8 @@ public class EndHelperModuleSession : EverestModuleSession
     public Dictionary<string, string> activateSoundEvent1 { get; set; } = new Dictionary<string, string> { };
     public Dictionary<string, string> activateSoundEvent2 { get; set; } = new Dictionary<string, string> { };
     public Dictionary<string, int> roomMapLevel { get; set; } = new Dictionary<string, int> { };
+
+    public bool enableRoomSwapFuncs;
 
     // 2D list containing template room names.
     // The index matches up with the swap room locations.
@@ -41,10 +44,24 @@ public class EndHelperModuleSession : EverestModuleSession
 
     public Dictionary<string, bool> pauseTypeDict = new Dictionary<string, bool> { }; // Stores the type of pauses used
 
+    public Dictionary<string, string> roomStatDict_fuseRoomRedirect = new Dictionary<string, string> { };  // <string, string?> room redirects. null if none.
 
+
+    // Frames since respawn, frozen if paused or just respawned.
+    public int framesSinceRespawn = 0;
+
+
+
+    // Gameplay Tweaks
 
     // Grabby. Here mostly so they are affected by states tbh
     public bool toggleifyEnabled = false;
     public bool GrabFakeTogglePressPressed = false;
     public bool ToggleGrabRanNothing = false;
+
+    // Track if gameplay tweaks were used at any point. These will show up as extended variations in the endscreen.
+    public bool usedGameplayTweaks = false;
+
+    // Override Gameplay Tweaks - With triggers
+    public ConvertDemoEnum? GameplayTweaksOverride_ConvertDemo = null;
 }

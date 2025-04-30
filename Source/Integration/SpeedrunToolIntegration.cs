@@ -40,7 +40,7 @@ namespace Celeste.Mod.EndHelper.Integration
             typeof(SpeedrunToolImport).ModInterop();
             SpeedrunToolInstalled = SpeedrunToolImport.IgnoreSaveState is not null;
             AddSaveLoadAction();
-            Logger.Log(LogLevel.Info, "EndHelper/SpeedrunToolIntegration", $"initialise stuff perhaps. {SpeedrunToolInstalled}");
+            //Logger.Log(LogLevel.Info, "EndHelper/SpeedrunToolIntegration", $"initialise stuff perhaps. {SpeedrunToolInstalled}");
         }
 
         internal static void Unload()
@@ -54,7 +54,6 @@ namespace Celeste.Mod.EndHelper.Integration
             {
                 return;
             }
-            Logger.Log(LogLevel.Info, "EndHelper/SpeedrunToolIntegration", $"hmmm");
 
             action = SpeedrunToolImport.RegisterSaveLoadAction(
                 // Save State - Action<Dictionary<Type, Dictionary<string, object>>
@@ -103,7 +102,7 @@ namespace Celeste.Mod.EndHelper.Integration
             {
                 if (!player.Dead)
                 {
-                    if (EndHelperModule.Settings.RoomStatMenu.DeathIgnoreLoadAfterDeath && timeSinceRespawn <= 30)
+                    if (EndHelperModule.Settings.RoomStatMenu.DeathIgnoreLoadAfterDeath && EndHelperModule.Session.framesSinceRespawn <= 30)
                     {
                         // Do not increment death count. Instead make the ignore death from load state after respawn icon appear instead
                         EndHelperModule.externalDict_pauseTypeDict["LoadNoDeath"] = true;
@@ -111,7 +110,9 @@ namespace Celeste.Mod.EndHelper.Integration
                     else
                     {
                         // Add +1 death when loading state, unless the player is already dead. Use the currentRoomName from roomStatDisplayer so it doesn't count multi-room bino
-                        EndHelperModule.externalRoomStatDict_death[roomStatDisplayer.currentRoomName] = Convert.ToInt32(EndHelperModule.externalRoomStatDict_death[roomStatDisplayer.currentRoomName]) + 1;
+                        // EndHelperModule.externalRoomStatDict_death[roomStatDisplayer.currentRoomName] = Convert.ToInt32(EndHelperModule.externalRoomStatDict_death[roomStatDisplayer.currentRoomName]) + 1;
+                        roomStatDisplayer.AddDeath();
+                        roomStatDisplayer.ExportRoomStatInfo(preloadLevel);
                     }
                 }
             }

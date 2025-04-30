@@ -14,6 +14,8 @@ using System.Threading.Tasks;
 using static Celeste.Mod.EndHelper.EndHelperModule;
 using System.Data.Common;
 using AsmResolver.PE.DotNet.ReadyToRun;
+using Celeste.Mod.EndHelper.SharedCode;
+using Celeste.Mod.EndHelper.Utils;
 
 
 
@@ -76,7 +78,7 @@ public class RoomSwapMap : Entity
         sine = new SineWave(0.5f, MathF.PI / 2);
         Add(sine);
 
-        folderPath = EndHelperModule.TrimPath(folderPath, "objects/EndHelper/RoomSwapMap");
+        folderPath = Utils_General.TrimPath(folderPath, "objects/EndHelper/RoomSwapMap");
     }
 
     public override void Update()
@@ -117,7 +119,7 @@ public class RoomSwapMap : Entity
         currentRoomPosFileName = entityData.Attr("mapCurrentPosFileName", "");
         if (currentRoomName.StartsWith(EndHelperModule.Session.roomSwapPrefix[gridID]) && currentRoomPosFileName != "")
         {
-            currentRoomPos = GetPosFromRoomName(currentRoomName);
+            currentRoomPos = Utils_RoomSwap.GetPosFromRoomName(currentRoomName);
             string currentRoomPosSuffix = $"{currentRoomPos[0].ToString()}{currentRoomPos[1].ToString()}";
         }
 
@@ -195,7 +197,7 @@ public class RoomSwapMap : Entity
                     List<string> roomPosSuffixListRow = [];
                     for (int col = 1; col <= EndHelperModule.Session.roomSwapColumn[gridID]; col++)
                     {
-                        List<int> roomPos = GetPosFromRoomName(roomSwapOrderList[row - 1][col - 1]);
+                        List<int> roomPos = Utils_RoomSwap.GetPosFromRoomName(roomSwapOrderList[row - 1][col - 1]);
                         string roomPosSuffix = $"{roomPos[0].ToString()}{roomPos[1].ToString()}";
 
                         //Try get folderpath/iconprefix_XY_# then see how many # are there

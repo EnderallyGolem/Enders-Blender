@@ -23,6 +23,7 @@ using Celeste.Mod.EndHelper.Integration;
 namespace Celeste.Mod.EndHelper.Entities.Misc;
 
 [Tracked(true)]
+[TrackedAs(typeof(Lookout))]
 [CustomEntity("EndHelper/MultiroomWatchtower")]
 public class MultiroomWatchtower : Entity
 {
@@ -218,7 +219,7 @@ public class MultiroomWatchtower : Entity
         [MethodImpl(MethodImplOptions.NoInlining)]
         public override void Render()
         {
-            Level level = Scene as Level;
+            Level level = SceneAs<Level>();
             float num_ease = Ease.CubeInOut(Easer);
             Color colorWhite = Color.White * num_ease;
             Color colorGold = Color.Gold * num_ease;
@@ -414,6 +415,7 @@ public class MultiroomWatchtower : Entity
     public EntityData data;
 
     public Vector2 screenCenterOffset;
+    private Vector2? preWatchRespawnPoint;
 
 
     [MethodImpl(MethodImplOptions.NoInlining)]
@@ -557,6 +559,7 @@ public class MultiroomWatchtower : Entity
     {
         trackPercent = 0f;
         Level level = SceneAs<Level>();
+        preWatchRespawnPoint = level.Session.RespawnPoint;
         screenCenterOffset = new Vector2(level.Camera.Right - level.Camera.Left, level.Camera.Bottom - level.Camera.Top) * 0.5f;
 
         SandwichLava sandwichLava = level.Entities.FindFirst<SandwichLava>();
@@ -659,6 +662,8 @@ public class MultiroomWatchtower : Entity
         List<LevelData> edgeRoomDataList = getEdgeRoomDataList(level);
 
         int changeRoomCooldown = 0;
+
+        EndHelperModule.allowScreenTransitionMovement = false;
 
         //
         // Stay within this while loop as long as viewing binoculars
@@ -776,11 +781,12 @@ public class MultiroomWatchtower : Entity
                 Vector2 transitionDirection = (targetTransitionPos - camCenter).SafeNormalize();
 
                 //ResetCameraTrackSettings(level, player, false);
-                player.Position = new Vector2(newRoomBounds.Left + 16, newRoomBounds.Bottom - 16);
+                //player.Position = new Vector2(newRoomBounds.Left + 16, newRoomBounds.Bottom - 16);
                 player.CameraAnchor = targetTransitionPos - screenCenterOffset;
 
                 level.NextTransitionDuration = 0.65f * transitionDurationScale;
                 level.TransitionTo(newRoomLevelData, transitionDirection);
+                ResetCameraTrackSettings(level, player, false);
 
                 // If watchtower room, set player position to watchtower, and let the player be active and have collision
                 // Otherwise, inactive and no collision
@@ -1357,11 +1363,14 @@ public class MultiroomWatchtower : Entity
         level.CanRetry = canRetryInitial;
         level.SaveQuitDisabled = canSaveQuitInitial;
         level.PauseLock = pauseLock;
+        EndHelperModule.allowScreenTransitionMovement = true;
 
-        removeTagAfterFrame(3);
+        EndInteractionAfterFrames(3);
 
-        async void removeTagAfterFrame(int frames)
+        async void EndInteractionAfterFrames(int frames)
         {
+
+            // --- Ran after a few frames ---
             await Task.Delay((int)(Engine.DeltaTime * 1000 * frames + 1));
 
             RemoveTag(Tags.Persistent);
@@ -1375,8 +1384,22 @@ public class MultiroomWatchtower : Entity
             player.Collider = originalPlayerCollider;
             player.Sprite.Visible = true;
             player.Hair.Visible = true;
-
             previouslyInteracted = true;
+
+
+            // --- Ran after scrolling back ---
+            while (level.Transitioning)
+            {
+                await Task.Delay((int)(Engine.DeltaTime * 1000 * 1)); // Do not run until screen transition is over
+            }
+
+            if (preWatchRespawnPoint != null)
+            {
+                level.Session.RespawnPoint = preWatchRespawnPoint; // Set respawn point to where it was before viewing
+            }
+            EndHelperModule.allowScreenTransitionMovement = true;
+
+
 
             if (destroyUponFinishView)
             {
@@ -1393,6 +1416,7 @@ public class MultiroomWatchtower : Entity
 
     public override void SceneEnd(Scene scene)
     {
+        EndHelperModule.allowScreenTransitionMovement = true;
         base.SceneEnd(scene);
     }
 

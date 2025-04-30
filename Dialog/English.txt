@@ -3,11 +3,14 @@
 EndHelper_Settings=Ender's Blender's Knobs & Dials
 
 # Keybinds
-modoptions_EndHelperModule_FreeMultiroomWatchtower=Spawn Multi-Room Watchtower
+modoptions_EndHelperModule_FreeMultiroomWatchtower=Portable Multi-Room Watchtower
 modoptions_EndHelperModule_OpenStatDisplayMenu=Open Room Stat Menu
 modoptions_EndHelperModule_QuickRetry=Quick Retry
 modoptions_EndHelperModule_ToggleGrab=Grab Recast
+modoptions_EndHelperModule_NeutralDrop=Neutral Drop
 
+######### Room Stats #########
+modoptions_EndHelperModule_SubHeader_RoomStat=Room Statistics
 
 # Room Statistics Menu
 modoptions_EndHelperModule_RoomStatMenu=Room Stat Tracker
@@ -22,8 +25,12 @@ modoptions_EndHelperModule_PauseOption_PauseInactive=Paused / Inactive
 modoptions_EndHelperModule_PauseOption_PauseInactiveAFK=Paused / Inactive / AFK
 
 modoptions_EndHelperModule_DeathIgnoreLoadAfterDeath=Ignore Load State Death After Respawn
-modoptions_EndHelperModule_DeathIgnoreLoadAfterDeath_Desc=If enabled, if you load a state immediately after respawning, the death from loading the state will not be counted.
+modoptions_EndHelperModule_DeathIgnoreLoadAfterDeath_Desc=If enabled, if you load a state immediately after respawning, the death from loading the state will not be tracked.
 The room stat tracker menu will display an icon if this has been used.
+
+modoptions_EndHelperModule_MenuShowFirstClear=Show First Clear Stats
+modoptions_EndHelperModule_MenuShowFirstClear_Desc=Makes the stats display and menu show the combined stats of all sessions
+instead of the current session if the map hasn't been cleared before.
 
 modoptions_EndHelperModule_MenuMulticolor=Multi-Colored Menu
 modoptions_EndHelperModule_MenuMulticolor_Desc=The Room stats menu's background will be dependent on the room color index.
@@ -31,9 +38,9 @@ modoptions_EndHelperModule_MenuMulticolor_Desc=The Room stats menu's background 
 modoptions_EndHelperModule_MenuSpoilBerries=Spoil Map Berry Count
 modoptions_EndHelperModule_MenuSpoilBerries_Desc=If disabled, the map's total berry count will be shown only at the end of the map, or you have beaten the level before.
 
-modoptions_EndHelperModule_MenuCustomNameStorageCount=Custom Name Storage Size
-modoptions_EndHelperModule_MenuCustomNameStorageCount_Desc=The number of sessions in which custom room names will be stored.
-Eg: If 10, custom names for the map's rooms will be kept until you play 10 other maps.
+modoptions_EndHelperModule_MenuTrackerStorageCount=Tracker Storage Size
+modoptions_EndHelperModule_MenuTrackerStorageCount_Desc=The number of maps which the mod will store tracked stats for. Set to -1 for no limit.
+(This will only fully take effect when starting a map!)
 
 
 # Room Stat Tracker Display
@@ -52,31 +59,47 @@ modoptions_EndHelperModule_ShowDeaths=Show Deaths
 modoptions_EndHelperModule_ShowTimeSpent=Show Time Spent
 modoptions_EndHelperModule_ShowStrawberries=Show Strawberries
 modoptions_EndHelperModule_ShowStrawberries_Desc=Only shown when at least one strawberry is collected.
-
-modoptions_EndHelperModule_DisableQuickRestart=Disable Quick Restart Keybind
-modoptions_EndHelperModule_DisableQuickRestart_Desc=Why is this set to R if empty
-why is this the everest search key, WWHHHHHYYYYYYYYYYYY
-
-modoptions_EndHelperModule_ConvertDemo=Prevent Down Dash Redirects
-modoptions_EndHelperModule_ConvertDemo_Desc=This converts manual demos into down / down diagonal dashes.
-This has no effect if 360 Dashing is enabled.
-If set to Diagonal, manual demos always become diagonal downwards dashes.
-
-modoptions_EndHelperModule_ConvertDemo_Disabled=Disabled
-modoptions_EndHelperModule_ConvertDemo_EnabledNormal=Enabled (Normal)
-modoptions_EndHelperModule_ConvertDemo_EnabledDiagonal=Enabled (Diagonal)
+modoptions_EndHelperModule_ShowAliveTime=Show Alive Time
+modoptions_EndHelperModule_ShowAliveTime_Desc=Shows time spent since respawning. Mostly meant to gauge the length of each room during mapping.
+modoptions_EndHelperModule_HideIfGolden=Hide If Golden
+modoptions_EndHelperModule_HideIfGolden_Desc=Hides the stat display if you have a golden strawberry.
+They will stay hidden until you reenter a map.
 
 EndHelper_Dialog_RoomStatisticsDisplayer_CopiedToClipboard=Copied Stats to Clipboard
-EndHelper_Dialog_RoomStatisticsDisplayer_SegmentRoomHeader=SEGMENT CURRENT ROOM?
-EndHelper_Dialog_RoomStatisticsDisplayer_SegmentRoomSubHeader=The room will be split into a new segment where the stats would count towards.
-Previous segments cannot be changed or removed.
-EndHelper_Dialog_RoomStatisticsDisplayer_SegmentRoomSubHeader2=
-EndHelper_Dialog_RoomStatisticsDisplayer_SegmentRoomConfirm=Segment
+EndHelper_Dialog_RoomStatisticsDisplayer_SegmentFuseRoomHeader=SEGMENT/FUSE CURRENT ROOM?
+EndHelper_Dialog_RoomStatisticsDisplayer_SegmentFuseRoomSubHeader=Room segmentation and fusing will only last for this session.
+EndHelper_Dialog_RoomStatisticsDisplayer_=SEGMENT/FUSE CURRENT ROOM?
+EndHelper_Dialog_RoomStatisticsDisplayer_SegmentRoomSubHeader=Segmenting this room will create a new segment where the stats would count towards.
+EndHelper_Dialog_RoomStatisticsDisplayer_UnfuseRoomSubHeader=Segmenting this room will unfuse this room from
+EndHelper_Dialog_RoomStatisticsDisplayer_FuseSegmentsSubHeader=Fusing this room will combine its last 2 segments.
+EndHelper_Dialog_RoomStatisticsDisplayer_FuseRoomSubHeader=Fusing this room will combine it with
+EndHelper_Dialog_RoomStatisticsDisplayer_CannotFuseRoomSubHeader=This is the first room and thus cannot be fused.
+EndHelper_Dialog_RoomStatisticsDisplayer_ConfirmSegmentRoom=Create segment
+EndHelper_Dialog_RoomStatisticsDisplayer_ConfirmFuseRoom=Fuse with
+EndHelper_Dialog_RoomStatisticsDisplayer_ConfirmUnfuseRoom=Unfuse
+EndHelper_Dialog_RoomStatisticsDisplayer_ConfirmUnfuseRoom_from=from
 EndHelper_Dialog_RoomStatisticsDisplayer_SegmentRoomCancel=Cancel
+
+EndHelper_Dialog_RoomStatisticsDisplayer_FirstClear=1st Clear Total
+EndHelper_Dialog_RoomStatisticsDisplayer_FirstRun=1st Run Total
+EndHelper_Dialog_RoomStatisticsDisplayer_Current=Current Run
+EndHelper_Dialog_RoomStatisticsDisplayer_MapNotClearedYet=In Progress
+EndHelper_Dialog_RoomStatisticsDisplayer_LastClear=Previous Clear
+EndHelper_Dialog_RoomStatisticsDisplayer_Journal_NoMaps=No maps with data are available.
+Come back after playing some maps!
+EndHelper_Dialog_RoomStatisticsDisplayer_Journal_NoMaps_LowStorageSetting=No maps with data are available.
+Try increasing the Tracker Storage Size in settings!
+EndHelper_Dialog_RoomStatisticsDisplayer_Journal_NoFirstClearData=No First Clear data for this map is available.
+Most likely, you've already beaten this map before stats for it were tracked,
+so unfortunately there will never be data here :(
+EndHelper_Dialog_RoomStatisticsDisplayer_Journal_NoLastClearData=No Previous Clear data for this map is available.
+Clear a map from the beginning, and the stats for that clear will appear here!
 
 EndHelper_Dialog_MultiroomWatchtower_FreeCameraON=Unlock Camera: ON
 EndHelper_Dialog_MultiroomWatchtower_FreeCameraOFF=Unlock Camera: OFF
 
+######### Gameplay Tweaks #########
+modoptions_EndHelperModule_SubHeader_GameplayTweaks=Gameplay Tweaks
 
 # Toggle Grab Key
 modoptions_EndHelperModule_ToggleGrabMenu=Grab Recast Key
@@ -97,7 +120,54 @@ Toggle: Recast makes Grab function as toggle grab
 Toggle (Press): Same as above, but also changes the Grab toggle state.
 Toggle (Lock): Changes and locks the Grab state (Grab won't do anything)
 
+### Gameplay Tweaks SubMenu
+modoptions_EndHelperModule_GameplayTweaksMenu=Other Gameplay Tweaks
 
+# Prevent Demos
+modoptions_EndHelperModule_ConvertDemo=Prevent Down Dash Redirects
+modoptions_EndHelperModule_ConvertDemo_Desc=This converts manual demos into down / down diagonal dashes.
+This has no effect if 360 Dashing is enabled.
+If set to Diagonal, manual demos always become diagonal downwards dashes.
+
+modoptions_EndHelperModule_ConvertDemo_Disabled=Disabled
+modoptions_EndHelperModule_ConvertDemo_EnabledNormal=Enabled (Normal)
+modoptions_EndHelperModule_ConvertDemo_EnabledDiagonal=Enabled (Diagonal)
+
+
+######### QOL Tweaks #########
+modoptions_EndHelperModule_SubHeader_QOLTweaks=QOL Tweaks
+
+### QOL Tweaks SubMenu
+modoptions_EndHelperModule_QOLTweaksMenu=QOL Tweaks
+
+# Quick Restart
+modoptions_EndHelperModule_DisableQuickRestart=Disable Quick Restart Keybind
+modoptions_EndHelperModule_DisableQuickRestart_Desc=Why is this set to R if empty
+why is this the everest search key, WWHHHHHYYYYYYYYYYYY
+
+# Dash Screen Shake
+modoptions_EndHelperModule_DisableFrequentScreenShake=Disable Frequent Screen Shakes
+modoptions_EndHelperModule_DisableFrequentScreenShake_Desc=Disables screen shake from dashes, boosters, springs, (vanilla) refills, and the death animation,
+while keeping the screen shake for other effects for you to enjoy since they look cool :)
+(This may not affect some custom entities, like Refill Walls.)
+
+# Prevent Accidental Restart/Quit
+modoptions_EndHelperModule_PreventAccidentalQuit=Restart / Quit Map Cooldown
+modoptions_EndHelperModule_PreventAccidentalQuit_Disabled=Disabled
+modoptions_EndHelperModule_PreventAccidentalQuit_TimeSmall=0.2s
+modoptions_EndHelperModule_PreventAccidentalQuit_TimeHalf=0.5s
+modoptions_EndHelperModule_PreventAccidentalQuit_Time1=1s
+modoptions_EndHelperModule_PreventAccidentalQuit_Time1Half=1.5s
+modoptions_EndHelperModule_PreventAccidentalQuit_Time2=2s
+modoptions_EndHelperModule_PreventAccidentalQuit_Time3=3s
+modoptions_EndHelperModule_PreventAccidentalQuit_Desc=Adds a cooldown to Restart Chapter and Return to Map, to prevent accidental quitting.
+
+
+
+######### Misc ######### This isn't used to keep a setting below the mod name, so the mod name can be searched. yeah it jank
+modoptions_EndHelperModule_SubHeader_Misc=Miscellaneous Stuff
+
+# Freeze Level Timer
 modoptions_EndHelperModule_PauseOptionLevel=Freeze Level Timer When
 modoptions_EndHelperModule_PauseOptionLevel_Desc=Does not affect the File time. This also affects Journal times! AFK: No input for 30s.
 Icons will be displayed under the speedrun timer if these have been used.
@@ -105,6 +175,7 @@ modoptions_EndHelperModule_PauseOptionLevel_None=Never
 modoptions_EndHelperModule_PauseOptionLevel_Pause=Paused
 modoptions_EndHelperModule_PauseOptionLevel_AFK=AFK
 modoptions_EndHelperModule_PauseOptionLevel_PauseAFK=Paused / AFK
+
 
 # ----------------------------------  Map Stuff  ----------------------------------------
 
@@ -129,17 +200,12 @@ EndHelperTest_1_EndHelperTestMap_B_theroom=B-side room with custom name!
 EndHelperTest_Tutorial_StatisticMenuBirb=Room Stats
 EndHelperTest_Tutorial_StatisticMenu=The mod stores the number of deaths, time spent, and strawberries collected in each room.
 The stats for the current room can be shown by enabling it in the mod settings. All stats can be shown with the room menu keybind.
-The color of the menu, unless disabled, corrosponds to the Color ID.
-These stats only last for the current session (though custom room names can be stored longer depending on settings).
+The color of the menu, unless disabled, corresponds to the Color ID.
+The {# 00ff00}1st Clear Total{#} (total stats when the map is cleared the first time) and {# 00ff00}Previous Clear{#} stats (has to be a valid clear from the beginning) will be kept, and can be seen from journals.
 For mod makers, you can have custom names show with {# ffff66}(Folder){#}_{# ffff66}(bin){#}_{# ffff66}(RoomName){#} in the dialog file (Map name format with _{# ffff66}(RoomName){#}).
 For B or C sides, this is {# ffff66}(Folder){#}_{# ffff66}(bin){#}_B_{# ffff66}(RoomName){#} or {# ffff66}(Folder){#}_{# ffff66}(bin){#}_C_{# ffff66}(RoomName){#}.
 This was done for the bino rooms above - check the names with the menu/display and debug mode!
 Don't use the bino to check the names though, the current room does not change when using the multi-room binoculars.
-
-EndHelperTest_Tutorial_RoomStatisticsCountersBirb=Counters
-EndHelperTest_Tutorial_RoomStatisticsCounters=The mod tracks the number of deaths, time spent, and berries collected in each room.
-These can be accessed from the counters {# ffff66}EndHelper_RoomStatistics_{# F94A4A}(currentRoomName){#}_death{#}, {# ffff66}EndHelper_RoomStatistics_{# F94A4A}(currentRoomName){#}_timer{#} (gives time in seconds), and {# ffff66}EndHelper_RoomStatistics_{# F94A4A}(currentRoomName){#}_strawberries{#}.
-Note that the timer will be paused differently depending on settings, so be careful if you ever use it.
 
 # ----------------------------------  Room Swap  ----------------------------------------
 EndHelperTest_Tutorial_RoomSwap_Category=Room-Swap
@@ -215,6 +281,16 @@ In short, they allow you to set the music tempo and/or change the current beat.
 Check out their settings in lönn to understand them better!
 The blocks are Cassette Beat Blocks, which can be set to move to a specific node on a specific beat.
 The one this bird and the refill are in are Entity Movers. They are invisible, but moves entities that were inside them when the room was loaded!
+
+
+EndHelperTest_Tutorial_Misc_GameplayTweaksOverrideTrigger=Gameplay Tweaks Override
+EndHelperTest_Tutorial_Misc_GameplayTweaksOverrideTrigger_Desc=You can't manual demo here!
+
+
+EndHelperTest_Tutorial_Misc_ConditionalTutorialBird=Conditional Tutorial Bird
+EndHelperTest_Tutorial_Misc_ConditionalTutorialBird_Desc=I appear after sitting here for 3s!
+EndHelperTest_Tutorial_Misc_ConditionalTutorialBird2=Conditional Tutorial Bird 2
+EndHelperTest_Tutorial_Misc_ConditionalTutorialBird2_Desc=I appear after dying here!
 
 # ----------------------------------  Credits  ----------------------------------------
 endhelper_credits={~}Additional credits:{/~}

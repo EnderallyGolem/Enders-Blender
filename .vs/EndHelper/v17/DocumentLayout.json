@@ -3,20 +3,16 @@
   "WorkspaceRootPath": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Celeste\\Mods\\EndersBlender\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{472281A7-9373-412A-8E8E-5B603857A9D6}|Source\\EndHelper.csproj|c:\\program files (x86)\\steam\\steamapps\\common\\celeste\\mods\\endersblender\\source\\entities\\misc\\roomstatisticsdisplayer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{472281A7-9373-412A-8E8E-5B603857A9D6}|Source\\EndHelper.csproj|solutionrelative:source\\entities\\misc\\roomstatisticsdisplayer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{472281A7-9373-412A-8E8E-5B603857A9D6}|Source\\EndHelper.csproj|c:\\program files (x86)\\steam\\steamapps\\common\\celeste\\mods\\endersblender\\source\\endhelpermodule.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{472281A7-9373-412A-8E8E-5B603857A9D6}|Source\\EndHelper.csproj|solutionrelative:source\\endhelpermodule.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{472281A7-9373-412A-8E8E-5B603857A9D6}|Source\\EndHelper.csproj|c:\\program files (x86)\\steam\\steamapps\\common\\celeste\\mods\\endersblender\\source\\integration\\quantummechanicsintegration.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{472281A7-9373-412A-8E8E-5B603857A9D6}|Source\\EndHelper.csproj|solutionrelative:source\\integration\\quantummechanicsintegration.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{472281A7-9373-412A-8E8E-5B603857A9D6}|Source\\EndHelper.csproj|c:\\program files (x86)\\steam\\steamapps\\common\\celeste\\mods\\endersblender\\source\\triggers\\misc\\cassettemanagertrigger.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{472281A7-9373-412A-8E8E-5B603857A9D6}|Source\\EndHelper.csproj|solutionrelative:source\\triggers\\misc\\cassettemanagertrigger.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{472281A7-9373-412A-8E8E-5B603857A9D6}|Source\\EndHelper.csproj|c:\\program files (x86)\\steam\\steamapps\\common\\celeste\\mods\\endersblender\\source\\entities\\misc\\cassettebeatgate.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{472281A7-9373-412A-8E8E-5B603857A9D6}|Source\\EndHelper.csproj|solutionrelative:source\\entities\\misc\\cassettebeatgate.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{472281A7-9373-412A-8E8E-5B603857A9D6}|Source\\EndHelper.csproj|c:\\program files (x86)\\steam\\steamapps\\common\\celeste\\mods\\endersblender\\source\\utils\\utils_journalstatistics.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{472281A7-9373-412A-8E8E-5B603857A9D6}|Source\\EndHelper.csproj|solutionrelative:source\\utils\\utils_journalstatistics.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -26,7 +22,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 4,
+          "SelectedChildIndex": 1,
           "Children": [
             {
               "$type": "Bookmark",
@@ -34,52 +30,40 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
-              "Title": "QuantumMechanicsIntegration.cs",
-              "DocumentMoniker": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Celeste\\Mods\\EndersBlender\\Source\\Integration\\QuantumMechanicsIntegration.cs",
-              "RelativeDocumentMoniker": "Source\\Integration\\QuantumMechanicsIntegration.cs",
-              "ToolTip": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Celeste\\Mods\\EndersBlender\\Source\\Integration\\QuantumMechanicsIntegration.cs",
-              "RelativeToolTip": "Source\\Integration\\QuantumMechanicsIntegration.cs",
-              "ViewState": "AgIAABsAAAAAAAAAAAAAAC8AAAANAAAAAAAAAA==",
+              "DocumentIndex": 0,
+              "Title": "RoomStatisticsDisplayer.cs",
+              "DocumentMoniker": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Celeste\\Mods\\EndersBlender\\Source\\Entities\\Misc\\RoomStatisticsDisplayer.cs",
+              "RelativeDocumentMoniker": "Source\\Entities\\Misc\\RoomStatisticsDisplayer.cs",
+              "ToolTip": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Celeste\\Mods\\EndersBlender\\Source\\Entities\\Misc\\RoomStatisticsDisplayer.cs",
+              "RelativeToolTip": "Source\\Entities\\Misc\\RoomStatisticsDisplayer.cs",
+              "ViewState": "AgIAAIQGAAAAAAAAAAAYwJsGAAAJAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-03-28T03:59:08.501Z"
+              "WhenOpened": "2025-04-28T15:33:52.479Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 2,
-              "Title": "CassetteManagerTrigger.cs",
-              "DocumentMoniker": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Celeste\\Mods\\EndersBlender\\Source\\Triggers\\Misc\\CassetteManagerTrigger.cs",
-              "RelativeDocumentMoniker": "Source\\Triggers\\Misc\\CassetteManagerTrigger.cs",
-              "ToolTip": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Celeste\\Mods\\EndersBlender\\Source\\Triggers\\Misc\\CassetteManagerTrigger.cs",
-              "RelativeToolTip": "Source\\Triggers\\Misc\\CassetteManagerTrigger.cs",
-              "ViewState": "AgIAAEYAAAAAAAAAAAAwwFoAAAAJAAAAAAAAAA==",
+              "Title": "Utils_JournalStatistics.cs",
+              "DocumentMoniker": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Celeste\\Mods\\EndersBlender\\Source\\Utils\\Utils_JournalStatistics.cs",
+              "RelativeDocumentMoniker": "Source\\Utils\\Utils_JournalStatistics.cs",
+              "ToolTip": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Celeste\\Mods\\EndersBlender\\Source\\Utils\\Utils_JournalStatistics.cs",
+              "RelativeToolTip": "Source\\Utils\\Utils_JournalStatistics.cs",
+              "ViewState": "AgIAAMcCAAAAAAAAAAAYwNkCAAAVAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-03-27T13:18:41.126Z"
+              "WhenOpened": "2025-04-28T12:11:22.167Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
-              "Title": "CassetteBeatGate.cs",
-              "DocumentMoniker": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Celeste\\Mods\\EndersBlender\\Source\\Entities\\Misc\\CassetteBeatGate.cs",
-              "RelativeDocumentMoniker": "Source\\Entities\\Misc\\CassetteBeatGate.cs",
-              "ToolTip": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Celeste\\Mods\\EndersBlender\\Source\\Entities\\Misc\\CassetteBeatGate.cs",
-              "RelativeToolTip": "Source\\Entities\\Misc\\CassetteBeatGate.cs",
-              "ViewState": "AgIAAIoAAAAAAAAAAAAwwJgAAAANAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-03-02T11:44:56.604Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 1,
               "Title": "EndHelperModule.cs",
               "DocumentMoniker": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Celeste\\Mods\\EndersBlender\\Source\\EndHelperModule.cs",
               "RelativeDocumentMoniker": "Source\\EndHelperModule.cs",
               "ToolTip": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Celeste\\Mods\\EndersBlender\\Source\\EndHelperModule.cs",
               "RelativeToolTip": "Source\\EndHelperModule.cs",
-              "ViewState": "AgIAAH0AAAAAAAAAAAAUwI8AAAAmAAAAAAAAAA==",
+              "ViewState": "AgIAAJoBAAAAAAAAAAAkwLgBAACCAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-02-03T15:32:32.679Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-04-25T11:08:33.548Z"
             }
           ]
         }

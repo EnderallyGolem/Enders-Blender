@@ -1,4 +1,5 @@
 using Celeste.Mod.EndHelper.Integration;
+using Celeste.Mod.EndHelper.Utils;
 using Celeste.Mod.Entities;
 using Celeste.Mod.QuantumMechanics.Entities;
 using Microsoft.Xna.Framework;
@@ -94,10 +95,10 @@ public class CassetteManagerTrigger : Trigger
 
         Level level = SceneAs<Level>();
 
-        allowFunctionality = EndHelperModule.IsFlagEnabled(level.Session, requireFlag, true);
+        allowFunctionality = Utils_General.AreFlagsEnabled(level.Session, requireFlag, true);
         if (allowFunctionality)
         {
-            setTempoMultiplier(multiplyTempoEnterRoom, multiplyTempoExisting, true);
+            SetTempoMultiplier(multiplyTempoEnterRoom, multiplyTempoExisting, true);
         }
 
         base.Awake(scene);
@@ -109,7 +110,7 @@ public class CassetteManagerTrigger : Trigger
         if (allowFunctionality)
         {
             SetBeatToIfAllow(setBeatOnEnter);
-            setTempoMultiplier(multiplyTempoOnEnter, multiplyTempoExisting, true);
+            SetTempoMultiplier(multiplyTempoOnEnter, multiplyTempoExisting, true);
         }
         base.OnEnter(player);
     }
@@ -119,7 +120,7 @@ public class CassetteManagerTrigger : Trigger
         if (allowFunctionality)
         {
             SetBeatToIfAllow(setBeatInside);
-            setTempoMultiplier(multiplyTempoInside, multiplyTempoExisting, false);
+            SetTempoMultiplier(multiplyTempoInside, multiplyTempoExisting, false);
         }
         base.OnStay(player);
     }
@@ -129,7 +130,7 @@ public class CassetteManagerTrigger : Trigger
         if (allowFunctionality)
         {
             SetBeatToIfAllow(setBeatOnLeave);
-            setTempoMultiplier(multiplyTempoOnLeave, multiplyTempoExisting, true);
+            SetTempoMultiplier(multiplyTempoOnLeave, multiplyTempoExisting, true);
         }
         base.OnLeave(player);
     }
@@ -137,7 +138,7 @@ public class CassetteManagerTrigger : Trigger
     public override void Update()
     {
         Level level = SceneAs<Level>();
-        allowFunctionality = EndHelperModule.IsFlagEnabled(level.Session, requireFlag, true);
+        allowFunctionality = Utils_General.AreFlagsEnabled(level.Session, requireFlag, true);
 
         if (!wonkyCassettes && level.Tracker.GetEntity<CassetteBlockManager>() is CassetteBlockManager cassetteBlockManager)
         {
@@ -214,7 +215,32 @@ public class CassetteManagerTrigger : Trigger
                 }
             }
         }
-        else if (wonkyCassettes && level.Tracker.GetEntity<WonkyCassetteBlockController>() is WonkyCassetteBlockController wonkyCassetteBlockManager)
+        else if (wonkyCassettes)
+        {
+            Update_QM(level);
+        }
+
+        // Run stuff that should be ran almost immediately, but a bit after awake
+        if (delayedAwakeCountdown >= 0)
+        {
+            delayedAwakeCountdown--;
+        }
+        if (delayedAwakeCountdown == 0)
+        {
+            SetBeatToIfAllow(setBeatEnterRoom);
+            if (removeImmediately)
+            {
+                Active = false; Collidable = false; // No more updates! Don't worry about allowFunctionality getting reset to enabled
+                allowFunctionality = false;         // This was done instead of removing the entity cause removing could lead to crash
+            }
+        }
+
+        base.Update();
+    }
+
+    private void Update_QM(Level level)
+    {
+        if (level.Tracker.GetEntity<WonkyCassetteBlockController>() is WonkyCassetteBlockController wonkyCassetteBlockManager)
         {
             DynamicData wonkyCassetteManagerData = DynamicData.For(wonkyCassetteBlockManager);
 
@@ -278,23 +304,6 @@ public class CassetteManagerTrigger : Trigger
                 }
             }
         }
-
-        // Run stuff that should be ran almost immediately, but a bit after awake
-        if (delayedAwakeCountdown >= 0)
-        {
-            delayedAwakeCountdown--;
-        }
-        if (delayedAwakeCountdown == 0)
-        {
-            SetBeatToIfAllow(setBeatEnterRoom);
-            if (removeImmediately)
-            {
-                Active = false; Collidable = false; // No more updates! Don't worry about allowFunctionality getting reset to enabled
-                allowFunctionality = false;         // This was done instead of removing the entity cause removing could lead to crash
-            }
-        }
-
-        base.Update();
     }
 
     public override void Render()
@@ -384,7 +393,15 @@ public class CassetteManagerTrigger : Trigger
 
             SetBeatTo(setBeat);
         }
-        else if (wonkyCassettes && level.Tracker.GetEntity<WonkyCassetteBlockController>() is WonkyCassetteBlockController wonkyCassetteBlockManager)
+        else if (wonkyCassettes)
+        {
+            SetBeatToAllow_QM(level, setBeat);
+        }
+    }
+
+    private void SetBeatToAllow_QM(Level level, int setBeat)
+    {
+        if (level.Tracker.GetEntity<WonkyCassetteBlockController>() is WonkyCassetteBlockController wonkyCassetteBlockManager)
         {
             DynamicData wonkyCassetteManagerData = DynamicData.For(wonkyCassetteBlockManager);
             int s_musicBeatIndex = QuantumMechanicsIntegration.QMInte_MusicBeatIndex();
@@ -563,7 +580,15 @@ public class CassetteManagerTrigger : Trigger
             }
             cassetteBlockManager.SetActiveIndex(newCurrentIndex);
         }
-        else if (wonkyCassettes && level.Tracker.GetEntity<WonkyCassetteBlockController>() is WonkyCassetteBlockController wonkyCassetteBlockManager)
+        else if (wonkyCassettes)
+        {
+            SetBeatTo_QM(level, setBeat);
+        }
+    }
+
+    private void SetBeatTo_QM(Level level, int setBeat)
+    {
+        if (level.Tracker.GetEntity<WonkyCassetteBlockController>() is WonkyCassetteBlockController wonkyCassetteBlockManager)
         {
             // Set Beats
             DynamicData wonkyCassetteManagerData = DynamicData.For(wonkyCassetteBlockManager);
@@ -675,7 +700,7 @@ public class CassetteManagerTrigger : Trigger
         }
     }
 
-    public void setTempoMultiplier(String tempoBeatString, bool multiplyOnTop, bool resetCheckedBeat)
+    public void SetTempoMultiplier(String tempoBeatString, bool multiplyOnTop, bool resetCheckedBeat)
     {
         if (tempoBeatString == "" || tempoBeatString == null)
         { return; }
@@ -718,25 +743,34 @@ public class CassetteManagerTrigger : Trigger
                 
             }
 
-            else if (wonkyCassettes && level.Tracker.GetEntity<WonkyCassetteBlockController>() is WonkyCassetteBlockController wonkyCassetteBlockManager)
+            else if (wonkyCassettes)
             {
-                foreach (WonkyCassetteBlockController wonkyCasseteController in level.Tracker.GetEntities<WonkyCassetteBlockController>())
-                {
-                    DynamicData wonkyCassetteManagerData = DynamicData.For(wonkyCasseteController);
-                    wonkyCassetteManagerData.Set("EndHelper_CassetteManagerTriggerTempoMultiplierList", tempoChangeTime);
-                    wonkyCassetteManagerData.Set("EndHelper_CassetteManagerTriggerTempoMultiplierMultiplyOnTop", multiplyOnTop);
-
-                    // same as above but for wonky cassettes
-                    if (resetCheckedBeat)
-                    {
-                        wonkyCassetteManagerData.Set("EndHelper_CassetteHaveCheckedBeat", int.MinValue);
-                    }
-                }
+                // Seperate, otherwise the mod spazzes out if there's no QM
+                SetTempoMultiplier_QM(level, resetCheckedBeat, tempoChangeTime, multiplyOnTop);
             }
         }
         catch (Exception)
         {
             Logger.Log(LogLevel.Warn, "EndHelper/CassetteManagerTrigger", $"Warning: Invalid string added to multiplyTempoAtBeat: {tempoBeatString}");
+        }
+    }
+
+    private void SetTempoMultiplier_QM(Level level, bool resetCheckedBeat, List<List<object>> tempoChangeTime, bool multiplyOnTop)
+    {
+        if (level.Tracker.GetEntity<WonkyCassetteBlockController>() is WonkyCassetteBlockController wonkyCassetteBlockManager)
+        {
+            foreach (WonkyCassetteBlockController wonkyCasseteController in level.Tracker.GetEntities<WonkyCassetteBlockController>())
+            {
+                DynamicData wonkyCassetteManagerData = DynamicData.For(wonkyCasseteController);
+                wonkyCassetteManagerData.Set("EndHelper_CassetteManagerTriggerTempoMultiplierList", tempoChangeTime);
+                wonkyCassetteManagerData.Set("EndHelper_CassetteManagerTriggerTempoMultiplierMultiplyOnTop", multiplyOnTop);
+
+                // same as above but for wonky cassettes
+                if (resetCheckedBeat)
+                {
+                    wonkyCassetteManagerData.Set("EndHelper_CassetteHaveCheckedBeat", int.MinValue);
+                }
+            }
         }
     }
 

@@ -2,6 +2,10 @@ mods.EndHelper.name=Ender's Blender
 
 ############ MISC STUFF
 
+
+
+
+
 # Tile Entity
 entities.EndHelper/TileEntity.placements.name.normal=Tile Entity
 entities.EndHelper/TileEntity.placements.description.normal=Modified VivHelper Custom Depth Tile Entity
@@ -33,6 +37,37 @@ entities.EndHelper/MultiroomWatchtower.placements.description.normal=Watchtower 
 entities.EndHelper/MultiroomWatchtower.attributes.description.modifiedInterpolation=If you're using nodes, uses Catmull-Rom Splines instead of whatever vanilla uses for the watchtower path,\nwhich have the advantage of ensuring the camera always goes past nodes, but is less smooth.\nBecareful if this is disabled, if the path does not go through a location where the camera can fit in the room,\nthe watchtower cannot access it and any future rooms!
 entities.EndHelper/MultiroomWatchtower.attributes.description.ignoreLookoutBlocker=The lookout bypasses Lookout Blockers.\nThis allows both scrolling past the blockers and looking at rooms past the blockers.\nThis has no effect if nodes are used.
 
+
+
+
+# Conditional Tutorial Bird
+entities.EndHelper/ConditionalBirdTutorial.placements.name.normal=Conditional Bird Tutorial
+entities.EndHelper/ConditionalBirdTutorial.placements.description.normal=Everest Custom Bird Tutorial with custom ways to activate them and fly-in animation. Everest Custom Bird Tutorial Trigger works for removing them,\nbut you shouldn't use them to show tutorial.
+entities.EndHelper/ConditionalBirdTutorial.attributes.description.flyInSpeedMultiplier=When the condition is met, the bird will fly to its location. This multiplies the Fly-in animation speed when the condition is met.\nSet to 0 for no fly-in (already at location by default)
+entities.EndHelper/ConditionalBirdTutorial.attributes.description.showSprite=If false, the bird will be invisible and skip the fly-in animation.
+entities.EndHelper/ConditionalBirdTutorial.attributes.description.onlyOnceFlyIn=The bird will only fly-in once.\nIn future room loads, the bird will already be at the landing spot, \nwith the tutorial checks apart from Require On Screen being skipped.
+entities.EndHelper/ConditionalBirdTutorial.attributes.description.secInZoneTotal=The mimimum total time (in seconds) madeline must be between the nodes for the tutorial to appear.
+entities.EndHelper/ConditionalBirdTutorial.attributes.description.secInZoneAtOnce=The mimimum time (in seconds) madeline must be between the nodes without leaving for the tutorial to appear.
+entities.EndHelper/ConditionalBirdTutorial.attributes.description.secInRoom=The mimimum total time (in seconds) madeline must be in the room for the tutorial to appear.
+entities.EndHelper/ConditionalBirdTutorial.attributes.description.deathsInZone=The mimimum number of deaths madeline must have between the nodes for the tutorial to appear.
+entities.EndHelper/ConditionalBirdTutorial.attributes.description.deathsInRoom=The mimimum number of deaths madeline must have in the room for the tutorial to appear.
+entities.EndHelper/ConditionalBirdTutorial.attributes.description.requireOnScreen=If the bird must be within the screen bounds for the tutorial to appear.
+entities.EndHelper/ConditionalBirdTutorial.attributes.description.requireFlag=Flag required for tutorial to appear.\nA list of flags in the format "flagA, flagB, !flagC | flagD, flagE" can be specified.\nThis means (flagA and flagB and not flagC) or (flagD and flagE).
+
+
+
+# Gameplay Tweaks Override Trigger
+triggers.EndHelper/GameplayTweaksOverrideTrigger.placements.name.normal=Blender Gameplay Tweaks Override Trigger
+triggers.EndHelper/GameplayTweaksOverrideTrigger.placements.description.normal=Temporarily enables some of the blender's Gameplay Tweaks for a map (without it counting as variations in the end screen).
+triggers.EndHelper/GameplayTweaksOverrideTrigger.attributes.description.preventDownDashRedirects=Convert manual demos into down/down-diagonal dashes.
+triggers.EndHelper/GameplayTweaksOverrideTrigger.attributes.description.setToDefaultUponLeaving=Removes the override, using the player's mod settings instead.
+triggers.EndHelper/GameplayTweaksOverrideTrigger.attributes.description.activateEnterRoom=Activates the trigger upon entering the room.
+triggers.EndHelper/GameplayTweaksOverrideTrigger.attributes.description.requireFlag=If specified, the trigger will only run if this flag is enabled.\nA list of flags in the format "flagA, flagB, !flagC | flagD, flagE" can be specified.\nThis means (flagA and flagB and not flagC) or (flagD and flagE).
+
+
+
+
+
 # Cassette Manager Trigger
 triggers.EndHelper/CassetteManagerTrigger.placements.name.normal=Cassette Manager Trigger
 triggers.EndHelper/CassetteManagerTrigger.placements.description.normal=Lets you create cassette music with changing tempo,\nor force a cassette theme to move to a certain beat.
@@ -53,7 +88,7 @@ triggers.EndHelper/CassetteManagerTrigger.attributes.description.doNotSetIfWithi
 triggers.EndHelper/CassetteManagerTrigger.attributes.description.addInsteadOfSet=Offsets the current beat index by a value rather than setting it to that value.
 triggers.EndHelper/CassetteManagerTrigger.attributes.description.removeImmediately=Trigger is removed after a few frames.\nMeant to be placed at respawn points to only set beat if the player respawns there.
 triggers.EndHelper/CassetteManagerTrigger.attributes.description.setBeatResetCassettePos=If enabled, when setting a beat, reset cassette blocks to their initial position.\nThis prevents cassette raising upon changing beats, but prevents you from moving the cassette block without issues.
-triggers.EndHelper/CassetteManagerTrigger.attributes.description.requireFlag=If specified, the tempo and beat will only be set/changed if this flag is enabled.
+triggers.EndHelper/CassetteManagerTrigger.attributes.description.requireFlag=If specified, the tempo and beat will only be set/changed if this flag is enabled.\nA list of flags in the format "flagA, flagB, !flagC | flagD, flagE" can be specified.\nThis means (flagA and flagB and not flagC) or (flagD and flagE).
 
 # Cassette Beat Block
 entities.EndHelper/CassetteBeatGate.placements.name.normal=Cassette Beat Block
@@ -76,7 +111,7 @@ entities.EndHelper/CassetteBeatGate.attributes.description.particleColour2=2nd p
 entities.EndHelper/CassetteBeatGate.attributes.description.particleColour2=2nd particle colour emitted when the block moves.
 entities.EndHelper/CassetteBeatGate.attributes.description.changeInsteadOfSet=If Move Loop Beat and Move Cycle Beats should specify change in node number, rather than setting it.\nFormat is changed to [beatNum]|[Change in nodeNum], negative changes means go to previous node.
 entities.EndHelper/CassetteBeatGate.attributes.description.loopNodes=If going above the highest node loops you back to the first node (and vice versa), rather than capping there.
-entities.EndHelper/CassetteBeatGate.attributes.description.requireFlag=If specified, the block will only move if this flag is enabled.
+entities.EndHelper/CassetteBeatGate.attributes.description.requireFlag=If specified, the block will only move if this flag is enabled.\nA list of flags in the format "flagA, flagB, !flagC | flagD, flagE" can be specified.\nThis means (flagA and flagB and not flagC) or (flagD and flagE).
 
 
 
@@ -99,18 +134,21 @@ entities.EndHelper/RoomSwapController.attributes.description.activateSoundEvent2
 entities.EndHelper/RoomSwapBox.placements.name.normal=Room-Swap Breaker Box
 entities.EndHelper/RoomSwapBox.placements.description.normal=Breaker Box that modifies room order depending on dash direction. And also does not break.
 entities.EndHelper/RoomSwapBox.attributes.description.gridId=The identifier for the moveable grid this box affects.
-entities.EndHelper/RoomSwapBox.attributes.description.modificationTypeLeft=Room order modification when box is hit from the left.\nFor Set To Order, the format is _{row1}{col1}_{row2}{col2}_{row3}{col3}_... from left to right, top down.
-entities.EndHelper/RoomSwapBox.attributes.description.modificationTypeRight=Room order modification when box is hit from the right.\nFor Set To Order, the format is _{row1}{col1}_{row2}{col2}_{row3}{col3}_... from left to right, top down.
-entities.EndHelper/RoomSwapBox.attributes.description.modificationTypeUp=Room order modification when box is hit from the top.\nFor Set To Order, the format is _{row1}{col1}_{row2}{col2}_{row3}{col3}_... from left to right, top down.
-entities.EndHelper/RoomSwapBox.attributes.description.modificationTypeDown=Room order modification when box is hit from the bottom.\nFor Set To Order, the format is _{row1}{col1}_{row2}{col2}_{row3}{col3}_... from left to right, top down.
+entities.EndHelper/RoomSwapBox.attributes.description.modificationTypeLeft=Room order modification when box is hit from the left.\nFor Set To Order, the format is _{row1}{col1}_{row2}{col2}_{row3}{col3}_... from left to right, top down.\nPutting a # makes the room not affected.
+entities.EndHelper/RoomSwapBox.attributes.description.modificationTypeRight=Room order modification when box is hit from the right.\nFor Set To Order, the format is _{row1}{col1}_{row2}{col2}_{row3}{col3}_... from left to right, top down.\nPutting a # makes the room not affected.
+entities.EndHelper/RoomSwapBox.attributes.description.modificationTypeUp=Room order modification when box is hit from the top.\nFor Set To Order, the format is _{row1}{col1}_{row2}{col2}_{row3}{col3}_... from left to right, top down.\nPutting a # makes the room not affected.
+entities.EndHelper/RoomSwapBox.attributes.description.modificationTypeDown=Room order modification when box is hit from the bottom.\nFor Set To Order, the format is _{row1}{col1}_{row2}{col2}_{row3}{col3}_... from left to right, top down.\nPutting a # makes the room not affected.
 entities.EndHelper/RoomSwapBox.attributes.description.particleColour1=1st particle colour emitted when box is hit.
 entities.EndHelper/RoomSwapBox.attributes.description.particleColour2=2nd particle colour emitted when box is hit.
 entities.EndHelper/RoomSwapBox.attributes.description.texturePath=Texture used for the box (Recommended size = 32x32).\nMake sure it is under Graphics\Atlases\Gameplay\objects\nIf blank, default textures are chosen depending on Left modification type.\nPut "heart" for heart texture.
-entities.EndHelper/RoomSwapBox.attributes.description.flagCheck=If not empty, the trigger only activates if this flag is set (or unset).
-entities.EndHelper/RoomSwapBox.attributes.description.flagRequire=True means flag must be set for trigger to activate.\nFalse means flag must be unset for trigger to activate.
-entities.EndHelper/RoomSwapBox.attributes.description.flagToggle=If true, the flag's state (set or unset) will be changed when the trigger activates.
 entities.EndHelper/RoomSwapBox.attributes.description.flashEffect=Flashes the screen when room modification occurs.
 entities.EndHelper/RoomSwapBox.attributes.description.preset=Sets the Modification Types (and texture) to some preset values.
+entities.EndHelper/RoomSwapBox.attributes.description.requireFlag=If specified, the trigger only activates if this flag is enabled.\nA list of flags in the format "flagA, flagB, !flagC | flagD, flagE" can be specified.\nThis means (flagA and flagB and not flagC) or (flagD and flagE).
+entities.EndHelper/RoomSwapBox.attributes.description.toggleFlag=If specified, this flag's state will be toggled when the trigger activates and a swap successfully occurs.\nA list of flags seperated by commas can also be specified.
+# old
+entities.EndHelper/RoomSwapBox.attributes.description.flagCheck=[Outdated] If not empty, the trigger only activates if this flag is set (or unset).
+entities.EndHelper/RoomSwapBox.attributes.description.flagRequire=[Outdated] True means flag must be set for trigger to activate.\nFalse means flag must be unset for trigger to activate.
+entities.EndHelper/RoomSwapBox.attributes.description.flagToggle=[Outdated] If true, the flag's state (set or unset) will be changed when the trigger activates.
 
 # RoomSwap Map
 entities.EndHelper/RoomSwapMap.placements.name.normal=Room-Swap Map
@@ -144,10 +182,13 @@ triggers.EndHelper/RoomSwapModifyRoomTrigger.placements.description.normal=Trigg
 triggers.EndHelper/RoomSwapModifyRoomTrigger.attributes.description.gridId=The identifier for the moveable grid this trigger affects.
 triggers.EndHelper/RoomSwapModifyRoomTrigger.attributes.description.modificationType=How does entering this trigger affect the room order?\nFor Set To Order, the format is _{row1}{col1}_{row2}{col2}_{row3}{col3}_... from left to right, top down.
 triggers.EndHelper/RoomSwapModifyRoomTrigger.attributes.description.modifySilently=Modify without any sound/visual effects.
-triggers.EndHelper/RoomSwapModifyRoomTrigger.attributes.description.flagCheck=If not empty, the trigger only activates if this flag is set (or unset).
-triggers.EndHelper/RoomSwapModifyRoomTrigger.attributes.description.flagRequire=True means flag must be set for trigger to activate.\nFalse means flag must be unset for trigger to activate.
-triggers.EndHelper/RoomSwapModifyRoomTrigger.attributes.description.flagToggle=If true, the flag's state (set or unset) will be changed when the trigger activates.
 triggers.EndHelper/RoomSwapModifyRoomTrigger.attributes.description.flashEffect=Flashes the screen when room modification occurs.
+entities.EndHelper/RoomSwapModifyRoomTrigger.attributes.description.requireFlag=If specified, the trigger only activates if this flag is enabled.\nA list of flags in the format "flagA, flagB, !flagC | flagD, flagE" can be specified.\nThis means (flagA and flagB and not flagC) or (flagD and flagE).
+entities.EndHelper/RoomSwapModifyRoomTrigger.attributes.description.toggleFlag=If specified, this flag's state will be toggled when the trigger activates and a swap successfully occurs.\nA list of flags seperated by commas can also be specified.
+# old
+triggers.EndHelper/RoomSwapModifyRoomTrigger.attributes.description.flagCheck=[Outdated] If not empty, the trigger only activates if this flag is set (or unset).
+triggers.EndHelper/RoomSwapModifyRoomTrigger.attributes.description.flagRequire=[Outdated] True means flag must be set for trigger to activate.\nFalse means flag must be unset for trigger to activate.
+triggers.EndHelper/RoomSwapModifyRoomTrigger.attributes.description.flagToggle=[Outdated] If true, the flag's state (set or unset) will be changed when the trigger activates.
 
 # RoomSwap Respawn Force Same Room Trigger
 triggers.EndHelper/RoomSwapRespawnForceSameRoomTrigger.placements.name.normal=Room-Swap Respawn Force Same Room Trigger

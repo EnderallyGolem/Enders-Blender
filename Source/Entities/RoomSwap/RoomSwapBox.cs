@@ -4,6 +4,8 @@ using Monocle;
 using System.Runtime.CompilerServices;
 using System;
 using static MonoMod.InlineRT.MonoModRule;
+using Celeste.Mod.EndHelper.SharedCode;
+using Celeste.Mod.EndHelper.Utils;
 
 namespace Celeste.Mod.EndHelper.Entities.RoomSwap;
 
@@ -32,10 +34,15 @@ public class RoomSwapBox : Solid
 
     private EntityData entityData;
     private MTexture texture;
+
+    private string requireFlag = "";
+    private string toggleFlag = "";
+    private bool flashEffect = false;
+
+    // OLD BEHAVIOUR
     private string flagCheck = "";
     private bool flagRequire = true;
     private bool flagToggle = false;
-    private bool flashEffect = false;
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     public RoomSwapBox(Vector2 position)
@@ -57,18 +64,23 @@ public class RoomSwapBox : Solid
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public RoomSwapBox(EntityData e, Vector2 levelOffset)
-        : this(e.Position + levelOffset)
+    public RoomSwapBox(EntityData data, Vector2 levelOffset)
+        : this(data.Position + levelOffset)
     {
-        entityData = e;
-        gridId = e.Attr("gridId", "1");
-        flagCheck = e.Attr("flagCheck", "");
-        flagRequire = e.Bool("flagRequire", true);
-        flagToggle = e.Bool("flagToggle", false);
-        flashEffect = e.Bool("flashEffect", false);
+        entityData = data;
+        gridId = data.Attr("gridId", "1");
+
+        requireFlag = data.Attr("requireFlag", "");
+        toggleFlag = data.Attr("toggleFlag", "");
+        flashEffect = data.Bool("flashEffect", false);
+
+        // OLD BEHAVIOUR
+        flagCheck = data.Attr("flagCheck", "");
+        flagRequire = data.Bool("flagRequire", true);
+        flagToggle = data.Bool("flagToggle", false);
 
         //Image Path
-        string imagePath = e.Attr("texturePath", "objects/EndHelper/RoomSwapBox/loenn");
+        string imagePath = data.Attr("texturePath", "objects/EndHelper/RoomSwapBox/loenn");
         if (imagePath == "") { 
 
             string left = entityData.Attr("modificationTypeLeft", "None");
@@ -154,8 +166,13 @@ public class RoomSwapBox : Solid
         Level level = SceneAs<Level>();
         if (flagCheck == "")
         {
-            modifyRoomCommandsAndStuff();
+            if (Utils_General.AreFlagsEnabled(level.Session, requireFlag))
+            {
+                bool succeedSwap = modifyRoomCommandsAndStuff();
+                Utils_General.ToggleFlags(level.Session, toggleFlag, succeedSwap);
+            }
         }
+        // OLD BEHAVIOUR
         else if (level.Session.GetFlag(flagCheck) == flagRequire)
         {
             if (flagToggle)
@@ -165,31 +182,30 @@ public class RoomSwapBox : Solid
             modifyRoomCommandsAndStuff();
         }
 
-        void modifyRoomCommandsAndStuff()
+        bool modifyRoomCommandsAndStuff()
         {
+            bool checkSucceed = false;
             if (dir == Vector2.UnitX)
             {
-                bool checkSucceed = EndHelperModule.ModifyRooms(modifyTypeLeft, modifySilently, player, SceneAs<Level>(), gridId, teleportDelayMilisecond: 150, flashEffect: flashEffect);
-                if (checkSucceed) { hitEffects(); }
+                checkSucceed = Utils_RoomSwap.ModifyRooms(modifyTypeLeft, modifySilently, player, SceneAs<Level>(), gridId, teleportDelayMilisecond: 150, flashEffect: flashEffect);
             }
 
             if (dir == -Vector2.UnitX)
             {
-                bool checkSucceed = EndHelperModule.ModifyRooms(modifyTypeRight, modifySilently, player, SceneAs<Level>(), gridId, teleportDelayMilisecond: 150, flashEffect: flashEffect);
-                if (checkSucceed) { hitEffects(); }
+                checkSucceed = Utils_RoomSwap.ModifyRooms(modifyTypeRight, modifySilently, player, SceneAs<Level>(), gridId, teleportDelayMilisecond: 150, flashEffect: flashEffect);
             }
 
             if (dir == Vector2.UnitY)
             {
-                bool checkSucceed = EndHelperModule.ModifyRooms(modifyTypeUp, modifySilently, player, SceneAs<Level>(), gridId, teleportDelayMilisecond: 250, flashEffect: flashEffect); //More delay to kb away
-                if (checkSucceed) { hitEffects(); }
+                checkSucceed = Utils_RoomSwap.ModifyRooms(modifyTypeUp, modifySilently, player, SceneAs<Level>(), gridId, teleportDelayMilisecond: 250, flashEffect: flashEffect); //More delay to kb away
             }
 
             if (dir == -Vector2.UnitY)
             {
-                bool checkSucceed = EndHelperModule.ModifyRooms(modifyTypeDown, modifySilently, player, SceneAs<Level>(), gridId, teleportDelayMilisecond: 0, flashEffect: flashEffect); //No delay otherwise clip inside
-                if (checkSucceed) { hitEffects(); }
+                checkSucceed = Utils_RoomSwap.ModifyRooms(modifyTypeDown, modifySilently, player, SceneAs<Level>(), gridId, teleportDelayMilisecond: 0, flashEffect: flashEffect); //No delay otherwise clip inside
             }
+            if (checkSucceed) { hitEffects(); }
+            return checkSucceed;
         }
 
         (Scene as Level).DirectionalShake(dir);

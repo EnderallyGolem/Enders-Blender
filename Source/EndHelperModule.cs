@@ -3,35 +3,30 @@ using Celeste.Mod.EndHelper.Integration;
 using Microsoft.Xna.Framework;
 using Monocle;
 using MonoMod.Utils;
-using On.Celeste;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
-using System.Data.Common;
 using System.Linq;
-using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
 using System.Threading.Tasks;
 using static Celeste.Mod.EndHelper.Entities.Misc.RoomStatisticsDisplayer;
-using static MonoMod.InlineRT.MonoModRule;
-using static On.Celeste.Level;
-using static On.Celeste.Strawberry;
-using Celeste.Mod.Entities;
-using System.Runtime.CompilerServices;
-using IL.Celeste;
-using Celeste;
 using System.Reflection;
-using NETCoreifier;
 using static Celeste.Mod.EndHelper.EndHelperModuleSettings;
-using Celeste.Mod.EndHelper.Entities.RoomSwap;
-using Microsoft.Xna.Framework.Graphics;
 using MonoMod.Cil;
-using Mono.Cecil.Cil;
 using MonoMod.RuntimeDetour;
-using static On.Celeste.Player;
 using FMOD.Studio;
-using static Celeste.DashSwitch;
+using System.Text.RegularExpressions;
+using Celeste.Mod.EndHelper.SharedCode;
+using Celeste.Mod.EndHelper.Utils;
+using Mono.Cecil.Cil;
+using Mono.Cecil;
+using AsmResolver.DotNet.Code.Cil;
+using System.Runtime.CompilerServices;
+using Microsoft.VisualBasic;
+using static Celeste.Mod.EndHelper.EndHelperModuleSettings.GameplayTweaks;
+using Celeste.Mod.Entities;
+using static On.Celeste.Player;
 
 namespace Celeste.Mod.EndHelper;
 
@@ -63,18 +58,25 @@ public class EndHelperModule : EverestModule {
     #region Initialisation
 
     // Debug mode is annoying
-    public enum SessionResetCause { None, LoadState, Debug }
-    public static int timeSinceSessionReset = 2;                                    // If == 1, correct for resets if needed. Starts from 2 so it does not cause a reset when loading!
-    public static int timeSinceRespawn = 0;                                         // Set to 0 when dying, incremented if player is alive and not "just respawned". Not changed during load state!
+    public enum SessionResetCause { None, LoadState, Debug, ReenterMap }
     public static SessionResetCause lastSessionResetCause = SessionResetCause.None; // Stores the previous cause of reset. Sometimes useful.
+    public static int timeSinceSessionReset = 2;                                    // If == 1, correct for resets if needed. Starts from 2 so it does not cause a reset when loading!
 
     // Store information for room stats externally for them to persist through save states
     public static Dictionary<string, string> externalRoomStatDict_customName = new Dictionary<string, string> { };
     public static OrderedDictionary externalRoomStatDict_death = new OrderedDictionary { };
     public static OrderedDictionary externalRoomStatDict_timer = new OrderedDictionary { };
     public static OrderedDictionary externalRoomStatDict_strawberries = new OrderedDictionary { };
+
     public static OrderedDictionary externalRoomStatDict_colorIndex = new OrderedDictionary { };
     public static Dictionary<string, bool> externalDict_pauseTypeDict = new Dictionary<string, bool> { };
+    public static Dictionary<string, string> externalDict_fuseRoomRedirect = new Dictionary<string, string> { };
+
+    public static List<string> externalRoomStatDict_firstClear_roomOrder = [];
+    public static Dictionary<string, int> externalRoomStatDict_firstClear_death = [];
+    public static Dictionary<string, long> externalRoomStatDict_firstClear_timer = [];
+    public static Dictionary<string, int> externalRoomStatDict_firstClear_strawberries = [];
+
 
     // Decreases till -ve, enables input if 0 and disables if +
     // Lets me disable, but ensure it gets re-enabled when I don't need it anymore
@@ -84,9 +86,11 @@ public class EndHelperModule : EverestModule {
     // -1 means not integrated
     public static bool integratingWithSSMQoL = false;
 
+    // If false, screen transitions do not move the player. Used in multi-room binos
+    public static bool allowScreenTransitionMovement = true;
+
     // Event Listener for when room modification occurs
     public static event EventHandler<RoomModificationEventArgs> RoomModificationEvent;
-    public static bool enableRoomSwapHooks = false;
     public class RoomModificationEventArgs : EventArgs
     {
         public string gridID { get; set; }
@@ -102,25 +106,37 @@ public class EndHelperModule : EverestModule {
     }
 
 
-    private static ILHook Loadhook_Player_DashCoroutine;
+    private static ILHook Loadhook_Level_OrigTransitionRoutine;
+    private static ILHook Loadhook_Refill_RefillRoutine;
     private static ILHook Loadhook_Input_GrabCheckGet;
+
+    private static ILHook Loadhook_Player_DashCoroutine;
+    private static ILHook Loadhook_Player_RedDashCoroutine;
+    private static ILHook Loadhook_Player_OrigDie;
+    private static ILHook Loadhook_PlayerDeadBody_DeathRoutine;
 
     public override void Load() {
         //On.Celeste.Level.TransitionRoutine += Hook_TransitionRoutine;
-        Everest.Events.AssetReload.OnReloadLevel += ReupdateAllRooms;
+        Everest.Events.AssetReload.OnReloadLevel += AssetReloadLevelFunc;
         Everest.Events.AssetReload.OnBeforeReload += ReloadBeginFunc;
         Everest.Events.AssetReload.OnAfterReload += ReloadCompleteFunc;
         Everest.Events.Level.OnEnter += EnterMapFunc;
+        Everest.Events.Level.OnCreatePauseMenuButtons += CreatePauseMenuButtonsFunc;
 
         On.Monocle.Engine.Update += Hook_EngineUpdate;
         On.Celeste.Level.Update += Hook_LevelUpdate;
         On.Celeste.Level.UpdateTime += Hook_LevelUpdateTime;
-        On.Celeste.Player.Die += Hook_OnPlayerDeath;
-        On.Celeste.Player.IntroRespawnBegin += Hook_OnPlayerRespawn;
-        On.Celeste.Level.TransitionRoutine += Hook_TransitionRoutine;
-        On.Celeste.LevelLoader.StartLevel += Hook_StartMap;
+        On.Celeste.LevelLoader.StartLevel += Hook_StartMapFromBeginning;
         On.Celeste.Level.Pause += Hook_Pause;
 
+        On.Celeste.Player.Update += Hook_OnPlayerUpdate;
+        On.Celeste.Player.Die += Hook_OnPlayerDeath;
+        On.Celeste.Player.IntroRespawnBegin += Hook_OnPlayerRespawn;
+
+        On.Celeste.AreaComplete.VersionNumberAndVariants += Hook_AreaCompleteVerNumVars;
+        On.Celeste.OuiJournal.Update += Hook_JournalUpdate;
+        On.Celeste.OuiJournal.Render += Hook_JournalRender;
+        On.Celeste.OuiJournal.Close += Hook_JournalClose;
 
         On.Celeste.Editor.MapEditor.Update += Hook_UsingMapEditor;
         On.Celeste.Strawberry.Added += Hook_StrawberryAddedToLevel;
@@ -132,35 +148,65 @@ public class EndHelperModule : EverestModule {
         On.Celeste.CassetteBlockManager.Awake += Hook_CassetteBlockManagerAwake;
         IL.Celeste.CassetteBlockManager.AdvanceMusic += ILHook_CassetteBlockManagerAdvMusic;
 
+        MethodInfo ILOrigDie = typeof(Player).GetMethod("orig_Die", BindingFlags.Public | BindingFlags.Instance);
+        Loadhook_Player_OrigDie = new ILHook(ILOrigDie, Hook_ILOrigDie);
+        MethodInfo ILDeadBodyDeathRoutine = typeof(PlayerDeadBody).GetMethod("DeathRoutine", BindingFlags.NonPublic | BindingFlags.Instance).GetStateMachineTarget();
+        Loadhook_PlayerDeadBody_DeathRoutine = new ILHook(ILDeadBodyDeathRoutine, Hook_ILDeadBodyDeathRoutine);
+
+
+        MethodInfo ILRefillCoroutine = typeof(Refill).GetMethod("RefillRoutine", BindingFlags.NonPublic | BindingFlags.Instance).GetStateMachineTarget();
+        Loadhook_Refill_RefillRoutine = new ILHook(ILRefillCoroutine, Hook_IL_RefillRefillCoroutine);
+
+        //On.Celeste.Level.TransitionRoutine += Hook_TransitionRoutine;
+        MethodInfo ILTransitionCoroutine = typeof(Level).GetMethod("orig_TransitionRoutine", BindingFlags.NonPublic | BindingFlags.Instance).GetStateMachineTarget();
+        Loadhook_Level_OrigTransitionRoutine = new ILHook(ILTransitionCoroutine, Hook_IL_OrigTransitionRoutine);
+
         On.Celeste.Player.DashBegin += Hook_DashBegin;
+        IL.Celeste.Player.SuperBounce += ILHook_SuperBounce;
+        IL.Celeste.Player.SideBounce += ILHook_SideBounce;
         MethodInfo ILDashCoroutine = typeof(Player).GetMethod("DashCoroutine", BindingFlags.NonPublic | BindingFlags.Instance).GetStateMachineTarget();
-        Loadhook_Player_DashCoroutine = new ILHook(ILDashCoroutine, Hook_IL_DashCoroutine); // Pass ILContext to Hook_IL_DashCoroutine
+        Loadhook_Player_DashCoroutine = new ILHook(ILDashCoroutine, Hook_IL_DashCoroutine);
+        MethodInfo ILRedDashCoroutine = typeof(Player).GetMethod("RedDashCoroutine", BindingFlags.NonPublic | BindingFlags.Instance).GetStateMachineTarget();
+        Loadhook_Player_RedDashCoroutine = new ILHook(ILRedDashCoroutine, Hook_IL_RedDashCoroutine);
 
         MethodInfo ILInputGrabCheckGet = typeof(Input).GetProperty("GrabCheck").GetGetMethod();
-        Loadhook_Input_GrabCheckGet = new ILHook(ILInputGrabCheckGet, Hook_IL_GrabCheckGet); // Pass ILContext to Hook_IL_DashCoroutine
+        Loadhook_Input_GrabCheckGet = new ILHook(ILInputGrabCheckGet, Hook_IL_GrabCheckGet);
 
         SpeedrunToolIntegration.Load();
         SSMQoLIntegration.Load();
         ImGuiHelperIntegration.Load();
         QuantumMechanicsIntegration.Load();
+        CollabUtils2Integration.Load();
+    }
+
+    private object CustomBirdTutorial_OnParseCommand(string command)
+    {
+        throw new NotImplementedException();
     }
 
     // Unload the entirety of your mod's content. Free up any native resources.
     public override void Unload() {
         //On.Celeste.Level.TransitionRoutine -= Hook_TransitionRoutine;
-        Everest.Events.AssetReload.OnReloadLevel -= ReupdateAllRooms;
+        Everest.Events.AssetReload.OnReloadLevel -= AssetReloadLevelFunc;
         Everest.Events.AssetReload.OnBeforeReload -= ReloadBeginFunc;
         Everest.Events.AssetReload.OnAfterReload -= ReloadCompleteFunc;
         Everest.Events.Level.OnEnter -= EnterMapFunc;
+        Everest.Events.Level.OnCreatePauseMenuButtons -= CreatePauseMenuButtonsFunc;
 
         On.Monocle.Engine.Update -= Hook_EngineUpdate;
         On.Celeste.Level.Update -= Hook_LevelUpdate;
         On.Celeste.Level.UpdateTime -= Hook_LevelUpdateTime;
+        On.Celeste.LevelLoader.StartLevel -= Hook_StartMapFromBeginning;
+        On.Celeste.Level.Pause -= Hook_Pause;
+
+        On.Celeste.Player.Update -= Hook_OnPlayerUpdate;
         On.Celeste.Player.Die -= Hook_OnPlayerDeath;
         On.Celeste.Player.IntroRespawnBegin -= Hook_OnPlayerRespawn;
-        On.Celeste.Level.TransitionRoutine -= Hook_TransitionRoutine;
-        On.Celeste.LevelLoader.StartLevel -= Hook_StartMap;
-        On.Celeste.Level.Pause -= Hook_Pause;
+
+        On.Celeste.AreaComplete.VersionNumberAndVariants -= Hook_AreaCompleteVerNumVars;
+        On.Celeste.OuiJournal.Update -= Hook_JournalUpdate;
+        On.Celeste.OuiJournal.Render -= Hook_JournalRender;
+        On.Celeste.OuiJournal.Close -= Hook_JournalClose;
 
         On.Celeste.Editor.MapEditor.Update -= Hook_UsingMapEditor;
         On.Celeste.Strawberry.Added -= Hook_StrawberryAddedToLevel;
@@ -172,14 +218,24 @@ public class EndHelperModule : EverestModule {
         On.Celeste.CassetteBlockManager.Awake -= Hook_CassetteBlockManagerAwake;
         IL.Celeste.CassetteBlockManager.AdvanceMusic -= ILHook_CassetteBlockManagerAdvMusic;
 
+        Loadhook_Player_OrigDie?.Dispose(); Loadhook_Player_OrigDie = null;
+        Loadhook_PlayerDeadBody_DeathRoutine?.Dispose(); Loadhook_PlayerDeadBody_DeathRoutine = null;
+        Loadhook_Refill_RefillRoutine?.Dispose(); Loadhook_Refill_RefillRoutine = null;
+        //On.Celeste.Level.TransitionRoutine -= Hook_TransitionRoutine;
+        Loadhook_Level_OrigTransitionRoutine?.Dispose(); Loadhook_Level_OrigTransitionRoutine = null;
+
         On.Celeste.Player.DashBegin -= Hook_DashBegin;
+        IL.Celeste.Player.SuperBounce -= ILHook_SuperBounce;
+        IL.Celeste.Player.SideBounce -= ILHook_SideBounce;
         Loadhook_Player_DashCoroutine?.Dispose(); Loadhook_Player_DashCoroutine = null;
+        Loadhook_Player_RedDashCoroutine?.Dispose(); Loadhook_Player_RedDashCoroutine = null;
         Loadhook_Input_GrabCheckGet?.Dispose(); Loadhook_Input_GrabCheckGet = null;
 
         SpeedrunToolIntegration.Unload();
         SSMQoLIntegration.Unload();
         ImGuiHelperIntegration.Unload();
         QuantumMechanicsIntegration.Unload();
+        CollabUtils2Integration.Unload();
     }
 
     // Optional, initialize anything after Celeste has initialized itself properly.
@@ -198,6 +254,18 @@ public class EndHelperModule : EverestModule {
 
     public static bool reloadComplete;
 
+    public static void AssetReloadLevelFunc(global::Celeste.Level level)
+    {
+        // Yeah this exists solely so reloading a map midway through it doesn't break.
+        // Solely this or solely EnterMapFunc doesn't work.
+        // Also these are both in timeSinceSessionReset > 2 checks so they don't infinite loop off each other
+        // Can you tell that the code is made with glue and duct tape
+        if (timeSinceSessionReset > 2)
+        {
+            timeSinceSessionReset = 0;
+            lastSessionResetCause = SessionResetCause.ReenterMap;
+        }
+    }
     private static void ReloadCompleteFunc(bool silent)
     {
         reloadComplete = true;
@@ -208,63 +276,220 @@ public class EndHelperModule : EverestModule {
     }
     private static void EnterMapFunc(global::Celeste.Session session, bool fromSaveData)
     {
+        RoomStatisticsDisplayer.hideIfGoldenStrawberryEnabled = false;
+
         // If first time (not fromSaveData), check Hook_StartMap since it has access to level
         if (fromSaveData)
         {
+            timeSinceSessionReset = 0;
+            lastSessionResetCause = SessionResetCause.ReenterMap;
+
+            // Handle savedata dicts. This requires fromSaveData as that is AFTER the session is made.
+            SetupRoomTrackerSaveDataDicts(session);
+
             String roomName = session.Level;
+            roomName = RoomStatisticsDisplayer.GetEffectiveRoomName(roomName);
             // +1 death for save and quit. The reason why this is done here instead of everest onexit event is because
             // as far as I can tell saving and returning to lobby with collabutil saves the session before onexit runs.
-            EndHelperModule.Session.roomStatDict_death[roomName] = Convert.ToInt32(EndHelperModule.Session.roomStatDict_death[roomName]) + 1;
 
-            // Handle the custom name savedata dict. This requires fromSaveData as that is AFTER the session is made.
-            SetupCustomNameSaveDataDict(session);
+            // This is done manually here to avoid touching RoomStatisticsDisplayer. Because this runs before the entity is loaded.
+
+            EndHelperModule.Session.roomStatDict_death[roomName] = Convert.ToInt32(EndHelperModule.Session.roomStatDict_death[roomName]) + 1;
+            String mapNameSide_Internal = GetMapNameSideInternal(session.Area);
+
+            bool dealWithFirstCycle = EndHelperModule.Settings.RoomStatMenu.MenuTrackerStorageCount != 0 && !global::Celeste.SaveData.Instance.Areas_Safe[session.Area.ID].Modes[(int)session.Area.Mode].Completed && EndHelperModule.SaveData.mapDict_roomStat_firstClear_roomOrder.ContainsKey(mapNameSide_Internal);
+            if (dealWithFirstCycle && EndHelperModule.SaveData.mapDict_roomStat_firstClear_death.ContainsKey(mapNameSide_Internal) && EndHelperModule.SaveData.mapDict_roomStat_firstClear_death[mapNameSide_Internal].ContainsKey(roomName))
+            {
+                EndHelperModule.SaveData.mapDict_roomStat_firstClear_death[mapNameSide_Internal][roomName]++;
+            }
         }
     }
 
-    static void SetupCustomNameSaveDataDict(global::Celeste.Session session)
-    {
-        String mapNameSide = session.Area.GetSID();
-        if (session.Area.Mode == AreaMode.BSide) { mapNameSide += "_BSide"; }
-        else if (session.Area.Mode == AreaMode.CSide) { mapNameSide += "_CSide"; }
+    private static int menuGiveUpLevelTimer = 0;
+    private static int menuGiveUpLevelTimerMax = 1000;
 
-        // Handle the dict storing room stat custom name dicts.
-        // Move the current map to the front of the list, and trim size if
-        //Logger.Log(LogLevel.Info, "EndHelper/main", $"Being the stuff:");
-        if (EndHelperModule.Settings.RoomStatMenu.MenuCustomNameStorageCount > 0)
+    private static void CreatePauseMenuButtonsFunc(Level level, TextMenu menu, bool minimal)
+    {
+        switch (EndHelperModule.Settings.QOLTweaksMenu.PreventAccidentalQuit)
         {
-            if (EndHelperModule.SaveData.mapDict_roomStatCustomNameDict.Contains(mapNameSide))
+            case QOLTweaks.PreventAccidentalQuitEnum.Disabled:
+                menuGiveUpLevelTimerMax = 0; break;
+            case QOLTweaks.PreventAccidentalQuitEnum.TimeSmall:
+                menuGiveUpLevelTimerMax = (int)(0.2 * 10); break;
+            case QOLTweaks.PreventAccidentalQuitEnum.TimeHalf:
+                menuGiveUpLevelTimerMax = (int)(0.5 * 10); break;
+            case QOLTweaks.PreventAccidentalQuitEnum.Time1:
+                menuGiveUpLevelTimerMax = (int)(1 * 10); break;
+            case QOLTweaks.PreventAccidentalQuitEnum.Time1Half:
+                menuGiveUpLevelTimerMax = (int)(1.5 * 10); break;
+            case QOLTweaks.PreventAccidentalQuitEnum.Time2:
+                menuGiveUpLevelTimerMax = (int)(2 * 10); break;
+            case QOLTweaks.PreventAccidentalQuitEnum.Time3:
+                menuGiveUpLevelTimerMax = (int)(3 * 10); break;
+            default:
+                menuGiveUpLevelTimerMax = 0; break;
+        }
+
+        // Only do the pausing thing if enabled (menuGiveUpLevelTimerMax != 0) and just paused (menuGiveUpLevelTimer == menuGiveUpLevelTimerMax)
+        if (menuGiveUpLevelTimer == menuGiveUpLevelTimerMax && menuGiveUpLevelTimerMax != 0)
+        {
+            PauseMenuButtonsFuncCooldown(level, menu, minimal);
+        }
+    }
+
+    async static void PauseMenuButtonsFuncCooldown(Level level, TextMenu menu, bool minimal)
+    {
+        // Temporarily Disable
+
+        // Restart Chapter
+        bool restartChapterInitialDisable = false;
+        int restartChapterIndex = menu.Items.FindIndex(item =>
+            item.GetType() == typeof(TextMenu.Button) && ((TextMenu.Button)item).Label == Dialog.Clean("menu_pause_restartarea"));
+        if (restartChapterIndex != -1)
+        {
+            restartChapterInitialDisable = menu.Items[restartChapterIndex].Disabled;
+            menu.Items[restartChapterIndex].Disabled = true;
+        }
+
+        // Return To Map
+        bool returnToMapInitialDisable = false;
+        int returnToMapIndex = menu.Items.FindIndex(item =>
+            item.GetType() == typeof(TextMenu.Button) && ((TextMenu.Button)item).Label == Dialog.Clean("menu_pause_return"));
+        if (returnToMapIndex != -1)
+        {
+            returnToMapInitialDisable = menu.Items[returnToMapIndex].Disabled;
+            menu.Items[returnToMapIndex].Disabled = true;
+        }
+
+        // I have no idea what this is
+        bool restartDemoInitialDisable = false;
+        int restartDemoIndex = menu.Items.FindIndex(item =>
+            item.GetType() == typeof(TextMenu.Button) && ((TextMenu.Button)item).Label == Dialog.Clean("menu_pause_restartdemo"));
+        if (restartDemoIndex != -1)
+        {
+            restartDemoInitialDisable = menu.Items[restartDemoIndex].Disabled;
+            menu.Items[restartDemoIndex].Disabled = true;
+        }
+
+        // Return To Lobby (but only if no save & quit)
+        bool returnToLobbyDisable = false;
+        int returnToLobbyIndex = menu.Items.FindIndex(item =>
+            item.GetType() == typeof(TextMenu.Button) && ((TextMenu.Button)item).Label == Dialog.Clean("collabutils2_returntolobby"));
+        if (returnToLobbyIndex != -1)
+        {
+            returnToLobbyDisable = menu.Items[returnToLobbyIndex].Disabled;
+            menu.Items[returnToLobbyIndex].Disabled = true;
+        }
+
+
+
+        menuGiveUpLevelTimer--;
+        while (menuGiveUpLevelTimer > 0 && menuGiveUpLevelTimer < menuGiveUpLevelTimerMax && level.Paused)
+        {
+            menuGiveUpLevelTimer--;
+            await Task.Delay(100);
+        }
+        if (menuGiveUpLevelTimer == 0)
+        {
+            // Update Reenable stuff
+            if (returnToMapIndex != -1)
+            {
+                menu.Items[returnToMapIndex].Disabled = returnToMapInitialDisable;
+            }
+            if (restartChapterIndex != -1)
+            {
+                menu.Items[restartChapterIndex].Disabled = restartChapterInitialDisable;
+            }
+            if (restartDemoIndex != -1)
+            {
+                menu.Items[restartDemoIndex].Disabled = restartDemoInitialDisable;
+            }
+            if (returnToLobbyIndex != -1)
+            {
+                menu.Items[returnToLobbyIndex].Disabled = returnToLobbyDisable;
+            }
+
+            // Update Menu
+            menu.Update();
+        }
+    }
+
+    static void SetupRoomTrackerSaveDataDicts(global::Celeste.Session session)
+    {
+        String mapNameSide_Internal = session.Area.GetSID();
+        if (session.Area.Mode == AreaMode.BSide) { mapNameSide_Internal += "_B"; }
+        else if (session.Area.Mode == AreaMode.CSide) { mapNameSide_Internal += "_C"; }
+
+        // Move the current map to the front of the list, and trim size if exceeds max
+        // The custom name dict will be the reference dict for size. (Just because it was added first.)
+
+        //Logger.Log(LogLevel.Info, "EndHelper/main", $"Being the stuff:");
+        if (EndHelperModule.Settings.RoomStatMenu.MenuTrackerStorageCount != 0)
+        {
+            // Not disabled.
+
+            // Handles adding/ordering of roomStatsCustomNameDict. This won't be necessary for the other dicts.
+            if (EndHelperModule.SaveData.mapDict_roomStatCustomNameDict.Contains(mapNameSide_Internal))
             {
                 //Logger.Log(LogLevel.Info, "EndHelper/main", $"Already contains {mapNameSide} => {EndHelperModule.SaveData.mapDict_roomStatCustomNameDict.Count} => {EndHelperModule.SaveData.mapDict_roomStatCustomNameDict[mapNameSide]}. Setting, Removing then Readding:");
-                if (EndHelperModule.SaveData.mapDict_roomStatCustomNameDict[mapNameSide] is Dictionary<string, string>)
+                if (EndHelperModule.SaveData.mapDict_roomStatCustomNameDict[mapNameSide_Internal] is Dictionary<string, string>)
                 {
-                    EndHelperModule.Session.roomStatDict_customName = (Dictionary<string, string>)EndHelperModule.SaveData.mapDict_roomStatCustomNameDict[mapNameSide];
-                } else
+                    EndHelperModule.Session.roomStatDict_customName = (Dictionary<string, string>)EndHelperModule.SaveData.mapDict_roomStatCustomNameDict[mapNameSide_Internal];
+                } 
+                else
                 {
-                    EndHelperModule.Session.roomStatDict_customName = ConvertToStringDictionary((Dictionary<object, object>)EndHelperModule.SaveData.mapDict_roomStatCustomNameDict[mapNameSide]);
+                    EndHelperModule.Session.roomStatDict_customName = Utils_General.ConvertToStringDictionary((Dictionary<object, object>)EndHelperModule.SaveData.mapDict_roomStatCustomNameDict[mapNameSide_Internal]);
                 }
-                EndHelperModule.SaveData.mapDict_roomStatCustomNameDict.Remove(mapNameSide);
+                EndHelperModule.SaveData.mapDict_roomStatCustomNameDict.Remove(mapNameSide_Internal);
             }
-            //Logger.Log(LogLevel.Info, "EndHelper/main", $"Adding {mapNameSide}.");
-            EndHelperModule.SaveData.mapDict_roomStatCustomNameDict[mapNameSide] = EndHelperModule.Session.roomStatDict_customName;
-        }
-        if (EndHelperModule.SaveData.mapDict_roomStatCustomNameDict.Count > EndHelperModule.Settings.RoomStatMenu.MenuCustomNameStorageCount)
-        {
-            //Logger.Log(LogLevel.Info, "EndHelper/main", $"Too many mapDicts: Removing the earliest.");
-            EndHelperModule.SaveData.mapDict_roomStatCustomNameDict.RemoveAt(0);
-        }
-    }
 
-    public static Dictionary<string, string> ConvertToStringDictionary(Dictionary<object, object> source)
-    {
-        Dictionary<string, string> result = new Dictionary<string, string>();
-        foreach (var kvp in source)
-        {
-            string key = kvp.Key?.ToString() ?? "";  // Convert key to string, default to ""
-            string value = kvp.Value?.ToString() ?? ""; // Convert value to string, default to ""
-            if (key == "" || value == "") { continue; }
-            result[key] = value;
+            //Logger.Log(LogLevel.Info, "EndHelper/main", $"Adding {mapNameSide_Internal}.");
+            EndHelperModule.SaveData.mapDict_roomStatCustomNameDict[mapNameSide_Internal] = EndHelperModule.Session.roomStatDict_customName;
+
+
+            // Handle colorIndex dict
+            if (!EndHelperModule.SaveData.mapDict_roomStat_colorIndex.ContainsKey(mapNameSide_Internal))
+            {
+                EndHelperModule.SaveData.mapDict_roomStat_colorIndex.Add(mapNameSide_Internal, []);
+            }
+
+            // Handles firstClear dicts. Just create them if they don't already exist.
+            //Logger.Log(LogLevel.Info, "EndHelper/main", $"Check if {mapNameSide_Internal} has all the first clear stuff:");
+            if (EndHelperModule.SaveData.mapDict_roomStat_firstClear_roomOrder.ContainsKey(mapNameSide_Internal))
+            {
+                // Do nothing. Already exist.
+                //Logger.Log(LogLevel.Info, "EndHelper/main", $"Yes. Already has it.");
+            }
+            else
+            {
+
+                //Logger.Log(LogLevel.Info, "EndHelper/main", $"No. Add {mapNameSide_Internal} to the relevant first clear lists!");
+                EndHelperModule.SaveData.mapDict_roomStat_firstClear_roomOrder.Add(mapNameSide_Internal, []);
+                EndHelperModule.SaveData.mapDict_roomStat_firstClear_death.Add(mapNameSide_Internal, []);
+                EndHelperModule.SaveData.mapDict_roomStat_firstClear_timer.Add(mapNameSide_Internal, []);
+                EndHelperModule.SaveData.mapDict_roomStat_firstClear_strawberries.Add(mapNameSide_Internal, []);
+                EndHelperModule.SaveData.mapDict_roomStat_firstClear_pauseType.Add(mapNameSide_Internal, []);
+            }
         }
-        return result;
+
+        while (EndHelperModule.SaveData.mapDict_roomStatCustomNameDict.Count > EndHelperModule.Settings.RoomStatMenu.MenuTrackerStorageCount && EndHelperModule.Settings.RoomStatMenu.MenuTrackerStorageCount != -1)
+        {
+            String earliestMapNameSide = (String)EndHelperModule.SaveData.mapDict_roomStatCustomNameDict.Cast<DictionaryEntry>().ElementAt(0).Key;
+            //Logger.Log(LogLevel.Info, "EndHelper/main", $"Too many mapDicts: Removing the earliest: {earliestMapNameSide}");
+            EndHelperModule.SaveData.mapDict_roomStatCustomNameDict.RemoveAt(0);
+
+            try
+            {
+                // Try block In case these don't exist (which is possible if updating from older ver)
+                EndHelperModule.SaveData.mapDict_roomStat_colorIndex.Remove(earliestMapNameSide);
+
+                EndHelperModule.SaveData.mapDict_roomStat_firstClear_roomOrder.Remove(earliestMapNameSide);
+                EndHelperModule.SaveData.mapDict_roomStat_firstClear_death.Remove(earliestMapNameSide);
+                EndHelperModule.SaveData.mapDict_roomStat_firstClear_timer.Remove(earliestMapNameSide);
+                EndHelperModule.SaveData.mapDict_roomStat_firstClear_strawberries.Remove(earliestMapNameSide);
+                EndHelperModule.SaveData.mapDict_roomStat_firstClear_pauseType.Remove(earliestMapNameSide);
+            } catch { }
+        }
     }
 
     // This has to be here so you don't get softlocked if MInput is disabled in UI or something
@@ -289,6 +514,59 @@ public class EndHelperModule : EverestModule {
             MInput.Disabled = false;
         }
         orig(self, gameTime);
+
+        // Scroll Input
+        if (Utils_General.scrollResetInputFrames == 1)
+        {
+            Utils_General.scrollInputFrames = 0;
+        }
+        if (Utils_General.scrollResetInputFrames > 0)
+        {
+            Utils_General.scrollResetInputFrames--;
+        }
+    }
+
+    private static void SessionResetFuncs(Level level)
+    {
+        if (EndHelperModule.Session.enableRoomSwapFuncs)
+        {
+            // This only exists so it updates when you respawn from debug. It umm still requires a transition/respawn to work lol
+            // Also runs if SessionResetCause is ReenterMap
+            Utils_RoomSwap.ReupdateAllRooms(level);
+
+            if (lastSessionResetCause == SessionResetCause.Debug || lastSessionResetCause == SessionResetCause.ReenterMap)
+            {
+                // Check if require double reload - if room the player is in is in a grid
+                String currentRoom = level.Session.LevelData.Name;
+                foreach (String gridID in EndHelperModule.Session.roomSwapOrderList.Keys)
+                {
+                    String roomSwapPrefix = EndHelperModule.Session.roomSwapPrefix[gridID];
+                    if (currentRoom.Contains(roomSwapPrefix))
+                    {
+                        // Is in one! Reload level again and break out of the loop.
+
+                        // First load rearranges the room, but doesn't reload them, so it's just empty...
+                        // Don't need to reload the whole thing with level.Reload() (and also this hides the double-respawn better)
+                        level.UnloadLevel();
+                        level.LoadLevel(Player.IntroTypes.Respawn);
+
+                        break;
+                    }
+                }
+            }
+        }
+        if (lastSessionResetCause != SessionResetCause.ReenterMap)
+        {
+            if (level.Tracker.GetEntity<RoomStatisticsDisplayer>() is RoomStatisticsDisplayer roomStatDisplayer)
+            {
+                roomStatDisplayer.ImportRoomStatInfo();
+            }
+        }
+
+        if (timeSinceSessionReset <= 1)
+        {
+            timeSinceSessionReset = 2;
+        }
     }
 
     // Using player update instead of level update so nothing happens when the level is loading
@@ -296,40 +574,25 @@ public class EndHelperModule : EverestModule {
     private static void Hook_LevelUpdate(On.Celeste.Level.orig_Update orig, global::Celeste.Level self)
     {
         Level level = self;
-
         // Session Reset Checker
         EndHelperModule.timeSinceSessionReset++;
         if (EndHelperModule.timeSinceSessionReset == 1)
         {
-            // This occurs when reset happens
-            if (enableRoomSwapHooks)
-            {
-                ReupdateAllRooms(level); //This only exists so it updates when you respawn from debug. It umm still requires a transition/respawn to work lol
-            }
-            {
-                if (level.Tracker.GetEntity<RoomStatisticsDisplayer>() is RoomStatisticsDisplayer roomStatDisplayer)
-                {
-                    roomStatDisplayer.ImportRoomStatInfo();
-                }
-            }
-        }
-        else if (EndHelperModule.timeSinceSessionReset > 1)
-        {
-            // Store data to use during reset
+            SessionResetFuncs(self);
         }
 
         {
             // Increment timeSinceRespawn if player is alive. and also not paused
             if (level.Tracker.GetEntity<Player>() is Player player && !player.Dead && !player.JustRespawned && !level.FrozenOrPaused)
             {
-                timeSinceRespawn++;
+                EndHelperModule.Session.framesSinceRespawn++;
             }
         }
 
         // Multi-room Bino Keybind
-        if (EndHelperModule.Settings.FreeMultiroomWatchtower.Button.Pressed && !level.FrozenOrPaused)
+        if (EndHelperModule.Settings.FreeMultiroomWatchtower.Button.Pressed && !level.FrozenOrPaused && !level.Transitioning)
         {
-            spawnMultiroomWatchtower();
+            Utils_MultiroomWatchtower.SpawnMultiroomWatchtower();
         }
 
         // Quick Restart Keybind
@@ -375,11 +638,13 @@ public class EndHelperModule : EverestModule {
             }
         }
 
-        // Toggle-ify Keybind
+        // Grab Recast Keybind
         if (level.Paused == false)
         {
             if (EndHelperModule.Settings.ToggleGrab.Button.Pressed)
             {
+                EndHelperModule.Session.usedGameplayTweaks = true;
+
                 Session.toggleifyEnabled = !Session.toggleifyEnabled;
 
                 // Set to false first
@@ -431,7 +696,7 @@ public class EndHelperModule : EverestModule {
             if (level.Tracker.GetEntity<RoomStatisticsDisplayer>() is RoomStatisticsDisplayer roomStatDisplayer)
             {
                 // Timer will be increased here instead of the entity's update as otherwise pause menu appearing will freeze the timer temporarily
-                String incrementRoomName = roomStatDisplayer.currentRoomName;
+                String incrementRoomName = roomStatDisplayer.currentEffectiveRoomName;
 
                 //AFK Checker
                 if (Input.Aim == Vector2.Zero && Input.Dash.Pressed == false && Input.Grab.Pressed == false && Input.CrouchDash.Pressed == false && Input.Talk.Pressed == false
@@ -494,11 +759,11 @@ public class EndHelperModule : EverestModule {
                     EndHelperModule.Session.pauseTypeDict["AFK"] = true;
                 }
 
-                roomStatDisplayer.ensureDictsHaveKey(level);
+                roomStatDisplayer.EnsureDictsHaveKey(level);
 
                 if (allowIncrementRoomTimer)
                 {
-                    EndHelperModule.Session.roomStatDict_timer[incrementRoomName] = TimeSpanShims.FromSeconds((double)Engine.RawDeltaTime).Ticks + Convert.ToInt64(EndHelperModule.Session.roomStatDict_timer[incrementRoomName]);
+                    roomStatDisplayer.AddTimer();
                 }
             }
         }
@@ -532,25 +797,78 @@ public class EndHelperModule : EverestModule {
         }
     }
 
+    public static void Hook_OnPlayerUpdate(On.Celeste.Player.orig_Update orig, Player self)
+    {
+        if (EndHelperModule.Settings.NeutralDrop.Button.Pressed && self.Holding != null)
+        {
+            EndHelperModule.Session.usedGameplayTweaks = true;
+            self.Drop();
+        }
+        orig(self);
+    }
+
     public static PlayerDeadBody Hook_OnPlayerDeath(On.Celeste.Player.orig_Die orig, global::Celeste.Player self, Vector2 direction, bool evenIfInvincible, bool registerDeathInStats)
     {
-        Level level = self.SceneAs<Level>();
-        bool invincibleCountDeathFlag = !evenIfInvincible && global::Celeste.SaveData.Instance.Assists.Invincible;
-
-        // Increment room death count. Same condition as sessionDeath++
-        if (!self.Dead && !invincibleCountDeathFlag && self.StateMachine.State != 18)
-        {
-            timeSinceRespawn = 0;
-            if (registerDeathInStats)
-            {
-                level.Tracker.GetEntity<RoomStatisticsDisplayer>()?.OnDeath();
-            }
-        }
-
         // Untoggle-ify if set to do so on death
         if (EndHelperModule.Settings.ToggleGrabMenu.UntoggleUponDeath) { Session.toggleifyEnabled = false; }
+        EndHelperModule.Session.framesSinceRespawn = 0;
 
         return orig(self, direction, evenIfInvincible, registerDeathInStats);
+    }
+
+    public static void Hook_ILOrigDie(ILContext il)
+    {
+        ILCursor cursor = new ILCursor(il);
+
+        // Match session.Deaths++, where I run stat menu add death
+        if (cursor.TryGotoNext(MoveType.After,
+            //instr => instr.MatchDup(),
+            //instr => instr.MatchLdfld<Session>("Deaths"),
+            //instr => instr.MatchLdcI4(out _),
+            //instr => instr.MatchAdd(),
+            instr => instr.MatchStfld(typeof(global::Celeste.Session),"Deaths")
+        ))
+        {
+            cursor.EmitDelegate(ILRunOnPlayerDeath);
+        }
+
+        // Disable first half of Death Screen Shake: Celeste.Level::Shake(float32)
+        if (cursor.TryGotoNext(MoveType.Before,
+            //instr => instr.MatchLdarg0(),
+            //instr => instr.MatchLdfld<Player>("level"),
+            //instr => instr.MatchLdcR4(0.3f), // After loading the shake intensity (0.3f)
+            instr => instr.MatchCallvirt<Level>("Shake")
+        ))
+        {
+            // Replace the current shake intensity with 0.0f
+            cursor.EmitDelegate<Func<float, float>>(GetScreenShakeReplacementIntensity);
+        }
+    }
+
+    public static void ILRunOnPlayerDeath()
+    {
+        if (Engine.Scene is Level level)
+        {
+            level.Tracker.GetEntity<RoomStatisticsDisplayer>()?.AddDeath();
+            foreach (ConditionalBirdTutorial conditionalBirdTutorial in level.Tracker.GetEntities<ConditionalBirdTutorial>())
+            {
+                conditionalBirdTutorial.UpdateConditionTracking_Death();
+            }
+        }
+    }
+
+    public static void Hook_ILDeadBodyDeathRoutine(ILContext il)
+    {
+        ILCursor cursor = new ILCursor(il);
+
+        // Disable 2nd half of Death Screen Shake: Celeste.Level::Shake(float32)
+        if (cursor.TryGotoNext(MoveType.Before,
+            instr => instr.MatchCallvirt<Level>("Shake")
+        ))
+        {
+            // Replace the current shake intensity with 0.0f
+            cursor.EmitDelegate<Func<float, float>>(GetScreenShakeReplacementIntensity);
+        }
     }
 
     public static void Hook_OnPlayerRespawn(On.Celeste.Player.orig_IntroRespawnBegin orig, global::Celeste.Player self)
@@ -558,47 +876,182 @@ public class EndHelperModule : EverestModule {
         Level level = self.SceneAs<Level>();
 
         //Update the room-swap rooms. This is kind of here as a failsafe, and also otherwise warping with debug mode permamently empty the swap rooms.
-        reupdateAllRooms();
+        Utils_RoomSwap.ReupdateAllRooms();
 
         orig(self);
     }
 
-    private static IEnumerator Hook_TransitionRoutine(
-        On.Celeste.Level.orig_TransitionRoutine orig, global::Celeste.Level self, global::Celeste.LevelData next, Vector2 direction
-    )
-    {
-        // To potentially use in the future
-        yield return new SwapImmediately(orig(self, next, direction));
-    }
+    //private static IEnumerator Hook_TransitionRoutine(
+    //    On.Celeste.Level.orig_TransitionRoutine orig, global::Celeste.Level self, global::Celeste.LevelData next, Vector2 direction
+    //)
+    //{
+    //    // To potentially use in the future
+    //    yield return new SwapImmediately(orig(self, next, direction));
+    //}
 
-    private static void Hook_StartMap(On.Celeste.LevelLoader.orig_StartLevel orig, global::Celeste.LevelLoader self)
+    private static void Hook_StartMapFromBeginning(On.Celeste.LevelLoader.orig_StartLevel orig, global::Celeste.LevelLoader self)
     {
-        timeSinceSessionReset = 2; // Set this to the default value which ISN'T 1. This shouldn't be necessary, but add it just in case!
+        // timeSinceSessionReset = 2; // Set this to the default value which ISN'T 1. This shouldn't be necessary, but add it just in case!
+        // nvm don't do this because debug runs this
         Level level = self.Level;
         level.Add(new RoomStatisticsDisplayer(level));
         inactiveDurationFrames = 60; // For maps starting with cutscene. If without, would be set to 0 immediately. Not even sure if this works lol
 
 
         // Set up the save data custom name dictionaries if starting a map from the beginning
-        SetupCustomNameSaveDataDict(level.Session);
+        SetupRoomTrackerSaveDataDicts(level.Session);
 
         orig(self);
     }
+
     private static void Hook_Pause(On.Celeste.Level.orig_Pause orig, global::Celeste.Level self, int startIndex, bool minimal, bool quickReset)
     {
         Level level = self;
 
         if (quickReset)
         {
-            { if (EndHelperModule.Settings.DisableQuickRestart ||
-                (EndHelperModule.Settings.QuickRetry.Button.Pressed && level.Tracker.GetEntity<Player>() is Player player && !level.Paused && level.CanPause && level.CanRetry)
-               )
+            { 
+                if (EndHelperModule.Settings.QOLTweaksMenu.DisableQuickRestart ||
+                (EndHelperModule.Settings.QuickRetry.Button.Pressed && level.Tracker.GetEntity<Player>() is Player player && !level.Paused && level.CanPause && level.CanRetry))
+                {
+                    // Do not quick reset if you are quick dying (or if disabled)
+                    return;
+                }
+            }
+        } 
+        else
+        {
+            if (!level.Paused)
             {
-                // Do not quick reset if you are quick dying (or if disabled)
-                return;
-            }}
+                // This is here so going backwards in a menu doesn't cause the timer to reset
+                menuGiveUpLevelTimer = menuGiveUpLevelTimerMax;
+            }
         }
         orig(self, startIndex, minimal, quickReset);
+    }
+
+    private static void Hook_AreaCompleteVerNumVars(On.Celeste.AreaComplete.orig_VersionNumberAndVariants orig, string version, float ease, float alpha)
+    {
+        if (EndHelperModule.Session.usedGameplayTweaks == true)
+        {
+            // Temporarily turn variant mode on, so the variants icon appears
+            // (this is just copied from extended variations)
+            bool oldVariantModeValue = global::Celeste.SaveData.Instance.VariantMode;
+            global::Celeste.SaveData.Instance.VariantMode = true;
+
+            orig(version, ease, alpha);
+
+            global::Celeste.SaveData.Instance.VariantMode = oldVariantModeValue;
+        }
+        else
+        {
+            orig(version, ease, alpha);
+        }
+    }
+
+
+    private static void Hook_JournalUpdate(On.Celeste.OuiJournal.orig_Update orig, global::Celeste.OuiJournal self)
+    {
+        Utils_JournalStatistics.Update(self);
+        if (!Utils_JournalStatistics.journalStatisticsGuiOpen)
+        {
+            orig(self);
+        }
+    }
+
+    private static void Hook_JournalRender(On.Celeste.OuiJournal.orig_Render orig, global::Celeste.OuiJournal self)
+    {
+        orig(self);
+
+        // Specifically for in overworld
+        if (Engine.Scene is Overworld)
+        {
+            if (RoomStatisticsDisplayer.tooltipDuration > -60)
+            {
+                ActiveFont.DrawOutline(RoomStatisticsDisplayer.tooltipText, new Vector2(100, 950), Vector2.Zero, Vector2.One, Color.White * alpha, 2, Color.Black * alpha);
+                RoomStatisticsDisplayer.tooltipDuration += -4;
+            }
+            if (RoomStatisticsDisplayer.tooltipDuration > 10 && RoomStatisticsDisplayer.alpha < 1) { RoomStatisticsDisplayer.alpha += 0.1f; }
+            if (RoomStatisticsDisplayer.tooltipDuration < 0 && RoomStatisticsDisplayer.alpha > 0) { RoomStatisticsDisplayer.alpha -= 0.03f; }
+        }
+
+        Utils_JournalStatistics.Render();
+    }
+
+    private static void Hook_JournalClose(On.Celeste.OuiJournal.orig_Close orig, global::Celeste.OuiJournal self)
+    {
+        orig(self);
+        Utils_JournalStatistics.journalStatisticsGuiOpen = false;
+        Utils_JournalStatistics.journalOpen = false;
+    }
+
+    private static void Hook_IL_RefillRefillCoroutine(ILContext il)
+    {
+        ILCursor cursor = new ILCursor(il);
+
+        // Disable Refill Screen Shake: Celeste.Level::Shake(float32)
+        if (cursor.TryGotoNext(MoveType.Before,
+            //instr => instr.MatchLdloc1(),
+            //instr => instr.MatchLdfld<Refill>("level"),
+            //instr => instr.MatchLdcR4(0.3f) // After loading the shake intensity (0.3f)
+            instr => instr.MatchCallvirt<Level>("Shake")
+        ))
+        {
+            // Replace the current shake intensity with 0.0f
+            cursor.EmitDelegate<Func<float, float>>(GetScreenShakeReplacementIntensity);
+        }
+    }
+
+    private static void Hook_IL_OrigTransitionRoutine(ILContext il)
+    {
+        ILCursor cursor = new ILCursor(il);
+
+        // Bottom of screen Y-Movement
+        if (cursor.TryGotoNext(MoveType.After,
+            instr => instr.MatchCallvirt(typeof(Rectangle), "get_Bottom")
+        ))
+        {
+            cursor.EmitDelegate<Func<int, int>>(ShouldRunLoopInt);
+        }
+
+        // Transitionary Movement
+        if (cursor.TryGotoNext(MoveType.After,
+            instr => instr.MatchCallvirt(typeof(Level), "IsInBounds")
+        ))
+        {
+            cursor.EmitDelegate<Func<bool, bool>>(ShouldRunLoopBool);
+        }
+
+        // Camera (and possibly other stuff) Movement
+        if (cursor.TryGotoNext(MoveType.After,
+            instr => instr.MatchCallvirt(typeof(Player), "TransitionTo")
+        ))
+        {
+            cursor.EmitDelegate<Func<bool, bool>>(ShouldRunLoopBool); // Push 'true' to pretend the transition was successful
+        }
+    }
+
+    static int ShouldRunLoopInt(int bottom)
+    {
+        if (allowScreenTransitionMovement)
+        {
+            return bottom; // run first loop
+        }
+        else
+        {
+            return int.MaxValue; // make Y < bottom so bge fails → skip
+        }
+    }
+    static bool ShouldRunLoopBool(bool originalBool)
+    {
+        if (allowScreenTransitionMovement)
+        {
+            return originalBool; // run first loop
+        }
+        else
+        {
+            return true; // make Y < bottom so bge fails → skip
+        }
     }
 
     private static Vector2 preRedirectDashDir = Vector2.Zero;
@@ -608,33 +1061,107 @@ public class EndHelperModule : EverestModule {
         orig(self);
     }
 
+    private static void ILHook_SuperBounce(ILContext il)
+    {
+        ILCursor cursor = new ILCursor(il);
+
+        // Remove Vertical Spring (and possibly other things?) screen shake.
+        // Replaces the default shake intensity (0.2f) with 0 if disabled!
+        if (cursor.TryGotoNext(MoveType.Before,
+            instr => instr.MatchCallvirt<Level>("DirectionalShake")
+        ))
+        {
+            // Replace the current shake intensity with 0.0f
+            cursor.EmitDelegate<Func<float, float>>(GetScreenShakeReplacementIntensity);
+        }
+    }
+
+    private static void ILHook_SideBounce(ILContext il)
+    {
+        ILCursor cursor = new ILCursor(il);
+
+        // Remove Sideway Spring (and possibly other things?) screen shake.
+        // Replaces the default shake intensity (0.2f) with 0 if disabled!
+        if (cursor.TryGotoNext(MoveType.Before,
+            instr => instr.MatchCallvirt<Level>("DirectionalShake")
+        ))
+        {
+            // Replace the current shake intensity with 0.0f
+            cursor.EmitDelegate<Func<float, float>>(GetScreenShakeReplacementIntensity);
+        }
+    }
+
     private static void Hook_IL_DashCoroutine(ILContext il)
     {
         ILCursor cursor = new ILCursor(il);
 
+        // Prevent Demos: Override redirects
         // Move the cursor to right after lastAim is obtained, but before lastAim is set.
         if (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdfld<Player>("lastAim")))
         {
-            cursor.EmitDelegate(preventDownRedirect); // Redirects the aim if necessary. My first IL hook :lilysass:
+            cursor.EmitDelegate(PreventDownRedirect); // Redirects the aim if necessary. My first IL hook :lilysass:
+        }
+
+        // Remove Dash Screen Shake
+        // Replaces the default shake intensity (0.2f) with 0 if disabled!
+        if (cursor.TryGotoNext(MoveType.After,
+            instr => instr.MatchLdloc1(),
+            instr => instr.MatchLdfld<Player>("DashDir"),
+            instr => instr.MatchLdcR4(0.2f) // After loading the shake intensity (0.2f)
+        ))
+        {
+            // Replace the current shake intensity with 0.0f
+            cursor.EmitDelegate<Func<float, float>>(GetScreenShakeReplacementIntensity);
         }
     }
 
-    public static Vector2 preventDownRedirect(Vector2 redirectedVector)
+    private static void Hook_IL_RedDashCoroutine(ILContext il)
+    {
+        ILCursor cursor = new ILCursor(il);
+
+        // Remove Red Booster Dash Screen Shake
+        // Replaces the default shake intensity (0.2f) with 0 if disabled!
+        if (cursor.TryGotoNext(MoveType.After,
+            instr => instr.MatchLdloc1(),
+            instr => instr.MatchLdfld<Player>("DashDir"),
+            instr => instr.MatchLdcR4(0.2f) // After loading the shake intensity (0.2f)
+        ))
+        {
+            // Replace the current shake intensity with 0.0f
+            cursor.EmitDelegate<Func<float, float>>(GetScreenShakeReplacementIntensity);
+        }
+    }
+
+    private static float GetScreenShakeReplacementIntensity(float initialIntensity)
+    {
+        // Replace the incoming intensity value with 0.0f
+        float outIntensity = EndHelperModule.Settings.QOLTweaksMenu.DisableFrequentScreenShake ? 0.0f : initialIntensity;
+        //Logger.Log(LogLevel.Info, "EndHelper/main", $"Something related to dash intensity happened. {initialIntensity} >> {outIntensity}");
+        return outIntensity;
+    }
+
+    public static Vector2 PreventDownRedirect(Vector2 redirectedVector)
     {
         //Logger.Log(LogLevel.Info, "EndHelper/main", $"pre-redirected vector: {preRedirectDashDir}");
         //Logger.Log(LogLevel.Info, "EndHelper/main", $"redirected vector: {redirectedVector}");
         //Logger.Log(LogLevel.Info, "EndHelper/main", $"current aim: {Input.Aim.PreviousValue}");
 
         Vector2 currentAim = Input.Aim.PreviousValue;
+        ConvertDemoEnum usedConvertDemoSetting = EndHelperModule.Session.GameplayTweaksOverride_ConvertDemo != null ? EndHelperModule.Session.GameplayTweaksOverride_ConvertDemo.Value : EndHelperModule.Settings.GameplayTweaksMenu.ConvertDemo;
 
         // If down direction was redirected to neutral, add it back during redirection //global::Celeste.SaveData.Instance.Assists.Invincible
-        if (EndHelperModule.Settings.convertDemo != ConvertDemoEnum.Disabled && !global::Celeste.SaveData.Instance.Assists.ThreeSixtyDashing
+        if (usedConvertDemoSetting != GameplayTweaks.ConvertDemoEnum.Disabled && !global::Celeste.SaveData.Instance.Assists.ThreeSixtyDashing
             && preRedirectDashDir.Y > 0.01 && redirectedVector.Y == 0)
         {
+            if (usedConvertDemoSetting != ConvertDemoEnum.Disabled && EndHelperModule.Session.GameplayTweaksOverride_ConvertDemo == null)
+            {
+                EndHelperModule.Session.usedGameplayTweaks = true;
+            }
+
             redirectedVector.Y = preRedirectDashDir.Y;
 
             // If this happens, last aim will probably be left/right. Check current aim to see if it should be downwards or diagonal, unless forced diagonal
-            if (EndHelperModule.Settings.convertDemo == ConvertDemoEnum.EnabledNormal && currentAim.X == 0)
+            if (usedConvertDemoSetting == GameplayTweaks.ConvertDemoEnum.EnabledNormal && currentAim.X == 0)
             {
                 redirectedVector.X = 0;
             }
@@ -759,27 +1286,10 @@ public class EndHelperModule : EverestModule {
     private static void Hook_CollectStrawberry(On.Celeste.Strawberry.orig_OnCollect orig, global::Celeste.Strawberry self)
     {
         Level level = self.SceneAs<Level>();
-        string roomName;
-
-        string homeroom = self.Get<HomeRoom>().roomName;
-
-        if (homeroom == "")
-        {
-            roomName = level.Session.LevelData.Name;
-            //Logger.Log(LogLevel.Info, "EndHelper/main", $"can't get homeroom, using current room {roomName}");
-        } else
-        {
-            roomName = homeroom;
-            //Logger.Log(LogLevel.Info, "EndHelper/main", $"strawberry homeroom = {roomName}");
-        }
-
-        String roomNameSeg = roomName;
         if (level.Tracker.GetEntity<RoomStatisticsDisplayer>() is RoomStatisticsDisplayer roomStatDisplayer)
         {
-            roomNameSeg = roomStatDisplayer.getRoomNameLatestSeg(roomName);
+            roomStatDisplayer.AddStrawberry(self);
         }
-        EndHelperModule.Session.roomStatDict_strawberries[roomNameSeg] = Convert.ToInt32(EndHelperModule.Session.roomStatDict_strawberries[roomNameSeg]) + 1;
-
         orig(self);
     }
 
@@ -838,6 +1348,8 @@ public class EndHelperModule : EverestModule {
             orig(self);
         }
     }
+
+    #region GrabbyIcon
     private static void ILHook_GrabbyIconUpdate(ILContext il)
     {
         ILCursor cursor = new ILCursor(il);
@@ -855,13 +1367,12 @@ public class EndHelperModule : EverestModule {
         }
 
         // Replace Settings.Instance.GrabMode with this check
-        cursor.EmitDelegate<Func<GrabModes, GrabModes>>(replaceGrabModeGrabbyIconCheck);
+        cursor.EmitDelegate<Func<GrabModes, GrabModes>>(ReplaceGrabModeGrabbyIconCheck);
     }
-    private static GrabModes replaceGrabModeGrabbyIconCheck(GrabModes grabMode)
+    private static GrabModes ReplaceGrabModeGrabbyIconCheck(GrabModes grabMode)
     {
         // If Recast is enabled and set to TurnGrabToToggle(Press), this is as good as grab mode being on.
         // So for purposes of the icon, return grabMode as toggle.
-
         if (Session.toggleifyEnabled && (
             EndHelperModule.Settings.ToggleGrabMenu.toggleGrabBehaviour == ToggleGrabSubMenu.ToggleGrabBehaviourEnum.TurnGrabToToggle
             || EndHelperModule.Settings.ToggleGrabMenu.toggleGrabBehaviour == ToggleGrabSubMenu.ToggleGrabBehaviourEnum.TurnGrabToTogglePress
@@ -871,6 +1382,10 @@ public class EndHelperModule : EverestModule {
         }
         return grabMode;
     }
+
+    #endregion
+
+    #region CassetteBlockManager
 
     private static void Hook_CassetteBlockAwake(On.Celeste.CassetteBlock.orig_Awake orig, global::Celeste.CassetteBlock self, Scene scene)
     {
@@ -929,7 +1444,7 @@ public class EndHelperModule : EverestModule {
         if (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdarg(1)))
         {
             // Multiply `time` by CassetteManagerTrigger multiplier
-            cursor.EmitDelegate<Func<float, float>>(ManagerMultiplyCassetteSpeed);
+            cursor.EmitDelegate<Func<float, float>>(Utils_CassetteManager.ManagerMultiplyCassetteSpeed);
         }
 
         // Find "if (leadBeats > 0)" condition check. Replace the whole thing with new logic if using the manager
@@ -940,930 +1455,10 @@ public class EndHelperModule : EverestModule {
         ))
         {
             // Condition in IL code is 0 <= leadBeats mean skip instr. This here force-changes the 0 to int limit (true, skip) if using the manager.
-            cursor.EmitDelegate<Func<int, int>>(ManagerLeadBeatShenanigans);
+            cursor.EmitDelegate<Func<int, int>>(Utils_CassetteManager.ManagerLeadBeatShenanigans);
         }
     }
-
-    private static int ManagerLeadBeatShenanigans(int leadBeatReturn)
-    {
-        if (Engine.Scene is Level level && level.Tracker.GetEntity<CassetteBlockManager>() is CassetteBlockManager cassetteBlockManager)
-        {
-            // Using manager! Return 0 at the end as it ensures the functions will be skipped. Before that though...
-            // Replace vanilla's lead beat logic with our lead beat logic.
-            // Vanilla's lead beat logic does not allow us to change the lead beat between 0 and not 0.
-
-            DynamicData cassetteManagerData = DynamicData.For(cassetteBlockManager);
-
-            int c_leadBeats = cassetteManagerData.Get<int>("leadBeats");
-            int c_beatIndex = cassetteManagerData.Get<int>("beatIndex");
-            bool c_cassetteStarted = cassetteManagerData.Get<bool>("EndHelper_CassetteStartedSFX");
-            bool c_isLevelMusic = cassetteManagerData.Get<bool>("isLevelMusic");
-
-            // If c_leadBeats is 1 (which is to say it increases normally rather than set), set beatIndex to 0.
-            // If it is 1 that means it will be set to 0 in the next step.
-            // Running this because manual set will set it to 0 directly and thus avoiding setting beatIndex to 0, which is what I want
-            if (c_leadBeats == 1)
-            {
-                c_beatIndex = 0;
-                cassetteManagerData.Set("beatIndex", c_beatIndex);
-            }
-
-            // Next, reduce leadBeats if it is larger than 0.
-            // This is the opposite order of what vanilla cassetteblockmanager does
-            if (c_leadBeats > 0)
-            {
-                c_leadBeats--;
-                cassetteManagerData.Set("leadBeats", c_leadBeats);
-            }
-
-            // Lastly, start the SFX if leadBeats == 0 and c_cassetteStarted == false (set to true).
-            // This is taken out of any c_leadBeat > 0 check so setting directly to 0 works.
-            // However to prevent it from being spammed, use a bool to check if this has already been done.
-            if (c_leadBeats <= 0 && !c_cassetteStarted && !c_isLevelMusic)
-            {
-                c_cassetteStarted = true;
-                cassetteManagerData.Set("EndHelper_CassetteStartedSFX", c_cassetteStarted);
-
-                // idk throw this in here in case dynamicdataing this specifically is laggy. it probably won't do much.
-                EventInstance sfx = cassetteManagerData.Get<EventInstance>("sfx");
-                sfx?.start(); // Start the musik!
-            }
-
-            return int.MaxValue;
-        }
-        else
-        {
-            // Not using manager. Just return existing value.
-            return leadBeatReturn;
-        }
-    }
-    private static float ManagerMultiplyCassetteSpeed(float originalTime)
-    {
-        if (Engine.Scene is Level level && level.Tracker.GetEntity<CassetteBlockManager>() is CassetteBlockManager cassetteBlockManager)
-        {
-            DynamicData cassetteManagerData = DynamicData.For(cassetteBlockManager);
-
-            try
-            {
-                List<List<object>> multiplierList = cassetteManagerData.Get<List<List<object>>>("EndHelper_CassetteManagerTriggerTempoMultiplierList");
-                bool multiplyOnTop = cassetteManagerData.Get<bool>("EndHelper_CassetteManagerTriggerTempoMultiplierMultiplyOnTop");
-                int effectiveBeatIndex = cassetteManagerData.Get<int>("EndHelper_CassetteManagerTriggerEffectiveBeatIndex");
-                int beatIndexMax = cassetteManagerData.Get<int>("beatIndexMax");
-
-                int cassetteHaveCheckedBeatGet = cassetteManagerData.Get<int>("EndHelper_CassetteHaveCheckedBeat");
-                float cassettePreviousTempoNumGet = cassetteManagerData.Get<float>("EndHelper_CassettePreviousTempoNum");
-
-                //Logger.Log(LogLevel.Info, "EndHelper/main", $"checkedbeatget == effectivebeatindex {cassetteHaveCheckedBeatGet} == {effectiveBeatIndex}");
-                if (cassetteHaveCheckedBeatGet != effectiveBeatIndex) // Check if this beat has already been checked
-                {
-                    // Check if the current beat matches. This should never skip since the cassette block manager can only increase by 1 beat at a time
-                    cassetteManagerData.Set("EndHelper_CassetteHaveCheckedBeat", effectiveBeatIndex);
-
-                    // For CassetteBeatGates: Run IncrementBeatCheckMove
-                    int c_beatIndex = cassetteManagerData.Get<int>("beatIndex");
-                    int c_beatsPerTick = cassetteManagerData.Get<int>("beatsPerTick");
-                    int c_ticksPerSwap = cassetteManagerData.Get<int>("ticksPerSwap");
-                    int c_maxBeat = cassetteManagerData.Get<int>("maxBeat");
-                    foreach (CassetteBeatGate cassetteBeatGate in level.Tracker.GetEntities<CassetteBeatGate>()) 
-                    {
-                        cassetteBeatGate.IncrementBeatCheckMove(currentBeat: c_beatIndex, totalCycleBeats: c_beatsPerTick * c_ticksPerSwap * c_maxBeat);
-                    }
-
-                    int minBeatsFromCurrent = int.MaxValue;
-
-                    foreach (List<object> tempoPairList in multiplierList)
-                    {
-                        int beatNum = (int)tempoPairList[0];
-                        float tempoNum = (float)tempoPairList[1];
-                        //Logger.Log(LogLevel.Info, "EndHelper/main", $"beat index comparision: {beatNum} == {effectiveBeatIndex}.");
-
-                        // If multiplyOnTop, only set check if beatNum == effectiveBeatIndex
-                        if (multiplyOnTop)
-                        {
-                            if (beatNum == effectiveBeatIndex)
-                            {
-                                // Reset. Since this is only triggered once I can change cassettePreviousTempoNumGet too
-                                if (tempoNum < 0)
-                                {
-                                    tempoNum = 1;
-                                    cassettePreviousTempoNumGet = 1;
-                                }
-                                cassettePreviousTempoNumGet = tempoNum * cassettePreviousTempoNumGet;
-                                cassetteManagerData.Set("EndHelper_CassettePreviousTempoNum", cassettePreviousTempoNumGet);
-                                break; // There should only be one matching beatNum. If there are multiple the mapper is stupid. and also later ones are ignored
-                            }
-                        }
-                        else
-                        // If normal, check how far behind the effectiveBeatIndex is behind the current beat.
-                        // If effectiveBeatIndex is positive, ensure this loops across to beatIndexMax
-                        {
-                            // First, filter the beatNum. +ve beatNum only works for +ve effectiveBeatIndex, and vice versa
-                            if (effectiveBeatIndex >= 0 && beatNum < 0 || effectiveBeatIndex < 0 && beatNum >= 0)
-                            {
-                                continue;
-                            }
-
-                            // Count how many beats this beatNum is behind the current (effective) beat
-                            int beatsFromCurrent = effectiveBeatIndex - beatNum;
-                            if (beatsFromCurrent < 0 && effectiveBeatIndex >= 0) // Loop around (only for +ve)
-                            {
-                                beatsFromCurrent += beatIndexMax;
-                            }
-                            else
-                            {
-                                // Firstly, if the beatNum is larger than effectiveBeatIndex, it is not being called. Go away.
-                                if (beatNum > effectiveBeatIndex) { continue; }
-                                // Now, pick the LARGER beatNum. I am going to just cheat this by flipping the sign.
-                                beatNum *= -1;
-                            }
-
-                            // Logger.Log(LogLevel.Info, "EndHelper/main", $"{beatNum}: is {beatsFromCurrent} from current beat ({effectiveBeatIndex} - {beatNum}). Compare with min {minBeatsFromCurrent}");
-
-                            // If this is smaller than minBeatsFromCurrent, set this as the new min beats and set tempo
-                            if (beatsFromCurrent < minBeatsFromCurrent)
-                            {
-                                minBeatsFromCurrent = beatsFromCurrent;
-
-                                // Reset. In this case it is just = 1 lol
-                                if (tempoNum < 0) { tempoNum = 1; }
-                                cassettePreviousTempoNumGet = tempoNum;
-                                cassetteManagerData.Set("EndHelper_CassettePreviousTempoNum", cassettePreviousTempoNumGet);
-                            }
-                        }
-                    }
-                }
-                //Logger.Log(LogLevel.Info, "EndHelper/main", $"return [no change] {originalTime * cassettePreviousTempoNumGet} -- {cassettePreviousTempoNumGet}");
-                return originalTime * cassettePreviousTempoNumGet;
-            }
-            catch (Exception e)
-            {
-                Logger.Log(LogLevel.Warn, "EndHelper/main", $"Cassette ManagerMultiplyCassetteSpeed error: {e}");
-            }
-        }
-        
-        // Not using the cassette block manager trigger lol
-        return originalTime;
-    }
-
     #endregion
 
-    #region Spawn Multiroom Watchtower
-
-    private static void spawnMultiroomWatchtower()
-    {
-        if (Engine.Scene is not Level level)
-        {
-            return;
-        }
-        if (level.Tracker.GetEntity<Player>() is not Player player || !player.InControl)
-        {
-            return;
-        }
-        if (level.Tracker.GetEntity<PortableMultiroomWatchtower>() is PortableMultiroomWatchtower)
-        {
-            return;
-        }
-
-        PortableMultiroomWatchtower portableWatchtower = new(new EntityData
-        {
-            Position = player.Position,
-            Level = level.Session.LevelData
-        }, Vector2.Zero);
-
-        level.Add(portableWatchtower);
-        portableWatchtower.Interact(player);
-    }
-
-    [Tracked(true)]
-    private class PortableMultiroomWatchtower : MultiroomWatchtower
-    {
-        internal PortableMultiroomWatchtower(EntityData data, Vector2 offset) : base(data, offset) {
-            allowAnywhere = true;
-            destroyUponFinishView = true;
-            maxSpeedSet *= 2;
-            canToggleBlocker = true;
-            doOverlapCheck = false;
-        }
-        internal static bool Exists => Engine.Scene.Tracker.GetEntity<PortableMultiroomWatchtower>() != null;
-    }
-
     #endregion
-
-    #region Room-Swap
-
-    public static void reupdateAllRooms()
-    {
-        if (Engine.Scene is not Level level)
-        {
-            return;
-        } else
-        {
-            ReupdateAllRooms(level);
-        }
-    }
-
-    public static void ReupdateAllRooms(global::Celeste.Level level)
-    {
-        foreach (String gridID in EndHelperModule.Session.roomSwapOrderList.Keys)
-        {
-            int roomSwapTotalRow = EndHelperModule.Session.roomSwapRow[gridID];
-            int roomSwapTotalColumn = EndHelperModule.Session.roomSwapColumn[gridID];
-            String roomSwapPrefix = EndHelperModule.Session.roomSwapPrefix[gridID];
-            String roomTemplatePrefix = EndHelperModule.Session.roomTemplatePrefix[gridID];
-
-            for (int row = 1; row <= roomSwapTotalRow; row++)
-            {
-                for (int column = 1; column <= roomSwapTotalColumn; column++)
-                {
-                    ReplaceRoomAfterReloadEnd(gridID, roomSwapPrefix, row, column, level);
-                }
-            }
-            RoomModificationEventTrigger(gridID);
-        }
-    }
-
-    public static async void ReplaceRoomAfterReloadEnd(string gridID, String roomSwapPrefix, int row, int column, global::Celeste.Level level)
-    {
-        while (reloadComplete != true)
-        {
-            await Task.Delay(20);
-        }
-
-        //Logger.Log(LogLevel.Info, "EndHelper/main", $"Replace {EndHelperModule.Session.roomSwapOrderList[gridID][row - 1][column - 1]} >> {roomSwapPrefix}{row}{column}");
-        ReplaceRoom($"{roomSwapPrefix}{row}{column}", EndHelperModule.Session.roomSwapOrderList[gridID][row - 1][column - 1], level);
-    }
-
-    static LevelData getRoomDataFromName(string roomName, Level level)
-    {
-        foreach (LevelData levelData in level.Session.MapData.Levels)
-        {
-            if (levelData.Name == roomName) { return levelData; }
-        }
-        Logger.Log(LogLevel.Warn, "EndHelper/main/getRoomDataFromName", $"Unable to find room {roomName} - returning current room leveldata instead.");
-        return level.Session.LevelData; //returns current room if can't find (this should not happen)
-    }
-
-    static void ReplaceRoom(String replaceSwapRoomName, String replaceTemplateRoomName, global::Celeste.Level level)
-    {
-        LevelData replaceSwapRoomData = getRoomDataFromName(replaceSwapRoomName, level);
-        LevelData replaceTemplateRoomData = getRoomDataFromName(replaceTemplateRoomName, level);
-
-        //Logger.Log(LogLevel.Info, "EndHelper/main", $"Replacing room {replaceSwapRoomName} with the template {replaceTemplateRoomName}");
-
-        // Avoid changing name, position
-        // FG and BG tiles don't even work smhmh
-        replaceSwapRoomData.Entities = replaceTemplateRoomData.Entities;
-        replaceSwapRoomData.Dummy = replaceTemplateRoomData.Dummy;
-        //replaceSwapRoomData.Space = replaceTemplateRoomData.Space;
-        replaceSwapRoomData.Bg = replaceTemplateRoomData.Bg;
-        replaceSwapRoomData.BgDecals = replaceTemplateRoomData.BgDecals;
-
-        // Spawns don't have their position set properly, but that's what TransitionRespawnForceSameRoomTrigger is for
-        replaceSwapRoomData.Spawns = replaceTemplateRoomData.Spawns;
-        replaceSwapRoomData.DefaultSpawn = replaceTemplateRoomData.DefaultSpawn;
-
-        //Tiles only SOMETIMES work, so i'll remove here so they consistently don't work
-        //replaceSwapRoomData.BgTiles = replaceTemplateRoomData.BgTiles;
-        //replaceSwapRoomData.FgTiles = replaceTemplateRoomData.FgTiles;
-        replaceSwapRoomData.ObjTiles = replaceTemplateRoomData.ObjTiles;
-
-        replaceSwapRoomData.Solids = replaceTemplateRoomData.Solids;
-
-        replaceSwapRoomData.FgDecals = replaceTemplateRoomData.FgDecals;
-        replaceSwapRoomData.Music = replaceTemplateRoomData.Music;
-        replaceSwapRoomData.Strawberries = replaceTemplateRoomData.Strawberries;
-        replaceSwapRoomData.Triggers = replaceTemplateRoomData.Triggers;
-        replaceSwapRoomData.MusicLayers = replaceTemplateRoomData.MusicLayers;
-        replaceSwapRoomData.Music = replaceTemplateRoomData.Music;
-        replaceSwapRoomData.MusicProgress = replaceTemplateRoomData.MusicProgress;
-        replaceSwapRoomData.MusicWhispers = replaceTemplateRoomData.MusicWhispers;
-        replaceSwapRoomData.DelayAltMusic = replaceTemplateRoomData.DelayAltMusic;
-        replaceSwapRoomData.AltMusic = replaceTemplateRoomData.AltMusic;
-        replaceSwapRoomData.Ambience = replaceTemplateRoomData.Ambience;
-        replaceSwapRoomData.AmbienceProgress = replaceTemplateRoomData.AmbienceProgress;
-        replaceSwapRoomData.Dark = replaceTemplateRoomData.Dark;
-        replaceSwapRoomData.EnforceDashNumber = replaceTemplateRoomData.EnforceDashNumber;
-        replaceSwapRoomData.Underwater = replaceTemplateRoomData.Underwater;
-        replaceSwapRoomData.WindPattern = replaceTemplateRoomData.WindPattern;
-        replaceSwapRoomData.HasGem = replaceTemplateRoomData.HasGem;
-        replaceSwapRoomData.HasHeartGem = replaceTemplateRoomData.HasHeartGem;
-        replaceSwapRoomData.HasCheckpoint = replaceTemplateRoomData.HasCheckpoint;
-    }
-
-    public static async void TemporarilyDisableTrigger(int millisecondDelay, string gridID)
-    {
-        EndHelperModule.Session.allowTriggerEffect[gridID] = false;
-        await Task.Delay(millisecondDelay);
-        EndHelperModule.Session.allowTriggerEffect[gridID] = true;
-    }
-
-    public static bool ModifyRooms(String modifyType, bool isSilent, Player player, Level level, String gridID, int teleportDelayMilisecond = 0, int teleportDisableMilisecond = 200, bool flashEffect = false)
-    {
-        bool succeedModify = false;
-
-        //player is NULLable! player should only be checked inside the not-silent box
-        LevelData currentRoomData = level.Session.LevelData;
-        String currentRoomName = currentRoomData.Name;
-
-        int roomSwapTotalRow = EndHelperModule.Session.roomSwapRow[gridID];
-        int roomSwapTotalColumn = EndHelperModule.Session.roomSwapColumn[gridID];
-        String roomSwapPrefix = EndHelperModule.Session.roomSwapPrefix[gridID];
-        String roomTemplatePrefix = EndHelperModule.Session.roomTemplatePrefix[gridID];
-
-        String currentTemplateRoomName = GetTemplateRoomFromSwapRoom(currentRoomName);
-
-        if (EndHelperModule.Session.allowTriggerEffect[gridID])
-        {
-            Logger.Log(LogLevel.Info, "EndHelper/Main", $"Modifying Room! Type: {modifyType}. Triggered from {currentRoomName}. ({roomSwapTotalRow}x{roomSwapTotalColumn})");
-            EndHelperModule.TemporarilyDisableTrigger(teleportDisableMilisecond + (int)(EndHelperModule.Session.roomTransitionTime[gridID] * 1000 + teleportDelayMilisecond), gridID);
-
-            if (EndHelperModule.Session.roomSwapOrderList.ContainsKey(gridID)) //Don't run this if first load
-            {
-                level.Session.SetFlag(GetTransitionFlagName(), false); //Remove flag
-            }
-            
-
-            switch (modifyType)
-            {
-
-                case "Test":
-                    EndHelperModule.Session.roomSwapOrderList[gridID] = [];
-                    for (int row = 1; row <= roomSwapTotalRow; row++)
-                    {
-                        List<string> roomRow = [];
-                        for (int column = 1; column <= roomSwapTotalColumn; column++)
-                        {
-                            GetPosFromRoomName($"{roomSwapPrefix}");
-                            roomRow.Add($"{roomTemplatePrefix}11");
-
-                        }
-                        EndHelperModule.Session.roomSwapOrderList[gridID].Add(roomRow);
-                    }
-                    UpdateRooms();
-                    //teleportToRoom("swap11", player, level);
-                    if (currentRoomName.StartsWith(roomSwapPrefix))
-                    {
-                        TeleportToRoom(getSwapRoomFromTemplateRoom(currentTemplateRoomName), player, level);
-                    }
-
-                    //level.Session.LevelData = getRoomDataFromName($"{roomTemplatePrefix}11", level);
-                    break;
-
-                case "Reset":
-                    {
-                        List<List<string>> initial = null;
-                        if (EndHelperModule.Session.roomSwapOrderList.TryGetValue(gridID, out List<List<string>> value))
-                        {
-                            initial = new List<List<string>>(DeepCopyJSON(value));
-                        }
-                        
-
-                        EndHelperModule.Session.roomSwapOrderList[gridID] = [];
-                        for (int row = 1; row <= roomSwapTotalRow; row++)
-                        {
-                            List<string> roomRow = [];
-                            for (int column = 1; column <= roomSwapTotalColumn; column++)
-                            {
-                                roomRow.Add($"{roomTemplatePrefix}{row}{column}");
-                            }
-                            EndHelperModule.Session.roomSwapOrderList[gridID].Add(roomRow);
-                        }
-
-                        if(!Are2LayerListsEqual(initial, EndHelperModule.Session.roomSwapOrderList[gridID]))
-                        {
-                            UpdateRooms();
-                        }
-
-                        //If reset is triggered while in the swap zone, do le warp
-                        if (currentRoomName.StartsWith(roomSwapPrefix))
-                        {
-                            TeleportToRoom(getSwapRoomFromTemplateRoom(currentTemplateRoomName), player, level);
-                        }
-                    }
-                    break;
-
-                case "CurrentRowLeft":
-                    {
-                        int roomRow = GetPosFromRoomName(currentRoomName)[0];
-
-                        EndHelperModule.Session.roomSwapOrderList[gridID][roomRow - 1].Add(EndHelperModule.Session.roomSwapOrderList[gridID][roomRow - 1][0]);
-                        EndHelperModule.Session.roomSwapOrderList[gridID][roomRow - 1].RemoveAt(0);
-                        UpdateRooms();
-                        TeleportToRoom(getSwapRoomFromTemplateRoom(currentTemplateRoomName), player, level);
-                    }
-                    break;
-
-                case "CurrentRowLeft_PreventWarp":
-                    {
-                        int roomCol = GetPosFromRoomName(currentRoomName)[1];
-                        int roomRow = GetPosFromRoomName(currentRoomName)[0];
-
-                        //Only continue if roomCol is not leftmost room
-                        if (roomCol != 1)
-                        {
-                            EndHelperModule.Session.roomSwapOrderList[gridID][roomRow - 1].Add(EndHelperModule.Session.roomSwapOrderList[gridID][roomRow - 1][0]);
-                            EndHelperModule.Session.roomSwapOrderList[gridID][roomRow - 1].RemoveAt(0);
-                            UpdateRooms();
-                            TeleportToRoom(getSwapRoomFromTemplateRoom(currentTemplateRoomName), player, level);
-                        }
-                    }
-                    break;
-
-                case "CurrentRowRight":
-                    {
-                        int roomRow = GetPosFromRoomName(currentRoomName)[0];
-
-                        EndHelperModule.Session.roomSwapOrderList[gridID][roomRow-1].Insert(0, EndHelperModule.Session.roomSwapOrderList[gridID][roomRow-1][roomSwapTotalColumn - 1]);
-                        EndHelperModule.Session.roomSwapOrderList[gridID][roomRow-1].RemoveAt(roomSwapTotalColumn);
-                        UpdateRooms();
-                        TeleportToRoom(getSwapRoomFromTemplateRoom(currentTemplateRoomName), player, level);
-                    }
-                    break;
-
-                case "CurrentRowRight_PreventWarp":
-                    {
-                        int roomCol = GetPosFromRoomName(currentRoomName)[1];
-                        int roomRow = GetPosFromRoomName(currentRoomName)[0];
-
-                        //Only continue if roomCol is not rightmost room
-                        if (roomCol != roomSwapTotalColumn)
-                        {
-                            EndHelperModule.Session.roomSwapOrderList[gridID][roomRow - 1].Insert(0, EndHelperModule.Session.roomSwapOrderList[gridID][roomRow - 1][roomSwapTotalColumn - 1]);
-                            EndHelperModule.Session.roomSwapOrderList[gridID][roomRow - 1].RemoveAt(roomSwapTotalColumn);
-                            UpdateRooms();
-                            TeleportToRoom(getSwapRoomFromTemplateRoom(currentTemplateRoomName), player, level);
-                        }
-                    }
-                    break;
-
-                case "CurrentColumnUp":
-                    {
-                        int roomCol = GetPosFromRoomName(currentRoomName)[1];
-                        int roomRow = GetPosFromRoomName(currentRoomName)[0];
-
-                        String topRoomName = EndHelperModule.Session.roomSwapOrderList[gridID][0][roomCol - 1];
-                        for (int row = 1; row <= roomSwapTotalRow-1; row++)
-                        {
-                            //Move each room up
-                            EndHelperModule.Session.roomSwapOrderList[gridID][row - 1][roomCol - 1] = EndHelperModule.Session.roomSwapOrderList[gridID][row][roomCol - 1];
-                        }
-                        //Copy over top room to the bottom
-                        EndHelperModule.Session.roomSwapOrderList[gridID][roomSwapTotalRow-1][roomCol - 1] = topRoomName;
-                        UpdateRooms();
-                        TeleportToRoom(getSwapRoomFromTemplateRoom(currentTemplateRoomName), player, level);
-                    }
-                    break;
-
-                case "CurrentColumnUp_PreventWarp":
-                    {
-                        int roomCol = GetPosFromRoomName(currentRoomName)[1];
-                        int roomRow = GetPosFromRoomName(currentRoomName)[0];
-
-                        //Only continue if roomRow is not topmost room
-                        if (roomRow != 1)
-                        {
-                            String topRoomName = EndHelperModule.Session.roomSwapOrderList[gridID][0][roomCol - 1];
-                            for (int row = 1; row <= roomSwapTotalRow - 1; row++)
-                            {
-                                //Move each room up
-                                EndHelperModule.Session.roomSwapOrderList[gridID][row - 1][roomCol - 1] = EndHelperModule.Session.roomSwapOrderList[gridID][row][roomCol - 1];
-                            }
-                            //Copy over top room to the bottom
-                            EndHelperModule.Session.roomSwapOrderList[gridID][roomSwapTotalRow - 1][roomCol - 1] = topRoomName;
-                            UpdateRooms();
-                            TeleportToRoom(getSwapRoomFromTemplateRoom(currentTemplateRoomName), player, level);
-                        }
-                    }
-                    break;
-
-                case "CurrentColumnDown":
-                    {
-                        int roomCol = GetPosFromRoomName(currentRoomName)[1];
-                        int roomRow = GetPosFromRoomName(currentRoomName)[0];
-
-                        String bottomRoomName = EndHelperModule.Session.roomSwapOrderList[gridID][roomSwapTotalRow - 1][roomCol - 1];
-                        for (int row = roomSwapTotalRow; row > 1; row--)
-                        {
-                            //Move each room down
-                            EndHelperModule.Session.roomSwapOrderList[gridID][row - 1][roomCol - 1] = EndHelperModule.Session.roomSwapOrderList[gridID][row - 2][roomCol - 1];
-                        }
-                        //Copy over bottom room to the top
-                        EndHelperModule.Session.roomSwapOrderList[gridID][0][roomCol - 1] = bottomRoomName;
-                        UpdateRooms();
-                        TeleportToRoom(getSwapRoomFromTemplateRoom(currentTemplateRoomName), player, level);
-                    }
-                    break;
-
-                case "CurrentColumnDown_PreventWarp":
-                    {
-                        int roomCol = GetPosFromRoomName(currentRoomName)[1];
-                        int roomRow = GetPosFromRoomName(currentRoomName)[0];
-
-                        //Only continue if roomRow is not bottommost room
-                        if (roomRow != roomSwapTotalRow)
-                        {
-                            String bottomRoomName = EndHelperModule.Session.roomSwapOrderList[gridID][roomSwapTotalRow - 1][roomCol - 1];
-                            for (int row = roomSwapTotalRow; row > 1; row--)
-                            {
-                                //Move each room down
-                                EndHelperModule.Session.roomSwapOrderList[gridID][row - 1][roomCol - 1] = EndHelperModule.Session.roomSwapOrderList[gridID][row - 2][roomCol - 1];
-                            }
-                            //Copy over bottom room to the top
-                            EndHelperModule.Session.roomSwapOrderList[gridID][0][roomCol - 1] = bottomRoomName;
-                            UpdateRooms();
-                            TeleportToRoom(getSwapRoomFromTemplateRoom(currentTemplateRoomName), player, level);
-                        }
-                    }
-                    break;
-
-                case "SwapLeftRight":
-                    {
-                        int roomCol = GetPosFromRoomName(currentRoomName)[1];
-                        int roomRow = GetPosFromRoomName(currentRoomName)[0];
-
-                        //Only continue if not leftmost or rightmost
-                        if (roomCol != roomSwapTotalColumn && roomCol != 1)
-                        {
-                            String leftRoom = EndHelperModule.Session.roomSwapOrderList[gridID][roomRow - 1][roomCol - 2];
-                            EndHelperModule.Session.roomSwapOrderList[gridID][roomRow - 1][roomCol-2] = EndHelperModule.Session.roomSwapOrderList[gridID][roomRow - 1][roomCol];
-                            EndHelperModule.Session.roomSwapOrderList[gridID][roomRow - 1][roomCol] = leftRoom;
-                            UpdateRooms();
-                            //teleportToRoom(getSwapRoomFromTemplateRoom(currentTemplateRoomName), player, level);
-                        }
-                    }
-                    break;
-
-                case "SwapUpDown":
-                    {
-                        int roomCol = GetPosFromRoomName(currentRoomName)[1];
-                        int roomRow = GetPosFromRoomName(currentRoomName)[0];
-
-                        //Only continue if not topmost or bottommost
-                        if (roomRow != roomSwapTotalRow && roomRow != 1)
-                        {
-                            String topRoom = EndHelperModule.Session.roomSwapOrderList[gridID][roomRow - 2][roomCol - 1];
-                            EndHelperModule.Session.roomSwapOrderList[gridID][roomRow - 2][roomCol - 1] = EndHelperModule.Session.roomSwapOrderList[gridID][roomRow][roomCol - 1];
-                            EndHelperModule.Session.roomSwapOrderList[gridID][roomRow][roomCol - 1] = topRoom;
-                            UpdateRooms();
-                            //teleportToRoom(getSwapRoomFromTemplateRoom(currentTemplateRoomName), player, level);
-                        }
-                    }
-                    break;
-
-                //set_11_12_21_22
-                case string s when s.StartsWith("Set_"):
-                    {
-                        string oldTemplateRoomAtThisPos = "";
-                        int roomCol = 0; int roomRow = 0;
-                        if (currentTemplateRoomName != null)
-                        {
-                            roomCol = GetPosFromRoomName(currentRoomName)[1];
-                            roomRow = GetPosFromRoomName(currentRoomName)[0];
-                            Logger.Log(LogLevel.Info, "EndHelper/main", $"------------- room name {currentRoomName}. col row {roomCol} {roomRow} and gridID {gridID}");
-                            oldTemplateRoomAtThisPos = EndHelperModule.Session.roomSwapOrderList[gridID][roomRow - 1][roomCol - 1];
-                        }
-
-                        string[] splittedArr = s.Split("_");
-                        int row = 1;
-                        int column = 1;
-
-                        List<List<string>> initial = null;
-                        if (EndHelperModule.Session.roomSwapOrderList.TryGetValue(gridID, out List<List<string>> value))
-                        {
-                            initial = new List<List<string>>(DeepCopyJSON(value));
-                        }
-
-                        for (int i = 1; i < splittedArr.Length; i++)
-                        {
-
-                            List<int> roomPos = GetPosFromRoomName(splittedArr[i]);
-
-                            // Set i-th item in splittedArr to row/col
-                            EndHelperModule.Session.roomSwapOrderList[gridID][row - 1][column - 1] = $"{roomTemplatePrefix}{roomPos[0]}{roomPos[1]}";
-                            
-                            // Change row/column index.
-                            // If overshot/undershot, it still shouldn't break
-                            column++;
-                            if (column > roomSwapTotalColumn)
-                            {
-                                column = 1;
-                                row++;
-                            }
-                            if (row > roomSwapTotalRow) { break; }
-                        }
-                        if (!Are2LayerListsEqual(initial, EndHelperModule.Session.roomSwapOrderList[gridID]))
-                        {
-
-                            UpdateRooms();
-
-                            // Teleport the player if it is triggered in a room that gets changed from setting
-                            // First, check if the player is even in the grid
-                            if (oldTemplateRoomAtThisPos == "")
-                            {
-                                // Player is not in a room in the grid. Stop checking.
-                            }
-                            else
-                            {
-                                // There can be multiple of the same template room. First check if the current room is the same
-                                string newTemplateRoomAtThisPos = EndHelperModule.Session.roomSwapOrderList[gridID][roomRow - 1][roomCol - 1];
-
-                                //Logger.Log(LogLevel.Info, "EndHelper/Main", $"current {oldTemplateRoomAtThisPos} new {newTemplateRoomAtThisPos}");
-                                if (oldTemplateRoomAtThisPos != newTemplateRoomAtThisPos)
-                                {
-                                    // Only teleport if the template room at the same position is different
-                                    TeleportToRoom(getSwapRoomFromTemplateRoom(currentTemplateRoomName), player, level);
-                                }
-                            }
-                        }
-                    }
-                    break;
-
-                case "None":
-                    UpdateRooms();
-                    break;
-
-                default:
-                    // nothing!!!!
-                    break;
-            }
-            level.Session.SetFlag(GetTransitionFlagName(), true); //Set flag
-        }
-
-        void UpdateRooms()
-        {
-            for (int row = 1; row <= roomSwapTotalRow; row++)
-            {
-                for (int column = 1; column <= roomSwapTotalColumn; column++)
-                {
-                    ReplaceRoom($"{roomSwapPrefix}{row}{column}", EndHelperModule.Session.roomSwapOrderList[gridID][row - 1][column - 1], level);
-                }
-            }
-            //Logger.Log(LogLevel.Info, "EndHelper/Main", "Updating rooms...");
-            swapEffects();
-        }
-
-        async void TeleportToRoom(String teleportToRoomName, Player player, Level level)
-        {
-            LevelData currentRoomData = level.Session.LevelData;
-            Vector2 currentRoomPos = currentRoomData.Position;
-
-            if (currentRoomData.Name == teleportToRoomName){
-                //If same room, do nothing
-                EndHelperModule.Session.allowTriggerEffect[gridID] = true; //Well actually we can set this to true immediately
-            } else {
-                LevelData toRoomData = getRoomDataFromName(teleportToRoomName, level);
-                Vector2 toRoomPos = toRoomData.Position;
-
-                await Task.Delay(teleportDelayMilisecond);
-
-                Vector2 playerOriginalPos = new (player.Position.X, player.Position.Y);
-
-                level.NextTransitionDuration = EndHelperModule.Session.roomTransitionTime[gridID];
-                Vector2 transitionOffset = toRoomPos - currentRoomPos;
-                Vector2 transitionDirection = transitionOffset.SafeNormalize();
-
-                player.Position += transitionOffset;
-                level.TransitionTo(toRoomData, transitionDirection);
-
-                //Occasionally the transition is jank and undoes the position change.
-                //This is here to unjank the jank
-                if (Math.Abs(playerOriginalPos.X - player.Position.X) <= 5 && Math.Abs(playerOriginalPos.Y - player.Position.Y) <= 5)
-                {
-                    //If player coordinates barely change, teleport again...
-                    player.Position += transitionOffset;
-                }
-
-                player.ResetSpriteNextFrame(default); // Hopefully fixes a bug where the player sometimes turns invisible after warp
-
-                // Move followers along with player
-                for (int index = 0; index < player.Leader.PastPoints.Count; index++)
-                {
-                    player.Leader.PastPoints[index] += transitionOffset;
-                }
-                foreach (var follower in player.Leader.Followers)
-                {
-                    if (follower != null)
-                    {
-                        follower.Entity.Position += transitionOffset;
-                    }
-                }
-                Logger.Log(LogLevel.Info, "EndHelper/Main", $"Teleporting from {currentRoomData.Name} >> {teleportToRoomName}. Pos change: ({playerOriginalPos.X} {playerOriginalPos.Y} => {player.Position.X} {player.Position.Y}) - change by ({(toRoomPos - currentRoomPos).X} {(toRoomPos - currentRoomPos).Y}), Transition direction: ({transitionDirection.X} {transitionDirection.Y})");
-            }
-        }
-
-        String getSwapRoomFromTemplateRoom(String templateRoomName)
-        {
-            List<List<String>> roomList = EndHelperModule.Session.roomSwapOrderList[gridID];
-            for (int row = 1; row <= roomSwapTotalRow; row++)
-            {
-                for (int column = 1; column <= roomSwapTotalColumn; column++)
-                {
-                    if (templateRoomName == roomList[row-1][column-1])
-                    {
-                        //Found match at {row}{colu} - the swap room is {prefix}{row}{col}
-                        return $"{roomSwapPrefix}{row}{column}";
-                    }
-                }
-            }
-            Logger.Log(LogLevel.Info, "EndHelper/main", $"getSwapRoomFromTemplateRoom - Unable to find {templateRoomName} - returning current room leveldata instead.");
-            return currentRoomName; //This shouldn't happen...
-        }
-
-        String GetTemplateRoomFromSwapRoom(String swapRoomName)
-        {
-            if (swapRoomName.StartsWith(roomSwapPrefix))
-            {
-                List<List<String>> roomList = EndHelperModule.Session.roomSwapOrderList[gridID];
-                int len = swapRoomName.Length;
-                int rowIndex = swapRoomName[len - 2] - '0';
-                rowIndex += -1;
-                int colIndex = swapRoomName[len - 1] - '0';
-                colIndex += -1;
-                String templateRoomName = roomList[rowIndex][colIndex];
-                return templateRoomName;
-            }
-            //This means the current room is not a swap room
-            //If the template room can't be found it means modifyRoom was triggered from outside the swap grid
-            //If the swap effect doesn't depend on the current room this will run with no issues! (Null check for Set)
-            return null;
-        }
-
-        void swapEffects()
-        {
-            RoomModificationEventTrigger(gridID);
-
-            if (flashEffect)
-            {
-                level.Flash(Color.White, drawPlayerOver: true);
-            }
-            if (!isSilent && player is not null)
-            {
-                level.Shake();
-
-                if(EndHelperModule.Session.activateSoundEvent1[gridID] != "")
-                {
-                    Audio.Play(EndHelperModule.Session.activateSoundEvent1[gridID], player.Position);
-                }
-                if (EndHelperModule.Session.activateSoundEvent2[gridID] != "")
-                {
-                    Audio.Play(EndHelperModule.Session.activateSoundEvent2[gridID], player.Position);
-                }
-            }
-            succeedModify = true;
-        }
-
-        String GetTransitionFlagName()
-        {
-            String flagName = roomSwapPrefix;
-            for (int row = 1; row <= roomSwapTotalRow; row++)
-                {
-                for (int column = 1; column <= roomSwapTotalColumn; column++)
-                {
-                    String roomNameAtPos = EndHelperModule.Session.roomSwapOrderList[gridID][row-1][column-1];
-                    List<int> roomPos = GetPosFromRoomName(roomNameAtPos);
-                    flagName += $"_{roomPos[0]}{roomPos[1]}";
-                }
-            }
-            //Logger.Log(LogLevel.Info, "EndHelper/main", $"getTransitionFlagName - Obtained flag name for {roomSwapPrefix} to be {flagName}");
-            return flagName;
-        }
-        return succeedModify;
-    }
-
-    /// <summary>
-    /// Returns the last 2 digits of the room name... or any string lol
-    /// </summary>
-    /// <param name="roomName"></param>
-    /// <returns></returns>
-    public static List<int> GetPosFromRoomName(String roomName)
-    {
-        int len = roomName.Length;
-        int row = roomName[len - 2] - '0';
-        int col = roomName[len - 1] - '0';
-
-        return [row, col];
-    }
-
-    #endregion
-
-    #region Misc Functions
-
-    /// <summary>
-    /// Compare if 2 2d lists are equal
-    /// </summary>
-    /// <param name="list1"></param>
-    /// <param name="list2"></param>
-    /// <returns></returns>
-    static bool Are2LayerListsEqual<T>(List<List<T>> list1, List<List<T>> list2)
-    {
-        if(list1 == null || list2 == null)
-        {
-            return false;
-        }
-
-        return list1.Count == list2.Count &&
-               list1.Zip(list2, (inner1, inner2) => inner1.SequenceEqual(inner2)).All(equal => equal);
-    }
-
-    // When will I finally learn a language that doesn't make deep cloning an absolute pain
-
-    /// <summary>
-    /// Lazy af deep cloning
-    /// </summary>
-    /// <typeparam name="T"></typeparam>
-    /// <param name="input"></param>
-    /// <returns></returns>
-    public static T DeepCopyJSON<T>(T input)
-    {
-        var jsonString = JsonSerializer.Serialize(input);
-
-        return JsonSerializer.Deserialize<T>(jsonString);
-    }
-
-    /// <summary>
-    /// Converts a Timespan into h:mm:ss string
-    /// </summary>
-    /// <param name="time"></param>
-    /// <returns></returns>
-    public static string MinimalGameplayFormat(TimeSpan time)
-    {
-        if (time.TotalHours >= 1.0)
-        {
-            return (int)time.TotalHours + ":" + time.ToString("mm\\:ss");
-        }
-        return time.ToString("m\\:ss");
-    }
-
-    /// <summary>
-    /// Buffers a VirtualButton for a few frames
-    /// </summary>
-    /// <param name="input"></param>
-    /// <param name="frames"></param>
-    public async static void consumeInput(VirtualButton input, int frames)
-    {
-        while (frames > 0)
-        {
-            input.ConsumePress();
-            input.ConsumeBuffer();
-            frames--;
-            await Task.Delay((int)(Engine.DeltaTime * 1000));
-        }
-    }
-
-    /// <summary>
-    /// Takes in a path set in loenn, outputs a path that can be used as an Image.
-    /// </summary>
-    /// <param name="path"></param>
-    /// <param name="defaultPath"></param>
-    /// <returns></returns>
-    public static string TrimPath(string path, string defaultPath)
-    {
-        if (path == "") { path = defaultPath; }
-        while (path.StartsWith("objects") == false)
-        {
-            path = path.Substring(path.IndexOf('/') + 1);
-        }
-        if (path.IndexOf(".") > -1)
-        {
-            path = path.Substring(0, path.IndexOf("."));
-        }
-        return path;
-    }
-
-    /// <summary>
-    /// Checks if the specified flag is enabled, negation if ! is in front. Returns boolIfEmpty (default true) if empty.
-    /// </summary>
-    /// <param name="session"></param>
-    /// <param name="flag"></param>
-    /// <param name="boolIfEmpty"></param>
-    /// <returns></returns>
-    public static bool IsFlagEnabled(Session session, string flag, bool boolIfEmpty = true)
-    {
-        //Logger.Log(LogLevel.Info, "EndHelper/main", $"IsFlagEnabled - Flag {flag}, boolIfEmpty {boolIfEmpty}");
-        if (flag == "")
-        {
-            //Logger.Log(LogLevel.Info, "EndHelper/main", $"Flag is empty! Returning {boolIfEmpty}");
-            return boolIfEmpty;
-        }
-        else
-        {
-            // Check if first character is !
-            if (flag.StartsWith('!'))
-            {
-                flag = flag.Substring(1);
-                //Logger.Log(LogLevel.Info, "EndHelper/main", $"Flag starts with !, checking if {flag} exists: {session.GetFlag(flag)} (returning opposite)");
-                return !session.GetFlag(flag);
-            }
-            else
-            {
-                //Logger.Log(LogLevel.Info, "EndHelper/main", $"Flag starts with !, checking if {flag} exists: {session.GetFlag(flag)}");
-                return session.GetFlag(flag);
-            }
-        }
-    }
-
-    // TO-DO: Split, check comma, use everywhere
-
-    #endregion
-
 }

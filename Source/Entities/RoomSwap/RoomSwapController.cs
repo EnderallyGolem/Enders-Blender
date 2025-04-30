@@ -7,6 +7,7 @@ using static Celeste.TempleGate;
 using static On.Celeste.Level;
 using System.Security.Cryptography.X509Certificates;
 using System;
+using Celeste.Mod.EndHelper.SharedCode;
 
 
 
@@ -36,7 +37,7 @@ public class RoomSwapController : Entity
         EndHelperModule.Session.activateSoundEvent1[gridID] = data.Attr("activateSoundEvent1", "");
         EndHelperModule.Session.activateSoundEvent2[gridID] = data.Attr("activateSoundEvent2", "");
 
-        EndHelperModule.enableRoomSwapHooks = true;
+        EndHelperModule.Session.enableRoomSwapFuncs = true;
     }
     public override void Added(Scene scene)
     {
@@ -52,7 +53,7 @@ public class RoomSwapController : Entity
             Level level = SceneAs<Level>();
             Player player = level.Tracker.GetEntity<Player>();
 
-            EndHelperModule.ModifyRooms("Reset", true, player, level, gridID); //This loads the stuff in 
+            Utils_RoomSwap.ModifyRooms("Reset", true, player, level, gridID); //This loads the stuff in 
             Logger.Log(LogLevel.Info, "EndHelper/RoomSwap/RoomSwapController", $"Added a {EndHelperModule.Session.roomSwapRow[gridID]}x{EndHelperModule.Session.roomSwapColumn[gridID]} grid with id {gridID}");
         }
     }
