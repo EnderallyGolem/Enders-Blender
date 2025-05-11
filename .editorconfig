@@ -1,0 +1,4 @@
+﻿[*.cs]
+
+# CL0006: Multiple predicates to ILCursor.(Try)Goto*
+dotnet_diagnostic.CL0006.severity = silent

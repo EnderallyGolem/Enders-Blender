@@ -67,6 +67,18 @@ These are marked as using variations in the end-screen. Some of these can be ove
     - If the seed depends on the relative position in the room
 - Option to be breakable
 
+
+
+## 1.1.1 changelog:
+- New Additions:
+    - Gameplay Tweaks:
+        - Seemless Respawns: Changes respawns to be more seemless by reloading the room without a wipe. This is kind of buggy and only meant for maps (enabled with gameplay tweak trigger) for now.
+
+- Room Stats:
+	- You can name a room dialog %skip to prevent it from showing up (previous room stats will be incremented instead)
+	- Made custom room names for SJ Heartsides
+	- Menu no longer freezes if viewed from the journal, in the world map, without imguihelper
+
 ## 1.1 changelog:
 - New Additions: 
     - QOL Tweaks:

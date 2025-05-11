@@ -84,13 +84,15 @@ public class RoomSwapMapUpgrade : Entity
     private string gridID;
     private SineWave sine;
 
+    private EntityID entityID;
+
     private EntityData entityData;
     MTexture texture;
 
 
-    public RoomSwapMapUpgrade(EntityData data, Vector2 offset) : base(data.Position + offset)
+    public RoomSwapMapUpgrade(EntityData data, Vector2 offset, EntityID id) : base(data.Position + offset)
     {
-
+        entityID = id;
         entityData = data;
         gridID = data.Attr("gridId", "1");
         string texturePath = data.Attr("texturePath");
@@ -105,27 +107,18 @@ public class RoomSwapMapUpgrade : Entity
         sine = new SineWave(0.5f, MathF.PI / 2);
         Add(sine);
 
-        if (oneTime && EndHelperModule.Session.entityPreventReappearIDs.Contains(data.ID))
-        {
-            // Entity to not appear
-            Visible = false;
-            Collidable = false;
-        }
-        else
-        {
 
-            texturePath = trimPath(texturePath, "objects/EndHelper/RoomSwapMap/upgradeicon");
-            texture = GFX.Game[texturePath];
+        texturePath = trimPath(texturePath, "objects/EndHelper/RoomSwapMap/upgradeicon");
+        texture = GFX.Game[texturePath];
 
-            data.Width = texture.Width;
-            data.Height = texture.Height;
+        data.Width = texture.Width;
+        data.Height = texture.Height;
 
-            Collider = new Hitbox(data.Width, data.Height, -data.Width / 2, -data.Height / 2);
-            Add(new PlayerCollider(ObtainMap));
-            Add(new Image(texture).CenterOrigin());
-            Add(new VertexLight(Color.White, 1f, 32, 64));
-            Add(new BloomPoint(0.5f, 12f));
-        }
+        Collider = new Hitbox(data.Width, data.Height, -data.Width / 2, -data.Height / 2);
+        Add(new PlayerCollider(ObtainMap));
+        Add(new Image(texture).CenterOrigin());
+        Add(new VertexLight(Color.White, 1f, 32, 64));
+        Add(new BloomPoint(0.5f, 12f));
     }
 
     private void ObtainMap(Player player)
@@ -160,7 +153,7 @@ public class RoomSwapMapUpgrade : Entity
         bool oneTime = entityData.Bool("oneTime", true);
         if (oneTime)
         {
-            EndHelperModule.Session.entityPreventReappearIDs.Add(entityData.ID);
+            level.Session.DoNotLoad.Add(entityID);
         }
 
         Visible = false;

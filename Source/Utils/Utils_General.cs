@@ -1,4 +1,6 @@
-﻿using Monocle;
+﻿using Microsoft.Xna.Framework;
+using Monocle;
+using MonoMod.Utils;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -10,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace Celeste.Mod.EndHelper.Utils
 {
-    internal class Utils_General
+    static internal class Utils_General
     {
         /// <summary>
         /// Compare if 2 2d lists are equal
@@ -354,6 +356,30 @@ namespace Celeste.Mod.EndHelper.Utils
                     session.SetFlag(flagTrim, !session.GetFlag(flagTrim));
                 }
             }
+        }
+        public static Rectangle GetRect(this Camera camera, int inflateX = 0, int inflateY = 0)
+        {
+            Rectangle cameraRect = new Rectangle((int)camera.X, (int)camera.Y, (int)(camera.Right - camera.Left), (int)(camera.Bottom - camera.Top));
+            cameraRect.Inflate(inflateX, inflateY);
+            return cameraRect;
+        }
+
+        public static Entity GetNearestGenericEntity(this Level level, Vector2 nearestTo)
+        {
+            EntityList entityList = level.Entities;
+            Entity closestEntity = null;
+            float num = 0f;
+            foreach (Entity entity in entityList)
+            {
+                float num2 = Vector2.DistanceSquared(nearestTo, entity.Position);
+                if (closestEntity == null || num2 < num)
+                {
+                    closestEntity = entity;
+                    num = num2;
+                }
+            }
+
+            return closestEntity;
         }
     }
 }

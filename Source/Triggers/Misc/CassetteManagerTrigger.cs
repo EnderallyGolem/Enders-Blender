@@ -145,17 +145,17 @@ public class CassetteManagerTrigger : Trigger
             DynamicData cassetteManagerData = DynamicData.For(cassetteBlockManager);
 
             // Get all the juicy data yum
-            int c_currentIndex = cassetteManagerData.Get<int>("currentIndex");
-            int c_maxBeat = cassetteManagerData.Get<int>("maxBeat");
+            int c_currentIndex = cassetteBlockManager.currentIndex;
+            int c_maxBeat = cassetteBlockManager.maxBeat;
 
-            int c_beatIndex = cassetteManagerData.Get<int>("beatIndex");
+            int c_beatIndex = cassetteBlockManager.beatIndex;
             int c_beatIndexMax = cassetteManagerData.Get<int>("beatIndexMax");
 
-            float c_tempoMult = cassetteManagerData.Get<float>("tempoMult");
-            float c_beatTimer = cassetteManagerData.Get<float>("beatTimer");
+            float c_tempoMult = cassetteBlockManager.tempoMult;
+            float c_beatTimer = cassetteBlockManager.beatTimer;
 
-            int c_leadBeats = cassetteManagerData.Get<int>("leadBeats");
-            int c_beatIndexOffset = cassetteManagerData.Get<int>("beatIndexOffset");
+            int c_leadBeats = cassetteBlockManager.leadBeats;
+            int c_beatIndexOffset = cassetteBlockManager.beatIndexOffset;
             int c_beatsPerTick = cassetteManagerData.Get<int>("beatsPerTick");
             int c_ticksPerSwap = cassetteManagerData.Get<int>("ticksPerSwap");
 
@@ -473,10 +473,10 @@ public class CassetteManagerTrigger : Trigger
         if (!wonkyCassettes && level.Tracker.GetEntity<CassetteBlockManager>() is CassetteBlockManager cassetteBlockManager)
         {
             DynamicData cassetteManagerData = DynamicData.For(cassetteBlockManager);
-            int c_currentIndex = cassetteManagerData.Get<int>("currentIndex");
-            int c_maxBeat = cassetteManagerData.Get<int>("maxBeat");
+            int c_currentIndex = cassetteBlockManager.currentIndex;
+            int c_maxBeat = cassetteBlockManager.maxBeat;
 
-            int oldbeatIndex = cassetteManagerData.Get<int>("beatIndex"); // Old one, BEFORE the set beat
+            int oldbeatIndex = cassetteBlockManager.beatIndex; // Old one, BEFORE the set beat
             int c_beatsPerTick = cassetteManagerData.Get<int>("beatsPerTick");
             int c_ticksPerSwap = cassetteManagerData.Get<int>("ticksPerSwap");
 
@@ -488,13 +488,13 @@ public class CassetteManagerTrigger : Trigger
 
             if (setBeat < 0)
             {
-                cassetteManagerData.Set("leadBeats", -setBeat);
-                cassetteManagerData.Set("beatIndex", positiveSetBeat);
+                cassetteBlockManager.leadBeats = -setBeat;
+                cassetteBlockManager.beatIndex = positiveSetBeat;
             }
             else
             {
-                cassetteManagerData.Set("leadBeats", 0);
-                cassetteManagerData.Set("beatIndex", setBeat);
+                cassetteBlockManager.leadBeats = 0;
+                cassetteBlockManager.beatIndex = setBeat;
             }
 
             // Set currentIndex (depending on beatsPerTick * ticksPerSwap) to ensure cassette blocks gets synced
@@ -502,7 +502,7 @@ public class CassetteManagerTrigger : Trigger
             if (newCurrentIndex < 0) { newCurrentIndex += c_beatsPerTick; } // Possible negative if initialLeadBeat is less than beatsPerSwap
 
             int newCurrentIndexNext = (newCurrentIndex + 1) % c_beatsPerTick;
-            cassetteManagerData.Set("currentIndex", newCurrentIndex);
+            cassetteBlockManager.currentIndex = newCurrentIndex;
 
             // Correct for dumb cassette height stuff.
             bool swapToChanging = (positiveSetBeat + 1) % beatsPerSwap == 0;

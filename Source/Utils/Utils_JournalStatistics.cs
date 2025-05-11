@@ -731,7 +731,7 @@ namespace Celeste.Mod.EndHelper.Utils
                         journalStatisticsEditingRoomName = roomName; // Update editingRoomName while updating the bg
                         backgroundTextureEdit.Draw(new Vector2(startX + col2BufferCurrent, startY + heightBetweenRows * displayRow), Vector2.Zero, bgColor);
 
-                        if (Input.MenuJournal.Check)
+                        if (RoomStatisticsDisplayer.renameRoomsMoveRooms)
                         {
                             moveRoomArrows.DrawOutline(new Vector2(startX + col2BufferCurrent - 40, startY + heightBetweenRows * displayRow), new Vector2(0.5f, 0.5f), Color.White, 1.3f);
                         }
@@ -975,7 +975,15 @@ namespace Celeste.Mod.EndHelper.Utils
                 if (Input.MenuJournal.Check)
                 {
                     Utils_JournalStatistics.EditingRoomMovePosition(oldEditingRoomIndex, journalStatisticsEditingRoomIndex, mapNameSide_Internal, journalRoomStatMenuType);
+                    renameRoomsMoveRooms = true;
                 }
+                else
+                {
+                    renameRoomsMoveRooms = false;
+                }
+            } else
+            {
+                renameRoomsMoveRooms = false;
             }
 
             // Room Stat Menu Buttons Functionality
@@ -1002,7 +1010,10 @@ namespace Celeste.Mod.EndHelper.Utils
                     filterSetting = (roomStatMenuFilter)(((int)filterSetting + 1) % Enum.GetValues(typeof(roomStatMenuFilter)).Length);
                 }
             }
-            MInput.Disabled = true;
+            if (Engine.Scene is Level)
+            {
+                MInput.Disabled = true;
+            }
         }
 
         public static void EditingRoomMovePosition(int initialPosIndex, int finalPosIndex, string mapNameSide_Internal, journalRoomStatMenuTypeEnum? menuType)

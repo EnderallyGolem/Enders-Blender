@@ -26,7 +26,6 @@ using System.Runtime.CompilerServices;
 using Microsoft.VisualBasic;
 using static Celeste.Mod.EndHelper.EndHelperModuleSettings.GameplayTweaks;
 using Celeste.Mod.Entities;
-using static On.Celeste.Player;
 
 namespace Celeste.Mod.EndHelper;
 
@@ -132,6 +131,12 @@ public class EndHelperModule : EverestModule {
         On.Celeste.Player.Update += Hook_OnPlayerUpdate;
         On.Celeste.Player.Die += Hook_OnPlayerDeath;
         On.Celeste.Player.IntroRespawnBegin += Hook_OnPlayerRespawn;
+        IL.Celeste.PlayerDeadBody.Update += ILHook_PlayerDeadBodyUpdate;
+        IL.Celeste.PlayerDeadBody.End += ILHook_PlayerDeadBodyEnd;
+        MethodInfo ILOrigDie = typeof(Player).GetMethod("orig_Die", BindingFlags.Public | BindingFlags.Instance);
+        Loadhook_Player_OrigDie = new ILHook(ILOrigDie, Hook_ILOrigDie);
+        MethodInfo ILDeadBodyDeathRoutine = typeof(PlayerDeadBody).GetMethod("DeathRoutine", BindingFlags.NonPublic | BindingFlags.Instance).GetStateMachineTarget();
+        Loadhook_PlayerDeadBody_DeathRoutine = new ILHook(ILDeadBodyDeathRoutine, Hook_ILDeadBodyDeathRoutine);
 
         On.Celeste.AreaComplete.VersionNumberAndVariants += Hook_AreaCompleteVerNumVars;
         On.Celeste.OuiJournal.Update += Hook_JournalUpdate;
@@ -144,15 +149,11 @@ public class EndHelperModule : EverestModule {
         On.Celeste.SpeedrunTimerDisplay.Render += Hook_SpeedrunTimerRender;
         IL.Celeste.GrabbyIcon.Update += ILHook_GrabbyIconUpdate;
 
+        On.Celeste.CrystalStaticSpinner.InView += Hook_SpinnerInView;
+
         On.Celeste.CassetteBlock.Awake += Hook_CassetteBlockAwake;
         On.Celeste.CassetteBlockManager.Awake += Hook_CassetteBlockManagerAwake;
         IL.Celeste.CassetteBlockManager.AdvanceMusic += ILHook_CassetteBlockManagerAdvMusic;
-
-        MethodInfo ILOrigDie = typeof(Player).GetMethod("orig_Die", BindingFlags.Public | BindingFlags.Instance);
-        Loadhook_Player_OrigDie = new ILHook(ILOrigDie, Hook_ILOrigDie);
-        MethodInfo ILDeadBodyDeathRoutine = typeof(PlayerDeadBody).GetMethod("DeathRoutine", BindingFlags.NonPublic | BindingFlags.Instance).GetStateMachineTarget();
-        Loadhook_PlayerDeadBody_DeathRoutine = new ILHook(ILDeadBodyDeathRoutine, Hook_ILDeadBodyDeathRoutine);
-
 
         MethodInfo ILRefillCoroutine = typeof(Refill).GetMethod("RefillRoutine", BindingFlags.NonPublic | BindingFlags.Instance).GetStateMachineTarget();
         Loadhook_Refill_RefillRoutine = new ILHook(ILRefillCoroutine, Hook_IL_RefillRefillCoroutine);
@@ -202,11 +203,17 @@ public class EndHelperModule : EverestModule {
         On.Celeste.Player.Update -= Hook_OnPlayerUpdate;
         On.Celeste.Player.Die -= Hook_OnPlayerDeath;
         On.Celeste.Player.IntroRespawnBegin -= Hook_OnPlayerRespawn;
+        IL.Celeste.PlayerDeadBody.Update -= ILHook_PlayerDeadBodyUpdate;
+        IL.Celeste.PlayerDeadBody.End -= ILHook_PlayerDeadBodyEnd;
+        Loadhook_Player_OrigDie?.Dispose(); Loadhook_Player_OrigDie = null;
+        Loadhook_PlayerDeadBody_DeathRoutine?.Dispose(); Loadhook_PlayerDeadBody_DeathRoutine = null;
 
         On.Celeste.AreaComplete.VersionNumberAndVariants -= Hook_AreaCompleteVerNumVars;
         On.Celeste.OuiJournal.Update -= Hook_JournalUpdate;
         On.Celeste.OuiJournal.Render -= Hook_JournalRender;
         On.Celeste.OuiJournal.Close -= Hook_JournalClose;
+
+        On.Celeste.CrystalStaticSpinner.InView -= Hook_SpinnerInView;
 
         On.Celeste.Editor.MapEditor.Update -= Hook_UsingMapEditor;
         On.Celeste.Strawberry.Added -= Hook_StrawberryAddedToLevel;
@@ -218,8 +225,6 @@ public class EndHelperModule : EverestModule {
         On.Celeste.CassetteBlockManager.Awake -= Hook_CassetteBlockManagerAwake;
         IL.Celeste.CassetteBlockManager.AdvanceMusic -= ILHook_CassetteBlockManagerAdvMusic;
 
-        Loadhook_Player_OrigDie?.Dispose(); Loadhook_Player_OrigDie = null;
-        Loadhook_PlayerDeadBody_DeathRoutine?.Dispose(); Loadhook_PlayerDeadBody_DeathRoutine = null;
         Loadhook_Refill_RefillRoutine?.Dispose(); Loadhook_Refill_RefillRoutine = null;
         //On.Celeste.Level.TransitionRoutine -= Hook_TransitionRoutine;
         Loadhook_Level_OrigTransitionRoutine?.Dispose(); Loadhook_Level_OrigTransitionRoutine = null;
@@ -493,6 +498,7 @@ public class EndHelperModule : EverestModule {
     }
 
     // This has to be here so you don't get softlocked if MInput is disabled in UI or something
+    // ...somehow that can still happen. well.
     private static void Hook_EngineUpdate(On.Monocle.Engine.orig_Update orig, global::Monocle.Engine self, GameTime gameTime)
     {
         bool levelPause = false;
@@ -544,11 +550,8 @@ public class EndHelperModule : EverestModule {
                     if (currentRoom.Contains(roomSwapPrefix))
                     {
                         // Is in one! Reload level again and break out of the loop.
-
                         // First load rearranges the room, but doesn't reload them, so it's just empty...
-                        // Don't need to reload the whole thing with level.Reload() (and also this hides the double-respawn better)
-                        level.UnloadLevel();
-                        level.LoadLevel(Player.IntroTypes.Respawn);
+                        Utils_DeathHandler.ReloadRoomSeemlessly(level, Utils_DeathHandler.ReloadRoomSeemlesslyEffect.None);
 
                         break;
                     }
@@ -571,6 +574,7 @@ public class EndHelperModule : EverestModule {
 
     // Using player update instead of level update so nothing happens when the level is loading
     // Level update screws with the timeSinceSessionReset.
+    private static int quickRetryCooldown = 0; // Prevent crashes that can happen when spamming for some reason idk
     private static void Hook_LevelUpdate(On.Celeste.Level.orig_Update orig, global::Celeste.Level self)
     {
         Level level = self;
@@ -596,9 +600,13 @@ public class EndHelperModule : EverestModule {
         }
 
         // Quick Restart Keybind
+        if (quickRetryCooldown > 0)
+        {
+            quickRetryCooldown--;
+        }
         bool forceCloseMenuAfter = false;
         {
-            if (EndHelperModule.Settings.QuickRetry.Button.Pressed && level.Tracker.GetEntity<Player>() is Player player && !level.Paused && level.CanPause && level.CanRetry)
+            if (EndHelperModule.Settings.QuickRetry.Button.Pressed && level.Tracker.GetEntity<Player>() is Player player && !level.Paused && level.CanPause && level.CanRetry && quickRetryCooldown <= 0)
             {
                 if (level.Session.GrabbedGolden)
                 {
@@ -608,32 +616,26 @@ public class EndHelperModule : EverestModule {
                 } 
                 else if (!player.Dead)
                 {
+                    quickRetryCooldown = 7;
+
                     level.Paused = false;
                     level.PauseMainMenuOpen = false;
                     Engine.TimeRate = 1f;
                     Distort.GameRate = 1f;
                     Distort.Anxiety = 0f;
                     level.InCutscene = (level.SkippingCutscene = false);
-                    foreach (LevelEndingHook component in level.Tracker.GetComponents<LevelEndingHook>())
+                    foreach (LevelEndingHook component in level.Tracker.GetComponents<LevelEndingHook>().Cast<LevelEndingHook>())
                     {
-                        if (component.OnEnd != null)
-                        {
-                            component.OnEnd();
-                        }
+                        component.OnEnd?.Invoke();
                     }
+                    Utils_DeathHandler.nextFastReload = true;
                     PlayerDeadBody deadPlayer = player.Die(Vector2.Zero, evenIfInvincible: true);
 
-                    // This sometimes fails if you spam retry lol
+                    // This sometimes fails if you spam retry and pauses the game instead with no way to unpause. No clue why.
                     try
-                    {
-                        DynamicData deadPlayerData = DynamicData.For(deadPlayer);
-                        level.DoScreenWipe(wipeIn: false, level.Reload);
-                        deadPlayerData.Set("finished", true); // Stop trying to end again if holding confirm
-                    }
+                    { deadPlayer.ActionDelay = 0; }
                     catch (Exception)
-                    {
-                        forceCloseMenuAfter = true;
-                    }
+                    { forceCloseMenuAfter = true; }
                 }
             }
         }
@@ -670,6 +672,7 @@ public class EndHelperModule : EverestModule {
         }
 
         orig(self);
+        Utils_DeathHandler.Update();
 
         if (forceCloseMenuAfter)
         {
@@ -804,6 +807,7 @@ public class EndHelperModule : EverestModule {
             EndHelperModule.Session.usedGameplayTweaks = true;
             self.Drop();
         }
+
         orig(self);
     }
 
@@ -813,7 +817,53 @@ public class EndHelperModule : EverestModule {
         if (EndHelperModule.Settings.ToggleGrabMenu.UntoggleUponDeath) { Session.toggleifyEnabled = false; }
         EndHelperModule.Session.framesSinceRespawn = 0;
 
+        Utils_DeathHandler.BeforePlayerDeath(self);
         return orig(self, direction, evenIfInvincible, registerDeathInStats);
+    }
+
+    public static void ILHook_PlayerDeadBodyUpdate(ILContext il)
+    {
+        ILCursor cursor = new ILCursor(il);
+
+        // Replace the Input.MenuConfirm.Pressed check, so we can force it to true if using the quick retry keybind
+        if (cursor.TryGotoNext(MoveType.After,
+            instr => instr.MatchCallvirt(typeof(VirtualButton), "get_Pressed")
+        ))
+        {
+            cursor.EmitDelegate<Func<bool, bool>>(ILHook_PlayerDeadBodyUpdate_ReplacementMenuConfirmPressed);
+        }
+    }
+    private static bool ILHook_PlayerDeadBodyUpdate_ReplacementMenuConfirmPressed(bool origPressed)
+    {
+        bool forceFast = Utils_DeathHandler.CheckPlayerNextFastReload();
+        return forceFast || origPressed; // Same as original, unless forceFast
+    }
+
+    public static void ILHook_PlayerDeadBodyEnd(ILContext il)
+    {
+        ILCursor cursor = new ILCursor(il);
+
+        // Skip Death Wipe. And by skip I mean delete self (and return to be safe).
+        if (cursor.TryGotoNext(MoveType.Before,
+            instr => instr.MatchLdloc0(),
+            instr => instr.MatchLdcI4(0),
+            instr => instr.MatchLdarg0(),
+            instr => instr.MatchLdfld(out _),
+            instr => instr.MatchLdcI4(0),
+            instr => instr.MatchCallvirt<Level>("DoScreenWipe")
+        ))
+        {
+            ILLabel resume = cursor.DefineLabel();
+            cursor.EmitDelegate<Func<bool>>(Utils_DeathHandler.CheckPlayerDeathSkipRemovePlayer);
+            cursor.Emit(OpCodes.Brfalse_S, resume);
+
+            // End!
+            cursor.Emit(OpCodes.Ldarg_0);  // push PlayerDeadBody (this) onto the stack
+            cursor.EmitDelegate<Action<PlayerDeadBody>>(Utils_DeathHandler.OnPlayerDeathSkipRemovePlayer);
+            cursor.Emit(OpCodes.Ret); // Return, for safety
+
+            cursor.MarkLabel(resume); // This continues to DoScreenWipe
+        }
     }
 
     public static void Hook_ILOrigDie(ILContext il)
@@ -832,6 +882,25 @@ public class EndHelperModule : EverestModule {
             cursor.EmitDelegate(ILRunOnPlayerDeath);
         }
 
+        // Skip losing all followers
+        if (cursor.TryGotoNext(MoveType.Before,
+            instr => instr.MatchLdarg(0),
+            instr => instr.MatchLdfld<Player>("Leader"),
+            instr => instr.MatchCallvirt<Leader>("LoseFollowers")
+        ))
+        {
+            ILLabel end = cursor.DefineLabel();
+
+            //   Call your helper, branch if true
+            cursor.EmitDelegate<Func<bool>>(Utils_DeathHandler.CheckPlayerDeathSkipLoseFollowers);
+            cursor.Emit(OpCodes.Brtrue_S, end); // Skip lose followers if true
+
+            cursor.GotoNext(MoveType.After,
+                instr => instr.MatchCallvirt<Leader>("LoseFollowers")
+            );
+            cursor.MarkLabel(end);
+        }
+
         // Disable first half of Death Screen Shake: Celeste.Level::Shake(float32)
         if (cursor.TryGotoNext(MoveType.Before,
             //instr => instr.MatchLdarg0(),
@@ -842,6 +911,34 @@ public class EndHelperModule : EverestModule {
         {
             // Replace the current shake intensity with 0.0f
             cursor.EmitDelegate<Func<float, float>>(GetScreenShakeReplacementIntensity);
+        }
+
+        // Skip the player remove - base.Scene.Remove(this)
+        if (cursor.TryGotoNext(MoveType.Before,
+            instr => instr.MatchLdarg(0),
+            instr => instr.MatchCall(typeof(Entity), "get_Scene"),
+            instr => instr.MatchLdarg(0),
+            instr => instr.MatchCallvirt(typeof(Scene), "Remove")
+        ))
+        {
+            // Define labels for skipping
+            ILLabel skipLabel = cursor.DefineLabel();
+            ILLabel endLabel = cursor.DefineLabel();
+
+            cursor.EmitDelegate<Func<bool>>(Utils_DeathHandler.CheckPlayerDeathSkipRemovePlayer); // Skip Check: true = skip, false = run original
+            
+            cursor.Emit(OpCodes.Brtrue_S, skipLabel); // If true (skip), jump to skipLabel (BEFORE going through above instructions)
+            cursor.GotoNext(MoveType.After,
+                instr => instr.MatchCallvirt(typeof(Scene), "Remove") // Advance past above instructions
+            );
+            cursor.Emit(OpCodes.Br_S, endLabel); // If not true (no skip), jump to endLabel (AFTER going through above instructions)
+
+            cursor.MarkLabel(skipLabel); // Mark skipLabel (Land here if skip)
+
+            cursor.Emit(OpCodes.Ldarg_0);
+            cursor.EmitDelegate<Action<Player>>(Utils_DeathHandler.OnPlayerDeathSkip); // Run this if skip
+
+            cursor.MarkLabel(endLabel); // Mark endLabel (Land here if no skip. This skips the run-if-skip function.)
         }
     }
 
@@ -879,6 +976,18 @@ public class EndHelperModule : EverestModule {
         Utils_RoomSwap.ReupdateAllRooms();
 
         orig(self);
+        if (Utils_DeathHandler.seemlessRespawn == SeemlessRespawnEnum.EnabledInstant)
+        {
+            self.StateMachine.State = 0;
+            self.Sprite.Scale = new Vector2(1.5f, 0.5f);
+        }
+        if (Utils_DeathHandler.seemlessRespawn == SeemlessRespawnEnum.EnabledKeepState)
+        {
+            self.StateMachine.State = 0;
+            self.Sprite.Scale = new Vector2(1f, 1f);
+        }
+
+        Utils_DeathHandler.AfterPlayerDeath(self);
     }
 
     //private static IEnumerator Hook_TransitionRoutine(
@@ -1256,6 +1365,21 @@ public class EndHelperModule : EverestModule {
         return grabbing;
     }
 
+    public static bool Hook_SpinnerInView(On.Celeste.CrystalStaticSpinner.orig_InView orig, global::Celeste.CrystalStaticSpinner self)
+    {
+        bool inView = orig(self);
+
+        if (!inView && Utils_DeathHandler.spinnerAltInView)
+        {
+            // Check if within screen bounds
+            if (Utils_DeathHandler.oldCameraRectInflate.Contains((int)(self.Position.X + self.Width / 2), (int)(self.Position.Y + self.Height / 2)))
+            {
+                inView = true;
+            }
+        }
+
+        return inView;
+    }
     public static void Hook_UsingMapEditor(On.Celeste.Editor.MapEditor.orig_Update orig, global::Celeste.Editor.MapEditor self)
     {
         timeSinceSessionReset = 0;
@@ -1263,14 +1387,10 @@ public class EndHelperModule : EverestModule {
         orig(self);
     }
 
-    // Component for strawberries to store its home room
-    public class HomeRoom : Component
+    // Component for strawberries to store its home room. This was probably not necessary...
+    public class HomeRoom(String roomName) : Component(true, false)
     {
-        public string roomName;
-        public HomeRoom(String roomName) : base(true, false)
-        {
-            this.roomName = roomName;
-        }
+        public string roomName = roomName;
     }
 
     private static void Hook_StrawberryAddedToLevel(On.Celeste.Strawberry.orig_Added orig, global::Celeste.Strawberry self, Scene scene)

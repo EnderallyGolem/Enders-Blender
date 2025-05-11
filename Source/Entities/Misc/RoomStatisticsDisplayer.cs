@@ -52,6 +52,7 @@ public class RoomStatisticsDisplayer : Entity
     public static roomStatMenuFilter filterSetting = roomStatMenuFilter.None;
 
     internal static bool hideIfGoldenStrawberryEnabled = false;
+    internal static bool renameRoomsMoveRooms = false;
 
     public RoomStatisticsDisplayer(Level level)
     {
@@ -218,6 +219,8 @@ public class RoomStatisticsDisplayer : Entity
     {
         // Keep these updated!
         Level level = SceneAs<Level>();
+
+
         EnsureDictsHaveKey(level);
 
         // Don't update this when map is completed, otherwise the stats may change upon collecting heart
@@ -226,7 +229,8 @@ public class RoomStatisticsDisplayer : Entity
             dealWithFirstClear = EndHelperModule.Settings.RoomStatMenu.MenuTrackerStorageCount != 0 && !SaveData.Instance.Areas_Safe[level.Session.Area.ID].Modes[(int)level.Session.Area.Mode].Completed && EndHelperModule.SaveData.mapDict_roomStat_firstClear_roomOrder.ContainsKey(mapNameSide_Internal);
         }
 
-        if (!disableRoomChange)
+        String roomDialogName = $"{mapNameSide_Internal}_{level.Session.LevelData.Name}".Replace(".", "__point__").DialogCleanOrNull(Dialog.Languages["english"]) ?? "";
+        if (!disableRoomChange && roomDialogName != "%skip")
         {
             currentRoomName = level.Session.LevelData.Name;
             currentEffectiveRoomName = GetEffectiveRoomName(currentRoomName);
@@ -834,7 +838,7 @@ public class RoomStatisticsDisplayer : Entity
                         editingRoomName = roomName; // Update editingRoomName while updating the bg
                         backgroundTextureEdit.Draw(new Vector2(startX + col2BufferCurrent, startY + heightBetweenRows * displayRow), Vector2.Zero, bgColor);
 
-                        if (Input.MenuJournal.Check)
+                        if (renameRoomsMoveRooms) // Checking journal input here directly might be buggy idk?
                         {
                             moveRoomArrows.DrawOutline(new Vector2(startX + col2BufferCurrent - 40, startY + heightBetweenRows * displayRow), new Vector2(0.5f, 0.5f), Color.White, 1.3f);
                         }
@@ -1053,7 +1057,15 @@ public class RoomStatisticsDisplayer : Entity
                 {
                     journalRoomStatMenuTypeEnum? menuType = EndHelperModule.Settings.RoomStatMenu.MenuShowFirstClear && dealWithFirstClear ? journalRoomStatMenuTypeEnum.FirstClear : null;
                     Utils_JournalStatistics.EditingRoomMovePosition(oldEditingRoomIndex, editingRoomIndex, mapNameSide_Internal, menuType);
+                    renameRoomsMoveRooms = true;
+                } 
+                else
+                {
+                    renameRoomsMoveRooms = false;
                 }
+            } else
+            {
+                renameRoomsMoveRooms = false;
             }
         }
 
@@ -1421,7 +1433,7 @@ public class RoomStatisticsDisplayer : Entity
         currentEffectiveRoomName = GetEffectiveRoomName(currentRoomName);
     }
 
-    static private bool CheckIfDictHaveRoomName(String roomName)
+    static private bool CheckIfSessionDictHaveRoomName(String roomName)
     {
         if (EndHelperModule.Session.roomStatDict_death.Contains(roomName)) { return true; } 
         else { return false; }
@@ -1471,7 +1483,7 @@ public class RoomStatisticsDisplayer : Entity
         }
     }
 
-    private void RemoveRoomFuse(String fuseRoomName)
+    private static void RemoveRoomFuse(String fuseRoomName)
     {
         fuseRoomName = GetRoomNameNoSeg(fuseRoomName);
         EndHelperModule.Session.roomStatDict_fuseRoomRedirect.Remove(fuseRoomName);
@@ -1537,7 +1549,7 @@ public class RoomStatisticsDisplayer : Entity
         for (int segNum = 2; true; segNum++)
         {
             // Find next available segment number
-            if (!CheckIfDictHaveRoomName($"{roomName}%seg{segNum}"))
+            if (!CheckIfSessionDictHaveRoomName($"{roomName}%seg{segNum}"))
             {
                 return segNum - 1; // Subtract to get final used number (min 1 for no segment)
             }

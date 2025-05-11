@@ -43,7 +43,6 @@ namespace Celeste.Mod.EndHelper.Integration
                 Name = "QuantumMechanics",
                 Version = new Version(1, 3, 0)
             };
-            Logger.Log(LogLevel.Info, "EndHelper/main", $"running load. now checking if dependancyloaded");
             if (Everest.Loader.DependencyLoaded(QuantumMechanicsMetaData))
             {
                 // Do the important stuff here

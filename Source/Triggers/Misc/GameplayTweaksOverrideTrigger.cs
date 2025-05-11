@@ -16,16 +16,17 @@ using static Celeste.Mod.EndHelper.EndHelperModuleSettings.GameplayTweaks;
 namespace Celeste.Mod.EndHelper.Triggers.RoomSwap;
 
 [CustomEntity("EndHelper/GameplayTweaksOverrideTrigger")]
-public class GameplayTweaksOverrideTrigger : Trigger
+public class DeathHandlerDeathBypassTrigger : Trigger
 {
     private readonly bool setToDefaultUponLeaving = false;
     private readonly bool activateEnterRoom = false;
     private readonly String requireFlag = "";
 
     private readonly string preventDownDashRedirects = "Default";
+    private readonly string seemlessRespawn = "Default";
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public GameplayTweaksOverrideTrigger(EntityData data, Vector2 offset)
+    public DeathHandlerDeathBypassTrigger(EntityData data, Vector2 offset)
         : base(data, offset)
     {
         setToDefaultUponLeaving = data.Bool("setToDefaultUponLeaving", false);
@@ -33,6 +34,7 @@ public class GameplayTweaksOverrideTrigger : Trigger
         requireFlag = data.Attr("requireFlag", "");
 
         preventDownDashRedirects = data.Attr("preventDownDashRedirects", "Default");
+        seemlessRespawn = data.Attr("seemlessRespawn", "Default");
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
@@ -88,7 +90,6 @@ public class GameplayTweaksOverrideTrigger : Trigger
         }
         else
         {
-            Logger.Log(LogLevel.Info, "EndHelper/GameplayTweaksOverrideTrigger", $"is this running... {preventDownDashRedirects}");
             switch (preventDownDashRedirects)
             {
                 case "Default":
@@ -108,5 +109,11 @@ public class GameplayTweaksOverrideTrigger : Trigger
                     break;
             }
         }
+
+        // Seemless Respawn
+        if (setToDefault)
+        { Utils_DeathHandler.UpdateSeemlessRespawnOverride(null); }
+        else
+        { Utils_DeathHandler.UpdateSeemlessRespawnOverride(seemlessRespawn); }
     }
 }

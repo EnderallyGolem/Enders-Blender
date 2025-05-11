@@ -26,10 +26,6 @@ public class EndHelperModuleSession : EverestModuleSession
     // The index matches up with the swap room locations.
     public Dictionary<string, List<List<string>>> roomSwapOrderList { get; set; } = new Dictionary<string, List<List<string>>> { };
 
-    // -------------------------------
-    // Prevents the same entity from reappearing multiple times. Only used for multiroom watchtower for now.
-    public List<int> entityPreventReappearIDs = new List<int> { };
-
 
     // -------------------------------
     // roomStatDicts. Stored here so it retains when resuming session.
@@ -50,6 +46,13 @@ public class EndHelperModuleSession : EverestModuleSession
     // Frames since respawn, frozen if paused or just respawned.
     public int framesSinceRespawn = 0;
 
+
+
+    // -------------------------------
+    // Death Handler
+    // Prevents Death-Bypass entitities from reappearing multiple times. Can't get the entityID for all entities, so I have to make one up.
+    // Hopefully can be replaced with something less stupid in the future
+    public List<string> deathHandlerEntityIDList = new List<string> { };
 
 
     // Gameplay Tweaks

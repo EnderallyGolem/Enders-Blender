@@ -6,6 +6,7 @@ local GameplayTweaksOverrideTrigger = {
             name = "normal",
             data = {
                 preventDownDashRedirects = "Default",
+                seemlessRespawn = "Default",
                 setToDefaultUponLeaving = false,
                 activateEnterRoom = false,
                 requireFlag = "",
@@ -17,15 +18,25 @@ local GameplayTweaksOverrideTrigger = {
             options = {
                 {"Default", "Default"},
                 {"Disabled", "Disabled"},
-                {"Enabled (Normal)", "EnabledNormal"},
-                {"Enabled (Diagonal)", "EnabledDiagonal"},
+                {"Enabled - Normal", "EnabledNormal"},
+                {"Enabled - Diagonal", "EnabledDiagonal"},
+            }
+        },
+        seemlessRespawn = { fieldType = "string", editable = false,
+            options = {
+                {"Default", "Default"},
+                {"Disabled", "Disabled"},
+                {"Enabled - Normal", "EnabledNormal"},
+                {"Enabled - Near Only", "EnabledNear"},
+                {"Enabled - Instant", "EnabledInstant"},
+                {"Enabled - Keep State", "EnabledKeepState"},
             }
         },
     },
     fieldOrder = {
         "x", "y", "height", "width", "editorLayer",
-        "preventDownDashRedirects",
         "requireFlag", "setToDefaultUponLeaving", "activateEnterRoom",
+        "preventDownDashRedirects", "seemlessRespawn"
     },
 }
 

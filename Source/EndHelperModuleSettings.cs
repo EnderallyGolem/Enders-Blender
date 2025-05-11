@@ -112,6 +112,11 @@ public class EndHelperModuleSettings : EverestModuleSettings {
         [DefaultValue(ConvertDemoEnum.Disabled)]
         [SettingSubText("modoptions_EndHelperModule_ConvertDemo_Desc")]
         public ConvertDemoEnum ConvertDemo { get; set; }
+
+        public enum SeemlessRespawnEnum { Disabled, EnabledNormal, EnabledNear, EnabledInstant, EnabledKeepState }
+        [DefaultValue(SeemlessRespawnEnum.Disabled)]
+        [SettingSubText("modoptions_EndHelperModule_SeemlessRespawn_Desc")]
+        public SeemlessRespawnEnum SeemlessRespawn { get; set; }
     }
 
     [SettingSubMenu]

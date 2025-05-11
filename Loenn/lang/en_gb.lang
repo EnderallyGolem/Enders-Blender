@@ -59,10 +59,11 @@ entities.EndHelper/ConditionalBirdTutorial.attributes.description.requireFlag=Fl
 # Gameplay Tweaks Override Trigger
 triggers.EndHelper/GameplayTweaksOverrideTrigger.placements.name.normal=Blender Gameplay Tweaks Override Trigger
 triggers.EndHelper/GameplayTweaksOverrideTrigger.placements.description.normal=Temporarily enables some of the blender's Gameplay Tweaks for a map (without it counting as variations in the end screen).
-triggers.EndHelper/GameplayTweaksOverrideTrigger.attributes.description.preventDownDashRedirects=Convert manual demos into down/down-diagonal dashes.
 triggers.EndHelper/GameplayTweaksOverrideTrigger.attributes.description.setToDefaultUponLeaving=Removes the override, using the player's mod settings instead.
 triggers.EndHelper/GameplayTweaksOverrideTrigger.attributes.description.activateEnterRoom=Activates the trigger upon entering the room.
 triggers.EndHelper/GameplayTweaksOverrideTrigger.attributes.description.requireFlag=If specified, the trigger will only run if this flag is enabled.\nA list of flags in the format "flagA, flagB, !flagC | flagD, flagE" can be specified.\nThis means (flagA and flagB and not flagC) or (flagD and flagE).
+triggers.EndHelper/GameplayTweaksOverrideTrigger.attributes.description.preventDownDashRedirects=Converts manual demos into down/down-diagonal dashes.
+triggers.EndHelper/GameplayTweaksOverrideTrigger.attributes.description.seemlessRespawn=Changes respawns to be more seemless with no wipes.
 
 
 
@@ -116,7 +117,7 @@ entities.EndHelper/CassetteBeatGate.attributes.description.requireFlag=If specif
 
 
 
-############ RoomSwap
+############ Room-Swap
 
 # RoomSwap Controller
 entities.EndHelper/RoomSwapController.placements.name.normal=Room-Swap Controller
@@ -199,3 +200,18 @@ triggers.EndHelper/RoomSwapRespawnForceSameRoomTrigger.attributes.description.on
 triggers.EndHelper/RoomSwapChangeRespawnTrigger.placements.name.normal=Room-Swap Change Respawn Trigger
 triggers.EndHelper/RoomSwapChangeRespawnTrigger.placements.description.normal=Change respawn trigger that rechecks for spawnpoints when the player enters.\nThis ensures the trigger sets the correct spawnpoint, even when it is moved.
 triggers.EndHelper/RoomSwapChangeRespawnTrigger.attributes.description.checkSolid=If disabled, avoids checking if the respawn point is available before setting the respawn point to there.
+
+
+
+
+
+
+
+
+############ Death-Handler
+
+# Reload Bypass Trigger
+triggers.EndHelper/DeathHandlerDeathBypassTrigger.placements.name.normal=Death-Handler Reload Bypass Trigger
+triggers.EndHelper/DeathHandlerDeathBypassTrigger.placements.description.normal=On death, entities inside it and entities marked by nodes will persist through the room reload.
+triggers.EndHelper/DeathHandlerDeathBypassTrigger.attributes.description.requireFlag=If specified, entities will only bypass death if this flag is enabled.\nA list of flags in the format "flagA, flagB, !flagC | flagD, flagE" can be specified.\nThis means (flagA and flagB and not flagC) or (flagD and flagE).
+triggers.EndHelper/DeathHandlerDeathBypassTrigger.attributes.description.showVisuals=Marks death-bypass entities with a golden glint.

@@ -36,7 +36,7 @@ modoptions_EndHelperModule_MenuMulticolor=Multi-Colored Menu
 modoptions_EndHelperModule_MenuMulticolor_Desc=The Room stats menu's background will be dependent on the room color index.
 
 modoptions_EndHelperModule_MenuSpoilBerries=Spoil Map Berry Count
-modoptions_EndHelperModule_MenuSpoilBerries_Desc=If disabled, the map's total berry count will be shown only at the end of the map, or you have beaten the level before.
+modoptions_EndHelperModule_MenuSpoilBerries_Desc=If disabled, the map's total berry count will be shown if you have beaten the level before.
 
 modoptions_EndHelperModule_MenuTrackerStorageCount=Tracker Storage Size
 modoptions_EndHelperModule_MenuTrackerStorageCount_Desc=The number of maps which the mod will store tracked stats for. Set to -1 for no limit.
@@ -130,8 +130,21 @@ This has no effect if 360 Dashing is enabled.
 If set to Diagonal, manual demos always become diagonal downwards dashes.
 
 modoptions_EndHelperModule_ConvertDemo_Disabled=Disabled
-modoptions_EndHelperModule_ConvertDemo_EnabledNormal=Enabled (Normal)
-modoptions_EndHelperModule_ConvertDemo_EnabledDiagonal=Enabled (Diagonal)
+modoptions_EndHelperModule_ConvertDemo_EnabledNormal=Enabled - Normal
+modoptions_EndHelperModule_ConvertDemo_EnabledDiagonal=Enabled - Diagonal
+
+
+modoptions_EndHelperModule_SeemlessRespawn=Seemless Respawn
+modoptions_EndHelperModule_SeemlessRespawn_Desc=Changes respawns to be more seemless by reloading the room without a wipe.
+May not work properly in rooms which instantly teleport you after respawning.
+Custom spinners might also not render properly.
+"Enabled - Keep State" isn't a proper respawn and keeps dash counts, velocity, held berries, etc.
+
+modoptions_EndHelperModule_SeemlessRespawn_Disabled=Disabled
+modoptions_EndHelperModule_SeemlessRespawn_EnabledNormal=Enabled - Normal
+modoptions_EndHelperModule_SeemlessRespawn_EnabledNear=Enabled - Near Only
+modoptions_EndHelperModule_SeemlessRespawn_EnabledInstant=Enabled - Instant
+modoptions_EndHelperModule_SeemlessRespawn_EnabledKeepState=Enabled - Keep State
 
 
 ######### QOL Tweaks #########
@@ -206,6 +219,7 @@ For mod makers, you can have custom names show with {# ffff66}(Folder){#}_{# fff
 For B or C sides, this is {# ffff66}(Folder){#}_{# ffff66}(bin){#}_B_{# ffff66}(RoomName){#} or {# ffff66}(Folder){#}_{# ffff66}(bin){#}_C_{# ffff66}(RoomName){#}.
 This was done for the bino rooms above - check the names with the menu/display and debug mode!
 Don't use the bino to check the names though, the current room does not change when using the multi-room binoculars.
+You can also name the rooms {# ffff66}%skip{#} to skip these rooms (stats will increment for the previous room).
 
 # ----------------------------------  Room Swap  ----------------------------------------
 EndHelperTest_Tutorial_RoomSwap_Category=Room-Swap
@@ -256,7 +270,7 @@ EndHelperTest_Tutorial_RoomSwap_RespawnForceSameRoomTrigger_Desc=Add to every ro
 
 
 # ----------------------------------  Death Warp  ----------------------------------------
-EndHelperTest_Tutorial_DeathWarp_Category=Death-Warp
+EndHelperTest_Tutorial_DeathHandler_Category=Death Handler
 
 
 
@@ -295,9 +309,177 @@ EndHelperTest_Tutorial_Misc_ConditionalTutorialBird2_Desc=I appear after dying h
 # ----------------------------------  Credits  ----------------------------------------
 endhelper_credits={~}Additional credits:{/~}
 The sprites for the Room-Swap Map, Map Upgrade, Transition Box, and Grab Recast Icon were made by Pakyjenace.
-A lot of code was blatantly plagur-{0.5} i mean modified from SpeedrunTools, VivHelper, DeathTracker and Maddie's Helping Hand.
+A lot of code was blatantly plagur-{0.5} i mean modified from SpeedrunTools, VivHelper, DeathTracker, Maddie's Helping Hand, and ChronoHelper.
 Thanks to bug reports and testing from Aleph, SpringMinh, myrtille and Merlyn!
 
+
+
+
+
+# ------------------------------  SJ Heartside Flags  ------------------------------
+StrawberryJam2021_0_Lobbies_1_Beginner_sj2021beginnerlobby=Beginner Lobby
+StrawberryJam2021_1_Beginner_ZZ_Heartside_cp1_heartside_intro=Start
+StrawberryJam2021_1_Beginner_ZZ_Heartside_cp1_21_heartside_Bing_Over_Google=F21 - If my 'driveway' almost did you in...
+StrawberryJam2021_1_Beginner_ZZ_Heartside_cp1_20_heartside_hyperlife=F20 - Collapsing Skyline
+StrawberryJam2021_1_Beginner_ZZ_Heartside_cp1_19_heartside_CellularAutomaton=F19 - Azure Caverns
+StrawberryJam2021_1_Beginner_ZZ_Heartside_cp1_18_heartside_Eclipse=F18 - Troposphere
+StrawberryJam2021_1_Beginner_ZZ_Heartside_cp2_17_heartside_NotYourBadeline=F17 - Seeing is Believing
+StrawberryJam2021_1_Beginner_ZZ_Heartside_cp2_16_heartside_snas=F16 - The Squeeze
+StrawberryJam2021_1_Beginner_ZZ_Heartside_cp2_15_heartside_frozenflygone_a=F15 - Potential for Anything
+StrawberryJam2021_1_Beginner_ZZ_Heartside_cp2_15_heartside_frozenflygone_b=F15b - Potential for Anything
+StrawberryJam2021_1_Beginner_ZZ_Heartside_cp2_15_heartside_frozenflygone_c=F15c - Potential for Anything
+StrawberryJam2021_1_Beginner_ZZ_Heartside_cp2_15_heartside_frozenflygone_d=F15d - Potential for Anything
+StrawberryJam2021_1_Beginner_ZZ_Heartside_cp3_14_heartside_asterisk=F14 - Forest Path
+StrawberryJam2021_1_Beginner_ZZ_Heartside_cp3_13_heartside_skeleton=F13 - Treehive
+StrawberryJam2021_1_Beginner_ZZ_Heartside_cp3_12_heartside_coffe=F12 - Loopy Lagoon
+StrawberryJam2021_1_Beginner_ZZ_Heartside_cp3_11_heartside_joltik=F11 - Midnight Spire
+StrawberryJam2021_1_Beginner_ZZ_Heartside_cp4_10_heartside_Hanky=F10 - A Gift From the Stars
+StrawberryJam2021_1_Beginner_ZZ_Heartside_cp4_09_heartside_jadeturtle=F9 - Strawberry Orchard
+StrawberryJam2021_1_Beginner_ZZ_Heartside_cp4_08_heartside_quinnigan=F8 - Rose Garden
+StrawberryJam2021_1_Beginner_ZZ_Heartside_cp5_07_heartside_voliver9=F7 - Coresaken City
+StrawberryJam2021_1_Beginner_ZZ_Heartside_cp5_06_heartside_CoupCritik1=F6 - Over the City
+StrawberryJam2021_1_Beginner_ZZ_Heartside_cp5_06_heartside_CoupCritik2=F6b - Over the City
+StrawberryJam2021_1_Beginner_ZZ_Heartside_cp5_06_heartside_CoupCritik3=F6c - Over the City
+StrawberryJam2021_1_Beginner_ZZ_Heartside_cp5_05_Flagpole1up_heartside=F5 - Switchtube Vista
+StrawberryJam2021_1_Beginner_ZZ_Heartside_cp5_04_heartside_circumplex=F4 - Soap
+StrawberryJam2021_1_Beginner_ZZ_Heartside_cp6_03_heartside_awheyaway=F3 - Dropzle
+StrawberryJam2021_1_Beginner_ZZ_Heartside_cp6_02_heartside_Ceph=F2 - Cassette Cliffs
+StrawberryJam2021_1_Beginner_ZZ_Heartside_cp6_03_heartside_Moss_1=F1 - Paint
+StrawberryJam2021_1_Beginner_ZZ_Heartside_heartside_outro=End of the Beginning
+
+StrawberryJam2021_0_Lobbies_2_Intermediate_01=Intermediate Lobby
+StrawberryJam2021_2_Intermediate_ZZ_Heartside_cp1_0_intro=Start
+StrawberryJam2021_2_Intermediate_ZZ_Heartside_cp1_1_liero=F18 - Fifth Dimension
+StrawberryJam2021_2_Intermediate_ZZ_Heartside_cp1_2_pixelator=F17 - The Tower
+StrawberryJam2021_2_Intermediate_ZZ_Heartside_cp1_3_evilleafy=F16 - Vertigo
+StrawberryJam2021_2_Intermediate_ZZ_Heartside_cp1_4_ezel=F15 - EAT GIRL
+StrawberryJam2021_2_Intermediate_ZZ_Heartside_cp2_1_spoopysoup=F14 - Sea of Soup
+StrawberryJam2021_2_Intermediate_ZZ_Heartside_cp2_2_dooshii=F13 - Frosted Fragments
+StrawberryJam2021_2_Intermediate_ZZ_Heartside_cp2_3_glowwoomii=F12 - Honeyzip Inc.
+StrawberryJam2021_2_Intermediate_ZZ_Heartside_cp2_4_ice=F11 - Temple of a Thousand Skies
+StrawberryJam2021_2_Intermediate_ZZ_Heartside_cp2_5_bryse0n=F10 - Square the Circle
+StrawberryJam2021_2_Intermediate_ZZ_Heartside_cp3_1_arphimigon=F9 - Sleeping Under Stars
+StrawberryJam2021_2_Intermediate_ZZ_Heartside_cp3_2_legS=F8 - Supernautica
+StrawberryJam2021_2_Intermediate_ZZ_Heartside_cp3_3_Jems=F7 - In Filtration
+StrawberryJam2021_2_Intermediate_ZZ_Heartside_cp3_4_vitellary=F6 - Pointless Machines
+StrawberryJam2021_2_Intermediate_ZZ_Heartside_cp3_5_RG2=F5 - Pufferfish Transportation Co.
+StrawberryJam2021_2_Intermediate_ZZ_Heartside_cp4_1_Emik=F4 - Deep Blue
+StrawberryJam2021_2_Intermediate_ZZ_Heartside_cp4_2_thebreadstick1=F3 - Construction Conumdrum
+StrawberryJam2021_2_Intermediate_ZZ_Heartside_cp4_3_Luma=F2 - Midnight Monsoon
+StrawberryJam2021_2_Intermediate_ZZ_Heartside_cp4_4_Marlin=F1 - Low-G Botany
+StrawberryJam2021_2_Intermediate_ZZ_Heartside_cp4_5_Heart=Heart of the Forest
+
+StrawberryJam2021_0_Lobbies_3_Advanced_a01=Advanced Lobby
+StrawberryJam2021_3_Advanced_ZZ_Heartside_heartside_oppen_intro=%skip
+StrawberryJam2021_3_Advanced_ZZ_Heartside_heartside_oppen_a=F25 - Lost Woods
+StrawberryJam2021_3_Advanced_ZZ_Heartside_heartside_oppen_b=%skip
+StrawberryJam2021_3_Advanced_ZZ_Heartside_heartside_oppen_c=%skip
+StrawberryJam2021_3_Advanced_ZZ_Heartside_heartside_oppen_d=%skip
+StrawberryJam2021_3_Advanced_ZZ_Heartside_heartside_Worldwaker2=F24 - Raindrops on Roses
+StrawberryJam2021_3_Advanced_ZZ_Heartside_heartside_TiltTheStars=F23 - Bee Berserk
+StrawberryJam2021_3_Advanced_ZZ_Heartside_heartside_Galaksyz=F22 - Slime Time!
+StrawberryJam2021_3_Advanced_ZZ_Heartside_heartside_mmm=F21 - Forest Rush
+StrawberryJam2021_3_Advanced_ZZ_Heartside_heartside_MousseMoose=F20 - Synapse
+StrawberryJam2021_3_Advanced_ZZ_Heartside_heartside_Meario=F19 - Dusk City
+StrawberryJam2021_3_Advanced_ZZ_Heartside_heartside_YaGrillRobib=F18 - Belated Valentine's Day
+StrawberryJam2021_3_Advanced_ZZ_Heartside_heartside_maladroit=F17 - Golden Dawn
+StrawberryJam2021_3_Advanced_ZZ_Heartside_heartside_pugroy=F16 - Attack of the Clone
+StrawberryJam2021_3_Advanced_ZZ_Heartside_heartside_astraxel=F15 - Sands of Time
+StrawberryJam2021_3_Advanced_ZZ_Heartside_heartside_Tortoise=F14 - Java's Crypt
+StrawberryJam2021_3_Advanced_ZZ_Heartside_heartside_Tortoise_B=%skip
+StrawberryJam2021_3_Advanced_ZZ_Heartside_heartside_bluexans=F13 - Jellyfish Sanctum
+StrawberryJam2021_3_Advanced_ZZ_Heartside_heartside_Vamp=F12 - Rightside-Down Cavern
+StrawberryJam2021_3_Advanced_ZZ_Heartside_heartside_Julia=F11 - Tectonic Trenches
+StrawberryJam2021_3_Advanced_ZZ_Heartside_heartside_sp1029=F10 - Thinking with Portals
+StrawberryJam2021_3_Advanced_ZZ_Heartside_heartside_hennyburgr=F9 - Lethal Laser Laboratory
+StrawberryJam2021_3_Advanced_ZZ_Heartside_heartside_Indecx=F8 - Starry Ruins
+StrawberryJam2021_3_Advanced_ZZ_Heartside_heartside_Nic=F7 - Undergrowth
+StrawberryJam2021_3_Advanced_ZZ_Heartside_heartside_Jan=F6 - The Tower (XVI)
+StrawberryJam2021_3_Advanced_ZZ_Heartside_heartside_citrea=F5 - Toggle Theory
+StrawberryJam2021_3_Advanced_ZZ_Heartside_heartside_RadleyMcTuneston=F4 - The Lab
+StrawberryJam2021_3_Advanced_ZZ_Heartside_heartside_Goldian=F3 - Superstructure
+StrawberryJam2021_3_Advanced_ZZ_Heartside_heartside_jolly=F2 - Starlight Station
+StrawberryJam2021_3_Advanced_ZZ_Heartside_heartside_Viv=F1 - Call of the Void
+StrawberryJam2021_3_Advanced_ZZ_Heartside_Fin=Fin
+
+StrawberryJam2021_0_Lobbies_4_Expert_lobby1=Expert Lobby
+StrawberryJam2021_4_Expert_ZZ_Heartside_a00_intro1=Start
+StrawberryJam2021_4_Expert_ZZ_Heartside_a00_intro2=%skip
+StrawberryJam2021_4_Expert_ZZ_Heartside_a01_jackal=F29 - Hydroshock
+StrawberryJam2021_4_Expert_ZZ_Heartside_a02_skunkynator=F28 - System.InvalidMapException
+StrawberryJam2021_4_Expert_ZZ_Heartside_a03_pansear=F27 - Hypnagogia
+StrawberryJam2021_4_Expert_ZZ_Heartside_a04_agent=F26 - A Change in Direction
+StrawberryJam2021_4_Expert_ZZ_Heartside_a05_flamecrafter=F25 - Overgrown Linn
+StrawberryJam2021_4_Expert_ZZ_Heartside_b01_stotch=F24 - Caper Cavortion
+StrawberryJam2021_4_Expert_ZZ_Heartside_b02_alt_alt=%skip
+StrawberryJam2021_4_Expert_ZZ_Heartside_b02_nyan=F23 - Subway Neon
+StrawberryJam2021_4_Expert_ZZ_Heartside_b02_alt=%skip
+StrawberryJam2021_4_Expert_ZZ_Heartside_b03_banana=F22 - The Core Problem
+StrawberryJam2021_4_Expert_ZZ_Heartside_b04_powerav=F21 - Meaningless Contraptions
+StrawberryJam2021_4_Expert_ZZ_Heartside_b04__point__25_poweravi=%skip
+StrawberryJam2021_4_Expert_ZZ_Heartside_b04__point__5_poweravin=%skip
+StrawberryJam2021_4_Expert_ZZ_Heartside_b04__point__75_poweravina=%skip
+StrawberryJam2021_4_Expert_ZZ_Heartside_b05_vina=F20 - Madeline the Bubble
+StrawberryJam2021_4_Expert_ZZ_Heartside_b06_transition=%skip
+StrawberryJam2021_4_Expert_ZZ_Heartside_c01_redboule=F19 - Golden Alleyway
+StrawberryJam2021_4_Expert_ZZ_Heartside_c02_moladan=F18 - Time Trouble
+StrawberryJam2021_4_Expert_ZZ_Heartside_c03_alice=F17 - Flying Battery
+StrawberryJam2021_4_Expert_ZZ_Heartside_c04_fonda=F16 - Clockwork
+StrawberryJam2021_4_Expert_ZZ_Heartside_c05_kaerra=F15 - Floating Point
+StrawberryJam2021_4_Expert_ZZ_Heartside_c06_fall=%skip
+StrawberryJam2021_4_Expert_ZZ_Heartside_d000_eeva=%skip
+StrawberryJam2021_4_Expert_ZZ_Heartside_d01_ru=F14 - Vinculum
+StrawberryJam2021_4_Expert_ZZ_Heartside_d02_lethargicdoggo=F13 - Storm Runner
+StrawberryJam2021_4_Expert_ZZ_Heartside_d03_appels=F12 - Skyline Usurper
+StrawberryJam2021_4_Expert_ZZ_Heartside_d04_yoshachobi7=F11 - Polaris
+StrawberryJam2021_4_Expert_ZZ_Heartside_d05_warp=%skip
+StrawberryJam2021_4_Expert_ZZ_Heartside_e01_linj=F10 - Summit Downside
+StrawberryJam2021_4_Expert_ZZ_Heartside_e02_aspar=F9 - Fortress Fall
+StrawberryJam2021_4_Expert_ZZ_Heartside_e03_spirialis=F8 - Lunar Pagoda
+StrawberryJam2021_4_Expert_ZZ_Heartside_e04_scroogle=F7 - Mosaic Garden
+StrawberryJam2021_4_Expert_ZZ_Heartside_e05_itsabrody=F6 - Narrow Hollow
+StrawberryJam2021_4_Expert_ZZ_Heartside_e06_transition=%skip
+StrawberryJam2021_4_Expert_ZZ_Heartside_f01_quantumspaceman=F5 - Ethereal Ascension
+StrawberryJam2021_4_Expert_ZZ_Heartside_f02_dantko=F4 - Garden of Khu'tara
+StrawberryJam2021_4_Expert_ZZ_Heartside_f02__point__5_xolimono=%skip
+StrawberryJam2021_4_Expert_ZZ_Heartside_f03_hivemindsrule=F3 - Plasma Reactor
+StrawberryJam2021_4_Expert_ZZ_Heartside_f04_alt=%skip
+StrawberryJam2021_4_Expert_ZZ_Heartside_f04_archra=F2 - Chromatic Complex
+StrawberryJam2021_4_Expert_ZZ_Heartside_f04_alt_2=%skip
+StrawberryJam2021_4_Expert_ZZ_Heartside_f05_cabob=F1 - Psychokinetic
+StrawberryJam2021_4_Expert_ZZ_Heartside_f06_cabob=F1b - Psychokinetic
+StrawberryJam2021_4_Expert_ZZ_Heartside_f07_butcherberries=Expertized
+StrawberryJam2021_4_Expert_ZZ_Heartside_f07_xplosives=%skip
+StrawberryJam2021_4_Expert_ZZ_Heartside_f07_ekisacik=%skip
+StrawberryJam2021_4_Expert_ZZ_Heartside_f07_lennygold=%skip
+StrawberryJam2021_4_Expert_ZZ_Heartside_f07_syrenyx=%skip
+StrawberryJam2021_4_Expert_ZZ_Heartside_f07_legs=%skip
+StrawberryJam2021_4_Expert_ZZ_Heartside_f07_introcar=%skip
+StrawberryJam2021_4_Expert_ZZ_Heartside_f07_violet=%skip
+StrawberryJam2021_4_Expert_ZZ_Heartside_f07_aurielle=%skip
+StrawberryJam2021_4_Expert_ZZ_Heartside_f07_and_you=%skip
+
+StrawberryJam2021_0_Lobbies_5_Grandmaster_GM_main=Grandmaster Lobby
+StrawberryJam2021_5_Grandmaster_ZZ_HeartSide_a0_Start=Start
+StrawberryJam2021_5_Grandmaster_ZZ_HeartSide_a1_18_Xplosives=F18 - Fractured Iridescence
+StrawberryJam2021_5_Grandmaster_ZZ_HeartSide_a2_17_Todd=F17 - kevintechspam.bin
+StrawberryJam2021_5_Grandmaster_ZZ_HeartSide_a3_16_Cookie=F16 - Flipside Cliffside
+StrawberryJam2021_5_Grandmaster_ZZ_HeartSide_b1_15_Alisticious=F15 - Superluminary
+StrawberryJam2021_5_Grandmaster_ZZ_HeartSide_b2_14_Ecl1psed=F14 - Stellar Odyssey
+StrawberryJam2021_5_Grandmaster_ZZ_HeartSide_b3_13_TheDavSmasher=F13 - World Abyss
+StrawberryJam2021_5_Grandmaster_ZZ_HeartSide_c1_12_RedBatNick=F12 - Cave of the Crimson Sky
+StrawberryJam2021_5_Grandmaster_ZZ_HeartSide_c2_11_DeathKontrol=F11 - Cycle Madness B-Side
+StrawberryJam2021_5_Grandmaster_ZZ_HeartSide_c3_10_fishtank=F10 - 74
+StrawberryJam2021_5_Grandmaster_ZZ_HeartSide_d1_09_xlibiza=F9 - Drifting Deep
+StrawberryJam2021_5_Grandmaster_ZZ_HeartSide_d2_08_Aiden=F8 - Belly of the Beast
+StrawberryJam2021_5_Grandmaster_ZZ_HeartSide_d3_07_Maya=F7 - Pinball Purgatory
+StrawberryJam2021_5_Grandmaster_ZZ_HeartSide_e1_06_tofu=F6 - Nelumbo
+StrawberryJam2021_5_Grandmaster_ZZ_HeartSide_e2_05_elio=F5 - summit
+StrawberryJam2021_5_Grandmaster_ZZ_HeartSide_e3_04_Linj=F4 - Ivory
+StrawberryJam2021_5_Grandmaster_ZZ_HeartSide_f1_03_tobyaaa=F3 - Lava Layer
+StrawberryJam2021_5_Grandmaster_ZZ_HeartSide_f2_02_Soloiini=F2 - Solar Express
+StrawberryJam2021_5_Grandmaster_ZZ_HeartSide_f3_01_Hydro=F1 - Shattersong
+StrawberryJam2021_5_Grandmaster_ZZ_HeartSide_gg_heart=gg heart
 
 
 # NOTES:

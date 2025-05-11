@@ -14,7 +14,9 @@ namespace Celeste.Mod.EndHelper.Entities.Misc;
 public class ConditionalBirdTutorial : CustomBirdTutorial
 {
     private readonly EntityData entityData;
+    #pragma warning disable CS0108
     private readonly Vector2[] nodes;
+    #pragma warning restore CS0108d
 
     private readonly bool showSprite = true;
     private float flyInSpeedMultiplier = 1;
