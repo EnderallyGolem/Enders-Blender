@@ -114,6 +114,8 @@ public class EndHelperModule : EverestModule {
     private static ILHook Loadhook_Player_OrigDie;
     private static ILHook Loadhook_PlayerDeadBody_DeathRoutine;
 
+    private static ILHook Loadhook_Level_OrigLoadLevel;
+
     public override void Load() {
         //On.Celeste.Level.TransitionRoutine += Hook_TransitionRoutine;
         Everest.Events.AssetReload.OnReloadLevel += AssetReloadLevelFunc;
@@ -121,6 +123,8 @@ public class EndHelperModule : EverestModule {
         Everest.Events.AssetReload.OnAfterReload += ReloadCompleteFunc;
         Everest.Events.Level.OnEnter += EnterMapFunc;
         Everest.Events.Level.OnCreatePauseMenuButtons += CreatePauseMenuButtonsFunc;
+        //Everest.Events.Level.OnLoadEntity += OnLoadEntityFunc;
+        //On.Monocle.Scene.Add_Entity += Hook_OnAddEntity;
 
         On.Monocle.Engine.Update += Hook_EngineUpdate;
         On.Celeste.Level.Update += Hook_LevelUpdate;
@@ -193,6 +197,8 @@ public class EndHelperModule : EverestModule {
         Everest.Events.AssetReload.OnAfterReload -= ReloadCompleteFunc;
         Everest.Events.Level.OnEnter -= EnterMapFunc;
         Everest.Events.Level.OnCreatePauseMenuButtons -= CreatePauseMenuButtonsFunc;
+        //Everest.Events.Level.OnLoadEntity -= OnLoadEntityFunc;
+        //On.Monocle.Scene.Add_Entity -= Hook_OnAddEntity;
 
         On.Monocle.Engine.Update -= Hook_EngineUpdate;
         On.Celeste.Level.Update -= Hook_LevelUpdate;
@@ -340,6 +346,24 @@ public class EndHelperModule : EverestModule {
         {
             PauseMenuButtonsFuncCooldown(level, menu, minimal);
         }
+    }
+
+    private static bool OnLoadEntityFunc(global::Celeste.Level level, LevelData levelData, Vector2 offset, EntityData entityData)
+    {
+        Logger.Log(LogLevel.Info, "EndHelper/main", $"Loaded entity with id {level.Session.LevelData.Name} {entityData.ID} -- {entityData.Name}");
+        return false; // True makes it not load
+    }
+    private static void Hook_OnAddEntity(On.Monocle.Scene.orig_Add_Entity orig, global::Monocle.Scene self, global::Monocle.Entity entity)
+    {
+        if (self is Level level)
+        {
+            Logger.Log(LogLevel.Info, "EndHelper/main", $"ONADDENTITY (scene add): the entity is {entity}");
+        }
+        orig(self, entity);
+    }
+    public class AccessibleID(EntityID entityID) : Component(true, true)
+    {
+        internal EntityID entityID = entityID;
     }
 
     async static void PauseMenuButtonsFuncCooldown(Level level, TextMenu menu, bool minimal)

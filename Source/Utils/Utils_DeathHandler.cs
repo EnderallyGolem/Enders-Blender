@@ -13,6 +13,7 @@ namespace Celeste.Mod.EndHelper.Utils
     internal class Utils_DeathHandler
     {
         internal static bool deathWipe = true;              // If false, skips wipe when dying.
+        private static bool previousDeathWipe = true;
         internal static bool nextFastReload = false;        // If true, next reload will be forced to be fast
         internal static SeemlessRespawnEnum seemlessRespawn = SeemlessRespawnEnum.Disabled;
         private static SeemlessRespawnEnum? overrideSeemlessRespawn = null;
@@ -78,6 +79,7 @@ namespace Celeste.Mod.EndHelper.Utils
             UpdateSeemlessRespawn();
             Level level = player.SceneAs<Level>();
 
+            previousDeathWipe = deathWipe;
             switch (seemlessRespawn)
             {
                 case SeemlessRespawnEnum.Disabled:
@@ -106,23 +108,29 @@ namespace Celeste.Mod.EndHelper.Utils
                     // TO-DO: For all of these other than EnabledKeepState, for X-death golden i still need to keep the golden somehow
             }
 
-            if (deathWipe)
+            if (deathWipe && previousDeathWipe == false)
             {
-                // Remove all existing dead bodies - otherwise THESE will lead to level reload
-                foreach (PlayerDeadBody playerDeadBody in level.Tracker.GetEntities<PlayerDeadBody>())
+                // If switch from no deathWipe to yes deathWipe, remove previous dead bodies if any
+                foreach (Entity entity in level.Entities)
                 {
-                    playerDeadBody.RemoveSelf();
+                    if (entity is PlayerDeadBody playerDeadBody)
+                    {
+                        playerDeadBody.RemoveSelf();
+                    }
                 }
+            } 
+            if (!deathWipe)
+            {
+                // Set these if no death wipe
+                oldDashes = player.Dashes;
+                oldStamina = player.Stamina;
+                oldFacing = player.Facing;
+
+                oldDashAttackTimer = player.dashAttackTimer;
+                oldDashCooldownTimer = player.dashCooldownTimer;
+                oldDashDir = player.DashDir;
+                oldSpeed = player.Speed;
             }
-
-            oldDashes = player.Dashes;
-            oldStamina = player.Stamina;
-            oldFacing = player.Facing;
-
-            oldDashAttackTimer = player.dashAttackTimer;
-            oldDashCooldownTimer = player.dashCooldownTimer;
-            oldDashDir = player.DashDir;
-            oldSpeed = player.Speed;
 
             // Global-ise DeathBypass entities temporarily. Update deathHandlerEntityIDList
             EndHelperModule.Session.deathHandlerEntityIDList.Clear();
@@ -137,7 +145,6 @@ namespace Celeste.Mod.EndHelper.Utils
                     level.Session.DoNotLoad.Add(new EntityID("test", 4));
                 }
             }
-            Logger.Log(LogLevel.Info, "EndHelper/Utils_DeathHandler", $"aft globalised - list length {EndHelperModule.Session.deathHandlerEntityIDList.Count}");
         }
 
         // Aka on respawn
@@ -324,9 +331,12 @@ namespace Celeste.Mod.EndHelper.Utils
                         }
                     }
                     // Globalise PlayerDeadBody
-                    foreach (PlayerDeadBody playerDeadBody in level.Tracker.GetEntities<PlayerDeadBody>())
+                    foreach (Entity entity in level.Entities)
                     {
-                        playerDeadBody.AddTag(Tags.Global);
+                        if (entity is PlayerDeadBody playerDeadBody)
+                        {
+                            playerDeadBody.AddTag(Tags.Global);
+                        }
                     }
 
                     // Effects

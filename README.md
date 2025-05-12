@@ -69,6 +69,14 @@ These are marked as using variations in the end-screen. Some of these can be ove
 
 
 
+## 1.2 changelog:
+- New Additions:
+	- Death Manager:
+		- !!
+		
+## 1.1.3 changelog:
+- seemless respawn crash patch
+
 ## 1.1.1 changelog:
 - New Additions:
     - Gameplay Tweaks:
