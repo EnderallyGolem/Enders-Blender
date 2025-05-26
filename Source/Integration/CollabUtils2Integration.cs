@@ -26,7 +26,7 @@ namespace Celeste.Mod.EndHelper.Integration
     [ModImportName("CollabUtils2.LobbyHelper")]
     public static class CollabUtils2Import
     {
-        public static Func<string, string> GetLobbyLevelSet; // Input: map sid, output: lobby sid
+        public static Func<string, string> GetLobbyLevelSet; // Input: map sid, output: lobby sid. this isn't even used lol
         public static Func<string, bool> IsHeartSide; // Input: map sid, output: bool
     }
 

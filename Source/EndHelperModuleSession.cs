@@ -46,13 +46,8 @@ public class EndHelperModuleSession : EverestModuleSession
     // Frames since respawn, frozen if paused or just respawned.
     public int framesSinceRespawn = 0;
 
-
-
-    // -------------------------------
-    // Death Handler
-    // Prevents Death-Bypass entitities from reappearing multiple times. Can't get the entityID for all entities, so I have to make one up.
-    // Hopefully can be replaced with something less stupid in the future
-    public List<string> deathHandlerEntityIDList = new List<string> { };
+    // If false, screen transitions do not move the player. Used in multi-room binos
+    internal bool allowScreenTransitionMovement = true;
 
 
     // Gameplay Tweaks

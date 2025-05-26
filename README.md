@@ -67,12 +67,13 @@ These are marked as using variations in the end-screen. Some of these can be ove
     - If the seed depends on the relative position in the room
 - Option to be breakable
 
-
-
 ## 1.2 changelog:
 - New Additions:
-	- Death Manager:
-		- !!
+	- Death Handler?
+
+		
+## 1.1.4 changelog:
+- patch for viewing journal stats in some maps
 		
 ## 1.1.3 changelog:
 - seemless respawn crash patch

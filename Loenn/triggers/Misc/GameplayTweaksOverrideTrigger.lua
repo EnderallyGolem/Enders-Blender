@@ -7,6 +7,7 @@ local GameplayTweaksOverrideTrigger = {
             data = {
                 preventDownDashRedirects = "Default",
                 seemlessRespawn = "Default",
+                --seemlessRespawnDelay = -1,
                 setToDefaultUponLeaving = false,
                 activateEnterRoom = false,
                 requireFlag = "",
@@ -32,11 +33,12 @@ local GameplayTweaksOverrideTrigger = {
                 {"Enabled - Keep State", "EnabledKeepState"},
             }
         },
+        --seemlessRespawnDelay = { fieldType = "integer", minimumValue = -1, maximumValue = 30 },
     },
     fieldOrder = {
         "x", "y", "height", "width", "editorLayer",
         "requireFlag", "setToDefaultUponLeaving", "activateEnterRoom",
-        "preventDownDashRedirects", "seemlessRespawn"
+        "preventDownDashRedirects", "seemlessRespawn", "seemlessRespawnDelay",
     },
 }
 

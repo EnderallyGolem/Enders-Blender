@@ -2,6 +2,7 @@
 using Celeste.Mod.EndHelper.Integration;
 using Microsoft.Xna.Framework;
 using Monocle;
+using MonoMod.Utils;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -131,21 +132,21 @@ namespace Celeste.Mod.EndHelper.Utils
 
             if (Engine.Scene is Level level && CollabUtils2Integration.CollabUtils2Installed)
             {
+                AreaData journalArea = new DynData<Overworld>(self.Overworld).Get<AreaData>("collabInGameForcedArea");
+                String areaLevelSetName = journalArea.LevelSet;
+                //Logger.Log(LogLevel.Info, "EndHelper/main", $"whats this forcearea {areaLevelSetName}");
 
-                String lobbyMapLevelSetName = CollabUtils2Import.GetLobbyLevelSet.Invoke(level.Session.Area.SID);
-                LevelSetStats lobbyMapLevelSet = null;
-                if (lobbyMapLevelSetName != null)
+                LevelSetStats areaLevelSet = null;
+                if (areaLevelSetName != null)
                 {
-                    lobbyMapLevelSet = global::Celeste.SaveData.Instance.GetLevelSetStatsFor(lobbyMapLevelSetName);
+                    areaLevelSet = global::Celeste.SaveData.Instance.GetLevelSetStatsFor(areaLevelSetName);
                 }
 
-                //Logger.Log(LogLevel.Info, "EndHelper/main", $"the journal is in level with level set {lobbyMapLevelSetName} {lobbyMapLevelSet}");
-
-                List<AreaStats> sortedMaps = lobbyMapLevelSet?.Areas;
+                List<AreaStats> sortedMaps = areaLevelSet?.Areas;
 
                 // Same sorting as used by CollabUI2
                 Regex startsWithNumber = new Regex(".*/[0-9]+-.*");
-                if (sortedMaps.Select(map => AreaData.Get(map).Icon ?? "").All(icon => startsWithNumber.IsMatch(icon)))
+                if (sortedMaps is not null && sortedMaps.Select(map => AreaData.Get(map).Icon ?? "").All(icon => startsWithNumber.IsMatch(icon)))
                 {
                     sortedMaps.Sort((a, b) => {
                         AreaData adata = AreaData.Get(a);
@@ -165,7 +166,7 @@ namespace Celeste.Mod.EndHelper.Utils
                     });
                 }
 
-                foreach (AreaStats lobbyMap in lobbyMapLevelSet?.Areas ?? new List<AreaStats>())
+                foreach (AreaStats lobbyMap in areaLevelSet?.Areas ?? new List<AreaStats>())
                 {
                     AreaData areaData = AreaData.Get(lobbyMap.ID_Safe);
                     mapAreaStatsList.Add(lobbyMap);
@@ -708,7 +709,7 @@ namespace Celeste.Mod.EndHelper.Utils
                     Color bgColor;
                     if (EndHelperModule.Settings.RoomStatMenu.MenuMulticolor)
                     {
-                        int colorIndex = EndHelperModule.SaveData.mapDict_roomStat_colorIndex[mapNameSide_Internal][roomName];
+                        int colorIndex = EndHelperModule.SaveData.mapDict_roomStat_colorIndex[mapNameSide_Internal].TryGetValue(roomName, out int value) ? value : 0;
                         switch (colorIndex)
                         {
                             case 0: bgColor = Color.Gray; break;

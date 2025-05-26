@@ -117,6 +117,11 @@ public class EndHelperModuleSettings : EverestModuleSettings {
         [DefaultValue(SeemlessRespawnEnum.Disabled)]
         [SettingSubText("modoptions_EndHelperModule_SeemlessRespawn_Desc")]
         public SeemlessRespawnEnum SeemlessRespawn { get; set; }
+
+        // These were removed due to too buggy
+        //[SettingRange(min: 0, max: 30, largeRange: false)]
+        //[SettingSubText("modoptions_EndHelperModule_SeemlessRespawnDelay_Desc")]
+        //public int SeemlessRespawnDelay { get; set; } = 0;
     }
 
     [SettingSubMenu]

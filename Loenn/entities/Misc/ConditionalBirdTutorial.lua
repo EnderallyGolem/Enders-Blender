@@ -6,7 +6,6 @@ ConditionalBirdTutorial.depth = -1000000
 ConditionalBirdTutorial.justification = {0.5, 1.0}
 ConditionalBirdTutorial.nodeLineRenderType = "line"
 ConditionalBirdTutorial.nodeVisibility = "always"
-ConditionalBirdTutorial.justification = {0.5, 1.0}
 ConditionalBirdTutorial.texture = "characters/bird/crow00"
 -- ConditionalBirdTutorial.nodeTexture = "objects/EndHelper/multiroomWatchtower/node"
 ConditionalBirdTutorial.nodeLimits = {2, 2}

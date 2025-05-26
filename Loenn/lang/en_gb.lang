@@ -57,7 +57,7 @@ entities.EndHelper/ConditionalBirdTutorial.attributes.description.requireFlag=Fl
 
 
 # Gameplay Tweaks Override Trigger
-triggers.EndHelper/GameplayTweaksOverrideTrigger.placements.name.normal=Blender Gameplay Tweaks Override Trigger
+triggers.EndHelper/GameplayTweaksOverrideTrigger.placements.name.normal=Blender Gameplay Tweaks Override
 triggers.EndHelper/GameplayTweaksOverrideTrigger.placements.description.normal=Temporarily enables some of the blender's Gameplay Tweaks for a map (without it counting as variations in the end screen).
 triggers.EndHelper/GameplayTweaksOverrideTrigger.attributes.description.setToDefaultUponLeaving=Removes the override, using the player's mod settings instead.
 triggers.EndHelper/GameplayTweaksOverrideTrigger.attributes.description.activateEnterRoom=Activates the trigger upon entering the room.
@@ -70,7 +70,7 @@ triggers.EndHelper/GameplayTweaksOverrideTrigger.attributes.description.seemless
 
 
 # Cassette Manager Trigger
-triggers.EndHelper/CassetteManagerTrigger.placements.name.normal=Cassette Manager Trigger
+triggers.EndHelper/CassetteManagerTrigger.placements.name.normal=Cassette Manager
 triggers.EndHelper/CassetteManagerTrigger.placements.description.normal=Lets you create cassette music with changing tempo,\nor force a cassette theme to move to a certain beat.
 triggers.EndHelper/CassetteManagerTrigger.attributes.description.wonkyCassettes=If this should work for Wonky Cassettes (Quantum Mechanics mod) rather than vanilla cassettes.\nThese only affect the main cassette controller.
 triggers.EndHelper/CassetteManagerTrigger.attributes.description.showDebugInfo=If enabled, displays debug info regarding current beat/bar/etc
@@ -178,7 +178,7 @@ entities.EndHelper/RoomSwapMapUpgrade.attributes.description.oneTime=If ticked, 
 
 
 # RoomSwap Modify Room Trigger
-triggers.EndHelper/RoomSwapModifyRoomTrigger.placements.name.normal=Room-Swap Modify Room Trigger
+triggers.EndHelper/RoomSwapModifyRoomTrigger.placements.name.normal=Room-Swap Modify Room
 triggers.EndHelper/RoomSwapModifyRoomTrigger.placements.description.normal=Trigger that modifies room order
 triggers.EndHelper/RoomSwapModifyRoomTrigger.attributes.description.gridId=The identifier for the moveable grid this trigger affects.
 triggers.EndHelper/RoomSwapModifyRoomTrigger.attributes.description.modificationType=How does entering this trigger affect the room order?\nFor Set To Order, the format is _{row1}{col1}_{row2}{col2}_{row3}{col3}_... from left to right, top down.
@@ -197,8 +197,8 @@ triggers.EndHelper/RoomSwapRespawnForceSameRoomTrigger.placements.description.no
 triggers.EndHelper/RoomSwapRespawnForceSameRoomTrigger.attributes.description.onAwake=Does it corrects the spawn points when the trigger is awake (upon entering room) rather than when entering the trigger?\nYou should probably leave this on.
 
 # RoomSwap Change Respawn Trigger
-triggers.EndHelper/RoomSwapChangeRespawnTrigger.placements.name.normal=Room-Swap Change Respawn Trigger
-triggers.EndHelper/RoomSwapChangeRespawnTrigger.placements.description.normal=Change respawn trigger that rechecks for spawnpoints when the player enters.\nThis ensures the trigger sets the correct spawnpoint, even when it is moved.
+triggers.EndHelper/RoomSwapChangeRespawnTrigger.placements.name.normal=Updating Change Respawn
+triggers.EndHelper/RoomSwapChangeRespawnTrigger.placements.description.normal=Change respawn trigger that rechecks for spawnpoints when the player enters it.\nThis ensures the trigger sets the correct spawnpoint, even when it is moved.\nIf using Room-Swap or Death-Handler, this should be used in place of the regular Change Respawn Trigger.
 triggers.EndHelper/RoomSwapChangeRespawnTrigger.attributes.description.checkSolid=If disabled, avoids checking if the respawn point is available before setting the respawn point to there.
 
 
@@ -210,8 +210,24 @@ triggers.EndHelper/RoomSwapChangeRespawnTrigger.attributes.description.checkSoli
 
 ############ Death-Handler
 
+# Respawn Point
+entities.EndHelper/DeathHandlerRespawnPoint.placements.name.normal=Death-Handler Respawn Point
+entities.EndHelper/DeathHandlerRespawnPoint.placements.description.normal=Player Respawn that can be attached, be visible, be disabled, etc\nNote: A regular player respawn is still needed in the room.
+entities.EndHelper/DeathHandlerRespawnPoint.attributes.description.faceLeft=Visually shows facing left, and also respawns the player facing left.
+entities.EndHelper/DeathHandlerRespawnPoint.attributes.description.attachable=Attached to objects that spikes can attach to, when place next to the object.
+entities.EndHelper/DeathHandlerRespawnPoint.attributes.description.fullReset=If the player can spawn here after activating a Full Reset Zone or whatever i haven't came up with the name yet, to-do, please change this later
+entities.EndHelper/DeathHandlerRespawnPoint.attributes.description.requireFlag=If specified, the respawn point will only work if this flag is enabled.\nA list of flags in the format "flagA, flagB, !flagC | flagD, flagE" can be specified.\nThis means (flagA and flagB and not flagC) or (flagD and flagE).
+
+
+# Respawn Marker
+entities.EndHelper/DeathHandlerRespawnMarker.placements.name.normal=Death-Handler Respawn Marker
+entities.EndHelper/DeathHandlerRespawnMarker.placements.description.normal=Marks the location of the respawn point.\nIf Death-Handler Respawn Points are used, will face the same direction as them.
+entities.EndHelper/DeathHandlerRespawnMarker.attributes.description.speed=How quickly the marker moves when the respawn point changes.\nSet to 0 for instant change.
+entities.EndHelper/DeathHandlerRespawnMarker.attributes.description.offscreenPointer=Adds an arrow pointing to the respawn point if it is off-screen.
+entities.EndHelper/DeathHandlerRespawnMarker.attributes.description.requireFlag=If specified, the respawn marker will only be visible if this flag is enabled.\nA list of flags in the format "flagA, flagB, !flagC | flagD, flagE" can be specified.\nThis means (flagA and flagB and not flagC) or (flagD and flagE).
+
 # Reload Bypass Trigger
-triggers.EndHelper/DeathHandlerDeathBypassTrigger.placements.name.normal=Death-Handler Reload Bypass Trigger
-triggers.EndHelper/DeathHandlerDeathBypassTrigger.placements.description.normal=On death, entities inside it and entities marked by nodes will persist through the room reload.
+triggers.EndHelper/DeathHandlerDeathBypassTrigger.placements.name.normal=Death-Handler Reload Bypass
+triggers.EndHelper/DeathHandlerDeathBypassTrigger.placements.description.normal=On death, entities inside it and entities overlapping its nodes will persist through the room reload.\nNote: This check will rerun each time you die!\nThis ensures that despawned entities that reload will have the bypass re-applied.
 triggers.EndHelper/DeathHandlerDeathBypassTrigger.attributes.description.requireFlag=If specified, entities will only bypass death if this flag is enabled.\nA list of flags in the format "flagA, flagB, !flagC | flagD, flagE" can be specified.\nThis means (flagA and flagB and not flagC) or (flagD and flagE).
 triggers.EndHelper/DeathHandlerDeathBypassTrigger.attributes.description.showVisuals=Marks death-bypass entities with a golden glint.

@@ -18,6 +18,8 @@ using static Celeste.GaussianBlur;
 using static Celeste.WaveDashPage;
 using System.Diagnostics.CodeAnalysis;
 using Celeste.Mod.EndHelper.Integration;
+using Celeste.Mod.EndHelper.Utils;
+using Microsoft.Xna.Framework.Graphics;
 
 // Because I keep forgetting: the vanilla entity is Lookout.
 namespace Celeste.Mod.EndHelper.Entities.Misc;
@@ -659,11 +661,11 @@ public class MultiroomWatchtower : Entity
         LevelData currentRoomLevelData = level.Session.LevelData;
         Rectangle currentRoomBounds = currentRoomLevelData.Bounds;
 
-        List<LevelData> edgeRoomDataList = getEdgeRoomDataList(level);
+        List<LevelData> edgeRoomDataList = GetEdgeRoomDataList(level);
 
         int changeRoomCooldown = 0;
 
-        EndHelperModule.allowScreenTransitionMovement = false;
+        EndHelperModule.Session.allowScreenTransitionMovement = false;
 
         //
         // Stay within this while loop as long as viewing binoculars
@@ -834,7 +836,7 @@ public class MultiroomWatchtower : Entity
                 level.SaveQuitDisabled = true;
                 level.PauseLock = true; //Prevent cheese
                 level.ScreenPadding = 16;
-                edgeRoomDataList = getEdgeRoomDataList(level);
+                edgeRoomDataList = GetEdgeRoomDataList(level);
                 currentRoomLevelData = level.Session.LevelData;
                 currentRoomBounds = currentRoomLevelData.Bounds;
 
@@ -1363,7 +1365,7 @@ public class MultiroomWatchtower : Entity
         level.CanRetry = canRetryInitial;
         level.SaveQuitDisabled = canSaveQuitInitial;
         level.PauseLock = pauseLock;
-        EndHelperModule.allowScreenTransitionMovement = true;
+        EndHelperModule.Session.allowScreenTransitionMovement = true;
 
         EndInteractionAfterFrames(3);
 
@@ -1397,7 +1399,7 @@ public class MultiroomWatchtower : Entity
             {
                 level.Session.RespawnPoint = preWatchRespawnPoint; // Set respawn point to where it was before viewing
             }
-            EndHelperModule.allowScreenTransitionMovement = true;
+            EndHelperModule.Session.allowScreenTransitionMovement = true;
 
 
 
@@ -1416,11 +1418,11 @@ public class MultiroomWatchtower : Entity
 
     public override void SceneEnd(Scene scene)
     {
-        EndHelperModule.allowScreenTransitionMovement = true;
+        EndHelperModule.Session.allowScreenTransitionMovement = true;
         base.SceneEnd(scene);
     }
 
-    public List<LevelData> getEdgeRoomDataList(Level level)
+    public List<LevelData> GetEdgeRoomDataList(Level level)
     {
         LevelData currentRoomLevelData = level.Session.LevelData;
         Rectangle currentRoomBounds = currentRoomLevelData.Bounds;

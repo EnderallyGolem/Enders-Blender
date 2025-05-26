@@ -14,6 +14,9 @@ namespace Celeste.Mod.EndHelper.Utils
 {
     static internal class Utils_General
     {
+        public static float timeSinceEnteredRoom = 0;
+
+
         /// <summary>
         /// Compare if 2 2d lists are equal
         /// </summary>
@@ -357,11 +360,90 @@ namespace Celeste.Mod.EndHelper.Utils
                 }
             }
         }
+        
+        /// <summary>
+        /// Converts a Camera into a Rectangle
+        /// </summary>
+        /// <param name="camera"></param>
+        /// <param name="inflateX"></param>
+        /// <param name="inflateY"></param>
+        /// <returns></returns>
         public static Rectangle GetRect(this Camera camera, int inflateX = 0, int inflateY = 0)
         {
             Rectangle cameraRect = new Rectangle((int)camera.X, (int)camera.Y, (int)(camera.Right - camera.Left), (int)(camera.Bottom - camera.Top));
             cameraRect.Inflate(inflateX, inflateY);
             return cameraRect;
+        }
+
+        /// <summary>
+        /// Returns the distance from the pos to the rectangle. 0 if inside.
+        /// </summary>
+        /// <param name="rectangle"></param>
+        /// <param name="pos"></param>
+        /// <returns></returns>
+        public static float GetDistanceTo(this Rectangle rectangle, Vector2 pos, out Vector2 closestPos)
+        {
+            // Return 0 if inside
+            if (rectangle.Contains((int)pos.X, (int)pos.Y))
+            {
+                closestPos = pos;
+                return 0;
+            }
+
+            // Find closer edge
+
+
+            float closerXEdge; float closerYEdge;
+            if (pos.X < rectangle.Left) closerXEdge = rectangle.Left;
+            else if (pos.X > rectangle.Right) closerXEdge = rectangle.Right; 
+            else closerXEdge = pos.X;
+
+            if (pos.Y < rectangle.Top) closerYEdge = rectangle.Top;
+            else if (pos.Y > rectangle.Bottom) closerYEdge = rectangle.Bottom;
+            else closerYEdge = pos.Y;
+
+            // Distance
+            closestPos = new Vector2(closerXEdge, closerYEdge);
+            return Vector2.Distance(closestPos, pos);
+        }
+
+        /// <summary>
+        /// Returns the intersection point between the line between (or extending from) a point and the center of a rectangle, and the boundary of that rectangle
+        /// and the boundary of rect.
+        /// </summary>
+        public static Vector2 PointToCenterIntersect(this Rectangle rectangle, Vector2 point)
+        {
+            Vector2 center = rectangle.Center.ToVector2();
+            Vector2 centerToPointVector = point - center;
+
+            if (centerToPointVector == Vector2.Zero)
+            {
+                // what nonsense is this
+                return point;
+            }
+
+            centerToPointVector.Normalize();
+
+            Vector2 intersectPos = center;
+
+            rectangle.Inflate(-3, -3);
+            while (rectangle.Contains((int)intersectPos.X, (int)intersectPos.Y))
+            {
+                intersectPos += centerToPointVector * 3;
+                // Logger.Log(LogLevel.Info, "EndHelper/Utils_General", $"PointToCenterIntersect: intersectPos {intersectPos}");
+            }
+            rectangle.Inflate(2, 2);
+            while (rectangle.Contains((int)intersectPos.X, (int)intersectPos.Y))
+            {
+                intersectPos += centerToPointVector * 0.3f;
+            }
+            rectangle.Inflate(1, 1);
+            while (rectangle.Contains((int)intersectPos.X, (int)intersectPos.Y))
+            {
+                intersectPos += centerToPointVector * 0.03f;
+            }
+
+            return intersectPos;
         }
 
         public static Entity GetNearestGenericEntity(this Level level, Vector2 nearestTo)

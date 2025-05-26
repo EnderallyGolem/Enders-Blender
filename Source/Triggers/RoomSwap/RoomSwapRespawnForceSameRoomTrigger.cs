@@ -12,12 +12,10 @@ public class RoomSwapRespawnForceSameRoomTrigger : Trigger
     private bool onAwake = true;
     private Vector2? respawnOffset = null;
     private Vector2 roomOffset;
-    private EntityData entityData = null;
 
     public RoomSwapRespawnForceSameRoomTrigger(EntityData data, Vector2 offset) : base(data, offset)
     {
         onAwake = data.Bool("onAwake", true);
-        entityData = data;
         roomOffset = offset;
     }
 
@@ -25,7 +23,7 @@ public class RoomSwapRespawnForceSameRoomTrigger : Trigger
     {
         if (!onAwake)
         {
-            doTheRespawnPositionChangeThingy();
+            DoTheRespawnPositionChangeThingy();
         }
     }
 
@@ -44,11 +42,11 @@ public class RoomSwapRespawnForceSameRoomTrigger : Trigger
         base.Awake(scene);
         if (onAwake)
         {
-            doTheRespawnPositionChangeThingy();
+            DoTheRespawnPositionChangeThingy();
         }
     }
 
-    private void doTheRespawnPositionChangeThingy()
+    private void DoTheRespawnPositionChangeThingy()
     {
         Level level = SceneAs<Level>();
 

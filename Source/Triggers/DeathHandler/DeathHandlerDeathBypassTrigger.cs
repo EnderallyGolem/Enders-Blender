@@ -11,6 +11,7 @@ using System.Linq;
 using System.Reflection;
 using System.Reflection.Metadata.Ecma335;
 using System.Runtime.CompilerServices;
+using static Celeste.Mod.EndHelper.EndHelperModule;
 
 namespace Celeste.Mod.EndHelper.Triggers.DeathHandler;
 
@@ -24,17 +25,15 @@ public class DeathHandlerDeathBypassTrigger : Trigger
     private readonly Rectangle triggerRange;
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    public DeathHandlerDeathBypassTrigger(EntityData data, Vector2 offset)
+    public DeathHandlerDeathBypassTrigger(EntityData data, Vector2 offset, EntityID id)
         : base(data, offset)
     {
         nodes = data.NodesOffset(offset);
         requireFlag = data.Attr("requireFlag", "");
         showVisuals = data.Bool("showVisuals", true);
 
-        //DeathBypass deathBypassComponent = new DeathBypass("", false); // The trigger itself gets the deathbypass component
-        //Add(deathBypassComponent);
-
-        triggerRange = new Rectangle((int)data.Position.X, (int)data.Position.Y, data.Width, data.Height);
+        triggerRange = new Rectangle((int)(data.Position.X + offset.X), (int)(data.Position.Y + offset.Y), data.Width, data.Height);
+        GoldenRipple.enableShader = true;
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
@@ -56,8 +55,10 @@ public class DeathHandlerDeathBypassTrigger : Trigger
             {
                 // Not collider in case no collision. And also i haven't figured out how to use collider yet :p
                 Rectangle entityRect = new Rectangle((int)entity.Position.X, (int)entity.Position.Y, (int)entity.Width, (int)entity.Height);
-                if (triggerRange.Intersects(entityRect) && entity.Components.Get<DeathBypass>() is null)
+                //Logger.Log(LogLevel.Info, "EndHelper/DeathHandlerDeathBypassTrigger", $"Compare entity {entity}: {entityRect.Left} {entityRect.Top} with trigger {triggerRange.Left} {triggerRange.Top}");
+                if (triggerRange.Intersects(entityRect) && entity.Components.Get<DeathBypass>() is null && FilterEntity(entity))
                 {
+                    //Logger.Log(LogLevel.Info, "EndHelper/DeathHandlerDeathBypassTrigger", $"Trigger Range: Add {entity} to DeathBypass");
                     DeathBypass deathBypassComponent = new DeathBypass(requireFlag, showVisuals);
                     entity.Add(deathBypassComponent);
                 }
@@ -66,13 +67,28 @@ public class DeathHandlerDeathBypassTrigger : Trigger
             // Nodes
             foreach (Vector2 nodePos in nodes)
             {
-                Entity nearestEntity = level.GetNearestGenericEntity(nodePos);
-                if (nearestEntity.Components.Get<DeathBypass>() is null)
+                foreach (Entity entity in level.Entities)
                 {
-                    DeathBypass deathBypassComponent = new DeathBypass(requireFlag, showVisuals);
-                    nearestEntity.Add(deathBypassComponent);
+                    // Not collider in case no collision. And also i haven't figured out how to use collider yet :p
+                    Rectangle entityRect = new Rectangle((int)entity.Position.X, (int)entity.Position.Y, (int)entity.Width, (int)entity.Height);
+                    //Logger.Log(LogLevel.Info, "EndHelper/DeathHandlerDeathBypassTrigger", $"Compare entity {entity}: {entityRect.Left} {entityRect.Top} with trigger {triggerRange.Left} {triggerRange.Top}");
+                    if (entityRect.Contains((int)nodePos.X, (int)nodePos.Y) && entity.Components.Get<DeathBypass>() is null && FilterEntity(entity))
+                    {
+                        //Logger.Log(LogLevel.Info, "EndHelper/DeathHandlerDeathBypassTrigger", $"Trigger Range: Add {entity} to DeathBypass");
+                        DeathBypass deathBypassComponent = new DeathBypass(requireFlag, showVisuals);
+                        entity.Add(deathBypassComponent);
+                    }
                 }
             }
         }
+    }
+
+    private static bool FilterEntity(Entity entity)
+    {
+        if (entity is SolidTiles || entity is BackgroundTiles || entity is Player || entity is PlayerDeadBody || entity is DeathHandlerDeathBypassTrigger)
+        {
+            return false;
+        }
+        return true;
     }
 }

@@ -26,6 +26,7 @@ using System.Linq;
 using Celeste.Mod.EndHelper.Utils;
 using static Celeste.Mod.EndHelper.Utils.Utils_JournalStatistics;
 using IL.MonoMod;
+using Microsoft.Xna.Framework.Graphics;
 
 
 namespace Celeste.Mod.EndHelper.Entities.Misc;

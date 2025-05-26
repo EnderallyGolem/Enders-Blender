@@ -6,6 +6,7 @@ using System;
 using static MonoMod.InlineRT.MonoModRule;
 using Celeste.Mod.EndHelper.SharedCode;
 using Celeste.Mod.EndHelper.Utils;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace Celeste.Mod.EndHelper.Entities.RoomSwap;
 

@@ -310,7 +310,8 @@ EndHelperTest_Tutorial_Misc_ConditionalTutorialBird2_Desc=I appear after dying h
 endhelper_credits={~}Additional credits:{/~}
 The sprites for the Room-Swap Map, Map Upgrade, Transition Box, and Grab Recast Icon were made by Pakyjenace.
 A lot of code was blatantly plagur-{0.5} i mean modified from SpeedrunTools, VivHelper, DeathTracker, Maddie's Helping Hand, and ChronoHelper.
-Thanks to bug reports and testing from Aleph, SpringMinh, myrtille and Merlyn!
+Obtaining of entity ids was done with the help of paulzd.
+Thanks to bug reports and testing from Aleph, SpringMinh, myrtille, Merlyn and lugunium!
 
 
 

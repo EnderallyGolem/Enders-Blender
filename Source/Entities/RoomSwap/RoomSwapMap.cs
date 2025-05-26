@@ -122,11 +122,6 @@ public class RoomSwapMap : Entity
             currentRoomPos = Utils_RoomSwap.GetPosFromRoomName(currentRoomName);
             string currentRoomPosSuffix = $"{currentRoomPos[0].ToString()}{currentRoomPos[1].ToString()}";
         }
-
-        if (hudLayer)
-        {
-            
-        }
     }
 
     public void RoomModificationEventListener(object sender, RoomModificationEventArgs e)
@@ -210,7 +205,7 @@ public class RoomSwapMap : Entity
                         // Check if animated, and if so, how many frames (idk if there's a better way of doing this that doesn't spam errors)
                         while (true)
                         {
-                            iconTexture = GFX.Game[$"{folderPath}/{iconFilePrefixLevel}{roomPosSuffix}_{(frameIndex + 1).ToString()}"];
+                            iconTexture = GFX.Game[$"{folderPath}/{iconFilePrefixLevel}{roomPosSuffix}_{(frameIndex + 1)}"];
 
                             if (iconTexture.AtlasPath == "__fallback")
                             {
