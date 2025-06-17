@@ -808,7 +808,7 @@ public class RoomStatisticsDisplayer : Entity
                     {
                         int colorIndex;
 
-                        if (EndHelperModule.Settings.RoomStatMenu.MenuShowFirstClear && dealWithFirstClear)
+                        if (EndHelperModule.Settings.RoomStatMenu.MenuShowFirstClear && dealWithFirstClear && EndHelperModule.SaveData.mapDict_roomStat_colorIndex[mapNameSide_Internal].ContainsKey(roomName))
                         {
                             colorIndex = EndHelperModule.SaveData.mapDict_roomStat_colorIndex[mapNameSide_Internal][roomName];
                         }

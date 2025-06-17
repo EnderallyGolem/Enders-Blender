@@ -14,6 +14,7 @@ public class EndHelperModuleSettings : EverestModuleSettings {
     public ButtonBinding ToggleGrab { get; set; }
 
     public ButtonBinding NeutralDrop { get; set; }
+    public ButtonBinding Backboost { get; set; }
 
     [SettingSubHeader("modoptions_EndHelperModule_SubHeader_QOLTweaks")]
     public ButtonBinding QuickRetry { get; set; }[SettingSubText("modoptions_EndHelperModule_DisableFrequentScreenShake_Desc")]

@@ -1,16 +1,16 @@
 {
   "version": 3,
   "targets": {
-    "net7.0": {
+    "net8.0": {
       "AsmResolver/6.0.0-beta.1": {
         "type": "package",
         "compile": {
-          "lib/net6.0/AsmResolver.dll": {
+          "lib/net8.0/AsmResolver.dll": {
             "related": ".xml"
           }
         },
         "runtime": {
-          "lib/net6.0/_._": {
+          "lib/net8.0/_._": {
             "related": ".xml"
           }
         }
@@ -21,12 +21,12 @@
           "AsmResolver.PE": "6.0.0-beta.1"
         },
         "compile": {
-          "lib/net6.0/AsmResolver.DotNet.dll": {
+          "lib/net8.0/AsmResolver.DotNet.dll": {
             "related": ".xml"
           }
         },
         "runtime": {
-          "lib/net6.0/_._": {
+          "lib/net8.0/_._": {
             "related": ".xml"
           }
         }
@@ -37,12 +37,12 @@
           "AsmResolver.PE.File": "6.0.0-beta.1"
         },
         "compile": {
-          "lib/net6.0/AsmResolver.PE.dll": {
+          "lib/net8.0/AsmResolver.PE.dll": {
             "related": ".xml"
           }
         },
         "runtime": {
-          "lib/net6.0/_._": {
+          "lib/net8.0/_._": {
             "related": ".xml"
           }
         }
@@ -53,12 +53,12 @@
           "AsmResolver": "6.0.0-beta.1"
         },
         "compile": {
-          "lib/net6.0/AsmResolver.PE.File.dll": {
+          "lib/net8.0/AsmResolver.PE.File.dll": {
             "related": ".xml"
           }
         },
         "runtime": {
-          "lib/net6.0/_._": {
+          "lib/net8.0/_._": {
             "related": ".xml"
           }
         }
@@ -233,12 +233,12 @@
           "MonoMod.ILHelpers": "1.1.0"
         },
         "compile": {
-          "lib/net7.0/MonoMod.Backports.dll": {
+          "lib/net8.0/MonoMod.Backports.dll": {
             "related": ".pdb;.xml"
           }
         },
         "runtime": {
-          "lib/net7.0/_._": {
+          "lib/net8.0/_._": {
             "related": ".pdb;.xml"
           }
         }
@@ -252,15 +252,15 @@
           "MonoMod.Utils": "25.0.7"
         },
         "compile": {
-          "lib/net7.0/MonoMod.Core.dll": {
+          "lib/net8.0/MonoMod.Core.dll": {
             "related": ".pdb;.xml"
           },
-          "lib/net7.0/MonoMod.Iced.dll": {
+          "lib/net8.0/MonoMod.Iced.dll": {
             "related": ".pdb;.xml"
           }
         },
         "runtime": {
-          "lib/net7.0/_._": {
+          "lib/net8.0/_._": {
             "related": ".pdb;.xml"
           }
         },
@@ -271,12 +271,12 @@
       "MonoMod.ILHelpers/1.1.0": {
         "type": "package",
         "compile": {
-          "lib/net7.0/MonoMod.ILHelpers.dll": {
+          "lib/net8.0/MonoMod.ILHelpers.dll": {
             "related": ".pdb"
           }
         },
         "runtime": {
-          "lib/net7.0/_._": {
+          "lib/net8.0/_._": {
             "related": ".pdb"
           }
         }
@@ -310,12 +310,12 @@
           "MonoMod.Utils": "25.0.7"
         },
         "compile": {
-          "lib/net7.0/MonoMod.RuntimeDetour.dll": {
+          "lib/net8.0/MonoMod.RuntimeDetour.dll": {
             "related": ".pdb;.xml"
           }
         },
         "runtime": {
-          "lib/net7.0/_._": {
+          "lib/net8.0/_._": {
             "related": ".pdb;.xml"
           }
         },
@@ -331,12 +331,12 @@
           "MonoMod.ILHelpers": "1.1.0"
         },
         "compile": {
-          "lib/net7.0/MonoMod.Utils.dll": {
+          "lib/net8.0/MonoMod.Utils.dll": {
             "related": ".pdb;.xml"
           }
         },
         "runtime": {
-          "lib/net7.0/_._": {
+          "lib/net8.0/_._": {
             "related": ".pdb;.xml"
           }
         }
@@ -4220,7 +4220,7 @@
     }
   },
   "projectFileDependencyGroups": {
-    "net7.0": [
+    "net8.0": [
       "CelesteAnalyzer >= *",
       "CelesteMod.Publicizer >= *",
       "MonoMod.Patcher >= 25.0.0-prerelease.2",
@@ -4249,15 +4249,15 @@
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
       "originalTargetFrameworks": [
-        "net7.0"
+        "net8.0"
       ],
       "sources": {
         "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
-        "net7.0": {
-          "targetAlias": "net7.0",
+        "net8.0": {
+          "targetAlias": "net8.0",
           "projectReferences": {}
         }
       },
@@ -4274,8 +4274,8 @@
       "SdkAnalysisLevel": "9.0.300"
     },
     "frameworks": {
-      "net7.0": {
-        "targetAlias": "net7.0",
+      "net8.0": {
+        "targetAlias": "net8.0",
         "dependencies": {
           "CelesteAnalyzer": {
             "include": "Compile, Build, Native, ContentFiles, Analyzers, BuildTransitive",
@@ -4318,7 +4318,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.300\\RuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.300/PortableRuntimeIdentifierGraph.json"
       }
     }
   }

@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net7.0</TargetFramework>
+        <TargetFramework>net8.0</TargetFramework>
         <AssemblyName>EndHelper</AssemblyName>
         <RootNamespace>Celeste.Mod.EndHelper</RootNamespace>
         <LangVersion>latest</LangVersion>
@@ -28,6 +28,9 @@
 		<PackageReference Include="CelesteMod.Publicizer" Version="*" CelesteAssembly="$(CelestePrefix)\Celeste.dll" />
         <Reference Include="$(CelestePrefix)\MMHOOK_Celeste.dll" Private="false" />
         <Reference Include="$(CelestePrefix)\FNA.dll" Private="false" />
+        <Reference Include="DotNetZip">
+          <HintPath>..\..\..\DotNetZip.dll</HintPath>
+        </Reference>
         <Reference Include="ImGuiHelper">
           <HintPath>..\Integrations\ImGuiHelper.dll</HintPath>
         </Reference>

@@ -21,14 +21,14 @@ public class DeathHandlerRespawnPoint : Entity
     private bool fullReset = false;
     private string requireFlag = "";
 
-    private MTexture activeTexture;
+    private MTexture currentSpawnpointTexture;
     private MTexture inactiveTexture;
     private Image displayImage;
 
     const int width = 16;
     const int height = 18;
 
-    private bool currentlyActive = false;
+    private bool currentlySpawnpoint = false;
     internal bool disabled = false;
     public Vector2 entityPosCenter;
     public Vector2 entityPosSpawnPoint;
@@ -51,12 +51,12 @@ public class DeathHandlerRespawnPoint : Entity
 
         if (fullReset)
         {
-            activeTexture = GFX.Game["objects/EndHelper/DeathHandlerRespawnPoint/respawnpoint_fullreset_active"];
+            currentSpawnpointTexture = GFX.Game["objects/EndHelper/DeathHandlerRespawnPoint/respawnpoint_fullreset_active"];
             inactiveTexture = GFX.Game["objects/EndHelper/DeathHandlerRespawnPoint/respawnpoint_fullreset_inactive"];
         }
         else
         {
-            activeTexture = GFX.Game["objects/EndHelper/DeathHandlerRespawnPoint/respawnpoint_normal_active"];
+            currentSpawnpointTexture = GFX.Game["objects/EndHelper/DeathHandlerRespawnPoint/respawnpoint_normal_active"];
             inactiveTexture = GFX.Game["objects/EndHelper/DeathHandlerRespawnPoint/respawnpoint_normal_inactive"];
         }
         UpdatePositionVectors(firstUpdate: true);
@@ -69,10 +69,13 @@ public class DeathHandlerRespawnPoint : Entity
             {
                 OnShake = OnShake,
                 SolidChecker = IsRidingSolid,
-                JumpThruChecker = IsRidingJumpthrough
+                JumpThruChecker = IsRidingJumpthrough,
             });
         }
+
+        Depth = 2;
     }
+
     private void OnShake(Vector2 amount)
     {
         imageOffset += amount;
@@ -132,7 +135,7 @@ public class DeathHandlerRespawnPoint : Entity
             foreach (DeathHandlerRespawnMarker respawnMarker in level.Tracker.GetEntities<DeathHandlerRespawnMarker>())
             {
                 respawnMarker.faceLeft = faceLeft;
-                respawnMarker.UpdateImage();
+                respawnMarker.UpdateSprite();
                 
                 // If moving and Marker is near, lock position
                 if (entityPosSpawnPoint != entityPosSpawnPointPrevious && respawnMarker.previousDistanceBetweenPosAndTarget <= 8)
@@ -167,15 +170,15 @@ public class DeathHandlerRespawnPoint : Entity
     {
         if (newActiveness == null)
         {
-            currentlyActive = !currentlyActive;
+            currentlySpawnpoint = !currentlySpawnpoint;
         }
         else if (newActiveness.Value)
         {
-            currentlyActive = true;
+            currentlySpawnpoint = true;
         }
         else if (newActiveness.Value == false)
         {
-            currentlyActive = false;
+            currentlySpawnpoint = false;
         }
         UpdateImage();
     }
@@ -184,9 +187,9 @@ public class DeathHandlerRespawnPoint : Entity
         if (visible)
         {
             Components.Remove(displayImage);
-            if (currentlyActive)
+            if (currentlySpawnpoint)
             {
-                displayImage = new Image(activeTexture);
+                displayImage = new Image(currentSpawnpointTexture);
             }
             else
             {

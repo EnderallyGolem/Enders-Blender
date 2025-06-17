@@ -57,8 +57,16 @@ public class EndHelperModuleSession : EverestModuleSession
     public bool GrabFakeTogglePressPressed = false;
     public bool ToggleGrabRanNothing = false;
 
-    // Track if gameplay tweaks were used at any point. These will show up as extended variations in the endscreen.
-    public bool usedGameplayTweaks = false;
+    // Track if gameplay tweaks were used at any point. These track what tweaks are used and show them in the endscreen.
+    // dashredirect grabrecast seemlessrespawn_minor seemlessrespawn_keepstate | backboost neutraldrop
+    public Dictionary<string, bool> usedGameplayTweaks = new Dictionary<string, bool> {
+        ["dashredirect"] = false,
+        ["grabrecast"] = false,
+        ["seemlessrespawn_minor"] = false,
+        ["seemlessrespawn_keepstate"] = false,
+        ["backboost"] = false,
+        ["neutraldrop"] = false
+    };
 
     // Override Gameplay Tweaks - With triggers
     public ConvertDemoEnum? GameplayTweaksOverride_ConvertDemo = null;

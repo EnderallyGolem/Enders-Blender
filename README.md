@@ -16,13 +16,14 @@ Calling it a blender was funnier. Too lazy to change the internal names though.
     - Stats can be copied onto clipboard
 
 ###### Gameplay Tweaks
-These are marked as using variations in the end-screen. Some of these can be overridden per-map with a Gameplay Tweaks Override Trigger.
+These are shown in the end-screen. Some of these can be overridden per-map with a Gameplay Tweaks Override Trigger.
 - Grab Recast
     - Keybind which can act as a toggle grab keybind, or modify the grab key to be invert/toggle.
 - Prevent Down Dash Redirects
     - Prevents down dashes from being redirected out of dashing down, aka prevent manual demos (except upward ones), by forcing them to be down or down diagonal
     - Does not affect demo keys.
 - Neutral Drop Keybind
+- Backboost Keybind
 
 ###### QOL Tweaks
 - Quick-Retry Keybind
@@ -67,9 +68,13 @@ These are marked as using variations in the end-screen. Some of these can be ove
     - If the seed depends on the relative position in the room
 - Option to be breakable
 
-## 1.2 changelog:
-- New Additions:
-	- Death Handler?
+## 1.1.5 changelog:
+- Updated to NET 8.0
+
+- Gameplay Tweaks:
+	- Tweaks are now tracked individually, and each used gameplay tweak is shown in the endscreen.
+	- Added a Backboost keybind.
+	- Modified Neutral Drop keybind so it sets MoveY to 1 and throws, so it should be more akin to pressing down for 1 frame and throwing.
 
 		
 ## 1.1.4 changelog:

@@ -3,7 +3,7 @@ local DeathHandlerRespawnMarker = {
     depth = -8500,
     justification = {0.5, 0.5},
     offset = {0, 1},
-    texture = "objects/EndHelper/DeathHandlerRespawnPoint/respawnpoint_marker",
+    texture = "objects/EndHelper/DeathHandlerRespawnPoint/respawnpoint_marker00",
     placements = {
         {
             name = "normal",

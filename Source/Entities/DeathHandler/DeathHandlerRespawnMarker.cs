@@ -23,7 +23,7 @@ public class DeathHandlerRespawnMarker : Entity
     private bool flagEnable = true;
     private bool offscreenPointer = true;
 
-    private Image displayImage;
+    public Sprite sprite;
 
     const int width = 16;
     const int height = 18;
@@ -63,8 +63,15 @@ public class DeathHandlerRespawnMarker : Entity
         Add(sine);
 
         Add(new DeathBypass(requireFlag, false, id));
+
+        Add(sprite = EndHelperModule.SpriteBank.Create("DeathHandlerRespawnPoint"));
+        sprite.Position += new Vector2(0, -1);
+        sprite.Play("idle");
+
+        Depth = 1;
+        base.Collider = new Hitbox(x: -width / 2, y: -height / 2, width: width, height: height);
     }
-   
+
     public override void Added(Scene scene)
     {
         base.Added(scene);
@@ -72,7 +79,7 @@ public class DeathHandlerRespawnMarker : Entity
 
     public override void Awake(Scene scene)
     {
-        UpdateImage();
+        UpdateSprite();
         base.Awake(scene);
 
         Level level = scene as Level;
@@ -172,38 +179,32 @@ public class DeathHandlerRespawnMarker : Entity
   
     public override void Render()
     {
-        UpdateImage();
+        UpdateSprite();
         base.Render();
     }
 
-    public void UpdateImage()
+    public void UpdateSprite()
     {
-        MTexture texture = GFX.Game["objects/EndHelper/DeathHandlerRespawnPoint/respawnpoint_marker"];
-        Remove(displayImage);
-
-        displayImage = new Image(texture);
-        displayImage.Position -= new Vector2(width / 2, (height / 2 + 1));
         if (flagEnable)
         {
-            displayImage.Visible = true;
+            sprite.Visible = true;
         } 
         else
         {
-            displayImage.Visible = false;
+            sprite.Visible = false;
         }
 
         if (faceLeft)
         {
-            displayImage.FlipX = true;
+            sprite.FlipX = true;
         }
         else
         {
-            displayImage.FlipX = false;
+            sprite.FlipX = false;
         }
 
-        displayImage.Color.A = 128;
-        displayImage.Color.A += (byte)(sine.Value * 120f);
-        Add(displayImage);
+        sprite.Color.A = 128;
+        sprite.Color.A += (byte)(sine.Value * 120f);
     }
 
     internal Vector2 ConvertSpawnPointPosToActualPos(Vector2 pos, bool reverse = false)

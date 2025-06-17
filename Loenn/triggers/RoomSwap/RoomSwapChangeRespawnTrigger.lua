@@ -4,6 +4,7 @@ local roomSwapChangeRespawnTrigger = {
     placements = {
         {
             name = "normal",
+            alternativeName = {"altname", "altname2"},
             data = {
                 checkSolid = true
             },

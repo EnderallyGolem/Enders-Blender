@@ -21,8 +21,6 @@ public class RoomSwapController : Entity
 
     public RoomSwapController(EntityData data, Vector2 offset) : base(data.Position + offset)
     {
-
-        //Add(RoomSwapModule.SpriteBank.Create("transitionController"));
         Collider = new Hitbox(16, 16, -8, -8);
 
         gridID = data.Attr("gridId", "1");

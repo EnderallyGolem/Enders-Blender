@@ -1,33 +1,34 @@
-﻿using Celeste.Mod.EndHelper.Entities.Misc;
+﻿using AsmResolver.DotNet.Code.Cil;
+using Celeste.Mod.EndHelper.Entities.DeathHandler;
+using Celeste.Mod.EndHelper.Entities.Misc;
 using Celeste.Mod.EndHelper.Integration;
+using Celeste.Mod.EndHelper.SharedCode;
+using Celeste.Mod.EndHelper.Utils;
+using Celeste.Mod.Entities;
+using Celeste.Mod.Helpers;
+using FMOD.Studio;
+using Microsoft.VisualBasic;
 using Microsoft.Xna.Framework;
+using Mono.Cecil;
+using Mono.Cecil.Cil;
 using Monocle;
+using MonoMod.Cil;
+using MonoMod.RuntimeDetour;
 using MonoMod.Utils;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
-using System.Text.Json;
-using System.Threading.Tasks;
-using static Celeste.Mod.EndHelper.Entities.Misc.RoomStatisticsDisplayer;
+using System.Net.Sockets;
 using System.Reflection;
-using static Celeste.Mod.EndHelper.EndHelperModuleSettings;
-using MonoMod.Cil;
-using MonoMod.RuntimeDetour;
-using FMOD.Studio;
-using System.Text.RegularExpressions;
-using Celeste.Mod.EndHelper.SharedCode;
-using Celeste.Mod.EndHelper.Utils;
-using Mono.Cecil.Cil;
-using Mono.Cecil;
-using AsmResolver.DotNet.Code.Cil;
 using System.Runtime.CompilerServices;
-using Microsoft.VisualBasic;
+using System.Text.Json;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
+using static Celeste.Mod.EndHelper.EndHelperModuleSettings;
 using static Celeste.Mod.EndHelper.EndHelperModuleSettings.GameplayTweaks;
-using Celeste.Mod.Entities;
-using Celeste.Mod.Helpers;
-using Celeste.Mod.EndHelper.Entities.DeathHandler;
+using static Celeste.Mod.EndHelper.Entities.Misc.RoomStatisticsDisplayer;
 
 namespace Celeste.Mod.EndHelper;
 
@@ -356,12 +357,27 @@ public class EndHelperModule : EverestModule {
 
     private static void OnPlayerSpawnFunc(Player player)
     {
-        // Spawn facing same direction as DeathHandlerRespawnPoint
+        // Spawn facing same direction as DeathHandlerRespawnPoint or DeathHandlerRespawnMarker.
+        // Priority goes to the marker.
         DeathHandlerRespawnPoint respawnPoint = player.CollideFirst<DeathHandlerRespawnPoint>();
+        DeathHandlerRespawnMarker respawnMarker = player.CollideFirst<DeathHandlerRespawnMarker>();
+
+        Facings? updateFacings = null;
         if (respawnPoint != null)
         {
-            player.Facing = respawnPoint.faceLeft ? Facings.Left : Facings.Right;
+            updateFacings = respawnPoint.faceLeft ? Facings.Left : Facings.Right;
         }
+        if (respawnMarker != null)
+        {
+            updateFacings = respawnMarker.faceLeft ? Facings.Left : Facings.Right;
+        }
+
+        if (updateFacings != null)
+        {
+            player.Facing = updateFacings.Value;
+        }
+
+        // Do the same thing for DeathHandlerRespawnPoint. With priority.
     }
 
     private static void Hook_OnAddEntity(On.Monocle.Scene.orig_Add_Entity orig, global::Monocle.Scene self, global::Monocle.Entity entity)
@@ -681,7 +697,7 @@ public class EndHelperModule : EverestModule {
         {
             if (EndHelperModule.Settings.ToggleGrab.Button.Pressed)
             {
-                EndHelperModule.Session.usedGameplayTweaks = true;
+                EndHelperModule.Session.usedGameplayTweaks["grabrecast"] = true;
 
                 Session.toggleifyEnabled = !Session.toggleifyEnabled;
 
@@ -845,8 +861,22 @@ public class EndHelperModule : EverestModule {
     {
         if (EndHelperModule.Settings.NeutralDrop.Button.Pressed && self.Holding != null)
         {
-            EndHelperModule.Session.usedGameplayTweaks = true;
-            self.Drop();
+            EndHelperModule.Session.usedGameplayTweaks["neutraldrop"] = true;
+            Input.MoveY.Value = 1;
+            self.Throw();
+        }
+        if (EndHelperModule.Settings.Backboost.Button.Pressed && self.Holding != null)
+        {
+            EndHelperModule.Session.usedGameplayTweaks["backboost"] = true;
+            if (self.Facing == Facings.Left)
+            {
+                self.Facing = Facings.Right;
+            }
+            else if (self.Facing == Facings.Right)
+            {
+                self.Facing = Facings.Left;
+            }
+            self.Throw();
         }
         orig(self);
     }
@@ -1131,21 +1161,62 @@ public class EndHelperModule : EverestModule {
 
     private static void Hook_AreaCompleteVerNumVars(On.Celeste.AreaComplete.orig_VersionNumberAndVariants orig, string version, float ease, float alpha)
     {
-        if (EndHelperModule.Session.usedGameplayTweaks == true)
-        {
-            // Temporarily turn variant mode on, so the variants icon appears
-            // (this is just copied from extended variations)
-            bool oldVariantModeValue = global::Celeste.SaveData.Instance.VariantMode;
-            global::Celeste.SaveData.Instance.VariantMode = true;
+        bool showFullBlender = false;
+        List<string> iconList = [];
 
-            orig(version, ease, alpha);
+        // Check each gameplay tweak, and add relevant GFX / set showFullBlender to true if required
+        Dictionary<string, bool> tweakList = EndHelperModule.Session.usedGameplayTweaks;
 
-            global::Celeste.SaveData.Instance.VariantMode = oldVariantModeValue;
+        // dashredirect grabrecast seemlessrespawn_minor seemlessrespawn_keepstate | backboost neutraldrop
+        if (tweakList["dashredirect"]) { iconList.Add(":EndHelper/endscreen_dashredirect:"); showFullBlender = true; }
+        if (tweakList["seemlessrespawn_minor"]) { 
+            if (tweakList["seemlessrespawn_keepstate"]) { iconList.Add(":EndHelper/endscreen_seemlessrespawn_keepstate:"); showFullBlender = true; }
+            else iconList.Add(":EndHelper/endscreen_seemlessrespawn_minor:");
         }
-        else
+        if (tweakList["grabrecast"]) iconList.Add(":EndHelper/endscreen_grabrecast:");
+        if (tweakList["backboost"]) iconList.Add(":EndHelper/endscreen_backboost:");
+        if (tweakList["neutraldrop"]) iconList.Add(":EndHelper/endscreen_neutraldrop:");
+
+        // Show blender if at least 1 thing to show!
+        if (iconList.Count >= 1)
         {
-            orig(version, ease, alpha);
+            // Get and draw the correct blender (half or full)
+            MTexture blenderTexture = showFullBlender ? GFX.Gui["misc/EndHelper/endscreenblender_full"] : GFX.Gui["misc/EndHelper/endscreenblender_half"];
+            Vector2 blenderPos = new Vector2(1820f - 1f + 300f * (1f - Ease.CubeOut(ease)), 1020f - 48f);
+
+            if (global::Celeste.SaveData.Instance.AssistMode || global::Celeste.SaveData.Instance.VariantMode)
+            { blenderPos.Y -= 48; }
+
+            FieldInfo versionOffsetField = typeof(AreaComplete).GetField("versionOffset", BindingFlags.Static | BindingFlags.NonPublic);
+            float versionOffset = (float)versionOffsetField.GetValue(null);
+            if (Engine.Scene is Level) versionOffset += -32f; // lazy as heck collabui check
+            blenderPos.Y += versionOffset;
+            //Logger.Log(LogLevel.Info, "EndHelper/main", $"why is the versionoffset not publically gettable: {versionOffset}");
+
+            blenderTexture.DrawJustified(blenderPos + new Vector2(0f, -8f), new Vector2(0.5f, 1f), Color.White, 0.6f);
+
+            // Draw the icons
+            Vector2 iconPos = blenderPos + new Vector2(0, -120);
+            string fullIconString = "";
+            int nextLineCounter = 1;
+            foreach (string iconString in iconList)
+            {
+                if (nextLineCounter > 2)
+                {
+                    nextLineCounter = 1;
+                    ActiveFont.DrawOutline(fullIconString, iconPos, new Vector2(0.5f, 0f), Vector2.One * 5f, Color.White, 1f, Color.Black);
+                    fullIconString = "";
+                    iconPos += new Vector2(0, -50);
+                }
+                fullIconString += iconString;
+                nextLineCounter++;
+            }
+            if (fullIconString != "")
+            {
+                ActiveFont.DrawOutline(fullIconString, iconPos, new Vector2(0.5f, 0f), Vector2.One * 5f, Color.White, 1f, Color.Black);
+            }
         }
+        orig(version, ease, alpha);
     }
 
 
@@ -1366,7 +1437,7 @@ public class EndHelperModule : EverestModule {
         {
             if (usedConvertDemoSetting != ConvertDemoEnum.Disabled && EndHelperModule.Session.GameplayTweaksOverride_ConvertDemo == null)
             {
-                EndHelperModule.Session.usedGameplayTweaks = true;
+                EndHelperModule.Session.usedGameplayTweaks["dashredirect"] = true;
             }
 
             redirectedVector.Y = preRedirectDashDir.Y;

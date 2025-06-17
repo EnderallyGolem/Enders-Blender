@@ -198,6 +198,8 @@ triggers.EndHelper/RoomSwapRespawnForceSameRoomTrigger.attributes.description.on
 
 # RoomSwap Change Respawn Trigger
 triggers.EndHelper/RoomSwapChangeRespawnTrigger.placements.name.normal=Updating Change Respawn
+triggers.EndHelper/RoomSwapChangeRespawnTrigger.placements.name.altname=Room-Swap Change Respawn
+triggers.EndHelper/RoomSwapChangeRespawnTrigger.placements.name.altname2=Death-Handler Change Respawn
 triggers.EndHelper/RoomSwapChangeRespawnTrigger.placements.description.normal=Change respawn trigger that rechecks for spawnpoints when the player enters it.\nThis ensures the trigger sets the correct spawnpoint, even when it is moved.\nIf using Room-Swap or Death-Handler, this should be used in place of the regular Change Respawn Trigger.
 triggers.EndHelper/RoomSwapChangeRespawnTrigger.attributes.description.checkSolid=If disabled, avoids checking if the respawn point is available before setting the respawn point to there.
 
@@ -215,9 +217,8 @@ entities.EndHelper/DeathHandlerRespawnPoint.placements.name.normal=Death-Handler
 entities.EndHelper/DeathHandlerRespawnPoint.placements.description.normal=Player Respawn that can be attached, be visible, be disabled, etc\nNote: A regular player respawn is still needed in the room.
 entities.EndHelper/DeathHandlerRespawnPoint.attributes.description.faceLeft=Visually shows facing left, and also respawns the player facing left.
 entities.EndHelper/DeathHandlerRespawnPoint.attributes.description.attachable=Attached to objects that spikes can attach to, when place next to the object.
-entities.EndHelper/DeathHandlerRespawnPoint.attributes.description.fullReset=If the player can spawn here after activating a Full Reset Zone or whatever i haven't came up with the name yet, to-do, please change this later
+entities.EndHelper/DeathHandlerRespawnPoint.attributes.description.fullReset=Marks the point as a Full Reset respawn point.\nThe player can only respawn here if they enter a Change Respawn Region set to Full Reset.
 entities.EndHelper/DeathHandlerRespawnPoint.attributes.description.requireFlag=If specified, the respawn point will only work if this flag is enabled.\nA list of flags in the format "flagA, flagB, !flagC | flagD, flagE" can be specified.\nThis means (flagA and flagB and not flagC) or (flagD and flagE).
-
 
 # Respawn Marker
 entities.EndHelper/DeathHandlerRespawnMarker.placements.name.normal=Death-Handler Respawn Marker
@@ -226,8 +227,18 @@ entities.EndHelper/DeathHandlerRespawnMarker.attributes.description.speed=How qu
 entities.EndHelper/DeathHandlerRespawnMarker.attributes.description.offscreenPointer=Adds an arrow pointing to the respawn point if it is off-screen.
 entities.EndHelper/DeathHandlerRespawnMarker.attributes.description.requireFlag=If specified, the respawn marker will only be visible if this flag is enabled.\nA list of flags in the format "flagA, flagB, !flagC | flagD, flagE" can be specified.\nThis means (flagA and flagB and not flagC) or (flagD and flagE).
 
+# Change Respawn Region
+entities.EndHelper/DeathHandlerChangeRespawnRegion.placements.name.normal=Death-Handler Change Respawn Region
+entities.EndHelper/DeathHandlerChangeRespawnRegion.placements.description.normal=Visible (Updating) Change Respawn Trigger.
+entities.EndHelper/DeathHandlerChangeRespawnRegion.attributes.description.checkSolid=If disabled, avoids checking if the respawn point is available before setting the respawn point to there.
+entities.EndHelper/DeathHandlerChangeRespawnRegion.attributes.description.attachable=Attached to objects that spikes can attach to, when place next to the object.
+entities.EndHelper/DeathHandlerChangeRespawnRegion.attributes.description.fullReset=The next respawn will be a Full Reset.\nThis means the player will only be able to respawn at Death-Handler Respawn Points that are marked as Full Reset,\nand Death-Bypass will be ignored.
+entities.EndHelper/DeathHandlerChangeRespawnRegion.attributes.description.killOnEnter=Kills the player once they enter the region.
+entities.EndHelper/DeathHandlerChangeRespawnRegion.attributes.description.visibleArea=Whether if the region is visible.
+entities.EndHelper/DeathHandlerChangeRespawnRegion.attributes.description.visibleTarget=Whether if the respawn point location that will be set upon activation is visible.
+
 # Reload Bypass Trigger
-triggers.EndHelper/DeathHandlerDeathBypassTrigger.placements.name.normal=Death-Handler Reload Bypass
-triggers.EndHelper/DeathHandlerDeathBypassTrigger.placements.description.normal=On death, entities inside it and entities overlapping its nodes will persist through the room reload.\nNote: This check will rerun each time you die!\nThis ensures that despawned entities that reload will have the bypass re-applied.
+triggers.EndHelper/DeathHandlerDeathBypassTrigger.placements.name.normal=Death-Handler Death Bypass
+triggers.EndHelper/DeathHandlerDeathBypassTrigger.placements.description.normal=On death, entities inside it and entities overlapping its nodes will persist through the room reload on death.\nNote: This check will rerun each time you die!\nThis ensures that despawned entities that reload will have the bypass re-applied.
 triggers.EndHelper/DeathHandlerDeathBypassTrigger.attributes.description.requireFlag=If specified, entities will only bypass death if this flag is enabled.\nA list of flags in the format "flagA, flagB, !flagC | flagD, flagE" can be specified.\nThis means (flagA and flagB and not flagC) or (flagD and flagE).
 triggers.EndHelper/DeathHandlerDeathBypassTrigger.attributes.description.showVisuals=Marks death-bypass entities with a golden glint.

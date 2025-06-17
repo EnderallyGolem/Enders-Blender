@@ -430,7 +430,12 @@ namespace Celeste.Mod.EndHelper.Utils
 
             ActiveFont.DrawOutline($"{journalStatisticsMapNameSideIndex + 1}/{totalMapNum}", new Vector2(mapNumXpos, mapNumYpos), new Vector2(0.5f, 0.5f), new Vector2(0.7f, 0.7f), mapNameColor, 2f, Color.Black);
 
-            if (totalMapNum > 1)
+            if (totalMapNum >= 10)
+            {
+                pageArrow.DrawCentered(new Vector2(mapNumXpos - 70, mapNumYpos), mapNameColor, 1, MathF.PI * 0.5f); // Up
+                pageArrow.DrawCentered(new Vector2(mapNumXpos + 70, mapNumYpos), mapNameColor, 1, MathF.PI * 1.5f); // Down
+            }
+            else if (totalMapNum > 1)
             {
                 pageArrow.DrawCentered(new Vector2(mapNumXpos - 60, mapNumYpos), mapNameColor, 1, MathF.PI * 0.5f); // Up
                 pageArrow.DrawCentered(new Vector2(mapNumXpos + 60, mapNumYpos), mapNameColor, 1, MathF.PI * 1.5f); // Down

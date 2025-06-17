@@ -8,6 +8,7 @@ modoptions_EndHelperModule_OpenStatDisplayMenu=Open Room Stat Menu
 modoptions_EndHelperModule_QuickRetry=Quick Retry
 modoptions_EndHelperModule_ToggleGrab=Grab Recast
 modoptions_EndHelperModule_NeutralDrop=Neutral Drop
+modoptions_EndHelperModule_Backboost=Backboost
 
 ######### Room Stats #########
 modoptions_EndHelperModule_SubHeader_RoomStat=Room Statistics
@@ -312,6 +313,7 @@ The sprites for the Room-Swap Map, Map Upgrade, Transition Box, and Grab Recast 
 A lot of code was blatantly plagur-{0.5} i mean modified from SpeedrunTools, VivHelper, DeathTracker, Maddie's Helping Hand, and ChronoHelper.
 Obtaining of entity ids was done with the help of paulzd.
 Thanks to bug reports and testing from Aleph, SpringMinh, myrtille, Merlyn and lugunium!
+Thanks to Snip for actually making sure I see the bugs :)
 
 
 

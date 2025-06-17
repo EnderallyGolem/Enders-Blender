@@ -56,7 +56,13 @@ namespace Celeste.Mod.EndHelper.Utils
             seemlessRespawn = EndHelperModule.Settings.GameplayTweaksMenu.SeemlessRespawn;
             if (overrideSeemlessRespawn != null)
             { seemlessRespawn = overrideSeemlessRespawn.Value; }
-            else if (seemlessRespawn != SeemlessRespawnEnum.Disabled) { EndHelperModule.Session.usedGameplayTweaks = true; }
+            else if (seemlessRespawn != SeemlessRespawnEnum.Disabled) {
+                EndHelperModule.Session.usedGameplayTweaks["seemlessrespawn_minor"] = true;
+                if (seemlessRespawn == SeemlessRespawnEnum.EnabledKeepState)
+                {
+                    EndHelperModule.Session.usedGameplayTweaks["seemlessrespawn_keepstate"] = true;
+                }
+            }
         }
 
         internal static void UpdateSeemlessRespawnOverride(String overrideSeemlessRespawnString, int overrideSeemlessRespawnDelay)
@@ -415,6 +421,11 @@ namespace Celeste.Mod.EndHelper.Utils
 
         static void SeemlessRespawnCamera(Level level, Player player, Vector2 initialPos, Vector2 finalPos, float timeSeconds)
         {
+            if (player is null)
+            {
+                return;
+            }
+
             Vector2 currentCameraPos = initialPos;
             Tween tween = Tween.Create(Tween.TweenMode.Oneshot, Ease.SineInOut, timeSeconds, start: true);
             tween.OnUpdate = delegate (Tween t) 
@@ -508,6 +519,10 @@ namespace Celeste.Mod.EndHelper.Utils
                             if (staticMowerEntity is DeathHandlerRespawnPoint respawnPoint)
                             {
                                 respawnPoint.Add(new DeathBypass(requireFlag, showVisuals, respawnPoint.entityID));
+                            }
+                            else if (staticMowerEntity is DeathHandlerChangeRespawnRegion changeRespawnRegion)
+                            {
+                                changeRespawnRegion.Add(new DeathBypass(requireFlag, showVisuals, changeRespawnRegion.entityID));
                             }
                             else
                             {
