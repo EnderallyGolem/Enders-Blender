@@ -95,6 +95,8 @@ namespace Celeste.Mod.EndHelper.Utils
 
         public static void BeforePlayerDeath(Player player)
         {
+            //Logger.Log(LogLevel.Info, "EndHelper/Utils_DeathHandler", $"BeforePlayerDeath ran!");
+
             // Set seemless respawn details
             UpdateSeemlessRespawn();
             Level level = player.SceneAs<Level>();
@@ -172,6 +174,8 @@ namespace Celeste.Mod.EndHelper.Utils
         // Aka on respawn
         public static void AfterPlayerDeath(Player player)
         {
+            //Logger.Log(LogLevel.Info, "EndHelper/Utils_DeathHandler", $"AfterPlayerDeath ran!");
+
             Level level = player.SceneAs<Level>();
 
             // Deglobal-ise DeathBypass entities. Remove it from the DoNotLoad list.
@@ -236,6 +240,7 @@ namespace Celeste.Mod.EndHelper.Utils
 
         internal static void OnPlayerDeathSkip(Player player)
         {
+            //Logger.Log(LogLevel.Info, "EndHelper/Utils_DeathHandler", $"OnPlayerDeathSkip ran: About to ReloadRoomSeemlesly.");
             Level level = player.SceneAs<Level>();
             ReloadRoomSeemlessly(level, ReloadRoomSeemlesslyEffect.Death);
         }
@@ -258,7 +263,8 @@ namespace Celeste.Mod.EndHelper.Utils
         public enum ReloadRoomSeemlesslyEffect { None, Wipe, Warp, Death }
         public static void ReloadRoomSeemlessly(Level level, ReloadRoomSeemlesslyEffect effect = ReloadRoomSeemlesslyEffect.None)
         {
-            if (level.Tracker.GetEntity<Player>() is Player player && !level.InCutscene && !level.Paused)
+            // Allow reload when paused if it's by player death - since death occurs when (un)pause(ing) when clicking retry
+            if (level.Tracker.GetEntity<Player>() is Player player && (!level.InCutscene && !level.Paused || effect == ReloadRoomSeemlesslyEffect.Death))
             {
                 level.OnEndOfFrame += delegate
                 {

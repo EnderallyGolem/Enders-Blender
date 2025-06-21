@@ -312,7 +312,7 @@ endhelper_credits={~}Additional credits:{/~}
 The sprites for the Room-Swap Map, Map Upgrade, Transition Box, and Grab Recast Icon were made by Pakyjenace.
 A lot of code was blatantly plagur-{0.5} i mean modified from SpeedrunTools, VivHelper, DeathTracker, Maddie's Helping Hand, and ChronoHelper.
 Obtaining of entity ids was done with the help of paulzd.
-Thanks to bug reports and testing from Aleph, SpringMinh, myrtille, Merlyn and lugunium!
+Thanks to bug reports and testing from Aleph, SpringMinh, myrtille, Merlyn, lugunium and Dexy!
 Thanks to Snip for actually making sure I see the bugs :)
 
 

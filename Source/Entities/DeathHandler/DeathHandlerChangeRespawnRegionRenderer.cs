@@ -3,14 +3,15 @@
 // Decompiled with ICSharpCode.Decompiler 8.2.0.7535
 #endregion
 
+using Celeste.Mod.EndHelper.Entities.DeathHandler;
+using Celeste.Mod.EndHelper.Utils;
+using CelesteMod.Publicizer;
+using Microsoft.Xna.Framework;
+using Monocle;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using Celeste.Mod.EndHelper.Entities.DeathHandler;
-using CelesteMod.Publicizer;
-using Microsoft.Xna.Framework;
-using Monocle;
 
 namespace Celeste;
 
@@ -22,26 +23,24 @@ public class DeathHandlerChangeRespawnRegionRenderer : Entity
         public DeathHandlerChangeRespawnRegion Parent;
 
         public bool Visible;
-
         public Vector2 A;
-
         public Vector2 B;
-
         public Vector2 Min;
-
         public Vector2 Max;
-
         public Vector2 Normal;
-
         public Vector2 Perpendicular;
-
         public float[] Wave;
-
         public float Length;
 
+        public bool fullReset;
+        public bool killOnEnter;
+
         [MethodImpl(MethodImplOptions.NoInlining)]
-        public Edge(DeathHandlerChangeRespawnRegion parent, Vector2 a, Vector2 b)
+        public Edge(DeathHandlerChangeRespawnRegion parent, Vector2 a, Vector2 b, bool fullReset, bool killOnEnter)
         {
+            this.fullReset = fullReset;
+            this.killOnEnter = killOnEnter;
+
             Parent = parent;
             Visible = true;
             A = a;
@@ -101,7 +100,7 @@ public class DeathHandlerChangeRespawnRegionRenderer : Entity
     [MethodImpl(MethodImplOptions.NoInlining)]
     public DeathHandlerChangeRespawnRegionRenderer()
     {
-        base.Tag = (int)Tags.Global | (int)Tags.TransitionUpdate;
+        base.Tag = (int)Tags.TransitionUpdate;
         base.Depth = 0;
         Add(new CustomBloom(OnRenderBloom));
     }
@@ -232,7 +231,7 @@ public class DeathHandlerChangeRespawnRegionRenderer : Entity
 
                             Vector2 a = new Vector2(point3.X, point3.Y) * 8f + vector - item.Position;
                             Vector2 b = new Vector2(point4.X, point4.Y) * 8f + vector - item.Position;
-                            edges.Add(new Edge(item, a, b));
+                            edges.Add(new Edge(item, a, b, item.fullReset, item.killOnEnter));
                         }
                     }
                 }
@@ -277,39 +276,66 @@ public class DeathHandlerChangeRespawnRegionRenderer : Entity
     [MethodImpl(MethodImplOptions.NoInlining)]
     public override void Render()
     {
-        if (list.Count <= 0)
-        {
-            return;
-        }
+        Level level = SceneAs<Level>();
 
         Color color = Color.White * 0.15f;
         Color value = Color.White * 0.25f;
-        foreach (DeathHandlerChangeRespawnRegion item in list)
-        {
-            if (item.Visible)
-            {
-                Draw.Rect(item.Collider, color);
-            }
-        }
 
-        if (edges.Count <= 0)
+        if (list.Count == 0 && edges.Count == 0)
         {
             return;
         }
 
-        foreach (Edge edge in edges)
+
+        // Check if rendering is necessary
+        bool fullResetFalse = false;
+        bool fullResetTrue = false;
+        bool killOnEnterFalse = false;
+        bool killOnEnterTrue = false;
+
+        foreach (DeathHandlerChangeRespawnRegion item in list)
         {
-            if (edge.Visible)
+            if (item.fullReset == false) fullResetFalse = true;
+            if (item.fullReset == true) fullResetTrue = true;
+            if (item.killOnEnter == false) killOnEnterFalse = true;
+            if (item.killOnEnter == true) killOnEnterTrue = true;
+        }
+
+        if (fullResetTrue && killOnEnterTrue) RenderSet(true, true);
+        if (fullResetTrue && killOnEnterFalse) RenderSet(true, false);
+        if (fullResetFalse && killOnEnterTrue) RenderSet(false, true);
+        if (fullResetFalse && killOnEnterFalse) RenderSet(false, false);
+
+        void RenderSet(bool fullReset, bool killOnEnter)
+        {
+            Color insideColour = fullReset ? Color.Red : Color.Green;
+            Color outlineColour = killOnEnter ? Color.Red : Color.Green;
+
+            RespawnRipple.BeginEntityRender(level, insideColour, outlineColour); // Begin applying respawn ripple effect
+
+            foreach (DeathHandlerChangeRespawnRegion item in list)
             {
-                Vector2 vector = edge.Parent.Position + edge.A;
-                _ = edge.Parent.Position + edge.B;
-                Color.Lerp(value, Color.White, edge.Parent.Flash);
-                for (int i = 0; (float)i <= edge.Length; i++)
+                if (item.Visible && item.fullReset == fullReset && item.killOnEnter == killOnEnter)
                 {
-                    Vector2 vector2 = vector + edge.Normal * i;
-                    Draw.Line(vector2, vector2 + edge.Perpendicular * edge.Wave[i], color);
+                    Draw.Rect(item.Collider, color);
                 }
             }
+
+            foreach (Edge edge in edges)
+            {
+                if (edge.Visible && edge.fullReset == fullReset && edge.killOnEnter == killOnEnter)
+                {
+                    Vector2 vector = edge.Parent.Position + edge.A;
+                    _ = edge.Parent.Position + edge.B;
+                    Color.Lerp(value, Color.White, edge.Parent.Flash);
+                    for (int i = 0; (float)i <= edge.Length; i++)
+                    {
+                        Vector2 vector2 = vector + edge.Normal * i;
+                        Draw.Line(vector2, vector2 + edge.Perpendicular * edge.Wave[i], color);
+                    }
+                }
+            }
+            RespawnRipple.EndEntityRender(level); // End applying respawn ripple effect
         }
     }
 }

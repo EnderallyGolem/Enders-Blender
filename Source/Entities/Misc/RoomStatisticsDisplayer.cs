@@ -32,10 +32,9 @@ using Microsoft.Xna.Framework.Graphics;
 namespace Celeste.Mod.EndHelper.Entities.Misc;
 
 [Tracked(true)]
-[CustomEntity("EndHelper/RoomStatisticsDisplayer")]
+//[CustomEntity("EndHelper/RoomStatisticsDisplayer")]
 public class RoomStatisticsDisplayer : Entity
 {
-
     #region Initialisation
 
     private string clipboardText = "";
@@ -54,6 +53,8 @@ public class RoomStatisticsDisplayer : Entity
 
     internal static bool hideIfGoldenStrawberryEnabled = false;
     internal static bool renameRoomsMoveRooms = false;
+
+    private bool hasUpdatedOnce = false;
 
     public RoomStatisticsDisplayer(Level level)
     {
@@ -220,8 +221,6 @@ public class RoomStatisticsDisplayer : Entity
     {
         // Keep these updated!
         Level level = SceneAs<Level>();
-
-
         EnsureDictsHaveKey(level);
 
         // Don't update this when map is completed, otherwise the stats may change upon collecting heart
@@ -312,6 +311,8 @@ public class RoomStatisticsDisplayer : Entity
 
         base.Update();
         // MInput.Disabled = false;
+
+        hasUpdatedOnce = true;
     }
 
     void MenuCloseNameEditor()
@@ -331,13 +332,13 @@ public class RoomStatisticsDisplayer : Entity
 
     public override void Render()
     {
+        if (!hasUpdatedOnce) return;
+
+        //Logger.Log(LogLevel.Info, "EndHelper/RoomStatisticsDisplayer", $"Render - currentRoomName {currentRoomName} effroomname {currentEffectiveRoomName}");
         Level level = SceneAs<Level>();
         EnsureDictsHaveKey(level);
 
-        if (statisticsGuiOpen)
-        {
-            statisticGUI();
-        }
+        if (statisticsGuiOpen) StatisticGUI();
 
         // Text Display
         int displayXPos = 15 + EndHelperModule.Settings.RoomStatDisplayMenu.OffsetX * 8;
@@ -551,7 +552,7 @@ public class RoomStatisticsDisplayer : Entity
     private int firstRowShown = 0;
     int editingRoomIndex = -1;
     string editingRoomName = null;
-    void statisticGUI()
+    void StatisticGUI()
     {
         Level level = SceneAs<Level>();
         Session session = level.Session;
@@ -597,12 +598,11 @@ public class RoomStatisticsDisplayer : Entity
 
         foreach (string roomName in new ArrayList(allRoomsList))
         {
-            if (roomName == "")
-            {
-                RemoveRoomData("", true, true);
-                continue;
-            }
-
+            //if (roomName == "")
+            //{
+            //    RemoveRoomData("", true, true);
+            //    continue;
+            //}
             int roomDeaths;
             TimeSpan roomTimeSpan;
             int roomStrawberriesCollected;
@@ -1286,6 +1286,7 @@ public class RoomStatisticsDisplayer : Entity
     public void EnsureDictsHaveKey(Level level, String roomName = null, DictsHaveKeyType dictsHaveKeyType = DictsHaveKeyType.All)
     {
         roomName ??= currentEffectiveRoomName;
+        if (roomName == "") return;
 
         // Custom Names are seperated as additional extra keys can be stored
         // Strawberries are seperated as they are undone during load state unlike the rest.
@@ -1317,7 +1318,7 @@ public class RoomStatisticsDisplayer : Entity
 
         // All the first clear stuff
         // This is dealWithFirstClear without the "ensure dictionary has required roomnames" part. Since *this* is responsible for having required roomnames.
-        bool canAddMapAsFirstCycle = EndHelperModule.Settings.RoomStatMenu.MenuTrackerStorageCount != 0 && !SaveData.Instance.Areas_Safe[level.Session.Area.ID].Modes[(int)level.Session.Area.Mode].Completed;
+        bool canAddMapAsFirstCycle = EndHelperModule.Settings.RoomStatMenu.MenuTrackerStorageCount != 0 && !SaveData.Instance.Areas_Safe[level.Session.Area.ID].Modes[(int)level.Session.Area.Mode].Completed && EndHelperModule.SaveData.mapDict_roomStat_firstClear_roomOrder.ContainsKey(mapNameSide_Internal);
 
         if (dictsHaveKeyType == DictsHaveKeyType.All)
         {
@@ -1632,10 +1633,22 @@ public class RoomStatisticsDisplayer : Entity
 
         if (removeFromFirstClear)
         {
-            EndHelperModule.SaveData.mapDict_roomStat_firstClear_roomOrder[mapNameSide_Internal].Remove(roomName);
-            EndHelperModule.SaveData.mapDict_roomStat_firstClear_death[mapNameSide_Internal].Remove(roomName);
-            EndHelperModule.SaveData.mapDict_roomStat_firstClear_timer[mapNameSide_Internal].Remove(roomName);
-            EndHelperModule.SaveData.mapDict_roomStat_firstClear_strawberries[mapNameSide_Internal].Remove(roomName);
+            if (EndHelperModule.SaveData.mapDict_roomStat_firstClear_roomOrder.TryGetValue(mapNameSide_Internal, out List<string> roomOrderDict))
+            {
+                roomOrderDict.Remove(roomName);
+            }
+            if (EndHelperModule.SaveData.mapDict_roomStat_firstClear_death.TryGetValue(mapNameSide_Internal, out Dictionary<string, int> deathDict))
+            {
+                deathDict.Remove(roomName);
+            }
+            if (EndHelperModule.SaveData.mapDict_roomStat_firstClear_timer.TryGetValue(mapNameSide_Internal, out Dictionary<string, long> timerDict))
+            {
+                timerDict.Remove(roomName);
+            }
+            if (EndHelperModule.SaveData.mapDict_roomStat_firstClear_strawberries.TryGetValue(mapNameSide_Internal, out Dictionary<string, int> strawDict))
+            {
+                strawDict.Remove(roomName);
+            }
         }
     }
 

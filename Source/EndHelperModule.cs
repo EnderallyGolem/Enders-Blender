@@ -294,6 +294,9 @@ public class EndHelperModule : EverestModule {
             timeSinceSessionReset = 0;
             lastSessionResetCause = SessionResetCause.ReenterMap;
 
+            // Clear old session data. There shouldn't be any, but sometimes the game weird
+            Utils_JournalStatistics.ResetSessionDicts();
+
             // Handle savedata dicts. This requires fromSaveData as that is AFTER the session is made.
             SetupRoomTrackerSaveDataDicts(session);
 
@@ -302,15 +305,23 @@ public class EndHelperModule : EverestModule {
             // +1 death for save and quit. The reason why this is done here instead of everest onexit event is because
             // as far as I can tell saving and returning to lobby with collabutil saves the session before onexit runs.
 
-            // This is done manually here to avoid touching RoomStatisticsDisplayer. Because this runs before the entity is loaded.
-
-            EndHelperModule.Session.roomStatDict_death[roomName] = Convert.ToInt32(EndHelperModule.Session.roomStatDict_death[roomName]) + 1;
-            String mapNameSide_Internal = GetMapNameSideInternal(session.Area);
-
-            bool dealWithFirstCycle = EndHelperModule.Settings.RoomStatMenu.MenuTrackerStorageCount != 0 && !global::Celeste.SaveData.Instance.Areas_Safe[session.Area.ID].Modes[(int)session.Area.Mode].Completed && EndHelperModule.SaveData.mapDict_roomStat_firstClear_roomOrder.ContainsKey(mapNameSide_Internal);
-            if (dealWithFirstCycle && EndHelperModule.SaveData.mapDict_roomStat_firstClear_death.ContainsKey(mapNameSide_Internal) && EndHelperModule.SaveData.mapDict_roomStat_firstClear_death[mapNameSide_Internal].ContainsKey(roomName))
+            try
             {
-                EndHelperModule.SaveData.mapDict_roomStat_firstClear_death[mapNameSide_Internal][roomName]++;
+                bool completedMapBefore = global::Celeste.SaveData.Instance.Areas_Safe[session.Area.ID].Modes[(int)session.Area.Mode].Completed;
+
+                // This is done manually here to avoid touching RoomStatisticsDisplayer. Because this runs before the entity is loaded.
+                EndHelperModule.Session.roomStatDict_death[roomName] = Convert.ToInt32(EndHelperModule.Session.roomStatDict_death[roomName]) + 1;
+                String mapNameSide_Internal = GetMapNameSideInternal(session.Area);
+
+                bool dealWithFirstCycle = EndHelperModule.Settings.RoomStatMenu.MenuTrackerStorageCount != 0 && !completedMapBefore && EndHelperModule.SaveData.mapDict_roomStat_firstClear_roomOrder.ContainsKey(mapNameSide_Internal);
+                if (dealWithFirstCycle && EndHelperModule.SaveData.mapDict_roomStat_firstClear_death.ContainsKey(mapNameSide_Internal) && EndHelperModule.SaveData.mapDict_roomStat_firstClear_death[mapNameSide_Internal].ContainsKey(roomName))
+                {
+                    EndHelperModule.SaveData.mapDict_roomStat_firstClear_death[mapNameSide_Internal][roomName]++;
+                }
+            }
+            catch (Exception e)
+            {
+                Logger.Log(LogLevel.Warn, "EndHelper/main", $"EnterMapFunc threw an error:\n{e}\nMost likely this is because the map can't be found, because the mod for it isn't loaded. If it isn't then there is an issue I have to fix :(");
             }
         }
     }
@@ -660,7 +671,7 @@ public class EndHelperModule : EverestModule {
         // Quick Restart Keybind
         bool forceCloseMenuAfter = false;
         {
-            if (EndHelperModule.Settings.QuickRetry.Button.Pressed && level.Tracker.GetEntity<Player>() is Player player && !level.Paused && level.CanPause && level.CanRetry)
+            if (EndHelperModule.Settings.QuickRetry.Button.Pressed && level.Tracker.GetEntity<Player>() is Player player && !level.Paused && level.CanPause && level.CanRetry && !player.Dead && !level.InCutscene)
             {
                 if (level.Session.GrabbedGolden)
                 {
@@ -721,6 +732,12 @@ public class EndHelperModule : EverestModule {
             {
                 Input.UpdateGrab(); // If NothingIfGrab and Toggle Grab, LOCK THIS during toggleify. (Locking being just update twice)
             }
+        }
+
+        // Tick up Respawn Ripple Shader
+        if (RespawnRipple.enableShader)
+        {
+            RespawnRipple.UpdateRipples(self);
         }
 
         orig(self);

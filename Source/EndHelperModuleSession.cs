@@ -47,7 +47,7 @@ public class EndHelperModuleSession : EverestModuleSession
     public int framesSinceRespawn = 0;
 
     // If false, screen transitions do not move the player. Used in multi-room binos
-    internal bool allowScreenTransitionMovement = true;
+    public bool allowScreenTransitionMovement = true;
 
 
     // Gameplay Tweaks

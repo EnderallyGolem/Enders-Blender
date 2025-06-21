@@ -535,21 +535,21 @@ namespace Celeste.Mod.EndHelper.Utils
                 if (roomName == "") { continue; }
                 int roomDeaths;
                 TimeSpan roomTimeSpan;
-                int roomStrawberriesCollected;
+                int roomStrawberriesCollected = 0;
 
                 if (journalRoomStatMenuType == journalRoomStatMenuTypeEnum.FirstClear)
                 {
                     // Show First Cycle
                     roomDeaths = EndHelperModule.SaveData.mapDict_roomStat_firstClear_death[mapNameSide_Internal][roomName];
                     roomTimeSpan = TimeSpan.FromTicks(EndHelperModule.SaveData.mapDict_roomStat_firstClear_timer[mapNameSide_Internal][roomName]);
-                    roomStrawberriesCollected = EndHelperModule.SaveData.mapDict_roomStat_firstClear_strawberries[mapNameSide_Internal][roomName];
+                    EndHelperModule.SaveData.mapDict_roomStat_firstClear_strawberries[mapNameSide_Internal].TryGetValue(roomName, out roomStrawberriesCollected);
                 }
                 else
                 {
                     // Show last session
                     roomDeaths = EndHelperModule.SaveData.mapDict_roomStat_latestSession_death[mapNameSide_Internal][roomName];
                     roomTimeSpan = TimeSpan.FromTicks(EndHelperModule.SaveData.mapDict_roomStat_latestSession_timer[mapNameSide_Internal][roomName]);
-                    roomStrawberriesCollected = EndHelperModule.SaveData.mapDict_roomStat_latestSession_strawberries[mapNameSide_Internal][roomName];
+                    EndHelperModule.SaveData.mapDict_roomStat_latestSession_strawberries[mapNameSide_Internal].TryGetValue(roomName, out roomStrawberriesCollected);
                 }
                 string roomTimeString = Utils_General.MinimalGameplayFormat(roomTimeSpan);
 
@@ -646,21 +646,21 @@ namespace Celeste.Mod.EndHelper.Utils
                 int roomDeaths;
                 long roomTimeTicks;
                 TimeSpan roomTimeSpan;
-                int roomStrawberriesCollected;
+                int roomStrawberriesCollected = 0;
 
                 if (journalRoomStatMenuType == journalRoomStatMenuTypeEnum.FirstClear)
                 {
                     // Show First Cycle
                     roomDeaths = EndHelperModule.SaveData.mapDict_roomStat_firstClear_death[mapNameSide_Internal][roomName];
                     roomTimeTicks = EndHelperModule.SaveData.mapDict_roomStat_firstClear_timer[mapNameSide_Internal][roomName];
-                    roomStrawberriesCollected = EndHelperModule.SaveData.mapDict_roomStat_firstClear_strawberries[mapNameSide_Internal][roomName];
+                    EndHelperModule.SaveData.mapDict_roomStat_firstClear_strawberries[mapNameSide_Internal].TryGetValue(roomName, out roomStrawberriesCollected);
                 }
                 else
                 {
                     // Show current stats
                     roomDeaths = EndHelperModule.SaveData.mapDict_roomStat_latestSession_death[mapNameSide_Internal][roomName];
                     roomTimeTicks = EndHelperModule.SaveData.mapDict_roomStat_latestSession_timer[mapNameSide_Internal][roomName];
-                    roomStrawberriesCollected = EndHelperModule.SaveData.mapDict_roomStat_latestSession_strawberries[mapNameSide_Internal][roomName];
+                    EndHelperModule.SaveData.mapDict_roomStat_latestSession_strawberries[mapNameSide_Internal].TryGetValue(roomName, out roomStrawberriesCollected);
                 }
                 roomTimeSpan = TimeSpan.FromTicks(roomTimeTicks);
                 string roomTimeString = Utils_General.MinimalGameplayFormat(roomTimeSpan);
@@ -1021,6 +1021,19 @@ namespace Celeste.Mod.EndHelper.Utils
                 MInput.Disabled = true;
             }
         }
+
+        internal static void ResetSessionDicts(bool statOnly = false)
+        {
+            EndHelperModule.Session.roomStatDict_death.Clear();
+            EndHelperModule.Session.roomStatDict_strawberries.Clear();
+            EndHelperModule.Session.roomStatDict_timer.Clear();
+            if (!statOnly)
+            {
+                EndHelperModule.Session.roomStatDict_colorIndex.Clear();
+                EndHelperModule.Session.roomStatDict_customName.Clear();
+                EndHelperModule.Session.roomStatDict_fuseRoomRedirect.Clear();
+            }
+        } 
 
         public static void EditingRoomMovePosition(int initialPosIndex, int finalPosIndex, string mapNameSide_Internal, journalRoomStatMenuTypeEnum? menuType)
         {

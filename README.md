@@ -68,6 +68,13 @@ These are shown in the end-screen. Some of these can be overridden per-map with 
     - If the seed depends on the relative position in the room
 - Option to be breakable
 
+
+## 1.1.6 changelog:
+	- Fixed crash when trying to enter an unloaded map
+	- Fixed crash from having tracker storage size set to 0, then increased mid-level
+	- Fixed crash from checking an empty nonexistent room (i don't really know what causes this but i know how to fix it yay)
+	- Fixed the issue of a previous session room sometimes showing up in the stats tracker
+
 ## 1.1.5 changelog:
 - Updated to NET 8.0
 

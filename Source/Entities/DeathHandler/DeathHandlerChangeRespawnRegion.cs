@@ -18,6 +18,14 @@ public class DeathHandlerChangeRespawnRegion : Solid
     public bool Flashing;
     internal EntityID entityID;
 
+    internal bool checkSolid = true;
+    internal bool attachable = true;
+    internal bool fullReset = false;
+    internal bool killOnEnter = false;
+
+    internal bool visibleArea = true;
+    internal bool visibleTarget = true;
+
     [MethodImpl(MethodImplOptions.NoInlining)]
     public DeathHandlerChangeRespawnRegion(Vector2 position, float width, float height)
         : base(position, width, height, safe: false)
@@ -29,6 +37,14 @@ public class DeathHandlerChangeRespawnRegion : Solid
     public DeathHandlerChangeRespawnRegion(EntityData data, Vector2 offset, EntityID id)
         : this(data.Position + offset, data.Width, data.Height)
     {
+        this.checkSolid = data.Bool("checkSolid", true);
+        this.attachable = data.Bool("attachable", true);
+        this.fullReset = data.Bool("fullReset", false);
+        this.killOnEnter = data.Bool("killOnEnter", false);
+
+        this.visibleArea = data.Bool("visibleArea", true);
+        this.visibleTarget = data.Bool("visibleTarget", true);
+
         entityID = id;
     }
 
@@ -53,7 +69,10 @@ public class DeathHandlerChangeRespawnRegion : Solid
     public override void Removed(Scene scene)
     {
         base.Removed(scene);
-        scene.Tracker.GetEntity<DeathHandlerChangeRespawnRegionRenderer>().Untrack(this);
+        if (scene.Tracker.CountEntities<DeathHandlerChangeRespawnRegionRenderer>() > 0)
+        {
+            scene.Tracker.GetEntity<DeathHandlerChangeRespawnRegionRenderer>().Untrack(this);
+        }
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
@@ -74,7 +93,6 @@ public class DeathHandlerChangeRespawnRegion : Solid
     [MethodImpl(MethodImplOptions.NoInlining)]
     public override void Render()
     {
-        // TO-DO: replace this with very cool shader small-ripple effect
         if (!IsVisible())
         {
             return;
