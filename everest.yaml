@@ -1,6 +1,6 @@
 - DLL: bin/EndHelper.dll
   Name: EndersBlender
-  Version: 1.1.6
+  Version: 1.1.7
   Dependencies:
     - Name: Everest
       Version: 1.5577.0

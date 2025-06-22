@@ -598,11 +598,11 @@ public class RoomStatisticsDisplayer : Entity
 
         foreach (string roomName in new ArrayList(allRoomsList))
         {
-            //if (roomName == "")
-            //{
-            //    RemoveRoomData("", true, true);
-            //    continue;
-            //}
+            if (roomName == "")
+            {
+                RemoveRoomData("", true, true);
+                continue;
+            }
             int roomDeaths;
             TimeSpan roomTimeSpan;
             int roomStrawberriesCollected;

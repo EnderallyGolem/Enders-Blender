@@ -69,7 +69,7 @@ These are shown in the end-screen. Some of these can be overridden per-map with 
 - Option to be breakable
 
 
-## 1.1.6 changelog:
+## 1.1.7 changelog:
 	- Fixed crash when trying to enter an unloaded map
 	- Fixed crash from having tracker storage size set to 0, then increased mid-level
 	- Fixed crash from checking an empty nonexistent room (i don't really know what causes this but i know how to fix it yay)
@@ -82,7 +82,6 @@ These are shown in the end-screen. Some of these can be overridden per-map with 
 	- Tweaks are now tracked individually, and each used gameplay tweak is shown in the endscreen.
 	- Added a Backboost keybind.
 	- Modified Neutral Drop keybind so it sets MoveY to 1 and throws, so it should be more akin to pressing down for 1 frame and throwing.
-
 		
 ## 1.1.4 changelog:
 - patch for viewing journal stats in some maps
