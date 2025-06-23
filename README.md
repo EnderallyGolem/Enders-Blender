@@ -69,7 +69,7 @@ These are shown in the end-screen. Some of these can be overridden per-map with 
 - Option to be breakable
 
 
-## 1.1.7 changelog:
+## 1.1.8 changelog:
 	- Fixed crash when trying to enter an unloaded map
 	- Fixed crash from having tracker storage size set to 0, then increased mid-level
 	- Fixed crash from checking an empty nonexistent room (i don't really know what causes this but i know how to fix it yay)

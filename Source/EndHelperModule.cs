@@ -295,7 +295,12 @@ public class EndHelperModule : EverestModule {
             lastSessionResetCause = SessionResetCause.ReenterMap;
 
             // Clear old session data. There shouldn't be any, but sometimes the game weird
-            Utils_JournalStatistics.ResetSessionDicts();
+
+            if (EndHelperModule.Session.roomStatDict_mapNameSide_Internal != GetMapNameSideInternal(session.Area))
+            {
+                Logger.Log(LogLevel.Warn, "EndHelper/main", $"EnterMapFunc: Session data mismatch: Current data is for {EndHelperModule.Session.roomStatDict_mapNameSide_Internal}, trying to load session data for {GetMapNameSideInternal(session.Area)}. Removing room stat data from the session!");
+                Utils_JournalStatistics.ResetSessionDicts();
+            }
 
             // Handle savedata dicts. This requires fromSaveData as that is AFTER the session is made.
             SetupRoomTrackerSaveDataDicts(session);

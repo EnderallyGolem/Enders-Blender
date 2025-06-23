@@ -71,6 +71,8 @@ public class RoomStatisticsDisplayer : Entity
         mapNameSide_Display = GetMapNameSideDisplay(session.Area);
         mapNameSide_Internal = GetMapNameSideInternal(session.Area);
         mapNameColor = GetMapColour(session.Area);
+
+        EndHelperModule.Session.roomStatDict_mapNameSide_Internal = mapNameSide_Internal; // Store mapNameSide of map into session - for error reference
     }
 
     public override void Awake(Scene scene)
