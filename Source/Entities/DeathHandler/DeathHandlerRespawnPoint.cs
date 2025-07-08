@@ -15,14 +15,14 @@ namespace Celeste.Mod.EndHelper.Entities.DeathHandler;
 [CustomEntity("EndHelper/DeathHandlerRespawnPoint")]
 public class DeathHandlerRespawnPoint : Entity
 {
-    internal bool faceLeft = false; // Handled in EndHelperModule OnPlayerSpawnFunc everest event.
-    private bool visible = true;
-    private bool attachable = true;
-    private bool fullReset = false;
-    private string requireFlag = "";
+    internal readonly bool faceLeft = false; // Handled in EndHelperModule OnPlayerSpawnFunc everest event.
+    private readonly bool visible = true;
+    private readonly bool attachable = true;
+    internal readonly bool fullReset = false;
+    private readonly string requireFlag = "";
 
-    private MTexture currentSpawnpointTexture;
-    private MTexture inactiveTexture;
+    private readonly MTexture currentSpawnpointTexture;
+    private readonly MTexture inactiveTexture;
     private Image displayImage;
 
     const int width = 16;
@@ -121,39 +121,72 @@ public class DeathHandlerRespawnPoint : Entity
 
 
         // Set to active if spawnpoint is there, else inactive
-        if ( !disabled && (entityPosSpawnPoint == level.Session.RespawnPoint || entityPosSpawnPointPrevious == level.Session.RespawnPoint) )
+        bool currentPointIsSpawnpoint = false;
+        if (!disabled)
         {
-            ChangeActiveness(true);
-            level.Session.RespawnPoint = entityPosSpawnPoint;
-
-            if (fullReset)
+            if (entityPosSpawnPoint == level.Session.RespawnPoint || entityPosSpawnPointPrevious == level.Session.RespawnPoint)
             {
-                Utils_DeathHandler.lastFullResetPos = level.Session.RespawnPoint;
+                if (level.Tracker.GetEntity<Player>() is Player player && player.Components.Get<DeathBypass>() is DeathBypass deathBypass && deathBypass.bypass
+                    && !fullReset)
+                {
+                    // If player has deathbypass and this isn't full reset, respawn point is at the player. Don't show as active.
+                    ChangeActiveness(false);
+                }
+                else
+                {
+                    ChangeActiveness(true);
+                }
+                level.Session.RespawnPoint = entityPosSpawnPoint;
+                if (fullReset)
+                {
+                    Utils_DeathHandler.SetFullResetPos(level.Session.RespawnPoint);
+                }
+
+                UpdateMarkerDirections(level);
+                currentPointIsSpawnpoint = true;
             }
 
-            // If using a DeathHandlerRespawnMarker, set its direction 
-            foreach (DeathHandlerRespawnMarker respawnMarker in level.Tracker.GetEntities<DeathHandlerRespawnMarker>())
+            else if (fullReset && entityPosSpawnPoint == EndHelperModule.Session.lastFullResetPos || entityPosSpawnPointPrevious == EndHelperModule.Session.lastFullResetPos)
             {
-                respawnMarker.faceLeft = faceLeft;
-                respawnMarker.UpdateSprite();
-                
-                // If moving and Marker is near, lock position
-                if (entityPosSpawnPoint != entityPosSpawnPointPrevious && respawnMarker.previousDistanceBetweenPosAndTarget <= 8)
-                {
-                    respawnMarker.Position = respawnMarker.ConvertSpawnPointPosToActualPos(entityPosSpawnPoint);
-                }
+                // Special case for full Reset: Lets the lastFullResetPos update even if currently not the spawnpoint
+                Utils_DeathHandler.SetFullResetPos(entityPosSpawnPoint);
             }
         }
-        else
+        if (!currentPointIsSpawnpoint)
         {
             ChangeActiveness(false);
         }
     }
-    private void UpdatePositionVectors(bool firstUpdate = false)
+
+    private void UpdateMarkerDirections(Level level)
     {
+        // If using a DeathHandlerRespawnMarker, set its direction 
+        foreach (DeathHandlerRespawnMarker respawnMarker in level.Tracker.GetEntities<DeathHandlerRespawnMarker>())
+        {
+            respawnMarker.faceLeft = faceLeft;
+            respawnMarker.UpdateSprite();
+
+            // If moving and Marker is near, lock position
+            if (entityPosSpawnPoint != entityPosSpawnPointPrevious && respawnMarker.previousDistanceBetweenPosAndTarget <= 8 && respawnMarker.previousDistanceBetweenPosAndTarget != 0 && !DeathHandlerRespawnMarker.attachedToPlayer)
+            {
+                respawnMarker.Position = respawnMarker.ConvertSpawnPointPosToActualPos(entityPosSpawnPoint);
+            }
+        }
+    }
+
+    private void UpdatePositionVectors(bool firstUpdate = false, bool allowInvalid = false)
+    {
+        Level level = SceneAs<Level>();
+
+        Rectangle respawnPointCheckRect = this.HitRect(width, height);
+
         entityPosCenter = new Vector2(Position.X + width / 2, Position.Y);
         entityPosSpawnPointPrevious = entityPosSpawnPoint;
-        entityPosSpawnPoint = new Vector2(Position.X, Position.Y + height/2 - 1);
+
+        // Do not update entityPosSpawnPoint if it is in an invalid respawn spot
+        if (firstUpdate == false && !Utils_DeathHandler.NoSolidCheck(level, respawnPointCheckRect, !allowInvalid, inflate: -4)) return;
+
+        entityPosSpawnPoint = new Vector2(Position.X, Position.Y + height / 2 - 1);
         if (firstUpdate)
         {
             entityPosSpawnPointPrevious = entityPosSpawnPoint;

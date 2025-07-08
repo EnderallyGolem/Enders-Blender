@@ -100,7 +100,7 @@ public class DeathHandlerChangeRespawnRegionRenderer : Entity
     [MethodImpl(MethodImplOptions.NoInlining)]
     public DeathHandlerChangeRespawnRegionRenderer()
     {
-        base.Tag = (int)Tags.TransitionUpdate;
+        base.Tag = (int)Tags.TransitionUpdate | (int)Tags.Persistent;
         base.Depth = 0;
         Add(new CustomBloom(OnRenderBloom));
     }
@@ -146,6 +146,12 @@ public class DeathHandlerChangeRespawnRegionRenderer : Entity
         }
 
         dirty = true;
+    }
+
+    public override void Awake(Scene scene)
+    {
+        base.Awake(scene);
+        Update();
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
@@ -209,6 +215,8 @@ public class DeathHandlerChangeRespawnRegionRenderer : Entity
         };
         foreach (DeathHandlerChangeRespawnRegion item in list)
         {
+            if (!item.Visible) continue;
+
             for (int i = (int)item.X / 8; (float)i < item.Right / 8f; i++)
             {
                 for (int j = (int)item.Y / 8; (float)j < item.Bottom / 8f; j++)
@@ -228,10 +236,11 @@ public class DeathHandlerChangeRespawnRegionRenderer : Entity
                                 point4.X += point2.X;
                                 point4.Y += point2.Y;
                             }
-
                             Vector2 a = new Vector2(point3.X, point3.Y) * 8f + vector - item.Position;
                             Vector2 b = new Vector2(point4.X, point4.Y) * 8f + vector - item.Position;
-                            edges.Add(new Edge(item, a, b, item.fullReset, item.killOnEnter));
+
+                            Edge addEdge = new Edge(item, a, b, item.fullReset, item.killOnEnter);
+                            edges.Add(addEdge);
                         }
                     }
                 }
@@ -249,7 +258,6 @@ public class DeathHandlerChangeRespawnRegionRenderer : Entity
     public void OnRenderBloom()
     {
         Camera camera = (base.Scene as Level).Camera;
-        new Rectangle((int)camera.Left, (int)camera.Top, (int)(camera.Right - camera.Left), (int)(camera.Bottom - camera.Top));
         foreach (DeathHandlerChangeRespawnRegion item in list)
         {
             if (item.Visible)
@@ -279,7 +287,6 @@ public class DeathHandlerChangeRespawnRegionRenderer : Entity
         Level level = SceneAs<Level>();
 
         Color color = Color.White * 0.15f;
-        Color value = Color.White * 0.25f;
 
         if (list.Count == 0 && edges.Count == 0)
         {
@@ -326,8 +333,6 @@ public class DeathHandlerChangeRespawnRegionRenderer : Entity
                 if (edge.Visible && edge.fullReset == fullReset && edge.killOnEnter == killOnEnter)
                 {
                     Vector2 vector = edge.Parent.Position + edge.A;
-                    _ = edge.Parent.Position + edge.B;
-                    Color.Lerp(value, Color.White, edge.Parent.Flash);
                     for (int i = 0; (float)i <= edge.Length; i++)
                     {
                         Vector2 vector2 = vector + edge.Normal * i;

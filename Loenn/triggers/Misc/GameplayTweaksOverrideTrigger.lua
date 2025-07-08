@@ -31,6 +31,7 @@ local GameplayTweaksOverrideTrigger = {
                 {"Enabled - Near Only", "EnabledNear"},
                 {"Enabled - Instant", "EnabledInstant"},
                 {"Enabled - Keep State", "EnabledKeepState"},
+                {"Enabled Except Full Reset", "EnabledExceptFullReset"},
             }
         },
         --seemlessRespawnDelay = { fieldType = "integer", minimumValue = -1, maximumValue = 30 },
@@ -38,7 +39,7 @@ local GameplayTweaksOverrideTrigger = {
     fieldOrder = {
         "x", "y", "height", "width", "editorLayer",
         "requireFlag", "setToDefaultUponLeaving", "activateEnterRoom",
-        "preventDownDashRedirects", "seemlessRespawn", "seemlessRespawnDelay",
+        "preventDownDashRedirects", "seemlessRespawn",
     },
 }
 

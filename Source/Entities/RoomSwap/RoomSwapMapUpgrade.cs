@@ -200,7 +200,7 @@ public class RoomSwapMapUpgrade : Entity
         int waitFrames = 20;
         while (waitFrames > 0)
         {
-            Logger.Log(LogLevel.Info, "EndHelper/RoomSwap/TransitionMapUpgrade", $"ummm wait {waitFrames}");
+            //Logger.Log(LogLevel.Info, "EndHelper/RoomSwapMapUpgrade", $"ummm wait {waitFrames}");
             waitFrames--;
             yield return null;
         }

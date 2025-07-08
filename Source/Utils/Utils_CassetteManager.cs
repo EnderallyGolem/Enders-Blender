@@ -4,14 +4,10 @@ using Monocle;
 using MonoMod.Utils;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Celeste.Mod.EndHelper.Utils
 {
-    internal class Utils_CassetteManager
+    static internal class Utils_CassetteManager
     {
         internal static int ManagerLeadBeatShenanigans(int leadBeatReturn)
         {

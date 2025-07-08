@@ -170,29 +170,9 @@ namespace Celeste.Mod.EndHelper.Entities.Misc
         public override void Render()
         {
             if (entityMover) { return; }
-            int widthInTiles = (int)Collider.Width / 8 - 1;
-            int heightInTiles = (int)Collider.Height / 8 - 1;
 
             Vector2 renderPos = new Vector2(Position.X + Shake.X, Position.Y + Shake.Y);
-            Texture2D baseTexture = texture.Texture.Texture;
-            int clipBaseX = texture.ClipRect.X;
-            int clipBaseY = texture.ClipRect.Y;
-
-            Rectangle clipRect = new Rectangle(clipBaseX, clipBaseY, 8, 8);
-
-            for (int i = 0; i <= widthInTiles; i++)
-            {
-                clipRect.X = clipBaseX + ((i < widthInTiles) ? i == 0 ? 0 : 8 : 16);
-                for (int j = 0; j <= heightInTiles; j++)
-                {
-                    int tilePartY = (j < heightInTiles) ? j == 0 ? 0 : 8 : 16;
-                    clipRect.Y = tilePartY + clipBaseY;
-                    Draw.SpriteBatch.Draw(baseTexture, renderPos, clipRect, Color.White);
-                    renderPos.Y += 8f;
-                }
-                renderPos.X += 8f;
-                renderPos.Y = Position.Y + Shake.Y;
-            }
+            texture.Render9Slice((int)Collider.Width, (int)Collider.Height, renderPos);
 
             base.Render();
         }

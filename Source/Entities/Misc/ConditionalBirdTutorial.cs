@@ -20,7 +20,8 @@ public class ConditionalBirdTutorial : CustomBirdTutorial
 
     private readonly bool showSprite = true;
     private float flyInSpeedMultiplier = 1;
-    private bool onlyOnceFlyIn;
+    private readonly bool onlyOnceFlyIn;
+    private readonly bool onlyFulfillConditionOnce;
     private bool flownIn = false;
 
     private readonly int requireFrameInZoneTotal = 0;
@@ -46,6 +47,7 @@ public class ConditionalBirdTutorial : CustomBirdTutorial
         showSprite = data.Bool("showSprite", true);
         flyInSpeedMultiplier = data.Float("flyInSpeedMultiplier", 1);
         onlyOnceFlyIn = data.Bool("onlyOnceFlyIn", true);
+        onlyFulfillConditionOnce = data.Bool("onlyFulfillConditionOnce", true);
 
         requireFrameInZoneTotal = (int)(data.Float("secInZoneTotal", 0) * 60f);
         requireFrameInZoneAtOnce = (int)(data.Float("secInZoneAtOnce", 0) * 60f);
@@ -56,7 +58,6 @@ public class ConditionalBirdTutorial : CustomBirdTutorial
         requireFlag = data.Attr("requireFlag", "");
 
         restPosition = data.Position + offset;
-
         //Logger.Log(LogLevel.Info, "EndHelper/Misc/ConditionalBirdTutorial", $"fly in time {flyInSpeedMultiplier}  id {BirdId}  startPos {Position} --- required requireFrameInZoneAtOnce: {requireFrameInZoneAtOnce}");
     }
 
@@ -263,7 +264,8 @@ public class ConditionalBirdTutorial : CustomBirdTutorial
         Level level = SceneAs<Level>();
 
         string trackerPrefix = $"EndHelper_ConditionalBirdTutorial_{entityData.ID}";
-        level.Session.SetFlag($"{trackerPrefix}_flewInBefore", true);
+
+        if (onlyFulfillConditionOnce) level.Session.SetFlag($"{trackerPrefix}_flewInBefore", true);
         flownIn = true;
 
         if (flyInSpeedMultiplier > 0 && !skipFly)

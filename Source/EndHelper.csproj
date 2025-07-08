@@ -31,6 +31,9 @@
         <Reference Include="DotNetZip">
           <HintPath>..\..\..\DotNetZip.dll</HintPath>
         </Reference>
+        <Reference Include="FrostTempleHelper">
+          <HintPath>..\Integrations\FrostTempleHelper.dll</HintPath>
+        </Reference>
         <Reference Include="ImGuiHelper">
           <HintPath>..\Integrations\ImGuiHelper.dll</HintPath>
         </Reference>

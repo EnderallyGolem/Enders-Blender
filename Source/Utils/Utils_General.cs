@@ -1,4 +1,6 @@
-﻿using Microsoft.Xna.Framework;
+﻿using AsmResolver.PE.DotNet.Cil;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using Monocle;
 using MonoMod.Utils;
 using System;
@@ -14,7 +16,7 @@ namespace Celeste.Mod.EndHelper.Utils
 {
     static internal class Utils_General
     {
-        public static float timeSinceEnteredRoom = 0;
+        public static float framesSinceEnteredRoom = 0;
 
 
         /// <summary>
@@ -259,6 +261,47 @@ namespace Celeste.Mod.EndHelper.Utils
         }
 
         /// <summary>
+        /// Renders a 9-slice texture. A good renderPos is: new Vector2(Position.X + Shake.X, Position.Y + Shake.Y)
+        /// </summary>
+        /// <param name="spriteWidth"></param>
+        /// <param name="spriteHeight"></param>
+        /// <param name="renderPos"></param>
+        /// <param name="texture"></param>
+        /// 
+        public static void Render9Slice(this MTexture texture, int spriteWidth, int spriteHeight, Vector2 renderPos)
+        {
+            Vector2 origRenderPos = renderPos;
+
+            int widthInTiles = spriteWidth / 8 - 1;
+            int heightInTiles = spriteHeight / 8 - 1;
+
+            float xSize = texture.Width / 3;
+            float ySize = texture.Height / 3;
+
+            Texture2D baseTexture = texture.Texture.Texture;
+            int clipBaseX = texture.ClipRect.X;
+            int clipBaseY = texture.ClipRect.Y;
+
+            Rectangle clipRect = new Rectangle(clipBaseX, clipBaseY, 8, 8);
+
+            for (int i = 0; i <= widthInTiles; i++)
+            {
+                clipRect.X = clipBaseX + ((i < widthInTiles) ? i == 0 ? 0 : 8 : 16);
+                for (int j = 0; j <= heightInTiles; j++)
+                {
+                    int tilePartY = (j < heightInTiles) ? j == 0 ? 0 : 8 : 16;
+                    clipRect.Y = tilePartY + clipBaseY;
+                    Draw.SpriteBatch.Draw(baseTexture, renderPos, clipRect, Color.White);
+                    renderPos.Y += ySize;
+                }
+                renderPos.X += xSize;
+                renderPos.Y = origRenderPos.Y;
+            }
+        }
+        public static void Render9Slice(this MTexture texture, float spriteWidth, float spriteHeight, Vector2 renderPos)
+        { texture.Render9Slice((int)spriteWidth, (int)spriteHeight, renderPos); }
+
+        /// <summary>
         /// Checks if the specified flag is enabled, negation if ! is in front. Returns boolIfEmpty (default true) if empty.
         /// </summary>
         /// <param name="session"></param>
@@ -413,7 +456,7 @@ namespace Celeste.Mod.EndHelper.Utils
         /// </summary>
         public static Vector2 PointToCenterIntersect(this Rectangle rectangle, Vector2 point)
         {
-            Vector2 center = rectangle.Center.ToVector2();
+            Vector2 center = Extensions.ToVector2(rectangle.Center);
             Vector2 centerToPointVector = point - center;
 
             if (centerToPointVector == Vector2.Zero)
@@ -446,6 +489,14 @@ namespace Celeste.Mod.EndHelper.Utils
             return intersectPos;
         }
 
+        /// <summary>
+        /// Converts a Point to a Vector2
+        /// </summary>
+        public static Vector2 ToVector2(this Point point)
+        {
+            return new Vector2(point.X, point.Y);
+        }
+
         public static Entity GetNearestGenericEntity(this Level level, Vector2 nearestTo)
         {
             EntityList entityList = level.Entities;
@@ -462,6 +513,40 @@ namespace Celeste.Mod.EndHelper.Utils
             }
 
             return closestEntity;
+        }
+
+        /// <summary>
+        /// Returns a Rectangle which is the size of the entity (same x, y, width, height)
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <param name="overrideWidth"></param>
+        /// <param name="overrideHeight"></param>
+        /// <returns></returns>
+        public static Rectangle HitRect(this Entity entity, int? overrideWidth = null, int? overrideHeight = null, bool useCollider = false)
+        {
+            if (!useCollider)
+            {
+                if (overrideWidth == null) { overrideWidth = (int)entity.Width; }
+                if (overrideHeight == null) { overrideHeight = (int)entity.Height; }
+                return new Rectangle((int)entity.X, (int)entity.Y, overrideWidth.Value, overrideHeight.Value);
+            }
+            else
+            {
+                if (overrideWidth == null) { overrideWidth = (int)entity.Collider.Width; }
+                if (overrideHeight == null) { overrideHeight = (int)entity.Collider.Height; }
+                return new Rectangle((int)entity.Collider.AbsoluteLeft, (int)entity.Collider.AbsoluteTop, overrideWidth.Value, overrideHeight.Value);
+            }
+        }
+
+        public static bool IsAttachedTo(this StaticMover staticMowerMain, Platform entity)
+        {
+            if (entity == staticMowerMain.Platform) return true;
+            return false;
+        }
+
+        public static bool Match(this EntityID left, EntityID right)
+        {
+            return (left.Key == right.Key) && (left.ID == right.ID);
         }
     }
 }

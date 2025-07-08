@@ -14,7 +14,7 @@ using static Celeste.Mod.EndHelper.Entities.Misc.RoomStatisticsDisplayer;
 
 namespace Celeste.Mod.EndHelper.Utils
 {
-    internal class Utils_JournalStatistics
+    static internal class Utils_JournalStatistics
     {
         internal static bool journalOpen = false;
         internal static bool journalStatisticsGuiOpen = false;

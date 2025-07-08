@@ -74,7 +74,7 @@ namespace Celeste.Mod.EndHelper.Utils
         static readonly Random rnd = new Random();
 
         const float waveSpeed = 0.6f;
-        const float waveStrength = 0.7f;
+        const float waveStrength = 1f;
         const float fadeOutTime = 3f;
         const int maxRippleCount = 15; // For shader badly made garbage reasons: This should be MAX 20
         const int inverseFractionSpawnChance = 15; // Eg: 10 means 1/10 chance of spawning a ripple per frame
@@ -139,7 +139,7 @@ namespace Celeste.Mod.EndHelper.Utils
             effect.Parameters["ViewMatrix"]?.SetValue(Matrix.Identity);
 
             // Special Parameters
-            effect.Parameters["TimeTransitionRoom"]?.SetValue(Utils_General.timeSinceEnteredRoom / 60);
+            effect.Parameters["TimeTransitionRoom"]?.SetValue(Utils_General.framesSinceEnteredRoom / 60);
             effect.Parameters["WaveSpeed"]?.SetValue(waveSpeed);
             effect.Parameters["WaveStrength"]?.SetValue(waveStrength);
             effect.Parameters["FadeOutTime"]?.SetValue(fadeOutTime);
@@ -253,7 +253,7 @@ namespace Celeste.Mod.EndHelper.Utils
             Vector4 outlineColourFloat4Normalisation = new Vector4((float)outlineColour.R / 256, (float)outlineColour.G / 256, (float)outlineColour.B / 256, (float)(1 - outlineColour.A) / 256);
             //Logger.Log(LogLevel.Info, "EndHelper/Utils_Shaders", $"RespawnRipple: Normalised Ripple float4: {rippleColourFloat4Normalisation}, Normalised outline float4: {outlineColourFloat4Normalisation}");
 
-            effect.Parameters["TimeTransitionRoom"]?.SetValue(Utils_General.timeSinceEnteredRoom / 60);
+            //effect.Parameters["TimeTransitionRoom"]?.SetValue(Utils_General.timeSinceEnteredRoom / 60);
             effect.Parameters["WaveSpeed"]?.SetValue(waveSpeed);
             effect.Parameters["WaveStrength"]?.SetValue(waveStrength);
             effect.Parameters["FadeOutTime"]?.SetValue(fadeOutTime);

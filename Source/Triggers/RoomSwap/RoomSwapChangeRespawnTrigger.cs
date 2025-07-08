@@ -5,6 +5,7 @@ using System.Runtime.CompilerServices;
 using Monocle;
 using static MonoMod.InlineRT.MonoModRule;
 using System.Threading.Tasks;
+using Celeste.Mod.EndHelper.Utils;
 
 namespace Celeste.Mod.EndHelper.Triggers.RoomSwap;
 
@@ -42,6 +43,8 @@ public class RoomSwapChangeRespawnTrigger : Trigger
     [MethodImpl(MethodImplOptions.NoInlining)]
     public override void OnEnter(Player player)
     {
+        Level level = SceneAs<Level>();
+
         //Move target to closest spawn point
         if (entityData.Nodes != null && entityData.Nodes.Length != 0)
         {
@@ -51,33 +54,7 @@ public class RoomSwapChangeRespawnTrigger : Trigger
         {
             Target = Center;
         }
-        Target = SceneAs<Level>().GetSpawnPoint(Target);
 
-        base.OnEnter(player);
-        Session session = (Scene as Level).Session;
-        if (NoSolidCheck() && (!session.RespawnPoint.HasValue || session.RespawnPoint.Value != Target))
-        {
-            session.HitCheckpoint = true;
-            session.RespawnPoint = Target;
-            session.UpdateLevelStartDashes();
-            //Logger.Log(LogLevel.Info, "EndHelper/RoomSwap/TransitionChangeRespawnTrigger", $"Updated respawn point to {Target.X} {Target.Y}");
-        }
-    }
-
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    private bool NoSolidCheck()
-    {
-        if (!checkSolid)
-        {
-            return true; // Avoid any checks for solid. Always return true (no solids)
-        }
-
-        Vector2 point = Target + Vector2.UnitY * -4f;
-        if (Scene.CollideCheck<Solid>(point))
-        {
-            return Scene.CollideCheck<FloatySpaceBlock>(point);
-        }
-
-        return true;
+        Utils_DeathHandler.UpdateRespawnPos(Target, level, checkSolid);
     }
 }

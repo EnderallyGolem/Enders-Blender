@@ -15,6 +15,7 @@ using Monocle;
 using MonoMod.Cil;
 using MonoMod.RuntimeDetour;
 using MonoMod.Utils;
+using NETCoreifier;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -26,6 +27,7 @@ using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using static Celeste.DashSwitch;
 using static Celeste.Mod.EndHelper.EndHelperModuleSettings;
 using static Celeste.Mod.EndHelper.EndHelperModuleSettings.GameplayTweaks;
 using static Celeste.Mod.EndHelper.Entities.Misc.RoomStatisticsDisplayer;
@@ -51,7 +53,7 @@ public class EndHelperModule : EverestModule {
         Instance = this;
     }
 
-    //Custom spritebank, for contest xml location stuff
+    //Custom spritebank
     public static SpriteBank SpriteBank => Instance._CustomEntitySpriteBank;
     private SpriteBank _CustomEntitySpriteBank;
 
@@ -84,9 +86,9 @@ public class EndHelperModule : EverestModule {
     // Lets me disable, but ensure it gets re-enabled when I don't need it anymore
     public static int mInputDisableDuration = 0;
 
-    // This is modified by SSMQolIntegration to change multiroom bino speed multiplier
-    // -1 means not integrated
-    public static bool integratingWithSSMQoL = false;
+    public static bool integratingWithSSMQoL = false; // Cchange multiroom bino speed multiplier if used by this
+    public static bool integratingWithFrostHelper = false; // Only to check for frost helper spinners
+    public static bool integratingWithCommunualHelper = false; // Make some entities work better with death handler
 
     // Event Listener for when room modification occurs
     public static event EventHandler<RoomModificationEventArgs> RoomModificationEvent;
@@ -122,7 +124,6 @@ public class EndHelperModule : EverestModule {
         Everest.Events.Level.OnCreatePauseMenuButtons += CreatePauseMenuButtonsFunc;
         Everest.Events.Level.OnLoadEntity += OnLoadEntityFunc;
         Everest.Events.Player.OnSpawn += OnPlayerSpawnFunc;
-        On.Monocle.Scene.Add_Entity += Hook_OnAddEntity;
 
         On.Monocle.Engine.Update += Hook_EngineUpdate;
         On.Celeste.Level.Update += Hook_LevelUpdate;
@@ -154,8 +155,10 @@ public class EndHelperModule : EverestModule {
         On.Celeste.SpeedrunTimerDisplay.Render += Hook_SpeedrunTimerRender;
         IL.Celeste.GrabbyIcon.Update += ILHook_GrabbyIconUpdate;
 
+        On.Celeste.Killbox.OnPlayer += Hook_KillboxKill;
         On.Celeste.CrystalStaticSpinner.InView += Hook_SpinnerInView;
         On.Celeste.Booster.PlayerDied += Hook_BoosterPlayerDied;
+        On.Celeste.Solid.GetRiders += Hook_SolidGetRiders;
 
         On.Celeste.CassetteBlock.Awake += Hook_CassetteBlockAwake;
         On.Celeste.CassetteBlockManager.Awake += Hook_CassetteBlockManagerAwake;
@@ -180,6 +183,7 @@ public class EndHelperModule : EverestModule {
 
         SpeedrunToolIntegration.Load();
         SSMQoLIntegration.Load();
+        FrostHelperIntegration.Load();
         ImGuiHelperIntegration.Load();
         QuantumMechanicsIntegration.Load();
         CollabUtils2Integration.Load();
@@ -194,7 +198,6 @@ public class EndHelperModule : EverestModule {
         Everest.Events.Level.OnCreatePauseMenuButtons -= CreatePauseMenuButtonsFunc;
         Everest.Events.Level.OnLoadEntity -= OnLoadEntityFunc;
         Everest.Events.Player.OnSpawn -= OnPlayerSpawnFunc;
-        On.Monocle.Scene.Add_Entity -= Hook_OnAddEntity;
 
         On.Monocle.Engine.Update -= Hook_EngineUpdate;
         On.Celeste.Level.Update -= Hook_LevelUpdate;
@@ -218,8 +221,10 @@ public class EndHelperModule : EverestModule {
         On.Celeste.OuiJournal.Render -= Hook_JournalRender;
         On.Celeste.OuiJournal.Close -= Hook_JournalClose;
 
+        On.Celeste.Killbox.OnPlayer -= Hook_KillboxKill;
         On.Celeste.CrystalStaticSpinner.InView -= Hook_SpinnerInView;
         On.Celeste.Booster.PlayerDied -= Hook_BoosterPlayerDied;
+        On.Celeste.Solid.GetRiders -= Hook_SolidGetRiders;
 
         On.Celeste.Editor.MapEditor.Update -= Hook_UsingMapEditor;
         On.Celeste.Strawberry.Added -= Hook_StrawberryAddedToLevel;
@@ -243,6 +248,7 @@ public class EndHelperModule : EverestModule {
 
         SpeedrunToolIntegration.Unload();
         SSMQoLIntegration.Unload();
+        FrostHelperIntegration.Unload();
         ImGuiHelperIntegration.Unload();
         QuantumMechanicsIntegration.Unload();
         CollabUtils2Integration.Unload();
@@ -294,8 +300,13 @@ public class EndHelperModule : EverestModule {
             timeSinceSessionReset = 0;
             lastSessionResetCause = SessionResetCause.ReenterMap;
 
-            // Clear old session data. There shouldn't be any, but sometimes the game weird
+            // Death-Handler: If there's a full reset respawn point, set it to there when reentering the map. (otherwise, shenanigans ensue!!!)
+            if (EndHelperModule.Session.firstFullResetPos != null)
+            {
+                session.RespawnPoint = EndHelperModule.Session.firstFullResetPos.Value;
+            }
 
+            // Clear old session data if the map is not the right map for some reason
             if (EndHelperModule.Session.roomStatDict_mapNameSide_Internal != GetMapNameSideInternal(session.Area))
             {
                 Logger.Log(LogLevel.Warn, "EndHelper/main", $"EnterMapFunc: Session data mismatch: Current data is for {EndHelperModule.Session.roomStatDict_mapNameSide_Internal}, trying to load session data for {GetMapNameSideInternal(session.Area)}. Removing room stat data from the session!");
@@ -336,6 +347,7 @@ public class EndHelperModule : EverestModule {
 
     private static void CreatePauseMenuButtonsFunc(Level level, TextMenu menu, bool minimal)
     {
+        // --- Prevent Accidental Quit ---
         switch (EndHelperModule.Settings.QOLTweaksMenu.PreventAccidentalQuit)
         {
             case QOLTweaks.PreventAccidentalQuitEnum.Disabled:
@@ -376,43 +388,18 @@ public class EndHelperModule : EverestModule {
         // Spawn facing same direction as DeathHandlerRespawnPoint or DeathHandlerRespawnMarker.
         // Priority goes to the marker.
         DeathHandlerRespawnPoint respawnPoint = player.CollideFirst<DeathHandlerRespawnPoint>();
+        DeathHandlerThrowableRespawnPoint throwableRespawnPoint = player.CollideFirst<DeathHandlerThrowableRespawnPoint>();
         DeathHandlerRespawnMarker respawnMarker = player.CollideFirst<DeathHandlerRespawnMarker>();
 
         Facings? updateFacings = null;
-        if (respawnPoint != null)
-        {
-            updateFacings = respawnPoint.faceLeft ? Facings.Left : Facings.Right;
-        }
-        if (respawnMarker != null)
-        {
-            updateFacings = respawnMarker.faceLeft ? Facings.Left : Facings.Right;
-        }
+        if (respawnMarker != null) updateFacings = respawnMarker.faceLeft ? Facings.Left : Facings.Right;
+        else if (throwableRespawnPoint != null) updateFacings = throwableRespawnPoint.faceLeft ? Facings.Left : Facings.Right;
+        else if (respawnPoint != null) updateFacings = respawnPoint.faceLeft ? Facings.Left : Facings.Right;
 
         if (updateFacings != null)
         {
             player.Facing = updateFacings.Value;
         }
-
-        // Do the same thing for DeathHandlerRespawnPoint. With priority.
-    }
-
-    private static void Hook_OnAddEntity(On.Monocle.Scene.orig_Add_Entity orig, global::Monocle.Scene self, global::Monocle.Entity entity)
-    {
-        if (self is Level level)
-        {
-            if (prevLoadedEntityID != null)
-            {
-                //Logger.Log(LogLevel.Info, "EndHelper/main", $"{entity} probably has entitydata with id {prevLoadedEntityID.Value.ID}");
-                AccessibleID accessibleID = new AccessibleID(prevLoadedEntityID.Value);
-                entity.Add(accessibleID);
-            }
-        }
-        orig(self, entity);
-    }
-
-    public class AccessibleID(EntityID entityID) : Component(true, true)
-    {
-        internal EntityID entityID = entityID;
     }
 
     async static void PauseMenuButtonsFuncCooldown(Level level, TextMenu menu, bool minimal)
@@ -641,6 +628,11 @@ public class EndHelperModule : EverestModule {
             }
         }
 
+        if (lastSessionResetCause == SessionResetCause.Debug)
+        {
+            Utils_DeathHandler.OnRoomTransition(level);
+        }
+
         if (timeSinceSessionReset <= 1)
         {
             timeSinceSessionReset = 2;
@@ -652,6 +644,7 @@ public class EndHelperModule : EverestModule {
     private static void Hook_LevelUpdate(On.Celeste.Level.orig_Update orig, global::Celeste.Level self)
     {
         Level level = self;
+
         // Session Reset Checker
         EndHelperModule.timeSinceSessionReset++;
         if (EndHelperModule.timeSinceSessionReset == 1)
@@ -686,6 +679,7 @@ public class EndHelperModule : EverestModule {
                 } 
                 else if (!player.Dead)
                 {
+                    Utils_DeathHandler.SetManualReset(level); // Set spawnpoint to full reset if it's used
                     level.Paused = false;
                     level.PauseMainMenuOpen = false;
                     Engine.TimeRate = 1f;
@@ -746,7 +740,7 @@ public class EndHelperModule : EverestModule {
         }
 
         orig(self);
-        Utils_DeathHandler.Update();
+        Utils_DeathHandler.Update(level);
 
         if (forceCloseMenuAfter)
         {
@@ -755,7 +749,7 @@ public class EndHelperModule : EverestModule {
 
         if (!level.Transitioning && !level.FrozenOrPaused)
         {
-            Utils_General.timeSinceEnteredRoom++;
+            Utils_General.framesSinceEnteredRoom++;
         }
     }
 
@@ -909,13 +903,16 @@ public class EndHelperModule : EverestModule {
         if (EndHelperModule.Settings.ToggleGrabMenu.UntoggleUponDeath) { Session.toggleifyEnabled = false; }
         EndHelperModule.Session.framesSinceRespawn = 0;
 
-        Utils_DeathHandler.BeforePlayerDeath(self);
+        Level level = self.SceneAs<Level>();
+        if (!level.IsInBounds(self)) Utils_DeathHandler.ForceShortDeathCooldown(); // Reduce cooldown if player is out of bounds. Will definitely need to die soon!
 
-        // Prevent death spam (if using seemless respawn)
+        // Prevent death spam (if using seemless respawn).
         if (Utils_DeathHandler.deathCooldownFrames > 0)
         {
             return null;
         }
+
+        Utils_DeathHandler.BeforePlayerDeath(self);
         return orig(self, direction, evenIfInvincible, registerDeathInStats);
     }
 
@@ -1079,7 +1076,7 @@ public class EndHelperModule : EverestModule {
             self.StateMachine.State = 0;
             self.Sprite.Scale = new Vector2(1.5f, 0.5f);
         }
-        if (Utils_DeathHandler.seemlessRespawn == SeemlessRespawnEnum.EnabledKeepState)
+        if (Utils_DeathHandler.seemlessRespawn == SeemlessRespawnEnum.EnabledKeepState || Utils_DeathHandler.playerHasDeathBypass)
         {
             self.StateMachine.State = 0;
             self.Sprite.Scale = new Vector2(1f, 1f);
@@ -1090,11 +1087,11 @@ public class EndHelperModule : EverestModule {
 
     private static Vector2 Hook_SessionGetSpawnPoint(On.Celeste.Session.orig_GetSpawnPoint orig, global::Celeste.Session self, Vector2 from)
     {
-        if (Engine.Scene is Level level && level.Tracker.GetEntity<DeathHandlerRespawnPoint>() is not null)
+        if (Engine.Scene is Level level && 
+            (level.Tracker.GetEntity<DeathHandlerRespawnPoint>() is not null || level.Tracker.GetEntity<DeathHandlerThrowableRespawnPoint>() is not null))
         {
             // In case other mods use this function, don't just replace orig directly
             // So do this roundabout thing where we add extra points, check, then remove the extra points
-
             List<Vector2> deathHandlerSpawnPoints = [];
             foreach (DeathHandlerRespawnPoint deathHandlerSpawnPointEntity in level.Tracker.GetEntities<DeathHandlerRespawnPoint>())
             {
@@ -1102,6 +1099,14 @@ public class EndHelperModule : EverestModule {
                 {
                     Vector2 deathHandlerSpawnPointPos = deathHandlerSpawnPointEntity.entityPosSpawnPoint;
                     deathHandlerSpawnPoints.Add(deathHandlerSpawnPointPos);
+                }
+            }
+            foreach (DeathHandlerThrowableRespawnPoint deathHandlerThrowableSpawnPointEntity in level.Tracker.GetEntities<DeathHandlerThrowableRespawnPoint>())
+            {
+                if (deathHandlerThrowableSpawnPointEntity.disabled == false)
+                {
+                    Vector2 deathHandlerThrowableSpawnPointPos = deathHandlerThrowableSpawnPointEntity.entityPosSpawnPoint;
+                    deathHandlerSpawnPoints.Add(deathHandlerThrowableSpawnPointPos);
                 }
             }
 
@@ -1123,9 +1128,9 @@ public class EndHelperModule : EverestModule {
         On.Celeste.Level.orig_TransitionRoutine orig, global::Celeste.Level self, global::Celeste.LevelData next, Vector2 direction
     )
     {
-        Utils_General.timeSinceEnteredRoom = 0;
-        Utils_DeathHandler.OnRoomTransition(self);
+        Utils_General.framesSinceEnteredRoom = 0;
         yield return new SwapImmediately(orig(self, next, direction));
+        Utils_DeathHandler.OnRoomTransition(self); // AFTER room change
     }
 
     private static void Hook_StartMapFromBeginning(On.Celeste.LevelLoader.orig_StartLevel orig, global::Celeste.LevelLoader self)
@@ -1560,6 +1565,12 @@ public class EndHelperModule : EverestModule {
         return grabbing;
     }
 
+    public static void Hook_KillboxKill(On.Celeste.Killbox.orig_OnPlayer orig, global::Celeste.Killbox self, global::Celeste.Player player)
+    {
+        if (!global::Celeste.SaveData.Instance.Assists.Invincible) Utils_DeathHandler.SetNextRespawnFullReset(player.level, true);
+        orig(self, player);
+    }
+
     public static bool Hook_SpinnerInView(On.Celeste.CrystalStaticSpinner.orig_InView orig, global::Celeste.CrystalStaticSpinner self)
     {
         bool inView = orig(self);
@@ -1584,6 +1595,12 @@ public class EndHelperModule : EverestModule {
         {
             self.AddTag(Tags.Global);
         }
+    }
+    public static void Hook_SolidGetRiders(On.Celeste.Solid.orig_GetRiders orig, global::Celeste.Solid self)
+    {
+        // This fixes some random obscure crash that sometimes happens with the death handler for some reason i have no idea what causes scene to be null
+        self.Scene ??= Engine.Scene as Level;
+        orig(self);
     }
     public static void Hook_UsingMapEditor(On.Celeste.Editor.MapEditor.orig_Update orig, global::Celeste.Editor.MapEditor self)
     {

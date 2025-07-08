@@ -1,6 +1,6 @@
 local DeathHandlerRespawnPoint = {
     name = "EndHelper/DeathHandlerRespawnPoint",
-    depth = -8500,
+    depth = 2,
     justification = {0.5, 0.5},
     offset = {0, 1},
     placements = {
@@ -31,6 +31,15 @@ function DeathHandlerRespawnPoint.texture(room, entity)
         return "objects/EndHelper/DeathHandlerRespawnPoint/respawnpoint_fullreset_inactive"
     end
     return "objects/EndHelper/DeathHandlerRespawnPoint/respawnpoint_normal_inactive"
+end
+
+function DeathHandlerRespawnPoint.onFlip(room, entity, horizontal, vertical)
+    if horizontal then
+        entity.faceLeft = not entity.faceLeft
+    end
+end
+function DeathHandlerRespawnPoint.onRotate(room, entity, direction)
+    entity.faceLeft = not entity.faceLeft
 end
 
 return DeathHandlerRespawnPoint

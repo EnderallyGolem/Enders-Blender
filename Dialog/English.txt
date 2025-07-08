@@ -307,6 +307,10 @@ EndHelperTest_Tutorial_Misc_ConditionalTutorialBird_Desc=I appear after sitting 
 EndHelperTest_Tutorial_Misc_ConditionalTutorialBird2=Conditional Tutorial Bird 2
 EndHelperTest_Tutorial_Misc_ConditionalTutorialBird2_Desc=I appear after dying here!
 
+
+EndHelperTest_Tutorial_Misc_IncrementalFlagTrigger=Incremental Flag
+EndHelperTest_Tutorial_Misc_IncrementalFlagTrigger_Desc=Set to 1!
+
 # ----------------------------------  Credits  ----------------------------------------
 endhelper_credits={~}Additional credits:{/~}
 The sprites for the Room-Swap Map, Map Upgrade, Transition Box, and Grab Recast Icon were made by Pakyjenace.

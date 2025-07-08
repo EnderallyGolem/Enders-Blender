@@ -24,7 +24,6 @@ public class DeathHandlerDeathBypassTrigger : Trigger
 
     private readonly string preventDownDashRedirects = "Default";
     private readonly string seemlessRespawn = "Default";
-    private readonly int seemlessRespawnDelay = -1;
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     public DeathHandlerDeathBypassTrigger(EntityData data, Vector2 offset)
@@ -36,7 +35,6 @@ public class DeathHandlerDeathBypassTrigger : Trigger
 
         preventDownDashRedirects = data.Attr("preventDownDashRedirects", "Default");
         seemlessRespawn = data.Attr("seemlessRespawn", "Default");
-        seemlessRespawnDelay = data.Int("seemlessRespawnDelay", -1);
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
@@ -114,8 +112,8 @@ public class DeathHandlerDeathBypassTrigger : Trigger
 
         // Seemless Respawn + Delay
         if (setToDefault)
-        { Utils_DeathHandler.UpdateSeemlessRespawnOverride(null, -1); }
+        { Utils_DeathHandler.UpdateSeemlessRespawnOverride(null); }
         else
-        { Utils_DeathHandler.UpdateSeemlessRespawnOverride(seemlessRespawn, seemlessRespawnDelay); }
+        { Utils_DeathHandler.UpdateSeemlessRespawnOverride(seemlessRespawn); }
     }
 }

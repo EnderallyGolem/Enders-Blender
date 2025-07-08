@@ -22,7 +22,8 @@ ConditionalBirdTutorial.placements = {
 
         flyInSpeedMultiplier = 1,
         showSprite = true,
-        onlyOnceFlyIn = true;
+        onlyOnceFlyIn = true,
+        onlyFulfillConditionOnce = true,
 
         secInZoneTotal = 0,
         secInZoneAtOnce = 0,
@@ -36,7 +37,7 @@ ConditionalBirdTutorial.placements = {
 
 ConditionalBirdTutorial.fieldOrder = {
     "x", "y", "editorLayer",
-    "birdId", "controls", "info", "caw", "faceLeft", "onlyOnce", "onlyOnceFlyIn", "showSprite",
+    "birdId", "controls", "info", "caw", "faceLeft", "onlyOnce", "onlyOnceFlyIn", "onlyFulfillConditionOnce", "showSprite",
     "flyInSpeedMultiplier",
     "secInZoneTotal", "secInZoneAtOnce", "secInRoom", "deathsInZone", "deathsInRoom",
     "requireFlag", "requireOnScreen"
@@ -64,6 +65,15 @@ function ConditionalBirdTutorial.nodeTexture(room, entity, node, nodeIndex, view
     else
         return "objects/EndHelper/ConditionalBirdTutorial/node_bottomright"
     end
+end
+
+function ConditionalBirdTutorial.onFlip(room, entity, horizontal, vertical)
+    if horizontal then
+        entity.faceLeft = not entity.faceLeft
+    end
+end
+function ConditionalBirdTutorial.onRotate(room, entity, direction)
+    entity.faceLeft = not entity.faceLeft
 end
 
 return ConditionalBirdTutorial

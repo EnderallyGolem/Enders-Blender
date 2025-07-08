@@ -11,7 +11,7 @@ using Monocle;
 
 namespace Celeste.Mod.EndHelper.SharedCode
 {
-    internal class Utils_RoomSwap
+    static internal class Utils_RoomSwap
     {
         internal static void ReupdateAllRooms()
         {

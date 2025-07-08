@@ -144,7 +144,6 @@ local ninePatchOptions = {
 function cassetteBeatGate.sprite(room, entity)
     local x, y = entity.x or 0, entity.y or 0
     local width, height = entity.width or 24, entity.height or 24
-    local color = entity.blockColour or "FFFFFF"
 
     local frame = miscFuncs.trimPath(entity.texturePath, defaultTexture)
     if entity.entityMover then

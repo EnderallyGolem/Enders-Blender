@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Celeste.Mod.EndHelper.Utils
 {
-    internal class Utils_MultiroomWatchtower
+    static internal class Utils_MultiroomWatchtower
     {
         internal static void SpawnMultiroomWatchtower()
         {

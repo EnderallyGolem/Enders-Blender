@@ -50,7 +50,6 @@ public class DeathHandlerDeathBypassTrigger : Trigger
             Level level = SceneAs<Level>();
 
             // Give all entities in its range + closest entity at its nodes the DeathBypass component
-            // Range
             foreach (Entity entity in level.Entities)
             {
                 // Not collider in case no collision. And also i haven't figured out how to use collider yet :p
@@ -83,12 +82,26 @@ public class DeathHandlerDeathBypassTrigger : Trigger
         }
     }
 
-    private static bool FilterEntity(Entity entity)
+    internal static bool FilterEntity(Entity entity, bool allowPlayer = false, bool allowPreventChange = true)
     {
-        if (entity is SolidTiles || entity is BackgroundTiles || entity is Player || entity is PlayerDeadBody || entity is DeathHandlerDeathBypassTrigger)
+        if (entity is SolidTiles || entity is BackgroundTiles || (entity is Player && !allowPlayer) || entity is PlayerDeadBody || entity is DeathHandlerDeathBypassTrigger
+            || entity is Killbox)
         {
             return false;
         }
+        if (integratingWithFrostHelper)
+        {
+            if (FrostHelperIntegration.CheckIfCustomSpinner(entity)) return false; // I am not figuring out how frost helper spinners work and potentially break stuff for this
+        }
+        if (entity is not Player && (entity.TagCheck(Tags.HUD) || entity.TagCheck(Tags.Global)))
+        {
+            return false;
+        }
+        if (!allowPreventChange && entity.Components.Get<DeathBypass>() is DeathBypass deathBypass && deathBypass.preventChange)
+        {
+            return false;
+        }
+
         return true;
     }
 }

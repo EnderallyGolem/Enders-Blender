@@ -3,6 +3,7 @@ using static Celeste.Mod.EndHelper.Entities.Misc.RoomStatisticsDisplayer;
 using Celeste.Mod.EndHelper.Entities.Misc;
 using System.Collections.Specialized;
 using static Celeste.Mod.EndHelper.EndHelperModuleSettings.GameplayTweaks;
+using Microsoft.Xna.Framework;
 
 namespace Celeste.Mod.EndHelper;
 
@@ -50,6 +51,11 @@ public class EndHelperModuleSession : EverestModuleSession
     // If false, screen transitions do not move the player. Used in multi-room binos
     public bool allowScreenTransitionMovement = true;
 
+    // Death-Handler: Store full reset pos. This is null whenever screen transition occurs. When entering full reset zone, set spawn here.
+    public Vector2? lastFullResetPos = null;
+    public Vector2? firstFullResetPos = null;
+    public bool nextRespawnFullReset = false; // Set to true if respawn point changed by full reset change respawn or by falling into a pit. Set to False after death.
+
 
     // Gameplay Tweaks
 
@@ -71,4 +77,5 @@ public class EndHelperModuleSession : EverestModuleSession
 
     // Override Gameplay Tweaks - With triggers
     public ConvertDemoEnum? GameplayTweaksOverride_ConvertDemo = null;
+    public SeemlessRespawnEnum? overrideSeemlessRespawn = null; public bool seemlessRespawnExceptFullReset = false;
 }

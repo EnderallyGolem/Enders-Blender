@@ -48,4 +48,13 @@
 		<Loop id="idle" path="respawnpoint_marker" delay="0.05"/>
 	</DeathHandlerRespawnPoint>
 	
+	<DeathHandlerThrowableRespawnPoint path="objects/EndHelper/DeathHandlerThrowableRespawnPoint/" start="idle">
+    <Origin x="10" y="21"/>
+		<Loop id="idle" path="throwablerespawnpoint_normal_inactive" delay="0.2"/>
+		<Loop id="normal_inactive" path="throwablerespawnpoint_normal_inactive" delay="0.2"/>
+		<Loop id="normal_active" path="throwablerespawnpoint_normal_active" delay="0.2"/>
+		<Loop id="fullreset_inactive" path="throwablerespawnpoint_fullreset_inactive" delay="0.2"/>
+		<Loop id="fullreset_active" path="throwablerespawnpoint_fullreset_active" delay="0.2"/>
+	</DeathHandlerThrowableRespawnPoint>
+	
 </Sprites>

@@ -69,6 +69,23 @@ These are shown in the end-screen. Some of these can be overridden per-map with 
 - Option to be breakable
 
 
+###### Misc
+- Incremental Flag Trigger
+	- Increments a counter when you reach the trigger with a specific value, which then sets a flag
+- Flag Killbox
+
+
+## 1.2 changelog:
+- New Additions:
+	+ Added Incremental Flag Trigger. Flag trigger that makes requiring flags to be triggered in a specific order easier.
+	- Death Handler?
+	
+- Misc:
+	- Conditional Bird Tutorial: Added option - Only Fulfill Condition Once, which means once the bird flew down once, it can fly down again without fulfilling the condition. (This was previously the default behaviour.)
+	
+- Gameplay Tweaks:
+	- Fixed Seemless Respawn bugging out when clicking retry in the menu
+
 ## 1.1.8 changelog:
 	- Fixed crash when trying to enter an unloaded map
 	- Fixed crash from having tracker storage size set to 0, then increased mid-level

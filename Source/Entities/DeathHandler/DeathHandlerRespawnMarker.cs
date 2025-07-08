@@ -34,6 +34,9 @@ public class DeathHandlerRespawnMarker : Entity
     private int framesGoingFurtherFromTarget = 0;
 
     private SineWave sine;
+    internal static bool attachedToPlayer = false;
+
+    private bool previousholdingThrowableRespawn = false;
 
     // Particles!
     readonly ParticleType particle = new ParticleType
@@ -62,7 +65,7 @@ public class DeathHandlerRespawnMarker : Entity
         sine = new SineWave(0.6f, 0f);
         Add(sine);
 
-        Add(new DeathBypass(requireFlag, false, id));
+        Add(new DeathBypass(requireFlag, false, id, preventChange: true));
 
         Add(sprite = EndHelperModule.SpriteBank.Create("DeathHandlerRespawnPoint"));
         sprite.Position += new Vector2(0, -1);
@@ -92,6 +95,7 @@ public class DeathHandlerRespawnMarker : Entity
         Vector2 targetPos = level.Session.RespawnPoint.Value;
         previousTargetPos = targetPos;
         currentPosSpawnpoint = targetPos;
+
         Position = new Vector2(currentPosSpawnpoint.X, currentPosSpawnpoint.Y - height / 2 + 1);
     }
 
@@ -124,6 +128,27 @@ public class DeathHandlerRespawnMarker : Entity
         Vector2 currentPosSpawnpoint = ConvertSpawnPointPosToActualPos(Position, true);
         Vector2 targetPos = level.Session.RespawnPoint.Value;
 
+        // If player is deathbypass, targetPos can only either be the player or lastFullResetPos
+        if (level.Tracker.GetEntity<Player>() is Player player && player.Components.Get<DeathBypass>() is DeathBypass deathBypass && deathBypass.bypass)
+        {
+            if (EndHelperModule.Session.nextRespawnFullReset && EndHelperModule.Session.lastFullResetPos is not null)
+            { 
+                targetPos = EndHelperModule.Session.lastFullResetPos.Value;
+                attachedToPlayer = false;
+            }
+            else
+            {
+                targetPos = player.BottomCenter;
+                faceLeft = player.Facing == Facings.Left;
+                if (attachedToPlayer == false)
+                {
+                    Add(new SoundSource("event:/game/06_reflection/feather_bubble_bounce"));
+                    attachedToPlayer = true;
+                }
+            }
+        }
+        else attachedToPlayer = false;
+
         float distanceBetweenPosAndTarget = Vector2.Distance(currentPosSpawnpoint, targetPos);
 
         // Count how many times previousDistanceTargetPrevTarget <= distanceTargetPrevTarget (going FURTHER/same distance from target)
@@ -138,15 +163,25 @@ public class DeathHandlerRespawnMarker : Entity
 
         //Logger.Log(LogLevel.Info, "EndHelper/DeathHandlerRespawnMarker", $"Distance between pos and target: {distanceBetweenPosAndTarget}. Previous: {previousDistanceBetweenPosAndTarget}. Frames going further: {framesGoingFurtherFromTarget}");
 
+        bool holdingThrowableRespawn = false;
+        if (level.Tracker.GetEntity<Player>() is Player player2 && player2.Holding is not null)
+        {
+            Holdable playerHoldable = player2.Holding;
+            holdingThrowableRespawn = playerHoldable.Entity is DeathHandlerThrowableRespawnPoint;
+        }
+
+        bool holdableRespawnLock = true;
+        if (holdingThrowableRespawn && previousholdingThrowableRespawn) holdableRespawnLock = false;
+
         // If becoming larger, and distance >= 1 tile, play SFX
-        if (distanceBetweenPosAndTarget >= 8 && framesGoingFurtherFromTarget == 1 && flagEnable)
+        if (distanceBetweenPosAndTarget >= 8 && framesGoingFurtherFromTarget == 1 && flagEnable && !attachedToPlayer && holdableRespawnLock)
         {
             Add(new SoundSource("event:/game/06_reflection/feather_bubble_bounce"));
         }
 
         if (currentPosSpawnpoint != targetPos)
         {
-            if (speed == 0 || (framesGoingFurtherFromTarget >= 2 && distanceBetweenPosAndTarget <= 8))
+            if (speed == 0 || (framesGoingFurtherFromTarget >= 2 && distanceBetweenPosAndTarget <= 8) || (attachedToPlayer && distanceBetweenPosAndTarget <= 8))
             {
                 // If set to instant teleport (speed == 0) or target is going away (while being close)
                 currentPosSpawnpoint = targetPos;
@@ -175,12 +210,19 @@ public class DeathHandlerRespawnMarker : Entity
 
         previousTargetPos = targetPos;
         previousDistanceBetweenPosAndTarget = distanceBetweenPosAndTarget;
+        previousholdingThrowableRespawn = holdingThrowableRespawn;
     }
   
     public override void Render()
     {
         UpdateSprite();
-        base.Render();
+
+        Level level = Scene as Level;
+        if (level.IsInBounds(Position, 8))
+        {
+            // Only render if entity is in level bounds
+            base.Render();
+        }
     }
 
     public void UpdateSprite()
@@ -203,8 +245,24 @@ public class DeathHandlerRespawnMarker : Entity
             sprite.FlipX = false;
         }
 
+        sprite.SetColor(Color.White);
         sprite.Color.A = 128;
         sprite.Color.A += (byte)(sine.Value * 120f);
+
+        if (attachedToPlayer && Scene.Tracker.GetEntity<Player>() is Player player)
+        {
+            float distanceFromPlayer = (player.Center - ConvertSpawnPointPosToActualPos(Position, true)).Length();
+            if (distanceFromPlayer <= 64)
+            {
+                sprite.Color *= Math.Clamp(distanceFromPlayer - 8, 0, 64 - 8) / (64 - 8);
+            }
+        }
+
+        // Fade in when transitioning into room
+        if (Utils_General.framesSinceEnteredRoom < 30)
+        {
+            sprite.Color *= Utils_General.framesSinceEnteredRoom / 30;
+        }
     }
 
     internal Vector2 ConvertSpawnPointPosToActualPos(Vector2 pos, bool reverse = false)
@@ -260,20 +318,27 @@ public class DeathHandlerRespawnMarker : Entity
 
         public override void Render()
         {
-            if (distanceToCamera > 0 && p.offscreenPointer)
+            Level level = SceneAs<Level>();
+            if (distanceToCamera > 0 && p.offscreenPointer && level.IsInBounds(p))
             {
                 float scaleMultiple = (float)Math.Clamp(distanceToCamera / 32, 0, 1);
 
                 Color iconColour = new Color(255, 232, 89, 64);
 
                 // Red if full reset
-                if (Utils_DeathHandler.lastFullResetPos == SceneAs<Level>().Session.RespawnPoint)
+                if (EndHelperModule.Session.lastFullResetPos == SceneAs<Level>().Session.RespawnPoint)
                 {
                     iconColour = new Color(255, 80, 80, 64);
                 }
 
                 iconColour.A += (byte)(p.sine.Value * 60);
                 iconColour *= scaleMultiple;
+
+                // Fade in when transitioning into room
+                if (Utils_General.framesSinceEnteredRoom < 30)
+                {
+                    iconColour *= Utils_General.framesSinceEnteredRoom / 30;
+                }
 
                 float iconSize = 0.5f * scaleMultiple + 0.5f;
                 iconSize += p.sine.Value * 0.1f;

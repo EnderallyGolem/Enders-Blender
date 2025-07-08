@@ -17,3 +17,5 @@
       Version: 0.1.3
     - Name: QuantumMechanics # Cassette Manager
       Version: 1.3.0
+    - Name: FrostHelper # Checking for the existence of frost helper custom spinners
+      Version: 1.70.1
