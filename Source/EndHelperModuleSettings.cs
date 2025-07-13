@@ -128,6 +128,10 @@ public class EndHelperModuleSettings : EverestModuleSettings {
     [SettingSubMenu]
     public class QOLTweaks
     {
+        [SettingSubText("modoptions_EndHelperModule_AutosaveTime_Desc")]
+        [SettingRange(min: 0, max: 30, largeRange: false)]
+        public int AutosaveTime { get; set; } = 0;
+
         [SettingSubText("modoptions_EndHelperModule_DisableQuickRestart_Desc")]
         public bool DisableQuickRestart { get; set; } = false;
 

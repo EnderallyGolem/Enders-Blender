@@ -1,6 +1,9 @@
 local DeathHandlerChangeRespawnRegion = {
     name = "EndHelper/DeathHandlerChangeRespawnRegion",
     depth = 0,
+    nodeLimits = {0, 1},
+    nodeLineRenderType = "line",
+    nodeVisibility = "selected",
     placements = {
         {
             name = "normal",

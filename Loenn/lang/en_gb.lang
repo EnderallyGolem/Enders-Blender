@@ -9,7 +9,8 @@ mods.EndHelper.name=Ender's Blender
 # Tile Entity
 entities.EndHelper/TileEntity.placements.name.normal=Tile Entity
 entities.EndHelper/TileEntity.placements.description.normal=Modified VivHelper Custom Depth Tile Entity
-entities.EndHelper/TileEntity.attributes.description.tiletypeOffscreen=The portion of the entity that is outside a room will show up as this.\nSet this to an invisible tile ("fake air") and extend the tiles offscreen to allow seemless room transitions.\nAlternatively, add <Tileset id="◯" copy="y" path="EndHelper/fakeAir" sound="0"/> to your ForegroundTiles.xml.
+entities.EndHelper/TileEntity.attributes.description.depth=Entity depth. Connected tiles will have the same depth.
+entities.EndHelper/TileEntity.attributes.description.tiletypeOffscreen=The portion of the entity that is outside a room will show up as this.\nSet this to an invisible tile ("fake air") and extend the tiles offscreen to allow seemless room transitions.\nAlternatively, add <Tileset id="◯" copy="y" path="EndHelper/fakeAir" sound="0"/> to your ForegroundTiles.xml (◯ is U+25EF).
 entities.EndHelper/TileEntity.attributes.description.extendOffscreen=If the tiles are placed at the edge of the room, they will be extended one tile outside the room.
 entities.EndHelper/TileEntity.attributes.description.allowMerge=Allows the tiles to connect to each other.\nBoth tile entities must have this enabled for them to connect.
 entities.EndHelper/TileEntity.attributes.description.allowMergeDifferentType=Allows DIFFERENT tiles to connect to each other.\nBoth tile entities must have this and Allow Merge enabled for them to connect.\nNote: Groups of multiple tiles sometimes only connect to those with this enabled (depending on connection order),\neven if the part of the group share the same time.
@@ -19,6 +20,9 @@ entities.EndHelper/TileEntity.attributes.description.surfaceSoundIndex=Overrides
 entities.EndHelper/TileEntity.attributes.description.dashBlock=Turns the Tile Entity into a Dash Block (broken when dashed into).\nDash Blocks will not connect with non-Dash Blocks!
 entities.EndHelper/TileEntity.attributes.description.dashBlockPermament=For Dash Blocks: If the block stays broken after room reload.\nIf connected blocks are partially permament and partially not,\nonly the non-permament parts will reappear on reload.
 entities.EndHelper/TileEntity.attributes.description.dashBlockBreakSound=For Dash Blocks: Sound event which plays when broken.\nIf connected, the sound will depend on which segment was broken.
+entities.EndHelper/TileEntity.attributes.description.collidable=Affects whether the tile entity is solid, and if it blocks light.
+entities.EndHelper/TileEntity.attributes.description.colour=Colour of the Tile Entity. (White = normal)\nDifferent coloured entities cannot connect.
+entities.EndHelper/TileEntity.attributes.description.backgroundTiles=Use background tiles instead of foreground tiles.\nThis is purely visual - you might still want to change the Depth (BG: 10000, FG: -10000) and Collidable.\nForeground and background tiles cannot be connected.\nReopen this menu to update the Tiletype selections!
 entities.EndHelper/TileEntity.attributes.description.offU=The offscreen tiletype will be used if it extends offscreen to the top.
 entities.EndHelper/TileEntity.attributes.description.offUR=The offscreen tiletype will be used if it extends offscreen to the top right.
 entities.EndHelper/TileEntity.attributes.description.offR=The offscreen tiletype will be used if it extends offscreen to the right.
@@ -58,7 +62,6 @@ entities.EndHelper/ConditionalBirdTutorial.attributes.description.requireFlag=Fl
 
 
 # Flag Killbox
-entities.EndHelper/ConditionalBirdTutorialTester.placements.name.normal=Conditional Bird Tutorial Tester
 entities.EndHelper/FlagKillbox.placements.name.normal=Flag Killbox
 entities.EndHelper/FlagKillbox.placements.name.altname=Flag Kill Box
 entities.EndHelper/FlagKillbox.placements.description.normal=Flag-toggleable killbox.\n(When above the killbox, the killbox becomes the new bottom deathzone.)
@@ -222,7 +225,7 @@ triggers.EndHelper/RoomSwapRespawnForceSameRoomTrigger.attributes.description.on
 triggers.EndHelper/RoomSwapChangeRespawnTrigger.placements.name.normal=Updating Change Respawn
 triggers.EndHelper/RoomSwapChangeRespawnTrigger.placements.name.altname=Room-Swap Change Respawn
 triggers.EndHelper/RoomSwapChangeRespawnTrigger.placements.name.altname2=Death-Handler Change Respawn
-triggers.EndHelper/RoomSwapChangeRespawnTrigger.placements.description.normal=Change respawn trigger that rechecks for spawnpoints when the player enters it.\nThis ensures the trigger sets the correct spawnpoint, even when it is moved.\nIf using Room-Swap or Death-Handler, this should be used in place of the regular Change Respawn Trigger.
+triggers.EndHelper/RoomSwapChangeRespawnTrigger.placements.description.normal=Change respawn trigger that rechecks for spawnpoints when the player enters it.\nThis ensures the trigger sets the correct spawnpoint, even when it is moved.\nIf using Room-Swap or Death-Handler, this should be used in place of the regular Change Respawn Trigger.\nLike the normal trigger, if a node is set, the closest spawnpoint to it is used.
 triggers.EndHelper/RoomSwapChangeRespawnTrigger.attributes.description.checkSolid=If disabled, avoids checking if the respawn point is available before setting the respawn point to there.
 
 
@@ -258,7 +261,7 @@ entities.EndHelper/DeathHandlerRespawnMarker.attributes.description.requireFlag=
 
 # Change Respawn Region
 entities.EndHelper/DeathHandlerChangeRespawnRegion.placements.name.normal=Death-Handler Change Respawn Region
-entities.EndHelper/DeathHandlerChangeRespawnRegion.placements.description.normal=Visible (Updating) Change Respawn Trigger.
+entities.EndHelper/DeathHandlerChangeRespawnRegion.placements.description.normal=Visible (Updating) Change Respawn Trigger. \nNodes act as offsets for where the spawnpoints are checked from (they move with the zone).
 entities.EndHelper/DeathHandlerChangeRespawnRegion.attributes.description.checkSolid=If disabled, avoids checking if the respawn point is available before setting the respawn point to there.
 entities.EndHelper/DeathHandlerChangeRespawnRegion.attributes.description.attachable=Attached to objects that spikes can attach to, when place next to the object.
 entities.EndHelper/DeathHandlerChangeRespawnRegion.attributes.description.fullReset=The next respawn will be a Full Reset.\nThis means the player will only be able to respawn at Death-Handler Respawn Points that are marked as Full Reset,\nand Death-Bypass will be ignored.
@@ -280,6 +283,6 @@ entities.EndHelper/DeathHandlerBypassZone.attributes.description.affectPlayer=Wh
 
 # Reload Bypass Trigger
 triggers.EndHelper/DeathHandlerDeathBypassTrigger.placements.name.normal=Death-Handler Death Bypass
-triggers.EndHelper/DeathHandlerDeathBypassTrigger.placements.description.normal=On death, entities inside it and entities overlapping its nodes will persist through the room reload on death.\nNote: This check will rerun each time you die!\nThis ensures that despawned entities that reload will have the bypass re-applied.\nWarning: This may be buggy with custom entities which are internally made of multiple entities (eg: zip/move blocks).
+triggers.EndHelper/DeathHandlerDeathBypassTrigger.placements.description.normal=On death, entities inside it and entities overlapping its nodes will persist through the room reload on death.\nEntities that are removed with the bypass won't appear until a Full Reset (including room transition).\nNote: This check will rerun each time you die!\nWarning: This may be buggy with custom entities which are internally made of multiple entities (eg: zip/move blocks).
 triggers.EndHelper/DeathHandlerDeathBypassTrigger.attributes.description.requireFlag=If specified, entities will only bypass death if this flag is enabled.\nA list of flags in the format "flagA, flagB, !flagC | flagD, flagE" can be specified.\nThis means (flagA and flagB and not flagC) or (flagD and flagE).
 triggers.EndHelper/DeathHandlerDeathBypassTrigger.attributes.description.showVisuals=Marks death-bypass entities with a golden glint.

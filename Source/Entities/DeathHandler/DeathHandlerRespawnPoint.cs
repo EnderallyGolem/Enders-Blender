@@ -51,6 +51,7 @@ public class DeathHandlerRespawnPoint : Entity
 
         if (fullReset)
         {
+            Utils_DeathHandler.EnableDeathHandlerEntityChecks();
             currentSpawnpointTexture = GFX.Game["objects/EndHelper/DeathHandlerRespawnPoint/respawnpoint_fullreset_active"];
             inactiveTexture = GFX.Game["objects/EndHelper/DeathHandlerRespawnPoint/respawnpoint_fullreset_inactive"];
         }

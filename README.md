@@ -75,16 +75,27 @@ These are shown in the end-screen. Some of these can be overridden per-map with 
 - Flag Killbox
 
 
-## 1.2 changelog:
+
+
+## 1.1.9 changelog:
 - New Additions:
-	+ Added Incremental Flag Trigger. Flag trigger that makes requiring flags to be triggered in a specific order easier.
-	- Death Handler?
-	
-- Misc:
-	- Conditional Bird Tutorial: Added option - Only Fulfill Condition Once, which means once the bird flew down once, it can fly down again without fulfilling the condition. (This was previously the default behaviour.)
+	- QOL Tweaks:
+		- Autosave. Automatically saves the game every few minutes.
+	- Mapping Tools:
+		- Incremental Flag Trigger. Flag trigger that makes requiring flags to be triggered in a specific order easier.
 	
 - Gameplay Tweaks:
 	- Fixed Seemless Respawn bugging out when clicking retry in the menu
+	
+- Mapping Tools:
+	- Conditional Bird Tutorial: Added option - Only Fulfill Condition Once, which means once the bird flew down once, it can fly down again without fulfilling the condition. (This was previously the default behaviour.)
+	- Tile Entities: 
+		- Added options: colour, collidable, and background tiles.
+		- Hopefully improved the accuracy of the connections shown in Loenn.
+	
+- Misc:
+	- Freeze Timer When Pause/AFK: Icons now only show up when game is paused.
+	- Fixed a crash that can happen on the first clear of 3a (or whenever a map ends on a room transition).
 
 ## 1.1.8 changelog:
 	- Fixed crash when trying to enter an unloaded map

@@ -76,6 +76,7 @@ public class DeathHandlerThrowableRespawnPoint : Actor
 
         if (fullReset)
         {
+            Utils_DeathHandler.EnableDeathHandlerEntityChecks();
             P_Impact = new ParticleType
             {
                 Color = Calc.HexToColor("BF5764"),

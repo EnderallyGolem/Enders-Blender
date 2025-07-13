@@ -516,6 +516,22 @@ namespace Celeste.Mod.EndHelper.Utils
         }
 
         /// <summary>
+        /// Collide Check that forces collidable = true on the entity before checking (then reverts it after).
+        /// </summary>
+        /// <param name="scene"></param>
+        /// <param name="rect"></param>
+        /// <param name="entity"></param>
+        /// <returns></returns>
+        public static bool CollideCheckForce(this Scene scene, Rectangle rect, Entity entity)
+        {
+            bool originalCollidable = entity.Collidable;
+            entity.Collidable = true;
+            bool returnVal = scene.CollideCheck(rect, entity);
+            entity.Collidable = originalCollidable;
+            return returnVal;
+        }
+
+        /// <summary>
         /// Returns a Rectangle which is the size of the entity (same x, y, width, height)
         /// </summary>
         /// <param name="entity"></param>

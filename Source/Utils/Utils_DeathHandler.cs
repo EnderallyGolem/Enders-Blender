@@ -19,9 +19,12 @@ namespace Celeste.Mod.EndHelper.Utils
 {
     static internal class Utils_DeathHandler
     {
+        // If false, skips a lot of checks. Enabled by death bypass component and (throwable) respawn points if full reset is used. Disabled upon entering map.
+        internal static bool AllowDeathHandlerEntityChecks { get; private set; } = false;
+
         internal static bool deathWipe = true;              // If false, skips wipe when dying.
         private static bool previousDeathWipe = true;
-        internal static bool nextFastReload = false;        // If true, next reload will be forced to be fast
+        internal static bool nextFastReload = false;        // If true, next reload will be forced to be fast (screen transition animation after dying)
         internal static SeemlessRespawnEnum seemlessRespawn = SeemlessRespawnEnum.Disabled;
 
         internal static bool playerHasDeathBypass = false; // Constantly false, unless when dying with bypass
@@ -52,6 +55,8 @@ namespace Celeste.Mod.EndHelper.Utils
         internal static float deathCooldownFrames = 0;
 
         #region Hook Functions
+        
+
         public static void Update(Level level)
         {
             spinnerAltInView = false;
@@ -59,6 +64,18 @@ namespace Celeste.Mod.EndHelper.Utils
             {
                 deathCooldownFrames -= 1;
             }
+        }
+
+        public static void DisableAllowDeathHandlerEntityChecks()
+        { AllowDeathHandlerEntityChecks = false; }
+        public static void EnableDeathHandlerEntityChecks()
+        {
+            if (!AllowDeathHandlerEntityChecks)
+            {
+                // Init stuff
+                DeathBypass.entityIDDisappearUntilFullReset = [];
+            }
+            AllowDeathHandlerEntityChecks = true;
         }
 
         internal static void ForceShortDeathCooldown()
@@ -121,24 +138,46 @@ namespace Celeste.Mod.EndHelper.Utils
             UpdateSeemlessRespawn();
             Level level = player.SceneAs<Level>();
 
-            // If level was paused when this happens and lastFullResetPos is not null, player retried from menu: count as manual reset
-            if (level.Paused && level.CanRetry) SetManualReset(level);
-
-            if (player.Components.Get<DeathBypass>() is DeathBypass deathBypass && deathBypass.bypass)
+            if (Utils_DeathHandler.AllowDeathHandlerEntityChecks)
             {
-                oldbypass_requireFlag = deathBypass.requireFlag;
-                oldbypass_showVisuals = deathBypass.showVisuals;
-                oldStateMachine = player.StateMachine;
-                //Logger.Log(LogLevel.Info, "EndHelper/Utils_DeathHandler", $"Before player death state machine: {oldStateMachine}");
-                playerHasDeathBypass = true;
+                // If level was paused when this happens and lastFullResetPos is not null, player retried from menu: count as manual reset
+                if (level.Paused && level.CanRetry) SetManualReset(level);
+
+                if (player.Components.Get<DeathBypass>() is DeathBypass deathBypass && deathBypass.bypass)
+                {
+                    oldbypass_requireFlag = deathBypass.requireFlag;
+                    oldbypass_showVisuals = deathBypass.showVisuals;
+                    oldStateMachine = player.StateMachine;
+                    //Logger.Log(LogLevel.Info, "EndHelper/Utils_DeathHandler", $"Before player death state machine: {oldStateMachine}");
+                    playerHasDeathBypass = true;
+                }
+                else playerHasDeathBypass = false;
+
+                // If player fell out of the map, this counts as a full reset
+                if (player.Y > level.Bounds.Bottom) SetNextRespawnFullReset(level, true);
+
+                // Global-ise DeathBypass entities temporarily. Prevent it from being loaded.
+                if (!EndHelperModule.Session.nextRespawnFullReset)
+                {
+                    foreach (Entity entity in level.Entities)
+                    {
+                        if (entity.Components.Get<DeathBypass>() is DeathBypass deathBypassComponent && entity is not Player)
+                        {
+                            // Bypass component has to update, no matter if the entity itself is active
+                            // Sometimes, eg in a move block, the entity might become inactive, but should still be affected by flag changes for example
+                            deathBypassComponent.Update();
+                            if (deathBypassComponent.bypass)
+                            {
+                                deathBypassComponent.BeforeDeathBypass(entity);
+                            }
+                        }
+                    }
+                    DeathBypass.BeforeDeathBypassID(level);
+                }
             }
-            else playerHasDeathBypass = false;
 
+            // Update DeathWipe
             previousDeathWipe = deathWipe;
-
-            // If player fell out of the map, this counts as a full reset
-            if (player.Y > level.Bounds.Bottom) SetNextRespawnFullReset(level, true);
-
             //Logger.Log(LogLevel.Info, "EndHelper/Utils_DeathHandler", $"has deathbypass {playerHasDeathBypass} => no deathwipe. also nextrespawnfullreset {EndHelperModule.Session.nextRespawnFullReset}");
             if (playerHasDeathBypass && !level.Session.GrabbedGolden && !manualReset)
             {
@@ -203,24 +242,6 @@ namespace Celeste.Mod.EndHelper.Utils
                 oldDashDir = player.DashDir;
                 oldSpeed = player.Speed;
             }
-
-            // Global-ise DeathBypass entities temporarily. Prevent it from being loaded.
-            if (!EndHelperModule.Session.nextRespawnFullReset)
-            {
-                foreach (Entity entity in level.Entities)
-                {
-                    if (entity.Components.Get<DeathBypass>() is DeathBypass deathBypassComponent && entity is not Player)
-                    {
-                        // Bypass component has to update, no matter if the entity itself is active
-                        // Sometimes, eg in a move block, the entity might become inactive, but should still be affected by flag changes for example
-                        deathBypassComponent.Update();
-                        if (deathBypassComponent.bypass)
-                        {
-                            deathBypassComponent.BeforeDeathBypass(entity);
-                        }
-                    }
-                }
-            }
         }
 
         internal static void SetManualReset(Level level)
@@ -258,18 +279,6 @@ namespace Celeste.Mod.EndHelper.Utils
             //Logger.Log(LogLevel.Info, "EndHelper/Utils_DeathHandler", $"AfterPlayerDeath ran!");
             Level level = player.SceneAs<Level>();
 
-            // Deglobal-ise DeathBypass entities. Remove it from the DoNotLoad list.
-            if (!EndHelperModule.Session.nextRespawnFullReset)
-            {
-                foreach (Entity entity in level.Entities)
-                {
-                    if (entity.Components.Get<DeathBypass>() is DeathBypass deathBypassComponent && deathBypassComponent.bypass && entity is not Player)
-                    {
-                        // Bypass flag should hopefully not have changed in this time. If it does it might lead to issues. But another bypass update isn't necessary.
-                        deathBypassComponent.OnDeathBypass(entity);
-                    }
-                }
-            }
 
             if (!deathWipe)
             {
@@ -278,13 +287,34 @@ namespace Celeste.Mod.EndHelper.Utils
                 deathCooldownFrames = 20;
             }
 
-            if (playerHasDeathBypass)
+            if (Utils_DeathHandler.AllowDeathHandlerEntityChecks)
             {
-                player.Add(new DeathBypass(oldbypass_requireFlag, oldbypass_showVisuals));
-                playerHasDeathBypass = false;
-            }
+                // Deglobal-ise DeathBypass entities. Remove it from the DoNotLoad list.
+                if (!EndHelperModule.Session.nextRespawnFullReset)
+                {
+                    foreach (Entity entity in level.Entities)
+                    {
+                        if (entity.Components.Get<DeathBypass>() is DeathBypass deathBypassComponent && deathBypassComponent.bypass && entity is not Player)
+                        {
+                            // Bypass flag should hopefully not have changed in this time. If it does it might lead to issues. But another bypass update isn't necessary.
+                            deathBypassComponent.OnDeathBypass(entity);
+                        }
+                    }
+                    DeathBypass.OnDeathBypassID(level);
+                }
+                else
+                {
+                    DeathBypass.ClearDeathBypassID(level);
+                }
 
-            player.Add(new Coroutine(AfterPlayerDeathDelayed()));
+                if (playerHasDeathBypass)
+                {
+                    player.Add(new DeathBypass(oldbypass_requireFlag, oldbypass_showVisuals));
+                    playerHasDeathBypass = false;
+                }
+
+                player.Add(new Coroutine(AfterPlayerDeathDelayed()));                
+            }
         }
 
         public static IEnumerator AfterPlayerDeathDelayed()
@@ -296,11 +326,13 @@ namespace Celeste.Mod.EndHelper.Utils
                 manualReset = false;
             }
             EndHelperModule.Session.nextRespawnFullReset = false;
+
             yield break;
         }
 
-        public static void OnRoomTransition(Level level)
+        public static void ResetFullResetAndBypassBetweenRooms(Level level)
         {
+            DeathBypass.ClearDeathBypassID(level);
             Vector2? firstFullResetRespawnPoint = GetFullResetSpawnPoint(level);
             EndHelperModule.Session.nextRespawnFullReset = false;
 
@@ -657,7 +689,7 @@ namespace Celeste.Mod.EndHelper.Utils
             EndHelperModule.Session.lastFullResetPos = setPos.Value;
             if (EndHelperModule.Session.firstFullResetPos is null || overrideFirstPos)
             {
-                Logger.Log(LogLevel.Info, "EndHelper/Utils_DeathHandler", $"{setPos} is the first full reset pos");
+                //Logger.Log(LogLevel.Info, "EndHelper/Utils_DeathHandler", $"{setPos} is the first full reset pos");
                 EndHelperModule.Session.firstFullResetPos = setPos.Value;
             }
         }
@@ -751,8 +783,10 @@ namespace Celeste.Mod.EndHelper.Utils
     #region Components
 
     // Component for entities to have Death Bypass
-    public class DeathBypass(String requireFlag = "", bool showVisuals = true, EntityID? id = null, Solid staticMoverBaseEntity = null, bool isAttached = false, bool initialAllowBypass = true, bool preventChange = false) : Component(true, true)
+    public class DeathBypass(String requireFlag = "", bool showVisuals = true, EntityID? id = null, bool isAttached = false, bool initialAllowBypass = true, bool preventChange = false) : Component(true, true)
     {
+        public static List<EntityID> entityIDDisappearUntilFullReset = new List<EntityID>();
+
         internal bool bypass;
         internal bool showVisuals = showVisuals;
         internal EntityID entityID;
@@ -767,7 +801,9 @@ namespace Celeste.Mod.EndHelper.Utils
         
         public override void Added(Entity entity)
         {
-            Logger.Log(LogLevel.Info, "EndHelper/Utils_DeathHandler", $"Attempt to apply Death Bypass to entity: {entity} {entity.Position} {entity.SourceId}");
+            Utils_DeathHandler.EnableDeathHandlerEntityChecks();
+
+            //Logger.Log(LogLevel.Info, "EndHelper/Utils_DeathHandler", $"Attempt to apply Death Bypass to entity: {entity} {entity.Position} {entity.SourceId}");
             Level level = entity.SceneAs<Level>();
 
             // Add id
@@ -791,7 +827,9 @@ namespace Celeste.Mod.EndHelper.Utils
             // Special entity considerations - Subentities (entities that create more entities)
             if (entity is ZipMover zipmover) AddSubentity(zipmover.pathRenderer);
             else if (entity is SwapBlock swapBlock) AddSubentity(swapBlock.path);
+            else if (entity is MoveBlock moveBlock) AddSubentity(moveBlock.border);
             else if (entity is CrystalStaticSpinner crystalStaticSpinner) AddSubentity(crystalStaticSpinner.border);
+            else if (entity is Booster booster) AddSubentity(booster.outline);
             //else if (entity is DustStaticSpinner dustStaticSpinner) AddSubentity(dustStaticSpinner.Sprite.eyes); // This umm doesn't work. I am not adding hooks just for this.
 
             // Static mowers
@@ -806,19 +844,19 @@ namespace Celeste.Mod.EndHelper.Utils
                         {
                             if (staticMowerEntity is DeathHandlerRespawnPoint respawnPoint)
                             {
-                                respawnPoint.Add(new DeathBypass(requireFlag, showVisuals, id: respawnPoint.entityID, staticMoverBaseEntity: solid, isAttached: true));
+                                respawnPoint.Add(new DeathBypass(requireFlag, showVisuals, id: respawnPoint.entityID, isAttached: true));
                             }
                             else if (staticMowerEntity is DeathHandlerChangeRespawnRegion changeRespawnRegion)
                             {
-                                changeRespawnRegion.Add(new DeathBypass(requireFlag, showVisuals, id: changeRespawnRegion.entityID, staticMoverBaseEntity: solid, isAttached: true));
+                                changeRespawnRegion.Add(new DeathBypass(requireFlag, showVisuals, id: changeRespawnRegion.entityID, isAttached: true));
                             }
                             else if (staticMowerEntity is DeathHandlerBypassZone bypassZone)
                             {
-                                bypassZone.Add(new DeathBypass(requireFlag, showVisuals, id: bypassZone.entityID, staticMoverBaseEntity: solid, isAttached: true));
+                                bypassZone.Add(new DeathBypass(requireFlag, showVisuals, id: bypassZone.entityID, isAttached: true));
                             }
                             else
                             {
-                                staticMowerEntity.Add(new DeathBypass(requireFlag, showVisuals, staticMoverBaseEntity: solid, isAttached: true));
+                                staticMowerEntity.Add(new DeathBypass(requireFlag, showVisuals, isAttached: true));
                             }
                         }
                     }
@@ -827,43 +865,38 @@ namespace Celeste.Mod.EndHelper.Utils
             base.Added(entity);
         }
 
-        // Ran by DeathBypass entities before player dies. Does special things to specific entities.
+        // Ran by DeathBypass entities before player dies.
         internal void BeforeDeathBypass(Entity entity)
         {
-            //Logger.Log(LogLevel.Info, "EndHelper/Utils_DeathHandler", $"BeforeDeathBypass: {entity}");
             Level level = entity.SceneAs<Level>();
-            bool retainBypass = true;
-
-            // Base entity (for static mowers)
-            if (staticMoverBaseEntity is not null)
+            try
             {
-                Rectangle hitRect = staticMoverBaseEntity.HitRect();
-                if (staticMoverBaseEntity is CrushBlock crushBlock && hitRect.Top >= (float)(level.Bounds.Bottom + 32))
-                {
-                    retainBypass = false; // CrushBlock gets removed when this condition is met. Remove staticmowers as well.
-                }
+                //Logger.Log(LogLevel.Info, "EndHelper/Utils_DeathHandler", $"{entity}: retainBypass. do not add. {entityID}");
+                level.Session.DoNotLoad.Add(entityID);
+                entity.AddTag(Tags.Global);
             }
-
-            if (retainBypass)
+            catch (Exception)
             {
-                try
-                {
-                    //Logger.Log(LogLevel.Info, "EndHelper/Utils_DeathHandler", $"{entity}: retainBypass. do not add. {entityID}");
-                    level.Session.DoNotLoad.Add(entityID);
-                    entity.AddTag(Tags.Global);
-                }
-                catch (Exception)
-                {
-                    Logger.Log(LogLevel.Warn, "EndHelper/Utils_DeathHandler", $"{entity}: Failed to death-bypass. Removing entitiy!");
-                    RemoveSelf();
-                }
-            }
-            else
-            {
+                Logger.Log(LogLevel.Warn, "EndHelper/Utils_DeathHandler", $"{entity}: Failed to death-bypass. Removing entitiy!");
                 RemoveSelf();
             }
         }
 
+        static internal void BeforeDeathBypassID(Level level)
+        {
+            foreach (EntityID entityID in entityIDDisappearUntilFullReset)
+            {
+                Logger.Log(LogLevel.Info, "EndHelper/Utils_DeathHandler", $"BeforeDeathBypassID >> Id: {entityID} {entityID.Key == null} {entityID.Key == ""}");
+                if (entityID.Key != null)
+                {
+                    level.Session.DoNotLoad.Add(entityID);
+                }
+                else
+                {
+                    entityIDDisappearUntilFullReset.Remove(entityID);
+                }
+            }
+        }
 
         // Ran by DeathBypass entities after player dies. Also does special things to specific entities.
         internal void OnDeathBypass(Entity entity)
@@ -874,14 +907,32 @@ namespace Celeste.Mod.EndHelper.Utils
             level.Session.DoNotLoad.Remove(entityID);
 
             // Entity itself
-            if (entity is Booster booster)
-            {
-                level.Add(booster.outline);
-            }
-            else if (entity is DeathHandlerChangeRespawnRegion changeRespawnRegion)
+            if (entity is DeathHandlerChangeRespawnRegion changeRespawnRegion)
             {
                 changeRespawnRegion.Add(new Coroutine(changeRespawnRegion.OnDeathBypass()));
             }
+        }
+
+        static internal void OnDeathBypassID(Level level)
+        {
+            foreach (EntityID entityID in entityIDDisappearUntilFullReset)
+            {
+                //Logger.Log(LogLevel.Info, "EndHelper/Utils_DeathHandler", $"OnDeathBypassID >> Id: {entityID}");
+                if (entityID.Key != null)
+                {
+                    level.Session.DoNotLoad.Remove(entityID);
+                }
+                else
+                {
+                    entityIDDisappearUntilFullReset.Remove(entityID);
+                }
+            }
+        }
+
+        static internal void ClearDeathBypassID(Level level)
+        {
+            OnDeathBypassID(level);
+            entityIDDisappearUntilFullReset = [];
         }
 
         public override void Update()
@@ -915,7 +966,6 @@ namespace Celeste.Mod.EndHelper.Utils
                         if (staticMowerEntity.Components.Get<DeathBypass>() is DeathBypass staticDeathBypass)
                         {
                             entity.Remove(staticDeathBypass);
-                            //deathbypass.RemoveSelf();
                         }
                     }
                 }

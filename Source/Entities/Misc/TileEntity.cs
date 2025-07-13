@@ -8,6 +8,7 @@ using Microsoft.Xna.Framework;
 using Celeste.Mod.Entities;
 using System.Runtime.CompilerServices;
 using System.ComponentModel.Design.Serialization;
+using Celeste.Mod.EndHelper.Utils;
 
 namespace Celeste.Mod.EndHelper.Entities.Misc;
 [Tracked]
@@ -19,18 +20,20 @@ public class TileEntity : Solid
     private EntityID id;
     private TileGrid tiles;
 
-    private char tileType;
-    private char tiletypeOffscreen;
+    private readonly char tileType;
+    private readonly char tiletypeOffscreen;
+    private readonly bool backgroundTiles;
     private bool tileTypeMix = false;
-    private bool bg;
-    private bool allowMergeDifferentType;
-    private bool allowMerge;
-    private bool extendOffscreen;
-    private bool noEdges;
+    private readonly bool allowMergeDifferentType;
+    private readonly bool allowMerge;
+    private readonly bool extendOffscreen;
+    private readonly bool noEdges;
+    private readonly bool collidable;
+    private readonly Color colour;
 
-    private bool locationSeeded;
+    private readonly bool locationSeeded;
 
-    private List<bool> offDirecBoolList;
+    private readonly List<bool> offDirecBoolList;
 
     private TileEntity master;
 
@@ -39,9 +42,9 @@ public class TileEntity : Solid
     public Point GroupBoundsMin;
     public Point GroupBoundsMax;
 
-    private bool dashBlock;
-    private bool dashBlockPermament;
-    private string dashBlockBreakSound;
+    private readonly bool dashBlock;
+    private readonly bool dashBlockPermament;
+    private readonly string dashBlockBreakSound;
 
     public bool HasGroup
     {
@@ -57,7 +60,7 @@ public class TileEntity : Solid
 
     private TileEntity getMasterOfGroup;
 
-    public TileEntity(Vector2 position, float width, float height, EntityID id, char tileType, char tiletypeOffscreen, int depth, bool bg, bool blockLights = true, bool allowMergeDifferentType = false, bool allowMerge = true, 
+    public TileEntity(Vector2 position, float width, float height, EntityID id, char tileType, char tiletypeOffscreen, int depth, bool backgroundTiles, bool collidable, string colourStr, bool allowMergeDifferentType = false, bool allowMerge = true, 
         bool extendOffscreen = false, bool noEdges = false, List<bool> offDirecBoolList = null, bool locationSeeded = false,
         bool dashBlock = false, bool dashBlockPermament = false, String dashBlockBreakSound = "")
     : base(position, width, height, safe: true)
@@ -65,8 +68,8 @@ public class TileEntity : Solid
         
         this.tileType = tileType;
         this.tiletypeOffscreen = tiletypeOffscreen;
+        this.backgroundTiles = backgroundTiles;
         Depth = Calc.Clamp(depth, -300000, 20000);
-        this.bg = bg; // Unused
         this.allowMergeDifferentType = allowMergeDifferentType;
         this.allowMerge = allowMerge;
         this.extendOffscreen = extendOffscreen;
@@ -77,15 +80,20 @@ public class TileEntity : Solid
         this.dashBlock = dashBlock;
         this.dashBlockPermament = dashBlockPermament;
         this.dashBlockBreakSound = dashBlockBreakSound;
+        this.collidable = collidable;
+        this.colour = Calc.HexToColorWithAlpha(colourStr);
 
         this.id = id;
 
-        if (bg)
+        if (collidable)
+        {
+            Add(new LightOcclude());
+        }
+        else
         {
             Collidable = false;
         }
-        if (blockLights)
-            Add(new LightOcclude());
+
         if (!SurfaceIndex.TileToIndex.TryGetValue(tileType, out SurfaceSoundIndex))
             SurfaceSoundIndex = SurfaceIndex.Brick;
 
@@ -96,7 +104,7 @@ public class TileEntity : Solid
     private Vector2 relativePos;
 
     public TileEntity(EntityData data, Vector2 offset, EntityID id)
-        : this(data.Position + offset, data.Width, data.Height, id, data.Char("tiletype", '3'), data.Char("tiletypeOffscreen", '◯'), data.Int("Depth", -9000), data.Bool("BackgroundTile", false), data.Bool("BlockLights", true), data.Bool("allowMergeDifferentType", false), data.Bool("allowMerge", true), data.Bool("extendOffscreen", true), data.Bool("noEdges", false),
+        : this(data.Position + offset, data.Width, data.Height, id, data.Char("tiletype", '3'), data.Char("tiletypeOffscreen", '◯'), data.Int("Depth", -9000), data.Bool("backgroundTiles", false), data.Bool("collidable", true), data.Attr("colour", "ffffffff"), data.Bool("allowMergeDifferentType", false), data.Bool("allowMerge", true), data.Bool("extendOffscreen", true), data.Bool("noEdges", false),
               [data.Bool("offU", true), data.Bool("offUR", true), data.Bool("offR", true), data.Bool("offDR", true), data.Bool("offD", true), data.Bool("offDL", true), data.Bool("offL", true), data.Bool("offUL", true)], data.Bool("locationSeeded", false),
               data.Bool("dashBlock", false), data.Bool("dashBlockPermament", true), data.Attr("dashBlockBreakSound", "")
         )
@@ -113,7 +121,7 @@ public class TileEntity : Solid
         if (!HasGroup)
         {
             isMasterOfGroup = true;
-            Group = new List<TileEntity>();
+            Group = [];
             GroupBoundsMin = new Point((int)X, (int)Y);
             GroupBoundsMax = new Point((int)Right, (int)Bottom);
             AddToGroupAndFindChildren(this);
@@ -203,14 +211,15 @@ public class TileEntity : Solid
             }
             //Logger.Log(LogLevel.Info, "EndHelper/Misc/TileEntity", $"{virtualMap}");
             if (locationSeeded) { Calc.PushRandom((int)(relativePos.X * relativePos.Y + Width + Height)); }
-            Autotiler tiler = bg ? GFX.BGAutotiler : GFX.FGAutotiler;
+            Autotiler tiler = backgroundTiles ? GFX.BGAutotiler : GFX.FGAutotiler;
             tiles = tiler.GenerateMap(virtualMap, new Autotiler.Behaviour
             {
                 EdgesExtend = false,
                 EdgesIgnoreOutOfLevel = noEdgesAny,
-                PaddingIgnoreOutOfLevel = false
+                PaddingIgnoreOutOfLevel = false,
             }).TileGrid;
             tiles.Position = new Vector2(GroupBoundsMin.X - X - 8, GroupBoundsMin.Y - Y - 8);
+            tiles.Color = colour;
             tiles.VisualExtend = 32;
             Add(tiles);
             if (locationSeeded) { Calc.PopRandom(); }
@@ -253,8 +262,8 @@ public class TileEntity : Solid
         }
         foreach (TileEntity entity in entities)
         {
-            if (allowMerge && entity.allowMerge && !entity.HasGroup && entity.bg == bg && entity.dashBlock == dashBlock
-                && (Scene.CollideCheck(new Rectangle((int)from.X - 1, (int)from.Y, (int)from.Width + 2, (int)from.Height), entity) || Scene.CollideCheck(new Rectangle((int)from.X, (int)from.Y - 1, (int)from.Width, (int)from.Height + 2), entity)))
+            if (allowMerge && entity.allowMerge && !entity.HasGroup && entity.dashBlock == dashBlock && entity.colour == colour && entity.backgroundTiles == backgroundTiles
+                && (Scene.CollideCheckForce(new Rectangle((int)from.X - 1, (int)from.Y, (int)from.Width + 2, (int)from.Height), entity) || Scene.CollideCheckForce(new Rectangle((int)from.X, (int)from.Y - 1, (int)from.Width, (int)from.Height + 2), entity)))
             {
                 if (allowMergeDifferentType && entity.allowMergeDifferentType)
                 {

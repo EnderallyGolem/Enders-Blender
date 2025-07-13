@@ -84,8 +84,8 @@ public class DeathHandlerDeathBypassTrigger : Trigger
 
     internal static bool FilterEntity(Entity entity, bool allowPlayer = false, bool allowPreventChange = true)
     {
-        if (entity is SolidTiles || entity is BackgroundTiles || (entity is Player && !allowPlayer) || entity is PlayerDeadBody || entity is DeathHandlerDeathBypassTrigger
-            || entity is Killbox)
+        if (entity is Trigger || entity is SolidTiles || entity is BackgroundTiles || (entity is Player && !allowPlayer) || entity is PlayerDeadBody 
+            || entity is DeathHandlerDeathBypassTrigger || entity is Killbox)
         {
             return false;
         }

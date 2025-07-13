@@ -128,7 +128,7 @@ cassetteBeatGate.fieldInformation = {
 }
 
 cassetteBeatGate.fieldOrder = {
-    "x", "y", "height", "width", "editorLayer",
+    "x", "y", "width", "height", "editorLayer",
     "moveCycleBeat", "moveLoopBeat", "firstNode", "moveTime", "easing",
     "texturePath", "particleColour1", "particleColour2",
     "surfaceSoundIndex", "moveSound", "requireFlag",

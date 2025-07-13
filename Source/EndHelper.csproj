@@ -46,6 +46,9 @@
         <Reference Include="SSMQoLMod">
           <HintPath>..\Integrations\SSMQoLMod.dll</HintPath>
         </Reference>
+        <Reference Include="Steamworks.NET">
+          <HintPath>..\..\..\Steamworks.NET.dll</HintPath>
+        </Reference>
         <Reference Include="System.Windows.Extensions">
           <HintPath>..\..\..\System.Windows.Extensions.dll</HintPath>
         </Reference>

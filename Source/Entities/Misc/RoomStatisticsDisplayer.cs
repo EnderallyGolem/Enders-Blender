@@ -1319,12 +1319,9 @@ public class RoomStatisticsDisplayer : Entity
 
 
         // All the first clear stuff
-        // This is dealWithFirstClear without the "ensure dictionary has required roomnames" part. Since *this* is responsible for having required roomnames.
-        bool canAddMapAsFirstCycle = EndHelperModule.Settings.RoomStatMenu.MenuTrackerStorageCount != 0 && !SaveData.Instance.Areas_Safe[level.Session.Area.ID].Modes[(int)level.Session.Area.Mode].Completed && EndHelperModule.SaveData.mapDict_roomStat_firstClear_roomOrder.ContainsKey(mapNameSide_Internal);
-
         if (dictsHaveKeyType == DictsHaveKeyType.All)
         {
-            if (canAddMapAsFirstCycle && (!EndHelperModule.SaveData.mapDict_roomStat_firstClear_roomOrder[mapNameSide_Internal].Contains(roomName) || !EndHelperModule.SaveData.mapDict_roomStat_firstClear_strawberries[mapNameSide_Internal].ContainsKey(roomName)))
+            if (dealWithFirstClear && (!EndHelperModule.SaveData.mapDict_roomStat_firstClear_roomOrder[mapNameSide_Internal].Contains(roomName) || !EndHelperModule.SaveData.mapDict_roomStat_firstClear_strawberries[mapNameSide_Internal].ContainsKey(roomName)))
             {
                 // Take existing data if it exists. This is pretty much just so if updating from prev ver the first clear doesn't reset if it doesn't need to
                 if (EndHelperModule.SaveData.mapDict_roomStat_firstClear_roomOrder[mapNameSide_Internal].Count == 0)
@@ -1376,13 +1373,13 @@ public class RoomStatisticsDisplayer : Entity
         else if (dictsHaveKeyType == DictsHaveKeyType.FirstClear)
         {
             // Updating just the first clear isn't used, but this is here just in case.
-            if (canAddMapAsFirstCycle && !EndHelperModule.SaveData.mapDict_roomStat_firstClear_roomOrder[mapNameSide_Internal].Contains(roomName))
+            if (dealWithFirstClear && !EndHelperModule.SaveData.mapDict_roomStat_firstClear_roomOrder[mapNameSide_Internal].Contains(roomName))
             {
                 EndHelperModule.SaveData.mapDict_roomStat_firstClear_roomOrder[mapNameSide_Internal].Add(roomName);
                 EndHelperModule.SaveData.mapDict_roomStat_firstClear_death[mapNameSide_Internal][roomName] = 0;
                 EndHelperModule.SaveData.mapDict_roomStat_firstClear_timer[mapNameSide_Internal][roomName] = 0;
             }
-            if (canAddMapAsFirstCycle && !EndHelperModule.SaveData.mapDict_roomStat_firstClear_strawberries[mapNameSide_Internal].ContainsKey(roomName))
+            if (dealWithFirstClear && !EndHelperModule.SaveData.mapDict_roomStat_firstClear_strawberries[mapNameSide_Internal].ContainsKey(roomName))
             {
                 EndHelperModule.SaveData.mapDict_roomStat_firstClear_strawberries[mapNameSide_Internal][roomName] = 0;
             }

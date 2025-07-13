@@ -154,6 +154,11 @@ modoptions_EndHelperModule_SubHeader_QOLTweaks=QOL Tweaks
 ### QOL Tweaks SubMenu
 modoptions_EndHelperModule_QOLTweaksMenu=QOL Tweaks
 
+# Autosave
+modoptions_EndHelperModule_AutosaveTime=Autosave Time
+modoptions_EndHelperModule_AutosaveTime_Desc=Saves the game every few minutes (only after a death).
+Set to 0 to disable.
+
 # Quick Restart
 modoptions_EndHelperModule_DisableQuickRestart=Disable Quick Restart Keybind
 modoptions_EndHelperModule_DisableQuickRestart_Desc=Why is this set to R if empty

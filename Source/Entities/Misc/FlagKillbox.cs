@@ -1,20 +1,9 @@
-﻿using Celeste.Mod.EndHelper.Entities.RoomSwap;
-using Celeste.Mod.EndHelper.Integration;
-using Celeste.Mod.EndHelper.Utils;
+﻿using Celeste.Mod.EndHelper.Utils;
 using Celeste.Mod.Entities;
-using Celeste.Mod.QuantumMechanics.Entities;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using Monocle;
-using MonoMod.Cil;
-using MonoMod.Utils;
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
+using Steamworks;
 
 namespace Celeste.Mod.EndHelper.Entities.Misc
 {

@@ -86,6 +86,9 @@ public class EndHelperModule : EverestModule {
     // Lets me disable, but ensure it gets re-enabled when I don't need it anymore
     public static int mInputDisableDuration = 0;
 
+    // Autosave timer
+    public static TimeSpan autoSaveTimer = TimeSpan.Zero;
+
     public static bool integratingWithSSMQoL = false; // Cchange multiroom bino speed multiplier if used by this
     public static bool integratingWithFrostHelper = false; // Only to check for frost helper spinners
     public static bool integratingWithCommunualHelper = false; // Make some entities work better with death handler
@@ -132,6 +135,7 @@ public class EndHelperModule : EverestModule {
         On.Celeste.Level.Pause += Hook_Pause;
         On.Celeste.Session.GetSpawnPoint += Hook_SessionGetSpawnPoint;
         On.Celeste.Level.TransitionRoutine += Hook_TransitionRoutine;
+        On.Monocle.Entity.Removed += Hook_EntityRemoved;
         On.Celeste.Glitch.Apply += Hook_GlitchEffectApply;
 
         On.Celeste.Player.Update += Hook_OnPlayerUpdate;
@@ -293,6 +297,8 @@ public class EndHelperModule : EverestModule {
     private static void EnterMapFunc(global::Celeste.Session session, bool fromSaveData)
     {
         RoomStatisticsDisplayer.hideIfGoldenStrawberryEnabled = false;
+        autoSaveTimer = TimeSpan.Zero;
+        Utils_DeathHandler.DisableAllowDeathHandlerEntityChecks();
 
         // If first time (not fromSaveData), check Hook_StartMap since it has access to level
         if (fromSaveData)
@@ -591,6 +597,12 @@ public class EndHelperModule : EverestModule {
         {
             Utils_General.scrollResetInputFrames--;
         }
+
+        // Autosave Timer
+        if (EndHelperModule.Settings.QOLTweaksMenu.AutosaveTime > 0)
+        {
+            autoSaveTimer += TimeSpanShims.FromSeconds((double)Engine.RawDeltaTime);
+        }
     }
 
     private static void SessionResetFuncs(Level level)
@@ -628,9 +640,9 @@ public class EndHelperModule : EverestModule {
             }
         }
 
-        if (lastSessionResetCause == SessionResetCause.Debug)
+        if (Utils_DeathHandler.AllowDeathHandlerEntityChecks && lastSessionResetCause == SessionResetCause.Debug)
         {
-            Utils_DeathHandler.OnRoomTransition(level);
+            Utils_DeathHandler.ResetFullResetAndBypassBetweenRooms(level);
         }
 
         if (timeSinceSessionReset <= 1)
@@ -679,7 +691,10 @@ public class EndHelperModule : EverestModule {
                 } 
                 else if (!player.Dead)
                 {
-                    Utils_DeathHandler.SetManualReset(level); // Set spawnpoint to full reset if it's used
+                    if (Utils_DeathHandler.AllowDeathHandlerEntityChecks)
+                    {
+                        Utils_DeathHandler.SetManualReset(level); // Set spawnpoint to full reset if it's used
+                    }
                     level.Paused = false;
                     level.PauseMainMenuOpen = false;
                     Engine.TimeRate = 1f;
@@ -907,12 +922,9 @@ public class EndHelperModule : EverestModule {
         if (!level.IsInBounds(self)) Utils_DeathHandler.ForceShortDeathCooldown(); // Reduce cooldown if player is out of bounds. Will definitely need to die soon!
 
         // Prevent death spam (if using seemless respawn).
-        if (Utils_DeathHandler.deathCooldownFrames > 0)
-        {
-            return null;
-        }
-
+        if (Utils_DeathHandler.deathCooldownFrames > 0) return null;
         Utils_DeathHandler.BeforePlayerDeath(self);
+
         return orig(self, direction, evenIfInvincible, registerDeathInStats);
     }
 
@@ -1083,6 +1095,13 @@ public class EndHelperModule : EverestModule {
         }
 
         Utils_DeathHandler.AfterPlayerDeath(self);
+
+        // Autosave
+        if (EndHelperModule.Settings.QOLTweaksMenu.AutosaveTime > 0 && autoSaveTimer.TotalMinutes >= EndHelperModule.Settings.QOLTweaksMenu.AutosaveTime)
+        {
+            level.AutoSave();
+            autoSaveTimer = TimeSpan.Zero;
+        }
     }
 
     private static Vector2 Hook_SessionGetSpawnPoint(On.Celeste.Session.orig_GetSpawnPoint orig, global::Celeste.Session self, Vector2 from)
@@ -1130,7 +1149,8 @@ public class EndHelperModule : EverestModule {
     {
         Utils_General.framesSinceEnteredRoom = 0;
         yield return new SwapImmediately(orig(self, next, direction));
-        Utils_DeathHandler.OnRoomTransition(self); // AFTER room change
+
+        if (Utils_DeathHandler.AllowDeathHandlerEntityChecks) Utils_DeathHandler.ResetFullResetAndBypassBetweenRooms(self); // AFTER room change
     }
 
     private static void Hook_StartMapFromBeginning(On.Celeste.LevelLoader.orig_StartLevel orig, global::Celeste.LevelLoader self)
@@ -1174,6 +1194,16 @@ public class EndHelperModule : EverestModule {
             }
         }
         orig(self, startIndex, minimal, quickReset);
+    }
+
+    public static void Hook_EntityRemoved(On.Monocle.Entity.orig_Removed orig, global::Monocle.Entity self, global::Monocle.Scene scene)
+    {
+        if (Utils_DeathHandler.AllowDeathHandlerEntityChecks && self.Components.Get<DeathBypass>() is DeathBypass deathBypassComponent && deathBypassComponent.bypass
+            && self is not Player)
+        {
+            DeathBypass.entityIDDisappearUntilFullReset.Add(deathBypassComponent.entityID);
+        }
+        orig(self, scene);
     }
 
     public static void Hook_GlitchEffectApply(On.Celeste.Glitch.orig_Apply orig, VirtualRenderTarget source, float timer, float seed, float amplitude)
@@ -1567,7 +1597,7 @@ public class EndHelperModule : EverestModule {
 
     public static void Hook_KillboxKill(On.Celeste.Killbox.orig_OnPlayer orig, global::Celeste.Killbox self, global::Celeste.Player player)
     {
-        if (!global::Celeste.SaveData.Instance.Assists.Invincible) Utils_DeathHandler.SetNextRespawnFullReset(player.level, true);
+        if (Utils_DeathHandler.AllowDeathHandlerEntityChecks && !global::Celeste.SaveData.Instance.Assists.Invincible) Utils_DeathHandler.SetNextRespawnFullReset(player.level, true);
         orig(self, player);
     }
 
@@ -1637,14 +1667,6 @@ public class EndHelperModule : EverestModule {
 
     private static void Hook_SpeedrunTimerRender(On.Celeste.SpeedrunTimerDisplay.orig_Render orig, global::Celeste.SpeedrunTimerDisplay self)
     {
-        // Display pause/afk icons if necessary
-        if (!EndHelperModule.Session.pauseTypeDict.ContainsKey("LevelTimer_Pause")) { EndHelperModule.Session.pauseTypeDict["LevelTimer_Pause"] = false; }
-        if (!EndHelperModule.Session.pauseTypeDict.ContainsKey("LevelTimer_AFK")) { EndHelperModule.Session.pauseTypeDict["LevelTimer_AFK"] = false; }
-        bool freezedByPause = EndHelperModule.Session.pauseTypeDict["LevelTimer_Pause"];
-        bool freezedByAfk = EndHelperModule.Session.pauseTypeDict["LevelTimer_AFK"];
-        String pauseIconMsg = ":EndHelper/ui_timerfreeze_pause:";
-        String afkIconMsg = ":EndHelper/ui_timerfreeze_afk:";
-
         bool renderTimer = true;
         if (Engine.Scene is Level level && level.Tracker.GetEntity<RoomStatisticsDisplayer>() is RoomStatisticsDisplayer roomStatDisplayer && roomStatDisplayer.statisticsGuiOpen)
         { renderTimer = false; }
@@ -1653,38 +1675,49 @@ public class EndHelperModule : EverestModule {
 
         if (renderTimer)
         {
-            if (self.Visible && global::Celeste.Settings.Instance.SpeedrunClock == SpeedrunType.Chapter)
+            if (Engine.Scene is Level level2 && level2.Paused && self.Visible)
             {
-                const int xPos = 13; const int xPosDiff = 20; const int yPos = 162;
-                if (freezedByPause && freezedByAfk)
+                // Display pause/afk icons if necessary
+                if (!EndHelperModule.Session.pauseTypeDict.ContainsKey("LevelTimer_Pause")) { EndHelperModule.Session.pauseTypeDict["LevelTimer_Pause"] = false; }
+                if (!EndHelperModule.Session.pauseTypeDict.ContainsKey("LevelTimer_AFK")) { EndHelperModule.Session.pauseTypeDict["LevelTimer_AFK"] = false; }
+                bool freezedByPause = EndHelperModule.Session.pauseTypeDict["LevelTimer_Pause"];
+                bool freezedByAfk = EndHelperModule.Session.pauseTypeDict["LevelTimer_AFK"];
+                String pauseIconMsg = ":EndHelper/ui_timerfreeze_pause:";
+                String afkIconMsg = ":EndHelper/ui_timerfreeze_afk:";
+
+                if (global::Celeste.Settings.Instance.SpeedrunClock == SpeedrunType.Chapter)
                 {
-                    ActiveFont.DrawOutline(pauseIconMsg, new Vector2(xPos, yPos), new Vector2(0.5f, 0.5f), Vector2.One * 2f, Color.DarkGray, 1f, Color.Black);
-                    ActiveFont.DrawOutline(afkIconMsg, new Vector2(xPos + xPosDiff, yPos), new Vector2(0.5f, 0.5f), Vector2.One * 2f, Color.DarkGray, 1f, Color.Black);
+                    const int xPos = 13; const int xPosDiff = 22; const int yPos = 162;
+                    if (freezedByPause && freezedByAfk)
+                    {
+                        ActiveFont.DrawOutline(pauseIconMsg, new Vector2(xPos, yPos), new Vector2(0.5f, 0.5f), Vector2.One * 2f, Color.DarkGray, 1f, Color.Black);
+                        ActiveFont.DrawOutline(afkIconMsg, new Vector2(xPos + xPosDiff, yPos), new Vector2(0.5f, 0.5f), Vector2.One * 2f, Color.DarkGray, 1f, Color.Black);
+                    }
+                    else if (freezedByPause)
+                    {
+                        ActiveFont.DrawOutline(pauseIconMsg, new Vector2(xPos, yPos), new Vector2(0.5f, 0.5f), Vector2.One * 2f, Color.DarkGray, 1f, Color.Black);
+                    }
+                    else if (freezedByAfk)
+                    {
+                        ActiveFont.DrawOutline(afkIconMsg, new Vector2(xPos, yPos), new Vector2(0.5f, 0.5f), Vector2.One * 2f, Color.DarkGray, 1f, Color.Black);
+                    }
                 }
-                else if (freezedByPause)
+                else if (global::Celeste.Settings.Instance.SpeedrunClock == SpeedrunType.File)
                 {
-                    ActiveFont.DrawOutline(pauseIconMsg, new Vector2(xPos, yPos), new Vector2(0.5f, 0.5f), Vector2.One * 2f, Color.DarkGray, 1f, Color.Black);
-                }
-                else if (freezedByAfk)
-                {
-                    ActiveFont.DrawOutline(afkIconMsg, new Vector2(xPos, yPos), new Vector2(0.5f, 0.5f), Vector2.One * 2f, Color.DarkGray, 1f, Color.Black);
-                }
-            }
-            else if (self.Visible && global::Celeste.Settings.Instance.SpeedrunClock == SpeedrunType.File)
-            {
-                const int xPos = 13; const int xPosDiff = 20; const int yPos = 185;
-                if (freezedByPause && freezedByAfk)
-                {
-                    ActiveFont.DrawOutline(pauseIconMsg, new Vector2(xPos, yPos), new Vector2(0.5f, 0.5f), Vector2.One * 2f, Color.DarkGray, 1f, Color.Black);
-                    ActiveFont.DrawOutline(afkIconMsg, new Vector2(xPos + xPosDiff, yPos), new Vector2(0.5f, 0.5f), Vector2.One * 2f, Color.DarkGray, 1f, Color.Black);
-                }
-                else if (freezedByPause)
-                {
-                    ActiveFont.DrawOutline(pauseIconMsg, new Vector2(xPos, yPos), new Vector2(0.5f, 0.5f), Vector2.One * 2f, Color.DarkGray, 1f, Color.Black);
-                }
-                else if (freezedByAfk)
-                {
-                    ActiveFont.DrawOutline(afkIconMsg, new Vector2(xPos, yPos), new Vector2(0.5f, 0.5f), Vector2.One * 2f, Color.DarkGray, 1f, Color.Black);
+                    const int xPos = 13; const int xPosDiff = 22; const int yPos = 185;
+                    if (freezedByPause && freezedByAfk)
+                    {
+                        ActiveFont.DrawOutline(pauseIconMsg, new Vector2(xPos, yPos), new Vector2(0.5f, 0.5f), Vector2.One * 2f, Color.DarkGray, 1f, Color.Black);
+                        ActiveFont.DrawOutline(afkIconMsg, new Vector2(xPos + xPosDiff, yPos), new Vector2(0.5f, 0.5f), Vector2.One * 2f, Color.DarkGray, 1f, Color.Black);
+                    }
+                    else if (freezedByPause)
+                    {
+                        ActiveFont.DrawOutline(pauseIconMsg, new Vector2(xPos, yPos), new Vector2(0.5f, 0.5f), Vector2.One * 2f, Color.DarkGray, 1f, Color.Black);
+                    }
+                    else if (freezedByAfk)
+                    {
+                        ActiveFont.DrawOutline(afkIconMsg, new Vector2(xPos, yPos), new Vector2(0.5f, 0.5f), Vector2.One * 2f, Color.DarkGray, 1f, Color.Black);
+                    }
                 }
             }
             orig(self);

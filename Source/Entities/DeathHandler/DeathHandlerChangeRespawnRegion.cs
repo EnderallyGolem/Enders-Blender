@@ -27,6 +27,7 @@ public class DeathHandlerChangeRespawnRegion : Solid
     internal bool visibleTarget = true;
 
     internal Vector2 targetSpawnpoint;
+    private readonly Vector2 targetSpawnpointOffset = Vector2.Zero;
 
     internal SimpleCurve visualLine1;
     internal SimpleCurve visualLine2;
@@ -59,6 +60,8 @@ public class DeathHandlerChangeRespawnRegion : Solid
 
         this.visibleArea = data.Bool("visibleArea", true);
         this.visibleTarget = data.Bool("visibleTarget", true);
+
+        if (data.Nodes.Length > 0) targetSpawnpointOffset = data.Nodes[0] + offset - Position;
 
         entityID = id;
         if (attachable)
@@ -172,7 +175,7 @@ public class DeathHandlerChangeRespawnRegion : Solid
         }
         else
         {
-            targetSpawnpoint = SceneAs<Level>().GetSpawnPoint(regionRect.Center.ToVector2());
+            targetSpawnpoint = SceneAs<Level>().GetSpawnPoint(regionRect.Center.ToVector2() + targetSpawnpointOffset);
         }
         //Logger.Log(LogLevel.Info, "EndHelper/DeathHandlerChangeRespawnRegion", $"{entityID} >> targetSpawnpoint: {targetSpawnpoint}");
         UpdateVisualLine(player);
