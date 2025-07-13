@@ -68,6 +68,12 @@ These are shown in the end-screen. Some of these can be overridden per-map with 
     - If the seed depends on the relative position in the room
 - Option to be breakable
 
+###### Conditional Bird Tutorial
+- Tutorial bird which flies in when certain conditions are met:
+	- Certain time in room / part of room (total or at once)
+	- Certain number of deaths in room / part of room
+	- Flag enabled
+	- If on screen
 
 ###### Misc
 - Incremental Flag Trigger
@@ -83,6 +89,7 @@ These are shown in the end-screen. Some of these can be overridden per-map with 
 		- Autosave. Automatically saves the game every few minutes.
 	- Mapping Tools:
 		- Incremental Flag Trigger. Flag trigger that makes requiring flags to be triggered in a specific order easier.
+		- Flag Killbox
 	
 - Gameplay Tweaks:
 	- Fixed Seemless Respawn bugging out when clicking retry in the menu
