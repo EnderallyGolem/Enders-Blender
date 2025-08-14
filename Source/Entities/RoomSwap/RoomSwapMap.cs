@@ -106,7 +106,7 @@ public class RoomSwapMap : Entity
 
         if (hudLayer)
         {
-            AddTag(Tags.HUD);
+            AddTag(TagsExt.SubHUD);
             AddTag(Tags.TransitionUpdate);
             backgroundTexture.Scale *= 6;
             backgroundTexture.RenderPosition = hudRenderPos;

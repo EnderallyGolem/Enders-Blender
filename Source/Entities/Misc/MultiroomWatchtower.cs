@@ -29,64 +29,61 @@ namespace Celeste.Mod.EndHelper.Entities.Misc;
 [CustomEntity("EndHelper/MultiroomWatchtower")]
 public class MultiroomWatchtower : Entity
 {
-
-    public bool leftLookoutRoomScroll = false;
-    public bool rightLookoutRoomScroll = false;
-    public bool upLookoutRoomScroll = false;
-    public bool downLookoutRoomScroll = false;
-    public bool Q1LookoutRoomScroll = false; //start top right, anticlockwise
-    public bool Q2LookoutRoomScroll = false;
-    public bool Q3LookoutRoomScroll = false;
-    public bool Q4LookoutRoomScroll = false;
-    public LevelData lookoutRoom = null;
+    private bool leftLookoutRoomScroll = false;
+    private bool rightLookoutRoomScroll = false;
+    private bool upLookoutRoomScroll = false;
+    private bool downLookoutRoomScroll = false;
+    private bool Q1LookoutRoomScroll = false; //start top right, anticlockwise
+    private bool Q2LookoutRoomScroll = false;
+    private bool Q3LookoutRoomScroll = false;
+    private bool Q4LookoutRoomScroll = false;
+    private LevelData lookoutRoom = null;
 
     Vector2 watchtowerPosition;
 
     public class Hud : Entity
     {
-        public float Easer;
+        internal float Easer;
 
-        public float timerUp;
-        public float timerDown;
-        public float timerLeft;
-        public float timerRight;
+        private float timerUp;
+        private float timerDown;
+        private float timerLeft;
+        private float timerRight;
 
-        public float timerQ1;
-        public float timerQ2;
-        public float timerQ3;
-        public float timerQ4;
+        private float timerQ1;
+        private float timerQ2;
+        private float timerQ3;
+        private float timerQ4;
 
+        private float multUp;
+        private float multDown;
+        private float multLeft;
+        private float multRight;
 
-        public float multUp;
-        public float multDown;
-        public float multLeft;
-        public float multRight;
+        private float multQ1;
+        private float multQ2;
+        private float multQ3;
+        private float multQ4;
 
-        public float multQ1;
-        public float multQ2;
-        public float multQ3;
-        public float multQ4;
+        private float leftScrollHUD;
+        private float rightScrollHUD;
+        private float upScrollHUD;
+        private float downScrollHUD;
 
-
-        public float leftScrollHUD;
-        public float rightScrollHUD;
-        public float upScrollHUD;
-        public float downScrollHUD;
-
-        public float Q1ScrollHUD;
-        public float Q2ScrollHUD;
-        public float Q3ScrollHUD;
-        public float Q4ScrollHUD;
+        private float Q1ScrollHUD;
+        private float Q2ScrollHUD;
+        private float Q3ScrollHUD;
+        private float Q4ScrollHUD;
 
         Vector2 Q1FadeOffset;
         Vector2 Q2FadeOffset;
         Vector2 Q3FadeOffset;
         Vector2 Q4FadeOffset;
 
-        public Vector2 aim;
+        private Vector2 aim;
 
 
-        public MTexture halfDot = GFX.Gui["dot"].GetSubtexture(0, 0, 64, 32);
+        private MTexture halfDot = GFX.Gui["dot"].GetSubtexture(0, 0, 64, 32);
 
         private MultiroomWatchtower p;
 
@@ -413,6 +410,7 @@ public class MultiroomWatchtower : Entity
     public bool ignoreBlocker = false;
     public bool canToggleBlocker = false;
     public bool doOverlapCheck = true;
+    internal bool invincibleWhenUsing = false;
 
     public EntityData data;
 
@@ -559,6 +557,9 @@ public class MultiroomWatchtower : Entity
 
     public IEnumerator LookRoutine(Player player)
     {
+        // For portable multiroom bino - early invinciblity, as there's a delay before the loop starts
+        if (invincibleWhenUsing) Utils_General.disablePlayerDeathCountdown.Set(30);
+
         trackPercent = 0f;
         Level level = SceneAs<Level>();
         preWatchRespawnPoint = level.Session.RespawnPoint;
@@ -600,10 +601,6 @@ public class MultiroomWatchtower : Entity
 
         // From here: player is definitely using it
         AddTag(Tags.Persistent);
-        {if (level.Tracker.GetEntity<RoomStatisticsDisplayer>() is RoomStatisticsDisplayer roomStatDisplayer)
-        {
-            roomStatDisplayer.disableRoomChange = true;
-        }}
 
         previouslyInteracted = true;
 
@@ -665,8 +662,6 @@ public class MultiroomWatchtower : Entity
 
         int changeRoomCooldown = 0;
 
-        EndHelperModule.Session.allowScreenTransitionMovement = false;
-
         //
         // Stay within this while loop as long as viewing binoculars
         //
@@ -678,6 +673,15 @@ public class MultiroomWatchtower : Entity
             player.Hair.Visible = false;
             screenCenterOffset = new Vector2(level.Camera.Right - level.Camera.Left, level.Camera.Bottom - level.Camera.Top) * 0.5f;
 
+            // Spam set respawn point to where it was before viewing, so hopefully if you save & quit somehow (like closing the game) it doesn't cheese your position
+            if (preWatchRespawnPoint != null) level.Session.RespawnPoint = preWatchRespawnPoint;
+
+            // Prevent room from changing when using the bino. Set to high number to account for shifting the camera back
+            if (level.Tracker.GetEntity<RoomStatisticsDisplayer>() is RoomStatisticsDisplayer roomStatDisplayer) roomStatDisplayer.disableRoomChangeTimer.Set(60);
+
+            // Disable player movement in screen transition. Otherwise respawn softlock kicks in.
+            EndHelperModule.DisableScreenTransitionMovementTimer.Set(3);
+
             if (EndHelperModule.integratingWithSSMQoL)
             {
                 float multiplier = SSMQoLIntegration.GetMultiplier();
@@ -686,7 +690,13 @@ public class MultiroomWatchtower : Entity
                 transitionDurationScale = originalTransitionDurationScale / multiplier;
             }
 
-            // Solely for the keybind multiroom bino
+            // For portable multiroom bino - invincible
+            if (invincibleWhenUsing)
+            {
+                Utils_General.disablePlayerDeathCountdown.Set(10);
+            }
+            
+            // Solely for the keybind multiroom bino - Show free camera message
             if (canToggleBlocker && EndHelperModule.Settings.FreeMultiroomWatchtower.Button.Pressed)
             {
                 ignoreBlocker = !ignoreBlocker;
@@ -700,7 +710,6 @@ public class MultiroomWatchtower : Entity
                 }
                 RoomStatisticsDisplayer.ShowTooltip(message, 1.5f);
             }
-
 
             ResetCameraTrackSettings(level, player, false);
             if (changeRoomCooldown > 0) { changeRoomCooldown--; }
@@ -726,16 +735,16 @@ public class MultiroomWatchtower : Entity
 
             if (!trackMode)
             {
-                LevelData leftLookoutRoom = findLookoutRoom(new Vector2(-1, 0), edgeRoomDataList, out _);
-                LevelData rightLookoutRoom = findLookoutRoom(new Vector2(1, 0), edgeRoomDataList, out _);
-                LevelData upLookoutRoom = findLookoutRoom(new Vector2(0, -1), edgeRoomDataList, out _);
-                LevelData downLookoutRoom = findLookoutRoom(new Vector2(0, 1), edgeRoomDataList, out _);
+                LevelData leftLookoutRoom = FindLookoutRoom(new Vector2(-1, 0), edgeRoomDataList, out _);
+                LevelData rightLookoutRoom = FindLookoutRoom(new Vector2(1, 0), edgeRoomDataList, out _);
+                LevelData upLookoutRoom = FindLookoutRoom(new Vector2(0, -1), edgeRoomDataList, out _);
+                LevelData downLookoutRoom = FindLookoutRoom(new Vector2(0, 1), edgeRoomDataList, out _);
 
                 //Start top right, Anti CW
-                LevelData Q1LookoutRoom = findLookoutRoom(new Vector2(1, -1), edgeRoomDataList, out _);
-                LevelData Q2LookoutRoom = findLookoutRoom(new Vector2(-1, -1), edgeRoomDataList, out _);
-                LevelData Q3LookoutRoom = findLookoutRoom(new Vector2(-1, 1), edgeRoomDataList, out _);
-                LevelData Q4LookoutRoom = findLookoutRoom(new Vector2(1, 1), edgeRoomDataList, out _);
+                LevelData Q1LookoutRoom = FindLookoutRoom(new Vector2(1, -1), edgeRoomDataList, out _);
+                LevelData Q2LookoutRoom = FindLookoutRoom(new Vector2(-1, -1), edgeRoomDataList, out _);
+                LevelData Q3LookoutRoom = FindLookoutRoom(new Vector2(-1, 1), edgeRoomDataList, out _);
+                LevelData Q4LookoutRoom = FindLookoutRoom(new Vector2(1, 1), edgeRoomDataList, out _);
 
                 // Allow L/R/U/D if not null
                 leftLookoutRoomScroll = leftLookoutRoom != null;
@@ -749,7 +758,7 @@ public class MultiroomWatchtower : Entity
                 Q3LookoutRoomScroll = Q3LookoutRoom != null && Q3LookoutRoom != downLookoutRoom && Q3LookoutRoom != leftLookoutRoom && !onlyX && !onlyY;
                 Q4LookoutRoomScroll = Q4LookoutRoom != null && Q4LookoutRoom != downLookoutRoom && Q4LookoutRoom != rightLookoutRoom && !onlyX && !onlyY;
 
-                lookoutRoom = findLookoutRoom(inputVector, edgeRoomDataList, out Vector2 roomAimPos);
+                lookoutRoom = FindLookoutRoom(inputVector, edgeRoomDataList, out Vector2 roomAimPos);
 
                 //
                 // The view other rooms part
@@ -758,20 +767,20 @@ public class MultiroomWatchtower : Entity
                 {
                     // Transition camera to target pos (slightly farther that roomAimPos)
                     Vector2 targetTransitionPos = roomAimPos + inputVector * 16;
-                    transitionToTarget(targetTransitionPos, lookoutRoom, out Vector2 newTargetPositionPos);
+                    TransitionToTarget(targetTransitionPos, lookoutRoom, out Vector2 newTargetPositionPos);
 
                     lookoutRoom = null; //This is set to null (almost) immediately so the (c) prompt can't show up during the transition
 
                     // Update the current level (and camera) after a frame
                     // Do it twice, cause sometimes the first one fails
-                    updateLevelAfterFrame(1, newTargetPositionPos - screenCenterOffset);
-                    updateLevelAfterFrame(2, newTargetPositionPos - screenCenterOffset);
+                    UpdateLevelAfterFrame(1, newTargetPositionPos - screenCenterOffset);
+                    UpdateLevelAfterFrame(2, newTargetPositionPos - screenCenterOffset);
 
-                    pleaseStopFlickeringThankYou(); // padding please freaking stay on
+                    PleaseStopFlickeringThankYou(); // padding please freaking stay on
                 }
             }
 
-            void transitionToTarget(Vector2 targetTransitionPos, LevelData newRoomLevelData, out Vector2 newTargetPositionPos)
+            void TransitionToTarget(Vector2 targetTransitionPos, LevelData newRoomLevelData, out Vector2 newTargetPositionPos)
             {
                 Vector2 camCenter = camCorner + screenCenterOffset;
 
@@ -812,7 +821,7 @@ public class MultiroomWatchtower : Entity
                 newTargetPositionPos = targetTransitionPos;
             }
 
-            async void pleaseStopFlickeringThankYou()
+            async void PleaseStopFlickeringThankYou()
             {
                 int repeat = 100;
                 while (repeat > 0 && interacting)
@@ -825,7 +834,7 @@ public class MultiroomWatchtower : Entity
                 }
             }
 
-            async void updateLevelAfterFrame(int frames, Vector2? cameraTargetPos = null)
+            async void UpdateLevelAfterFrame(int frames, Vector2? cameraTargetPos = null)
             {
                 await Task.Delay((int)(Engine.DeltaTime * 1000 * frames + 1));
 
@@ -849,7 +858,7 @@ public class MultiroomWatchtower : Entity
             }
 
 
-            bool checkBlockerAtPos(Vector2 position, Scene level)
+            bool CheckBlockerAtPos(Vector2 position, Scene level)
             {
                 if (ignoreBlocker)
                 {
@@ -869,7 +878,7 @@ public class MultiroomWatchtower : Entity
                 return false;
             }
 
-            LevelData findLookoutRoom(Vector2 lookDirection, List<LevelData> edgeRoomDataList, out Vector2 roomAimPos)
+            LevelData FindLookoutRoom(Vector2 lookDirection, List<LevelData> edgeRoomDataList, out Vector2 roomAimPos)
             {
                 roomAimPos = level.Camera.Position + screenCenterOffset;
                 // Get room that the lookDirection is pointing towards
@@ -880,7 +889,7 @@ public class MultiroomWatchtower : Entity
                         && roomAimPos.Y >= currentRoomBounds.Top && roomAimPos.Y <= currentRoomBounds.Bottom)
                     {
                         roomAimPos += lookDirection * 8;
-                        if (checkBlockerAtPos(roomAimPos, level))
+                        if (CheckBlockerAtPos(roomAimPos, level))
                         {
                             return null; //Blocker found! Stop everything.
                         }
@@ -907,7 +916,7 @@ public class MultiroomWatchtower : Entity
                         checkRect.X = -50;
                         checkRect.Width = 100;
                     }
-                    LevelData aimRoomData = findOverlapRoom(roomAimPos, edgeRoomDataList, checkRect);
+                    LevelData aimRoomData = FindOverlapRoom(roomAimPos, edgeRoomDataList, checkRect);
                     return aimRoomData;
                 }
                 else
@@ -916,7 +925,7 @@ public class MultiroomWatchtower : Entity
                 }
             }
 
-            LevelData findOverlapRoom(Vector2 roomAimPos, List<LevelData> edgeRoomDataList, Rectangle? checkRect = null)
+            LevelData FindOverlapRoom(Vector2 roomAimPos, List<LevelData> edgeRoomDataList, Rectangle? checkRect = null)
             {
 
                 if (checkRect == null)
@@ -946,7 +955,7 @@ public class MultiroomWatchtower : Entity
                     Rectangle levelDataBounds = levelData.Bounds;
                     if (checkRectHalfAbsolute.Intersects(levelDataBounds))
                     {
-                        if (checkBlockerInLine(camCorner + screenCenterOffset, levelDataBounds.Center.ToVector2()) == false) // Trace line to room to check if there are blockers
+                        if (CheckBlockerInLine(camCorner + screenCenterOffset, levelDataBounds.Center.ToVector2()) == false) // Trace line to room to check if there are blockers
                         {
                             return levelData; //Found room that this position aims at
                         }
@@ -959,7 +968,7 @@ public class MultiroomWatchtower : Entity
                     Rectangle levelDataBounds = levelData.Bounds;
                     if (checkRectAbsolute.Intersects(levelDataBounds))
                     {
-                        if (checkBlockerInLine(camCorner + screenCenterOffset, levelDataBounds.Center.ToVector2()) == false) // Trace line to room to check if there are blockers
+                        if (CheckBlockerInLine(camCorner + screenCenterOffset, levelDataBounds.Center.ToVector2()) == false) // Trace line to room to check if there are blockers
                         {
                             return levelData; //Found room that this position aims at
                         }
@@ -970,7 +979,7 @@ public class MultiroomWatchtower : Entity
                 return null;
             }
 
-            bool checkBlockerInLine(Vector2 startPos, Vector2 endPos)
+            bool CheckBlockerInLine(Vector2 startPos, Vector2 endPos)
             {
                 // Continue until reach endPos (even if exceed room bounds, in case offscreen blockers)
                 Vector2 currentCheckPos = startPos;
@@ -982,7 +991,7 @@ public class MultiroomWatchtower : Entity
                 while ((currentCheckPos - endPos).Length() > 8)
                 {
                     currentCheckPos += lookDirection * 8;
-                    if (checkBlockerAtPos(currentCheckPos, level))
+                    if (CheckBlockerAtPos(currentCheckPos, level))
                     {
                         return true; //Blocker found! Return true
                     }
@@ -1100,9 +1109,9 @@ public class MultiroomWatchtower : Entity
                 // FOR NODES. Nodepercent is percent BETWEEN NODES, not total track percent!
                 int movementLimit = 500;
                 camCorner = level.Camera.Position;
-                moveBino();
+                MoveBino();
 
-                void moveBino()
+                void MoveBino()
                 {
                     movementLimit--;
                     // Get Node Details
@@ -1112,8 +1121,8 @@ public class MultiroomWatchtower : Entity
                     //(nextNodePosition - previousNodePosition).SafeNormalize();
 
                     // Set Camera
-                    setCamera();
-                    void setCamera()
+                    SetCamera();
+                    void SetCamera()
                     {
                         Vector2 previousNodePosition = currentNodeNum <= 0 ? camStartCenter : nodes[currentNodeNum - 1];
                         Vector2 nextNodePosition = nodes[currentNodeNum];
@@ -1263,20 +1272,20 @@ public class MultiroomWatchtower : Entity
                                 {
                                     // Within range: Transition the room here
 
-                                    setCamera(); //Fixes some smoothness jank
+                                    SetCamera(); //Fixes some smoothness jank
 
                                     // Transition camera to target pos (slightly farther that roomAimPos)
-                                    transitionToTarget(camCorner + screenCenterOffset, room, out Vector2 transitionPosTarget);
+                                    TransitionToTarget(camCorner + screenCenterOffset, room, out Vector2 transitionPosTarget);
 
                                     // Update the current level (and camera) after a frame
                                     // Do it twice, cause sometimes the first one fails
 
                                     camCorner = transitionPosTarget - screenCenterOffset;
 
-                                    updateLevelAfterFrame(1, camCorner);
-                                    updateLevelAfterFrame(2, camCorner);
+                                    UpdateLevelAfterFrame(1, camCorner);
+                                    UpdateLevelAfterFrame(2, camCorner);
 
-                                    pleaseStopFlickeringThankYou(); // padding please freaking stay on
+                                    PleaseStopFlickeringThankYou(); // padding please freaking stay on
 
                                     break; //Note: moveBino triggers one more time to update camera pos
                                 }
@@ -1287,7 +1296,7 @@ public class MultiroomWatchtower : Entity
                             }
                             else if (trackPercent > 0f && trackPercent < 1f)
                             {
-                                moveBino();
+                                MoveBino();
                             }
                         }
                     }
@@ -1365,7 +1374,6 @@ public class MultiroomWatchtower : Entity
         level.CanRetry = canRetryInitial;
         level.SaveQuitDisabled = canSaveQuitInitial;
         level.PauseLock = pauseLock;
-        EndHelperModule.Session.allowScreenTransitionMovement = true;
 
         EndInteractionAfterFrames(3);
 
@@ -1376,10 +1384,6 @@ public class MultiroomWatchtower : Entity
             await Task.Delay((int)(Engine.DeltaTime * 1000 * frames + 1));
 
             RemoveTag(Tags.Persistent);
-            {if (level.Tracker.GetEntity<RoomStatisticsDisplayer>() is RoomStatisticsDisplayer roomStatDisplayer)
-            {
-                roomStatDisplayer.disableRoomChange = false;
-            }}
             player.Active = true;
             player.Visible = true;
             player.Collidable = true;
@@ -1395,12 +1399,8 @@ public class MultiroomWatchtower : Entity
                 await Task.Delay((int)(Engine.DeltaTime * 1000 * 1)); // Do not run until screen transition is over
             }
 
-            if (preWatchRespawnPoint != null)
-            {
-                level.Session.RespawnPoint = preWatchRespawnPoint; // Set respawn point to where it was before viewing
-            }
-            EndHelperModule.Session.allowScreenTransitionMovement = true;
-
+            // Set respawn point to where it was before viewing one more time, for good measure
+            if (preWatchRespawnPoint != null) level.Session.RespawnPoint = preWatchRespawnPoint;
 
 
             if (destroyUponFinishView)
@@ -1413,12 +1413,11 @@ public class MultiroomWatchtower : Entity
         leftLookoutRoomScroll = rightLookoutRoomScroll = upLookoutRoomScroll = downLookoutRoomScroll = 
             Q1LookoutRoomScroll = Q2LookoutRoomScroll = Q3LookoutRoomScroll = Q4LookoutRoomScroll = false;
 
-    yield return null;
+        yield return null;
     }
 
     public override void SceneEnd(Scene scene)
     {
-        EndHelperModule.Session.allowScreenTransitionMovement = true;
         base.SceneEnd(scene);
     }
 

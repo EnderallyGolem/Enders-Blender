@@ -16,7 +16,36 @@ namespace Celeste.Mod.EndHelper.Utils
 {
     static internal class Utils_General
     {
+        public class Countdown
+        {
+            public int TimeLeft { get; private set; } = 0;
+            public Countdown()
+            {}
+            public void Set(int setValue, bool onlyIncrease = true)
+            {
+                if (onlyIncrease)
+                {
+                    if (setValue > TimeLeft)
+                    {
+                        TimeLeft = setValue;
+                    }
+                }
+                else
+                {
+                    TimeLeft = setValue;
+                }
+            }
+            public void Update()
+            {
+                if (TimeLeft > 0) TimeLeft--;
+            }
+            public bool IsTicking => TimeLeft > 0;
+        }
+
+
+
         public static float framesSinceEnteredRoom = 0;
+        public static Utils_General.Countdown disablePlayerDeathCountdown = new Utils_General.Countdown();
 
 
         /// <summary>
@@ -119,7 +148,7 @@ namespace Celeste.Mod.EndHelper.Utils
         }
 
         public static int scrollInputFrames = 0;
-        public static int scrollResetInputFrames = 0;
+        public static Countdown scrollResetInputFrames = new Countdown();
 
         /// <summary>
         /// Held menu buttons. Eg: Holding right increases a value once, then waits a few frames, then rapidly increases.
@@ -156,7 +185,7 @@ namespace Celeste.Mod.EndHelper.Utils
                     scrollInputFrames = 0;
                 }
                 scrollInputFrames++;
-                scrollResetInputFrames = 5;
+                scrollResetInputFrames.Set(5);
             }
             else if (decreaseInput)
             {
@@ -165,7 +194,7 @@ namespace Celeste.Mod.EndHelper.Utils
                     scrollInputFrames = 0;
                 }
                 scrollInputFrames--;
-                scrollResetInputFrames = 5;
+                scrollResetInputFrames.Set(5);
             }
 
             // Increase first time
@@ -300,6 +329,13 @@ namespace Celeste.Mod.EndHelper.Utils
         }
         public static void Render9Slice(this MTexture texture, float spriteWidth, float spriteHeight, Vector2 renderPos)
         { texture.Render9Slice((int)spriteWidth, (int)spriteHeight, renderPos); }
+
+        // SetFlag overload for ignoreIfEmpty
+        public static void SetFlag(this Session session, String flag, bool setTo, bool ignoreIfEmpty)
+        {
+            if (ignoreIfEmpty && (flag == "" || flag == null)) return;
+            session.SetFlag(flag, setTo);
+        }
 
         /// <summary>
         /// Checks if the specified flag is enabled, negation if ! is in front. Returns boolIfEmpty (default true) if empty.
@@ -497,13 +533,15 @@ namespace Celeste.Mod.EndHelper.Utils
             return new Vector2(point.X, point.Y);
         }
 
-        public static Entity GetNearestGenericEntity(this Level level, Vector2 nearestTo)
+        public static Entity GetNearestGenericEntity(this Level level, Vector2 nearestTo, Entity excludeEntity)
         {
             EntityList entityList = level.Entities;
             Entity closestEntity = null;
             float num = 0f;
             foreach (Entity entity in entityList)
             {
+                if (entity == excludeEntity) continue;
+
                 float num2 = Vector2.DistanceSquared(nearestTo, entity.Position);
                 if (closestEntity == null || num2 < num)
                 {
@@ -513,6 +551,26 @@ namespace Celeste.Mod.EndHelper.Utils
             }
 
             return closestEntity;
+        }
+
+        public static Entity GetNearestEntityExcluding<T>(this Tracker tracker, Vector2 nearestTo, Entity excludeEntity) where T : Entity
+        {
+            List<Entity> entities = tracker.GetEntities<T>();
+            T val = null;
+            float num = 0f;
+            foreach (T item in entities)
+            {
+                if (item == excludeEntity) continue;
+
+                float num2 = Vector2.DistanceSquared(nearestTo, item.Position);
+                if (val == null || num2 < num)
+                {
+                    val = item;
+                    num = num2;
+                }
+            }
+
+            return val;
         }
 
         /// <summary>

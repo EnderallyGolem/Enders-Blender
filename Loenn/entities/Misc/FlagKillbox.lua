@@ -21,4 +21,10 @@ function FlagKillbox.rectangle(room, entity)
     return utils.rectangle(entity.x, entity.y, entity.width or 8, 32)
 end
 
+function FlagKillbox.onRotate(room, entity, direction)
+    local oldWidth = entity.width
+    entity.width = entity.height
+    entity.height = oldWidth
+end
+
 return FlagKillbox

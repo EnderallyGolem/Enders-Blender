@@ -41,7 +41,7 @@ public class RoomStatisticsDisplayer : Entity
     public string currentEffectiveRoomName = "";
     public string currentRoomName = "";
     public bool statisticsGuiOpen = false;
-    public bool disableRoomChange = false;   // Eg: When viewing other rooms with multi-room bino
+    internal Utils_General.Countdown disableRoomChangeTimer = new Utils_General.Countdown();   // Eg: When viewing other rooms with multi-room bino
 
     public string mapNameSide_Internal = ""; // Internally checked to distinguish between map and sides & to determine which lang to pick for room names
     public string mapNameSide_Display = "";  // Text to display to the player
@@ -78,6 +78,7 @@ public class RoomStatisticsDisplayer : Entity
     public override void Awake(Scene scene)
     {
         base.Awake(scene);
+        EndHelperModule.Session.pauseTypeDict["Level_Invalid"] = !(scene as Level).Session.StartedFromBeginning;
 
         // Do not get affected by save states. This umm does not work. Commenting this out so it doesn't break if it works.
         //if (SpeedrunToolIntegration.SpeedrunToolInstalled)
@@ -165,24 +166,141 @@ public class RoomStatisticsDisplayer : Entity
             }
 
             // Latest Session Data. These only gets exported at the end of the map, if you started from the beginning (valid clear).
-            if (level.Completed && level.Session.StartedFromBeginning)
+            if (level.Completed && CheckSaveSessionData(level))
             {
-                // Room Order: Add every room in order.
-                EndHelperModule.SaveData.mapDict_roomStat_latestSession_roomOrder[mapNameSide_Internal] = [];
-                foreach (DictionaryEntry sessionDeathDict in EndHelperModule.Session.roomStatDict_death)
-                {
-                    string sessionDeathDictRoomName = (String)sessionDeathDict.Key;
-                    EndHelperModule.SaveData.mapDict_roomStat_latestSession_roomOrder[mapNameSide_Internal].Add(sessionDeathDictRoomName);
-                }
-
-                // Copy paste all the session data into the latestSession dicts
-                EndHelperModule.SaveData.mapDict_roomStat_latestSession_death[mapNameSide_Internal] = Utils_General.ConvertFromOrderedDictionary<string, int>(EndHelperModule.Session.roomStatDict_death);
-                EndHelperModule.SaveData.mapDict_roomStat_latestSession_timer[mapNameSide_Internal] = Utils_General.ConvertFromOrderedDictionary<string, long>(EndHelperModule.Session.roomStatDict_timer);
-                EndHelperModule.SaveData.mapDict_roomStat_latestSession_strawberries[mapNameSide_Internal] = Utils_General.ConvertFromOrderedDictionary<string, int>(EndHelperModule.Session.roomStatDict_strawberries);
-                EndHelperModule.SaveData.mapDict_roomStat_latestSession_pauseType[mapNameSide_Internal] = EndHelperModule.Session.pauseTypeDict;
+                SaveSessionData();
             }
         }
     }
+
+    private void SaveSessionData()
+    {
+        savedSessionData = true;
+        //Logger.Log(LogLevel.Info, "EndHelper/RoomStatisticsDisplayer", $"Saving session's room stat data!");
+
+        // Room Order: Add every room in order.
+        EndHelperModule.SaveData.mapDict_roomStat_latestSession_roomOrder[mapNameSide_Internal] = [];
+        foreach (DictionaryEntry sessionDeathDict in EndHelperModule.Session.roomStatDict_death)
+        {
+            string sessionDeathDictRoomName = (String)sessionDeathDict.Key;
+            EndHelperModule.SaveData.mapDict_roomStat_latestSession_roomOrder[mapNameSide_Internal].Add(sessionDeathDictRoomName);
+        }
+
+        // Copy paste all the session data into the latestSession dicts
+        EndHelperModule.SaveData.mapDict_roomStat_latestSession_death[mapNameSide_Internal] = Utils_General.ConvertFromOrderedDictionary<string, int>(EndHelperModule.Session.roomStatDict_death);
+        EndHelperModule.SaveData.mapDict_roomStat_latestSession_timer[mapNameSide_Internal] = Utils_General.ConvertFromOrderedDictionary<string, long>(EndHelperModule.Session.roomStatDict_timer);
+        EndHelperModule.SaveData.mapDict_roomStat_latestSession_strawberries[mapNameSide_Internal] = Utils_General.ConvertFromOrderedDictionary<string, int>(EndHelperModule.Session.roomStatDict_strawberries);
+        EndHelperModule.SaveData.mapDict_roomStat_latestSession_pauseType[mapNameSide_Internal] = EndHelperModule.Session.pauseTypeDict;
+    }
+
+    private bool haveCheckedSaveSessionData = false;
+    private bool savedSessionData = false;
+    private bool CheckSaveSessionData(Level level)
+    {
+        if (haveCheckedSaveSessionData) return false;
+        haveCheckedSaveSessionData = true;
+
+
+        if (!EndHelperModule.SaveData.mapDict_roomStat_latestSession_death.ContainsKey(mapNameSide_Internal))
+        {
+            return true; // If no stored map, return true (save it!)
+        }
+        else
+        {
+            // Otherwise, check settings to determine if it should be saved
+
+            bool validClear = level.Session.StartedFromBeginning;
+
+            int current_totalDeaths = 0; long current_totalTimer = 0; int current_totalBerries = 0;
+            int saved_totalDeaths = 0; long saved_totalTimer = 0; int saved_totalBerries = 0;
+            bool saved_invalidClear = EndHelperModule.SaveData.mapDict_roomStat_latestSession_pauseType[mapNameSide_Internal].ContainsKey("Level_Invalid") 
+                && EndHelperModule.SaveData.mapDict_roomStat_latestSession_pauseType[mapNameSide_Internal]["Level_Invalid"];
+            
+                foreach (string roomName in EndHelperModule.SaveData.mapDict_roomStat_latestSession_roomOrder[mapNameSide_Internal])
+            {
+                int saved_roomDeaths = EndHelperModule.SaveData.mapDict_roomStat_latestSession_death[mapNameSide_Internal][roomName];
+                long saved_roomTimeTicks = EndHelperModule.SaveData.mapDict_roomStat_latestSession_timer[mapNameSide_Internal][roomName];
+                int saved_roomBerries = EndHelperModule.SaveData.mapDict_roomStat_latestSession_strawberries[mapNameSide_Internal][roomName];
+                saved_totalDeaths += saved_roomDeaths;
+                saved_totalTimer += saved_roomTimeTicks;
+                saved_totalBerries += saved_roomBerries;
+            }
+            foreach (string roomName in EndHelperModule.Session.roomStatDict_death.Keys)
+            {
+                int current_roomDeaths = Convert.ToInt32(EndHelperModule.Session.roomStatDict_death[roomName]);
+                long current_roomTimeTicks = Convert.ToInt64(EndHelperModule.Session.roomStatDict_timer[roomName]);
+                int current_roomBerries = Convert.ToInt32(EndHelperModule.Session.roomStatDict_strawberries[roomName]);
+                current_totalDeaths += current_roomDeaths;
+                current_totalTimer += current_roomTimeTicks;
+                current_totalBerries += current_roomBerries;
+            }
+
+            switch (EndHelperModule.Settings.RoomStatMenu.StoredClears)
+            {
+                case RoomStatMenuSubMenu.StoredClearsEnum.Always:
+                    return true;
+                case RoomStatMenuSubMenu.StoredClearsEnum.Ask:
+                    ShowSaveSessionMenu(current_totalDeaths, current_totalTimer, current_totalBerries, !validClear, saved_totalDeaths, saved_totalTimer, saved_totalBerries, saved_invalidClear);
+                    return false;
+                case RoomStatMenuSubMenu.StoredClearsEnum.AskIfValidClear:
+                    if (validClear) ShowSaveSessionMenu(current_totalDeaths, current_totalTimer, current_totalBerries, !validClear, saved_totalDeaths, saved_totalTimer, saved_totalBerries, saved_invalidClear);
+                    return false;
+                case RoomStatMenuSubMenu.StoredClearsEnum.ValidClear:
+                    if (validClear) return true;
+                    else return false;
+                case RoomStatMenuSubMenu.StoredClearsEnum.ValidClearFaster:
+                    if (validClear && current_totalTimer <= saved_totalTimer) return true;
+                    else return false;
+                case RoomStatMenuSubMenu.StoredClearsEnum.ValidClearLessDeaths:
+                    if (validClear && current_totalDeaths <= saved_totalDeaths) return true;
+                    else return false;
+                case RoomStatMenuSubMenu.StoredClearsEnum.Never: return false;
+                default: return false;
+            }
+        }
+    }
+
+    private void ShowSaveSessionMenu(int current_deaths, long current_timer, int current_berries, bool current_invalidClear,
+                                     int saved_deaths, long saved_timer, int saved_berries, bool saved_invalidClear)
+    {
+        TextMenu menu = new TextMenu();
+        Level level = SceneAs<Level>();
+        level.Paused = true;
+
+        menu.OnCancel = (() =>
+        {
+            Audio.Play("event:/ui/main/button_back");
+            menu.Close();
+            level.Unpause();
+        });
+
+        menu.Add(new TextMenu.Header(Dialog.Clean("EndHelper_Dialog_RoomStatisticsDisplayer_StoredClears_Header")));
+        menu.Add(new TextMenu.SubHeader(Dialog.Clean("EndHelper_Dialog_RoomStatisticsDisplayer_StoredClears_SubHeader")));
+
+        String current_timer_string = Utils_General.MinimalGameplayFormat(TimeSpan.FromTicks(current_timer));
+        string currentStatString = $":EndHelper/uioutline_skull: {current_deaths}   :EndHelper/uioutline_clock: {current_timer_string}   :EndHelper/uioutline_strawberry: {current_berries}";
+        if (current_invalidClear) currentStatString += $" [Not Valid]";
+
+        String saved_timer_string = Utils_General.MinimalGameplayFormat(TimeSpan.FromTicks(saved_timer));
+        string savedStatString = $":EndHelper/uioutline_skull: {saved_deaths}   :EndHelper/uioutline_clock: {saved_timer_string}   :EndHelper/uioutline_strawberry: {saved_berries}";
+        if (saved_invalidClear) savedStatString += $" [Not Valid]";
+
+        menu.Add(new TextMenu.SubHeader($"{currentStatString}     >>>     {savedStatString}"));
+        menu.Add(new TextMenu.Button(Dialog.Clean("EndHelper_Dialog_RoomStatisticsDisplayer_StoredClears_Override")).Pressed(() =>
+        {
+            SaveSessionData();
+            menu.OnCancel();
+        }
+        ));
+        menu.Add(new TextMenu.Button(Dialog.Clean("EndHelper_Dialog_RoomStatisticsDisplayer_StoredClears_Cancel")).Pressed(() =>
+        {
+            menu.OnCancel();
+        }
+        ));
+
+        Scene.Add(menu);
+    }
+
     private void UpdateSaveDataCustomName()
     {
         if (EndHelperModule.SaveData.mapDict_roomStatCustomNameDict.Contains(mapNameSide_Internal))
@@ -221,9 +339,13 @@ public class RoomStatisticsDisplayer : Entity
 
     public override void Update()
     {
+
         // Keep these updated!
         Level level = SceneAs<Level>();
         EnsureDictsHaveKey(level);
+
+        // Tick down disable change room timer
+        if (!level.FrozenOrPaused && !level.Transitioning) disableRoomChangeTimer.Update();
 
         // Don't update this when map is completed, otherwise the stats may change upon collecting heart
         if (!level.Completed)
@@ -232,7 +354,7 @@ public class RoomStatisticsDisplayer : Entity
         }
 
         String roomDialogName = $"{mapNameSide_Internal}_{level.Session.LevelData.Name}".Replace(".", "__point__").DialogCleanOrNull(Dialog.Languages["english"]) ?? "";
-        if (!disableRoomChange && roomDialogName != "%skip")
+        if (!disableRoomChangeTimer.IsTicking && roomDialogName != "%skip")
         {
             currentRoomName = level.Session.LevelData.Name;
             currentEffectiveRoomName = GetEffectiveRoomName(currentRoomName);
@@ -302,7 +424,7 @@ public class RoomStatisticsDisplayer : Entity
 
         if (statisticsGuiOpen)
         {
-            EndHelperModule.mInputDisableDuration = 3;
+            EndHelperModule.mInputDisableTimer.Set(5);
         }
 
         // Hide if golden strawberry
@@ -380,9 +502,10 @@ public class RoomStatisticsDisplayer : Entity
 
         if (!statisticsGuiOpen && (!EndHelperModule.Settings.RoomStatDisplayMenu.HideIfGolden || !hideIfGoldenStrawberryEnabled))
         {
-            bool validClear = level.Completed && level.Session.StartedFromBeginning;
+            IconType iconType = IconType.White;
+            if (level.Completed) iconType = savedSessionData ? IconType.Green : IconType.Gray;
             bool showAliveTimer = EndHelperModule.Settings.RoomStatDisplayMenu.ShowAliveTime;
-            ShowGUIStats(currentEffectiveRoomName, displayXPos, displayYPos, displayScale, timerColor, false, xJustification, false, false, showAliveTimer, false, level.Session.MapData.DetectedStrawberries, $"", $"", deathNum, timerNum, strawberriesNum, validClear);
+            ShowGUIStats(currentEffectiveRoomName, displayXPos, displayYPos, displayScale, timerColor, false, xJustification, false, false, showAliveTimer, false, level.Session.MapData.DetectedStrawberries, $"", $"", deathNum, timerNum, strawberriesNum, iconType);
         }
 
         RenderOtherStuffCompletelyUnrelatedToRoomStatsButAddedHereDueToConvenience(level);
@@ -408,7 +531,8 @@ public class RoomStatisticsDisplayer : Entity
     }
 
     // currentEffectiveRoomName only necessary if showRoomName or showAll enabled. Otherwise just set to empty string
-    public static void ShowGUIStats(string currentEffectiveRoomName, int displayXPos, int displayYPos, float displayScale, Color timerColor, bool yCentered, float xJustification, bool showAll, bool hideRoomName, bool showAliveTimer, bool showTotalMapBerryCount, int totalMapBerryCount, string prefix, string suffix, int deathNum, long timerNum, int strawberriesNum, bool validClearColour)
+    internal enum IconType { White, Gray, Green, Yellow }
+    internal static void ShowGUIStats(string currentEffectiveRoomName, int displayXPos, int displayYPos, float displayScale, Color timerColor, bool yCentered, float xJustification, bool showAll, bool hideRoomName, bool showAliveTimer, bool showTotalMapBerryCount, int totalMapBerryCount, string prefix, string suffix, int deathNum, long timerNum, int strawberriesNum, IconType iconType)
     {
         var roomDisplaySettings = EndHelperModule.Settings.RoomStatDisplayMenu;
         Vector2 justification = new Vector2(0, yCentered ? 0.5f : 0f);
@@ -446,10 +570,10 @@ public class RoomStatisticsDisplayer : Entity
         if (showAll || roomDisplaySettings.ShowDeaths)
         {
             string displayMsg = $":EndHelper/uioutline_skull: {deathNum}";
-            if (validClearColour)
-            {
-                displayMsg = $":EndHelper/uioutline_skull_green: {deathNum}";
-            }
+            if (iconType == IconType.Gray) displayMsg = $":EndHelper/uioutline_skull_gray: {deathNum}";
+            if (iconType == IconType.Green) displayMsg = $":EndHelper/uioutline_skull_green: {deathNum}";
+            else if (iconType == IconType.Yellow) displayMsg = $":EndHelper/uioutline_skull_yellow: {deathNum}";
+
             displayInfoList.Add(new DisplayInfo("deaths", displayMsg, (int)(ActiveFont.WidthToNextLine($"{deathNum}XXX|", 0) * displayScale)));
         }
         if (showAll || roomDisplaySettings.ShowTimeSpent)
@@ -457,14 +581,10 @@ public class RoomStatisticsDisplayer : Entity
             TimeSpan timeSpent = TimeSpan.FromTicks(timerNum);
             string timeString = Utils_General.MinimalGameplayFormat(timeSpent);
             string displayMsg = $":EndHelper/uioutline_clock: {timeString}";
-            if (timerColor == Color.Gray)
-            {
-                displayMsg = $":EndHelper/uioutline_clock_gray: {timeString}";
-            }
-            if (validClearColour)
-            {
-                displayMsg = $":EndHelper/uioutline_clock_green: {timeString}";
-            }
+
+            if (timerColor == Color.Gray || iconType == IconType.Gray) displayMsg = $":EndHelper/uioutline_clock_gray: {timeString}";
+            if (iconType == IconType.Green) displayMsg = $":EndHelper/uioutline_clock_green: {timeString}";
+            if (iconType == IconType.Yellow) displayMsg = $":EndHelper/uioutline_clock_yellow: {timeString}";
 
             int textWidth = 0;
             if (timeSpent.TotalHours < 1)
@@ -509,10 +629,10 @@ public class RoomStatisticsDisplayer : Entity
                     displayMsgNoEmote += $"/{mapBerryCount}";
                 }
                 String displayMsg = $":EndHelper/uioutline_strawberry:{displayMsgNoEmote}";
-                if (validClearColour)
-                {
-                    displayMsg = $":EndHelper/uioutline_strawberry_green:{displayMsgNoEmote}";
-                }
+                if (iconType == IconType.Gray) displayMsg = $":EndHelper/uioutline_strawberry_gray:{displayMsgNoEmote}";
+                if (iconType == IconType.Green) displayMsg = $":EndHelper/uioutline_strawberry_green:{displayMsgNoEmote}";
+                if (iconType == IconType.Yellow) displayMsg = $":EndHelper/uioutline_strawberry_yellow:{displayMsgNoEmote}";
+
                 displayInfoList.Add(new DisplayInfo("strawberries", displayMsg, (int)(ActiveFont.WidthToNextLine($"{displayMsgNoEmote}XXX", 0) * displayScale)));
             }
         }
@@ -538,10 +658,11 @@ public class RoomStatisticsDisplayer : Entity
         foreach (DisplayInfo displayInfo in displayInfoList)
         {
             Color color = displayInfo.id == "timer" ? timerColor : Color.White;
-            if (validClearColour)
-            {
-                color = Calc.HexToColor("6ded87");
-            }
+
+            if (iconType == IconType.Gray) color = Color.Gray;
+            if (iconType == IconType.Green) color = Calc.HexToColor("6ded87");
+            if (iconType == IconType.Yellow) color = Calc.HexToColor("fad768");
+
             ActiveFont.DrawOutline(displayInfo.displayMsg, new Vector2(sectionXPos + xOffset, displayYPos), justification, Vector2.One * displayScale, color, 2f, Color.Black);
             sectionXPos += displayInfo.textWidth;
         }
@@ -888,7 +1009,8 @@ public class RoomStatisticsDisplayer : Entity
 
             String totalText = "Total";
             if (filterSetting != roomStatMenuFilter.None) { totalText += $" [{filterString}]"; }
-            ShowGUIStats(currentEffectiveRoomName, 100, 1010, 0.7f, Color.White, true, 0, true, true, false, showTotalMapBerryCount, level.Session.MapData.DetectedStrawberries, $"{totalText}: ", "", totalDeaths, totalTimer, totalStrawberries, false);
+            IconType iconType = EndHelperModule.Session.pauseTypeDict["Level_Invalid"] == true ? IconType.Gray : IconType.White;
+            ShowGUIStats(currentEffectiveRoomName, 100, 1010, 0.7f, Color.White, true, 0, true, true, false, showTotalMapBerryCount, level.Session.MapData.DetectedStrawberries, $"{totalText}: ", "", totalDeaths, totalTimer, totalStrawberries, iconType);
         }
 
         // Instructions
@@ -1041,9 +1163,13 @@ public class RoomStatisticsDisplayer : Entity
                 editingRoomIndex = Utils_General.ScrollInput(valueToChange: editingRoomIndex, increaseInput: MInput.Keyboard.orig_Check(Microsoft.Xna.Framework.Input.Keys.Down), increaseValue: 1,
                     decreaseInput: MInput.Keyboard.orig_Check(Microsoft.Xna.Framework.Input.Keys.Up), decreaseValue: 1, minValue: 0, maxValue: dictSize - 1, loopValues: false, doNotChangeIfPastCap: false,
                     framesFirstHeldChange: 30, framesBetweenHeldChange: 5);
-                editingRoomIndex = Utils_General.ScrollInput(valueToChange: editingRoomIndex, increaseInput: MInput.Keyboard.orig_Check(Microsoft.Xna.Framework.Input.Keys.Right), increaseValue: roomsPerColumn,
-                    decreaseInput: MInput.Keyboard.orig_Check(Microsoft.Xna.Framework.Input.Keys.Left), decreaseValue: roomsPerColumn, minValue: 0, maxValue: dictSize - 1, loopValues: false, doNotChangeIfPastCap: false,
-                    framesFirstHeldChange: 30, framesBetweenHeldChange: 5);
+
+                if (!MInput.Keyboard.orig_Check(Microsoft.Xna.Framework.Input.Keys.Up) && !MInput.Keyboard.orig_Check(Microsoft.Xna.Framework.Input.Keys.Down))
+                {
+                    editingRoomIndex = Utils_General.ScrollInput(valueToChange: editingRoomIndex, increaseInput: MInput.Keyboard.orig_Check(Microsoft.Xna.Framework.Input.Keys.Right), increaseValue: roomsPerColumn,
+                        decreaseInput: MInput.Keyboard.orig_Check(Microsoft.Xna.Framework.Input.Keys.Left), decreaseValue: roomsPerColumn, minValue: 0, maxValue: dictSize - 1, loopValues: false, doNotChangeIfPastCap: false,
+                        framesFirstHeldChange: 30, framesBetweenHeldChange: 5);
+                }
 
                 int editRoomPage = (int)Math.Ceiling((editingRoomIndex + 1f) / (roomsPerColumn * 2));
                 if (currentPage > editRoomPage)

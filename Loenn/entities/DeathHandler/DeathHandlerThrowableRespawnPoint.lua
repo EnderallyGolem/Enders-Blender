@@ -9,7 +9,9 @@ DeathHandlerThrowableRespawnPoint.placements = {
     data = {
         fullReset = false,
         requireFlag = "",
-        initialFaceLeft = false;
+        initialFaceLeft = false,
+        checkSolid = true,
+        flagWhenSpawnpoint = "",
     },
 }
 

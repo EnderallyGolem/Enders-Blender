@@ -31,11 +31,10 @@ public class ConditionalBirdTutorial : CustomBirdTutorial
     private readonly int requireDeathsInRoom = 0;
     private readonly bool requireOnScreen = true;
     private readonly string requireFlag = "";
+    private readonly string requireFlagForIncrement = "";
 
     private Vector2 restPosition;
-
     private Rectangle nodeBounds;
-
     private bool triggered;
 
     public ConditionalBirdTutorial(EntityData data, Vector2 offset)
@@ -56,6 +55,7 @@ public class ConditionalBirdTutorial : CustomBirdTutorial
         requireDeathsInRoom = data.Int("deathsInRoom", 0);
         requireOnScreen = data.Bool("requireOnScreen", true);
         requireFlag = data.Attr("requireFlag", "");
+        requireFlagForIncrement = data.Attr("requireFlagForIncrement", "");
 
         restPosition = data.Position + offset;
         //Logger.Log(LogLevel.Info, "EndHelper/Misc/ConditionalBirdTutorial", $"fly in time {flyInSpeedMultiplier}  id {BirdId}  startPos {Position} --- required requireFrameInZoneAtOnce: {requireFrameInZoneAtOnce}");
@@ -87,23 +87,25 @@ public class ConditionalBirdTutorial : CustomBirdTutorial
         float right = (node1Pos.X > node2Pos.X ? node1Pos.X : node2Pos.X) + 12f;
         nodeBounds = new Rectangle((int)left, (int)top, (int)(right - left), (int)(bottom - top));
 
-        //DynamicData thisBirbData = DynamicData.For(this);
-        //thisBirbData.Set("triggered", true);
-
         //base.Awake(scene);
         //I don't want the regular awake to trigger
 
-        //thisBirbData.Set("triggered", false);
-
-        if (flewInBefore && onlyOnceFlyIn)
+        if (flewInBefore && onlyOnceFlyIn && 
+            ( onlyFulfillConditionOnce ) || (!onlyFulfillConditionOnce && CheckMetFlyInCondition(level, true))
+           )
         {
-            // Stay flown in (but not triggered)
+            // Stay flown in (but not triggered). If no onlyFulfillConditionOnce, flewInBefore is temporarily saved for this check. If condition met, start already flown in.
             StartFlyIn(showTutorial: false, skipFly: true);
         }
         else
         {
             // Prepare Fly in
             SetStartingPosition();
+        }
+
+        if (!onlyFulfillConditionOnce)
+        {
+            level.Session.SetFlag($"{trackerPrefix}_flewInBefore", false); // Reset flewInBefore if no onlyFulfillConditionOnce
         }
     }
 
@@ -116,22 +118,30 @@ public class ConditionalBirdTutorial : CustomBirdTutorial
 
     }
 
-    private void UpdateConditionTracking_Time()
+    private void UpdateConditionTracking_Time(bool avoidIncrement = false)
     {
         Level level = SceneAs<Level>();
+        if (!Utils_General.AreFlagsEnabled(level.Session, requireFlagForIncrement, true))
+        {
+            avoidIncrement = true; // Avoid incrementing if require flag for condition fails
+        }
+
         if (level.Tracker.GetEntity<Player>() is Player player)
         {
             string trackerPrefix = $"EndHelper_ConditionalBirdTutorial_{entityData.ID}";
             if (nodeBounds.Contains((int)player.X, (int)player.Y))
             {
-                // --- IN BOUNDS ---
-                // secInZoneTotal
-                int frameInZoneTotal = level.Session.GetCounter($"{trackerPrefix}_frameInZoneTotal");
-                level.Session.SetCounter($"{trackerPrefix}_frameInZoneTotal", frameInZoneTotal + 1);
+                if (!avoidIncrement)
+                {
+                    // --- IN BOUNDS ---
+                    // secInZoneTotal
+                    int frameInZoneTotal = level.Session.GetCounter($"{trackerPrefix}_frameInZoneTotal");
+                    level.Session.SetCounter($"{trackerPrefix}_frameInZoneTotal", frameInZoneTotal + 1);
 
-                // secInZoneAtOnce
-                int frameInZoneAtOnce = level.Session.GetCounter($"{trackerPrefix}_frameInZoneAtOnce");
-                level.Session.SetCounter($"{trackerPrefix}_frameInZoneAtOnce", frameInZoneAtOnce + 1);
+                    // secInZoneAtOnce
+                    int frameInZoneAtOnce = level.Session.GetCounter($"{trackerPrefix}_frameInZoneAtOnce");
+                    level.Session.SetCounter($"{trackerPrefix}_frameInZoneAtOnce", frameInZoneAtOnce + 1);
+                }
             }
             else
             {
@@ -141,23 +151,35 @@ public class ConditionalBirdTutorial : CustomBirdTutorial
             }
             // --- ANY BOUNDS ---
             // secInRoom
-            int frameInRoom = level.Session.GetCounter($"{trackerPrefix}_frameInRoom");
-            level.Session.SetCounter($"{trackerPrefix}_frameInRoom", frameInRoom + 1);
+            if (!avoidIncrement)
+            {
+                int frameInRoom = level.Session.GetCounter($"{trackerPrefix}_frameInRoom");
+                level.Session.SetCounter($"{trackerPrefix}_frameInRoom", frameInRoom + 1);
+            }
         }
     }
 
-    internal void UpdateConditionTracking_Death() // From EndHelperModule - ILRunOnPlayerDeath
+    internal void UpdateConditionTracking_Death(bool avoidIncrement = false) // From EndHelperModule - ILRunOnPlayerDeath
     {
         Level level = SceneAs<Level>();
+        if (!Utils_General.AreFlagsEnabled(level.Session, requireFlagForIncrement, true))
+        {
+            avoidIncrement = true; // Avoid incrementing if require flag for condition fails
+        }
+
         if (level.Tracker.GetEntity<Player>() is Player player)
         {
             string trackerPrefix = $"EndHelper_ConditionalBirdTutorial_{entityData.ID}";
             if (nodeBounds.Contains((int)player.X, (int)player.Y))
             {
-                // --- IN BOUNDS ---
-                // deathsInZone
-                int deathsInZone = level.Session.GetCounter($"{trackerPrefix}_deathsInZone");
-                level.Session.SetCounter($"{trackerPrefix}_deathsInZone", deathsInZone + 1);
+                if (!avoidIncrement)
+                {
+                    // --- IN BOUNDS ---
+                    // deathsInZone
+                    int deathsInZone = level.Session.GetCounter($"{trackerPrefix}_deathsInZone");
+                    level.Session.SetCounter($"{trackerPrefix}_deathsInZone", deathsInZone + 1);
+                }
+
             }
             else
             {
@@ -166,8 +188,12 @@ public class ConditionalBirdTutorial : CustomBirdTutorial
             }
             // --- ANY BOUNDS ---
             // deathsInRoom
-            int deathsInRoom = level.Session.GetCounter($"{trackerPrefix}_deathsInRoom");
-            level.Session.SetCounter($"{trackerPrefix}_deathsInRoom", deathsInRoom + 1);
+            if (!avoidIncrement)
+            {
+                int deathsInRoom = level.Session.GetCounter($"{trackerPrefix}_deathsInRoom");
+                level.Session.SetCounter($"{trackerPrefix}_deathsInRoom", deathsInRoom + 1);
+            }
+
         }
     }
 
@@ -175,44 +201,8 @@ public class ConditionalBirdTutorial : CustomBirdTutorial
     {
         // Do logic to check if condition met
         Level level = SceneAs<Level>();
-        if (level.Tracker.GetEntity<Player>() is Player player)
+        if (CheckMetFlyInCondition(level))
         {
-            // Look through each condition. If any fails, exit.
-
-            // Ensure hasn't triggered yet
-            if (triggered || player.Dead || level.Transitioning)
-            {
-                return;
-            }
-
-            string trackerPrefix = $"EndHelper_ConditionalBirdTutorial_{entityData.ID}";
-            bool flewInBefore = level.Session.GetFlag($"{trackerPrefix}_flewInBefore");
-
-            if (!flewInBefore)
-            {
-                // secInRoom Checks
-                if (level.Session.GetCounter($"{trackerPrefix}_frameInZoneTotal") < requireFrameInZoneTotal) return;
-                if (level.Session.GetCounter($"{trackerPrefix}_frameInZoneAtOnce") < requireFrameInZoneAtOnce) return;
-                if (level.Session.GetCounter($"{trackerPrefix}_frameInRoom") < requireFrameInRoom) return;
-
-                // death checks
-                if (level.Session.GetCounter($"{trackerPrefix}_deathsInZone") < requireDeathsInZone) return;
-                if (level.Session.GetCounter($"{trackerPrefix}_deathsInRoom") < requireDeathsInRoom) return;
-
-                // flag check
-                bool passCheck = Utils_General.AreFlagsEnabled(level.Session, requireFlag, true);
-                if (!passCheck) return;
-            }
-
-            // within screen boundary check
-            if (requireOnScreen)
-            {
-                Rectangle entityEndRectangle = new Rectangle((int)restPosition.X - 8, (int)restPosition.Y - 16, entityData.Width + 16, entityData.Height + 16);
-                //if (!level.Bounds.Contains(entityEndRectangle)) return;
-                Rectangle cameraRectangle = new Rectangle((int)level.Camera.X, (int)level.Camera.Y, (int)(level.Camera.Right - level.Camera.Left), (int)(level.Camera.Bottom - level.Camera.Top));
-                if (!cameraRectangle.Contains(entityEndRectangle)) return;
-            }
-
             // All passed! Get the bird to fly in.
             bool skipFly = false;
             if (flownIn)
@@ -221,6 +211,52 @@ public class ConditionalBirdTutorial : CustomBirdTutorial
             }
             StartFlyIn(showTutorial: true, skipFly: skipFly);
         }
+    }
+    
+    private bool CheckMetFlyInCondition(Level level, bool recheckIfOutsideZone = false)
+    {
+        if (recheckIfOutsideZone) UpdateConditionTracking_Time(true);
+
+        if (level.Tracker.GetEntity<Player>() is Player player)
+        {
+            // Look through each condition. If any fails, exit.
+            // Ensure hasn't triggered yet
+            if (triggered || player.Dead || level.Transitioning)
+            {
+                return false;
+            }
+
+            string trackerPrefix = $"EndHelper_ConditionalBirdTutorial_{entityData.ID}";
+            bool flewInBefore = level.Session.GetFlag($"{trackerPrefix}_flewInBefore");
+
+            if (!flewInBefore || !onlyFulfillConditionOnce)
+            {
+                // secInRoom Checks
+                if (level.Session.GetCounter($"{trackerPrefix}_frameInZoneTotal") < requireFrameInZoneTotal) return false;
+                if (level.Session.GetCounter($"{trackerPrefix}_frameInZoneAtOnce") < requireFrameInZoneAtOnce) return false;
+                if (level.Session.GetCounter($"{trackerPrefix}_frameInRoom") < requireFrameInRoom) return false;
+
+                // death checks
+                if (level.Session.GetCounter($"{trackerPrefix}_deathsInZone") < requireDeathsInZone) return false;
+                if (level.Session.GetCounter($"{trackerPrefix}_deathsInRoom") < requireDeathsInRoom) return false;
+
+                // flag check
+                bool passCheck = Utils_General.AreFlagsEnabled(level.Session, requireFlag, true);
+                if (!passCheck) return false;
+            }
+
+            // within screen boundary check
+            if (requireOnScreen)
+            {
+                Rectangle entityEndRectangle = new Rectangle((int)restPosition.X - 8, (int)restPosition.Y - 16, entityData.Width + 16, entityData.Height + 16);
+                //if (!level.Bounds.Contains(entityEndRectangle)) return;
+                Rectangle cameraRectangle = new Rectangle((int)level.Camera.X, (int)level.Camera.Y, (int)(level.Camera.Right - level.Camera.Left), (int)(level.Camera.Bottom - level.Camera.Top));
+                if (!cameraRectangle.Contains(entityEndRectangle)) return false;
+            }
+
+            return true; // All checks passed!
+        }
+        return false;
     }
 
     private void SetStartingPosition()
@@ -265,7 +301,7 @@ public class ConditionalBirdTutorial : CustomBirdTutorial
 
         string trackerPrefix = $"EndHelper_ConditionalBirdTutorial_{entityData.ID}";
 
-        if (onlyFulfillConditionOnce) level.Session.SetFlag($"{trackerPrefix}_flewInBefore", true);
+        level.Session.SetFlag($"{trackerPrefix}_flewInBefore", true);
         flownIn = true;
 
         if (flyInSpeedMultiplier > 0 && !skipFly)

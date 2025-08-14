@@ -3,15 +3,18 @@
 // Decompiled with ICSharpCode.Decompiler 8.2.0.7535
 #endregion
 
+using Celeste.Mod;
 using Celeste.Mod.EndHelper.Entities.DeathHandler;
 using Celeste.Mod.EndHelper.Utils;
 using CelesteMod.Publicizer;
+using FrostHelper.Helpers;
 using Microsoft.Xna.Framework;
 using Monocle;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Celeste;
 
@@ -97,6 +100,12 @@ public class DeathHandlerChangeRespawnRegionRenderer : Entity
     public Rectangle levelTileBounds;
     public bool dirty;
 
+
+    private bool render_fullResetKill = false;
+    private bool render_fullResetNormal = false;
+    private bool render_resetKill = false;
+    private bool render_resetNormal = false;
+
     [MethodImpl(MethodImplOptions.NoInlining)]
     public DeathHandlerChangeRespawnRegionRenderer()
     {
@@ -109,17 +118,58 @@ public class DeathHandlerChangeRespawnRegionRenderer : Entity
     public void Track(DeathHandlerChangeRespawnRegion block)
     {
         list.Add(block);
+        //Logger.Log(LogLevel.Info, "EndHelper/DeathHandlerChangeRespawnRegionRenderer", $"added block - {block} | Location: {block.Position} | FullReset: {block.fullReset} | killOnEnter: {block.killOnEnter}");
         if (tiles == null)
         {
-            levelTileBounds = (base.Scene as Level).TileBounds;
+            Rectangle extendedLevelBounds = SceneAs<Level>().Bounds;
+            levelTileBounds = new Rectangle(extendedLevelBounds.X, extendedLevelBounds.Y, extendedLevelBounds.Width, extendedLevelBounds.Height);
             tiles = new VirtualMap<bool>(levelTileBounds.Width, levelTileBounds.Height, emptyValue: false);
+
+            //Logger.Log(LogLevel.Info, "EndHelper/DeathHandlerChangeRespawnRegionRenderer", $"create new tile list");
         }
 
-        for (int i = (int)block.X / 8; (float)i < block.Right / 8f; i++)
+        for (int i = (int)block.X; (float)i < block.Right; i++)
         {
-            for (int j = (int)block.Y / 8; (float)j < block.Bottom / 8f; j++)
+            for (int j = (int)block.Y; (float)j < block.Bottom; j++)
             {
-                tiles[i - levelTileBounds.X, j - levelTileBounds.Y] = true;
+                int mapX = i - levelTileBounds.X;
+                int mapY = j - levelTileBounds.Y;
+                bool pointFitsInMap = mapX >= 0 && mapY >= 0 && mapX < tiles.Columns && mapY < tiles.Rows;
+                if (pointFitsInMap)
+                {
+                    tiles[mapX, mapY] = true;
+                }
+                else
+                {
+                    //Logger.Log(LogLevel.Info, "EndHelper/DeathHandlerChangeRespawnRegionRenderer", $"pointfitsinmap failed: {mapX} {mapY} || {tiles.Columns} {tiles.Rows}");
+
+                    // Extend the tile VirtualMap to fit the new point + 128 tiles worth of buffer
+                    int extX = mapX < 0 ? -mapX + 128 : 0;
+                    int extWidth = (mapX >= levelTileBounds.Width) ? (mapX - levelTileBounds.Width + 128) : 0;
+                    int extY = mapY < 0 ? -mapY + 128 : 0;
+                    int extHeight = (mapY >= levelTileBounds.Height) ? (mapY - levelTileBounds.Height + 128) : 0;
+                    extWidth += extX; extHeight += extY;
+
+                    //Logger.Log(LogLevel.Info, "EndHelper/DeathHandlerChangeRespawnRegionRenderer", $"account for {i} {j}: level bounds: {levelTileBounds} >>");
+                    levelTileBounds = new Rectangle(levelTileBounds.X - extX, levelTileBounds.Y - extY, levelTileBounds.Width + extWidth, levelTileBounds.Height + extHeight);
+                    //Logger.Log(LogLevel.Info, "EndHelper/DeathHandlerChangeRespawnRegionRenderer", $">> now {levelTileBounds}");
+                    VirtualMap<bool> newTiles = new VirtualMap<bool>(levelTileBounds.Width, levelTileBounds.Height, emptyValue: false);
+
+                    // Copy over, now shifted
+                    for (int ix = 0; ix < tiles.Columns; ix++)
+                    {
+                        for (int iy = 0; iy < tiles.Rows; iy++)
+                        {
+                            int wx = extX + ix;
+                            int wy = extY + iy;
+                            newTiles[wx, wy] = tiles[ix, iy];
+                        }
+                    }
+                    newTiles[i - levelTileBounds.X, j - levelTileBounds.Y] = true;
+
+                    //Logger.Log(LogLevel.Info, "EndHelper/DeathHandlerChangeRespawnRegionRenderer", $"to include {i - levelTileBounds.X} {j - levelTileBounds.Y}: expanding tile size: {tiles.Columns}x{tiles.Rows} --> {newTiles.Columns}x{newTiles.Rows}");
+                    tiles = newTiles;
+                }
             }
         }
 
@@ -130,15 +180,18 @@ public class DeathHandlerChangeRespawnRegionRenderer : Entity
     public void Untrack(DeathHandlerChangeRespawnRegion block)
     {
         list.Remove(block);
+
+        //Logger.Log(LogLevel.Info, "EndHelper/DeathHandlerChangeRespawnRegionRenderer", $"removed block");
         if (list.Count <= 0)
         {
             tiles = null;
+            //Logger.Log(LogLevel.Info, "EndHelper/DeathHandlerChangeRespawnRegionRenderer", $"tiles = null");
         }
         else
         {
-            for (int i = (int)block.X / 8; (float)i < block.Right / 8f; i++)
+            for (int i = (int)block.X; (float)i < block.Right; i++)
             {
-                for (int j = (int)block.Y / 8; (float)j < block.Bottom / 8f; j++)
+                for (int j = (int)block.Y; (float)j < block.Bottom; j++)
                 {
                     tiles[i - levelTileBounds.X, j - levelTileBounds.Y] = false;
                 }
@@ -194,6 +247,7 @@ public class DeathHandlerChangeRespawnRegionRenderer : Entity
     [MethodImpl(MethodImplOptions.NoInlining)]
     public void RebuildEdges()
     {
+        //Logger.Log(LogLevel.Info, "EndHelper/DeathHandlerChangeRespawnRegionRenderer", $"rebuild edges");
         dirty = false;
         edges.Clear();
         if (list.Count <= 0)
@@ -208,43 +262,61 @@ public class DeathHandlerChangeRespawnRegionRenderer : Entity
         _ = obj.TileBounds.Bottom;
         Point[] array = new Point[4]
         {
-            new Point(0, -1),
-            new Point(0, 1),
-            new Point(-1, 0),
-            new Point(1, 0)
+            new Point(0, -8),
+            new Point(0, 8),
+            new Point(-8, 0),
+            new Point(8, 0)
         };
         foreach (DeathHandlerChangeRespawnRegion item in list)
         {
             if (!item.Visible) continue;
+            //Logger.Log(LogLevel.Info, "EndHelper/DeathHandlerChangeRespawnRegionRenderer", $"Adding edges for {item} at {item.Position}. Full Reset {item.fullReset}, killOnEnter {item.killOnEnter}");
 
-            for (int i = (int)item.X / 8; (float)i < item.Right / 8f; i++)
+            for (int i = (int)item.X; (float)i < item.Right; i += 8)
             {
-                for (int j = (int)item.Y / 8; (float)j < item.Bottom / 8f; j++)
+                for (int j = (int)item.Y; (float)j < item.Bottom; j += 8)
                 {
                     Point[] array2 = array;
                     for (int k = 0; k < array2.Length; k++)
                     {
-                        Point point = array2[k];
-                        Point point2 = new Point(-point.Y, point.X);
-                        if (!Inside(i + point.X, j + point.Y) && (!Inside(i - point2.X, j - point2.Y) || Inside(i + point.X - point2.X, j + point.Y - point2.Y)))
+                        Point dir = array2[k];
+                        Point rotDir = new Point(-dir.Y, dir.X);
+                        if (!Inside(i + dir.X, j + dir.Y) && (!Inside(i - rotDir.X, j - rotDir.Y) || Inside(i + dir.X - rotDir.X, j + dir.Y - rotDir.Y)))
                         {
-                            Point point3 = new Point(i, j);
-                            Point point4 = new Point(i + point2.X, j + point2.Y);
-                            Vector2 vector = new Vector2(4f) + new Vector2(point.X - point2.X, point.Y - point2.Y) * 4f;
-                            while (Inside(point4.X, point4.Y) && !Inside(point4.X + point.X, point4.Y + point.Y))
+                            Point topLeftPoint = new Point(i, j);
+                            Point bottomRightPoint = new Point(i + rotDir.X, j + rotDir.Y);
+                            Vector2 vector = new Vector2(4f) + new Vector2(dir.X - rotDir.X, dir.Y - rotDir.Y) * 0.5f;
+                            while (Inside(bottomRightPoint.X, bottomRightPoint.Y) && !Inside(bottomRightPoint.X + dir.X, bottomRightPoint.Y + dir.Y))
                             {
-                                point4.X += point2.X;
-                                point4.Y += point2.Y;
+                                bottomRightPoint.X += rotDir.X;
+                                bottomRightPoint.Y += rotDir.Y;
                             }
-                            Vector2 a = new Vector2(point3.X, point3.Y) * 8f + vector - item.Position;
-                            Vector2 b = new Vector2(point4.X, point4.Y) * 8f + vector - item.Position;
+                            Vector2 a = new Vector2(topLeftPoint.X, topLeftPoint.Y) + vector - item.Position;
+                            Vector2 b = new Vector2(bottomRightPoint.X, bottomRightPoint.Y) + vector - item.Position;
 
                             Edge addEdge = new Edge(item, a, b, item.fullReset, item.killOnEnter);
                             edges.Add(addEdge);
+                            //Logger.Log(LogLevel.Info, "EndHelper/DeathHandlerChangeRespawnRegionRenderer", $"add edge {addEdge}: {addEdge.A} {addEdge.B}");
                         }
                     }
                 }
             }
+        }
+
+        // Check if rendering is necessary
+        render_fullResetKill = false;
+        render_fullResetNormal = false;
+        render_resetKill = false;
+        render_resetNormal = false;
+
+        foreach (DeathHandlerChangeRespawnRegion item in list)
+        {
+            if (!item.visibleArea) continue;
+            //Logger.Log(LogLevel.Info, "EndHelper/DeathHandlerChangeRespawnRegionRenderer", $">> for {item}: fullreset {item.fullReset} killOnEnter {item.killOnEnter}");
+            if (item.fullReset && item.killOnEnter) render_fullResetKill = true;
+            if (item.fullReset && !item.killOnEnter) render_fullResetNormal = true;
+            if (!item.fullReset && item.killOnEnter) render_resetKill = true;
+            if (!item.fullReset && !item.killOnEnter) render_resetNormal = true;
         }
     }
 
@@ -257,25 +329,31 @@ public class DeathHandlerChangeRespawnRegionRenderer : Entity
     [MethodImpl(MethodImplOptions.NoInlining)]
     public void OnRenderBloom()
     {
-        Camera camera = (base.Scene as Level).Camera;
+        Color color = Color.White * 0.15f;
+        Rectangle cameraRect = SceneAs<Level>().Camera.GetRect();
+        Rectangle cameraRectInflated = cameraRect; cameraRectInflated.Inflate(16, 16);
         foreach (DeathHandlerChangeRespawnRegion item in list)
         {
-            if (item.Visible)
+            if (item.Visible && cameraRect.Intersects(item.HitRect()))
             {
-                Draw.Rect(item.X, item.Y, item.Width, item.Height, Color.White);
+                Draw.Rect(item.X, item.Y, item.Width, item.Height, color);
             }
         }
 
+        //Logger.Log(LogLevel.Info, "EndHelper/DeathHandlerChangeRespawnRegionRenderer", $"--------------------------");
         foreach (Edge edge in edges)
         {
+            //Rectangle edgeRect = new Rectangle((int)(edge.Parent.Position.X + edge.Min.X - 8), (int)(edge.Parent.Position.Y + edge.Min.Y - 8), (int)(edge.Max.X - edge.Min.X + 16), (int)(edge.Max.Y - edge.Min.Y + 16));
             if (edge.Visible)
             {
-                Vector2 vector = edge.Parent.Position + edge.A;
-                _ = edge.Parent.Position + edge.B;
+                Vector2 edgeFirstPos = edge.Parent.Position + edge.A;
                 for (int i = 0; (float)i <= edge.Length; i++)
                 {
-                    Vector2 vector2 = vector + edge.Normal * i;
-                    Draw.Line(vector2, vector2 + edge.Perpendicular * edge.Wave[i], Color.White);
+                    Vector2 vector2 = edgeFirstPos + edge.Normal * i;
+                    if (cameraRectInflated.Contains((int)vector2.X, (int)vector2.Y))
+                    {
+                        Draw.Line(vector2, vector2 + edge.Perpendicular * edge.Wave[i], color);
+                    }
                 }
             }
         }
@@ -285,7 +363,6 @@ public class DeathHandlerChangeRespawnRegionRenderer : Entity
     public override void Render()
     {
         Level level = SceneAs<Level>();
-
         Color color = Color.White * 0.15f;
 
         if (list.Count == 0 && edges.Count == 0)
@@ -293,28 +370,18 @@ public class DeathHandlerChangeRespawnRegionRenderer : Entity
             return;
         }
 
+        Rectangle cameraRect = level.Camera.GetRect();
+        Rectangle cameraRectInflated = cameraRect; cameraRectInflated.Inflate(16, 16);
 
-        // Check if rendering is necessary
-        bool fullResetFalse = false;
-        bool fullResetTrue = false;
-        bool killOnEnterFalse = false;
-        bool killOnEnterTrue = false;
-
-        foreach (DeathHandlerChangeRespawnRegion item in list)
-        {
-            if (item.fullReset == false) fullResetFalse = true;
-            if (item.fullReset == true) fullResetTrue = true;
-            if (item.killOnEnter == false) killOnEnterFalse = true;
-            if (item.killOnEnter == true) killOnEnterTrue = true;
-        }
-
-        if (fullResetTrue && killOnEnterTrue) RenderSet(true, true);
-        if (fullResetTrue && killOnEnterFalse) RenderSet(true, false);
-        if (fullResetFalse && killOnEnterTrue) RenderSet(false, true);
-        if (fullResetFalse && killOnEnterFalse) RenderSet(false, false);
+        if (render_fullResetKill) RenderSet(true, true);
+        if (render_fullResetNormal) RenderSet(true, false);
+        if (render_resetKill) RenderSet(false, true);
+        if (render_resetNormal) RenderSet(false, false);
 
         void RenderSet(bool fullReset, bool killOnEnter)
         {
+            //Logger.Log(LogLevel.Info, "EndHelper/DeathHandlerChangeRespawnRegionRenderer", $"render for fullreset {fullReset} killOnEnter {killOnEnter}");
+
             Color insideColour = fullReset ? Color.Red : Color.Green;
             Color outlineColour = killOnEnter ? Color.Red : Color.Green;
 
@@ -322,21 +389,26 @@ public class DeathHandlerChangeRespawnRegionRenderer : Entity
 
             foreach (DeathHandlerChangeRespawnRegion item in list)
             {
-                if (item.Visible && item.fullReset == fullReset && item.killOnEnter == killOnEnter)
+                if (item.Visible && item.fullReset == fullReset && item.killOnEnter == killOnEnter && cameraRect.Intersects(item.HitRect()))
                 {
-                    Draw.Rect(item.Collider, color);
+                    Draw.Rect(item.X, item.Y, item.Width, item.Height, color);
                 }
             }
 
+            //Logger.Log(LogLevel.Info, "EndHelper/DeathHandlerChangeRespawnRegionRenderer", $"--------------------------");
             foreach (Edge edge in edges)
             {
+                //Rectangle edgeRect = new Rectangle((int)(edge.Parent.Position.X + edge.Min.X - 8), (int)(edge.Parent.Position.Y + edge.Min.Y - 8), (int)(edge.Max.X - edge.Min.X + 16), (int)(edge.Max.Y - edge.Min.Y + 16));
                 if (edge.Visible && edge.fullReset == fullReset && edge.killOnEnter == killOnEnter)
                 {
-                    Vector2 vector = edge.Parent.Position + edge.A;
+                    Vector2 edgeFirstPos = edge.Parent.Position + edge.A;
                     for (int i = 0; (float)i <= edge.Length; i++)
                     {
-                        Vector2 vector2 = vector + edge.Normal * i;
-                        Draw.Line(vector2, vector2 + edge.Perpendicular * edge.Wave[i], color);
+                        Vector2 vector2 = edgeFirstPos + edge.Normal * i;
+                        if (cameraRectInflated.Contains((int)vector2.X, (int)vector2.Y))
+                        {
+                            Draw.Line(vector2, vector2 + edge.Perpendicular * edge.Wave[i], color);
+                        }
                     }
                 }
             }

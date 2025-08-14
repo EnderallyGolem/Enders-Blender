@@ -14,17 +14,17 @@ namespace Celeste.Mod.EndHelper.Entities.DeathHandler;
 
 [Tracked(false)]
 [CustomEntity("EndHelper/DeathHandlerChangeRespawnRegion")]
-public class DeathHandlerChangeRespawnRegion : Solid
+public class DeathHandlerChangeRespawnRegion : Entity
 {
     internal EntityID entityID;
 
-    internal bool checkSolid = true;
-    internal bool attachable = true;
-    internal bool fullReset = false;
-    internal bool killOnEnter = false;
+    internal readonly bool checkSolid = true;
+    internal readonly bool attachable = true;
+    internal readonly bool fullReset = false;
+    internal readonly bool killOnEnter = false;
 
-    internal bool visibleArea = true;
-    internal bool visibleTarget = true;
+    internal readonly bool visibleArea = true;
+    internal readonly bool visibleTarget = true;
 
     internal Vector2 targetSpawnpoint;
     private readonly Vector2 targetSpawnpointOffset = Vector2.Zero;
@@ -40,19 +40,14 @@ public class DeathHandlerChangeRespawnRegion : Solid
     internal static EntityID? triggerChangeRespawnDeathEntityID; // When changing respawn in death zones, set this. This is checked upon add.
                                                                  // Purpose of this is to allow effect to occur if the player dies immediately
 
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    public DeathHandlerChangeRespawnRegion(Vector2 position, float width, float height)
-        : base(position, width, height, safe: false)
-    {
-        Collidable = false;
-        this.BlockWaterfalls = false;
-        this.AllowStaticMovers = false;
-    }
+    private static bool scheduleAddRendererTick = false;
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     public DeathHandlerChangeRespawnRegion(EntityData data, Vector2 offset, EntityID id)
-        : this(data.Position + offset, data.Width, data.Height)
+        : base(data.Position + offset)
     {
+        this.Collider = new Hitbox(data.Width, data.Height);
+
         this.checkSolid = data.Bool("checkSolid", true);
         this.attachable = data.Bool("attachable", true);
         this.fullReset = data.Bool("fullReset", false);
@@ -77,18 +72,26 @@ public class DeathHandlerChangeRespawnRegion : Solid
         }
 
         if (!visibleArea) Visible = false;
+
+        if (killOnEnter) Add(new LedgeBlocker());
+
+        // Schuled to add renderer
+        if (visibleArea) scheduleAddRendererTick = true;
     }
 
     private void OnEnable()
     {
+        if (!visibleArea) return;
         Level level = SceneAs<Level>();
         Active = true;
         Visible = visibleArea;
+        EnsureRendererInLevel();
         level.Tracker.GetEntity<DeathHandlerChangeRespawnRegionRenderer>().Track(this);
     }
 
     private void OnDisable()
     {
+        if (!visibleArea) return;
         Level level = SceneAs<Level>();
         Active = false;
         Visible = false;
@@ -97,19 +100,25 @@ public class DeathHandlerChangeRespawnRegion : Solid
 
     private void OnDestroy()
     {
-        Level level = SceneAs<Level>();
-        level.Tracker.GetEntity<DeathHandlerChangeRespawnRegionRenderer>().Untrack(this);
+        if (visibleArea)
+        {
+            Level level = SceneAs<Level>();
+            level.Tracker.GetEntity<DeathHandlerChangeRespawnRegionRenderer>().Untrack(this);
+        }
         RemoveSelf();
         //Logger.Log(LogLevel.Info, "EndHelper/DeathHandlerChangeRespawnRegion", $"it destroyed");
     }
 
+    private void OnShake(Vector2 shakePos)
+    {
+        Position += shakePos;
+    }
+
     private bool IsRidingSolid(Solid solid)
     {
-        Collidable = true;
         Collider origCollider = base.Collider;
         base.Collider = new Hitbox(Width+2, Height+2, -1, -1);
         bool collideCheck = CollideCheck(solid);
-        Collidable = false;
         base.Collider = origCollider;
         return collideCheck;
     }
@@ -118,16 +127,27 @@ public class DeathHandlerChangeRespawnRegion : Solid
     public override void Added(Scene scene)
     {
         base.Added(scene);
+        if (scheduleAddRendererTick)
+        {
+            // Add renderer if level doesn't already have one
+            scheduleAddRendererTick = false;
+            EnsureRendererInLevel();
+        }
+    }
 
-        // Add render if the level didn't already have one
-        Level level = scene as Level;
+    public void EnsureRendererInLevel()
+    {
+        Level level = SceneAs<Level>();
         if (level.Tracker.CountEntities<DeathHandlerChangeRespawnRegionRenderer>() == 0)
-        { level.Add(new DeathHandlerChangeRespawnRegionRenderer()); }
+        { 
+            level.Add(new DeathHandlerChangeRespawnRegionRenderer());
+        }
+        //Logger.Log(LogLevel.Info, "EndHelper/DeathHandlerChangeRespawnRegion", $"ensure renderer in level added new renderer - now total {level.Tracker.CountEntities<DeathHandlerChangeRespawnRegionRenderer>()}");
     }
 
     public override void Awake(Scene scene)
     {
-        scene.Tracker.GetEntity<DeathHandlerChangeRespawnRegionRenderer>().Track(this);
+        if (visibleArea) scene.Tracker.GetEntity<DeathHandlerChangeRespawnRegionRenderer>().Track(this);
         base.Awake(scene);
 
         // If triggerChangeRespawnDeathEntityID == entityID, this means effect was triggered right before death. Show effect.
@@ -142,7 +162,7 @@ public class DeathHandlerChangeRespawnRegion : Solid
     public override void Removed(Scene scene)
     {
         base.Removed(scene);
-        if (scene.Tracker.CountEntities<DeathHandlerChangeRespawnRegionRenderer>() > 0)
+        if (scene.Tracker.CountEntities<DeathHandlerChangeRespawnRegionRenderer>() > 0 && visibleArea)
         {
             scene.Tracker.GetEntity<DeathHandlerChangeRespawnRegionRenderer>().Untrack(this);
         }
@@ -150,6 +170,8 @@ public class DeathHandlerChangeRespawnRegion : Solid
 
     public IEnumerator OnDeathBypass()
     {
+        if (!visibleArea) yield break;
+
         Level level = SceneAs<Level>();
         int nullReturnCount = 0;
         while (level.Tracker.CountEntities<DeathHandlerChangeRespawnRegionRenderer>() == 0)
@@ -157,7 +179,10 @@ public class DeathHandlerChangeRespawnRegion : Solid
             yield return null;
             nullReturnCount++;
             // If repeatedly null, add the renderer
-            if (nullReturnCount >= 3) level.Add(new DeathHandlerChangeRespawnRegionRenderer());
+            if (nullReturnCount >= 2)
+            {
+                level.Add(new DeathHandlerChangeRespawnRegionRenderer());
+            }
         }
         level.Tracker.GetEntity<DeathHandlerChangeRespawnRegionRenderer>().Track(this);
         yield break;
@@ -193,6 +218,19 @@ public class DeathHandlerChangeRespawnRegion : Solid
 
     public void PlayerCollide(Player player)
     {
+        if (killOnEnter && Utils_DeathHandler.deathCooldownFrames != 0)
+        {
+            // If killOnEnter, we want to ensure the player dies if the respawn point changes.
+            // If death cooldown isn't 0, do not run this.
+            // However, do forceShortDeathCooldown so this will hopefully run again in ~2 frames if the player is still inside (if full reset).
+            // (Otherwise they skipped through using invincibility)
+            if (fullReset)
+            {
+                Utils_DeathHandler.ForceShortDeathCooldown();
+            }
+            return;
+        }
+
         //Logger.Log(LogLevel.Info, "EndHelper/DeathHandlerChangeRespawnRegion", $"it continues to collide {pos}");
         Vector2 playerPosMiddle = new Vector2((player.Position.X - player.Width / 2), (player.Position.Y - player.Height));
 
@@ -201,7 +239,7 @@ public class DeathHandlerChangeRespawnRegion : Solid
         bool changeRespawnSuccess = Utils_DeathHandler.UpdateRespawnPos(targetSpawnpoint, level, checkSolid, fullReset);
         if (EndHelperModule.Session.nextRespawnFullReset != nextIsFullReset) changeRespawnSuccess = true;
 
-        if (killOnEnter && (changeRespawnSuccess || DeathHandlerRespawnMarker.attachedToPlayer && fullReset))
+        if (killOnEnter && changeRespawnSuccess)
         {
             triggerChangeRespawnDeathEntityID = entityID; // Schedule a VisualLineEffect to occur after death. If player is bypass + full reset, don't need to be a success.
         }
@@ -221,7 +259,6 @@ public class DeathHandlerChangeRespawnRegion : Solid
             if (!visibleArea) dieDir = Vector2.Zero;
 
             dieDir = dieDir.SafeNormalize();
-            if (fullReset) Utils_DeathHandler.ForceShortDeathCooldown();
             player.Die(dieDir);
         }
     }

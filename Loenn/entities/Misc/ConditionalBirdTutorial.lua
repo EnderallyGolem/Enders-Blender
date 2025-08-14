@@ -31,6 +31,7 @@ ConditionalBirdTutorial.placements = {
         deathsInZone = 0,
         deathsInRoom = 0,
         requireOnScreen = true,
+        requireFlagForIncrement = "",
         requireFlag = ""
     }
 }
@@ -40,7 +41,7 @@ ConditionalBirdTutorial.fieldOrder = {
     "birdId", "controls", "info", "caw", "faceLeft", "onlyOnce", "onlyOnceFlyIn", "onlyFulfillConditionOnce", "showSprite",
     "flyInSpeedMultiplier",
     "secInZoneTotal", "secInZoneAtOnce", "secInRoom", "deathsInZone", "deathsInRoom",
-    "requireFlag", "requireOnScreen"
+    "requireFlag", "requireFlagForIncrement", "requireOnScreen"
 }
 
 ConditionalBirdTutorial.fieldInformation = {

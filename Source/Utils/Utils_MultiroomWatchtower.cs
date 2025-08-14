@@ -46,6 +46,7 @@ namespace Celeste.Mod.EndHelper.Utils
                 maxSpeedSet *= 2;
                 canToggleBlocker = true;
                 doOverlapCheck = false;
+                invincibleWhenUsing = true;
             }
             internal static bool Exists => Engine.Scene.Tracker.GetEntity<PortableMultiroomWatchtower>() != null;
         }

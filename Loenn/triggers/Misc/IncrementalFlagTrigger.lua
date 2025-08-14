@@ -5,7 +5,7 @@ local IncrementalFlagTrigger = {
         {
             name = "normal",
             data = {
-                flag = "",
+                flag = "incrementflag",
                 setValue = 1,
                 setOnlyIfOneBelow = true,
                 requireFlag = "",

@@ -12,7 +12,7 @@ Calling it a blender was funnier. Too lazy to change the internal names though.
 - Stats Menu
     - Menu which shows information for all rooms
     - Rooms can be fused together, segmented, or rearranged
-    - Total first clear stats and last clear stats are saved and are viewable in the journal
+    - Total first clear stats and one other clear's stats are saved and are viewable in the journal
     - Stats can be copied onto clipboard
 
 ###### Gameplay Tweaks
@@ -44,6 +44,12 @@ These are shown in the end-screen. Some of these can be overridden per-map with 
 ###### Room-Swap
 - Create a grid of rooms that can swap positions with each other (baring some limitations: no collectables and FG/BG tiles).
 - You can check out how they work in my [Crossroads Contest map](https://www.youtube.com/watch?v=xB6RLAKZC0g).
+	- Setup a grid with Room-Swap Controller (ensure it is loaded before entering the grid)
+	- Create template rooms (with names matching the controller) and actual rooms of the same size. Actual rooms are empty, template rooms have the actual room.
+	- Add Room-Swap Respawn Force Same Room Triggers in each template room.
+	- Use Updating Change Respawn Triggers instead of the regular trigger.
+	- Change room order using Room-Swap Breaker Box or Room-Swap Modify Room Trigger.
+	- Create a map with Room-Swap Map. Implement map upgrades with Room-Swap Map Upgrade.
 
 ###### Cassette Entity/Triggers
 - Cassette Beat Gates
@@ -72,7 +78,7 @@ These are shown in the end-screen. Some of these can be overridden per-map with 
 - Tutorial bird which flies in when certain conditions are met:
 	- Certain time in room / part of room (total or at once)
 	- Certain number of deaths in room / part of room
-	- Flag enabled
+	- Flag enabled (either as a seperate condition, or required for the above 2 conditions to increment)
 	- If on screen
 
 ###### Misc
@@ -82,6 +88,35 @@ These are shown in the end-screen. Some of these can be overridden per-map with 
 
 
 
+			
+## 1.1.10 changelog:
+- New Additions:
+	- Mapping Tools:
+		- Connectable Outline - Outline indicator which can be (visually) connceted to each other and attached.
+
+- Room Stats Tracker:
+	- The Previous Clear stats (viewed in journal) is renamed to Saved Clear.
+		- In settings, you can configure whether if beating a map overrides the previous Saved Clear.
+		- By default, it prompts you if you would like to override the saved stats upon a clear.
+		- If there isn't already a Saved Clear, the stats will always save.
+
+- QOL Tweaks:
+	- Autosave can now also occur during load state.
+
+- Gameplay Tweaks:
+	- Seemless Respawn: Fixed spinner flicker during death for spinners with custom hues.
+
+- Mapping Tools:
+	- Conditional Bird Tutorial
+		- Modified behaviour of Only Fulfill Condition Once being disabled together with Only Once Fly In enabled.
+			- If the condition is still met upon death, the bird does not fly in. Otherwise, it still does.
+			- Previously Only Once Fly In did nothing together with Only Fulfill Condition Once disabled (the bird would fly in regardless).
+		- Added option - Require Flag For Increment.
+			- If specified, the second and death conditions will not increment unless this flag is set.
+	- Room-Swap Map: HUD option now moves it to the Sub-HUD layer.
+
+- Misc:
+	- Multi-room Watchtower: Fixed issues when you die while using it. You also now just can't die when using it.
 
 ## 1.1.9 changelog:
 - New Additions:
@@ -157,7 +192,7 @@ These are shown in the end-screen. Some of these can be overridden per-map with 
     - Room-Swaps Box/Trigger: The Set modification type now lets you exclude rooms from being changed.
     - Flag checks uses the same checks as Cassette Beat Trigger/Blocks (checks for multiple and negation). Flag toggles are specified seperately (and you can list multiple), and only toggle if swapping is successful.
 
-- Multi-room watchtower:
+- Multi-room Watchtower:
     - Watchtower now retains your respawn point after viewing it (rather than changing it to the closest point after viewing).
     - Watchtower no longer shifts the player position to the viewed room. This should avoid it somehow triggering stuff unintentionally. Possibly.
 

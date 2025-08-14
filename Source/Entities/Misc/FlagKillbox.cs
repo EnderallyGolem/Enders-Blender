@@ -3,7 +3,6 @@ using Celeste.Mod.Entities;
 using Microsoft.Xna.Framework;
 using Monocle;
 using System.Runtime.CompilerServices;
-using Steamworks;
 
 namespace Celeste.Mod.EndHelper.Entities.Misc
 {

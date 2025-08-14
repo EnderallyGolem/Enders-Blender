@@ -53,4 +53,10 @@ function DeathHandlerChangeRespawnRegion.borderColor(room, entity)
     end
 end
 
+function DeathHandlerChangeRespawnRegion.onRotate(room, entity, direction)
+    local oldWidth = entity.width
+    entity.width = entity.height
+    entity.height = oldWidth
+end
+
 return DeathHandlerChangeRespawnRegion

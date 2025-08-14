@@ -1,6 +1,7 @@
 using Microsoft.Xna.Framework.Input;
 using System.ComponentModel;
 using static Celeste.Mod.EndHelper.EndHelperModuleSettings.RoomStatMenuSubMenu;
+using static Celeste.Mod.EndHelper.EndHelperModuleSettings.ToggleGrabSubMenu;
 
 namespace Celeste.Mod.EndHelper;
 
@@ -36,6 +37,11 @@ public class EndHelperModuleSettings : EverestModuleSettings {
 
         [SettingSubText("modoptions_EndHelperModule_MenuShowFirstClear_Desc")]
         public bool MenuShowFirstClear { get; set; } = false;
+
+        public enum StoredClearsEnum { Always, Ask, AskIfValidClear, ValidClear, ValidClearFaster, ValidClearLessDeaths, Never }
+        [SettingSubText("modoptions_EndHelperModule_StoredClears_Desc")]
+        [DefaultValue(StoredClearsEnum.Ask)]
+        public StoredClearsEnum StoredClears { get; set; }
 
         [SettingSubText("modoptions_EndHelperModule_MenuMulticolor_Desc")]
         public bool MenuMulticolor { get; set; } = true;

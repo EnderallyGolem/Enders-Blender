@@ -36,7 +36,7 @@ namespace Celeste.Mod.EndHelper.Integration
         private static void Engine_Update_Hook(Action<On.Monocle.Engine.orig_Update, Monocle.Engine, GameTime> orig, On.Monocle.Engine.orig_Update ogorig, Monocle.Engine self, GameTime gametime)
         {
             // This is here to get ImGuiHelper to stop forcing MInput Disable to be false when I need it to be true ):<
-            if (mInputDisableDuration >= 1)
+            if (mInputDisableTimer.TimeLeft >= 1)
             {
                 Monocle.MInput.Disabled = true;
                 ogorig(self, gametime);

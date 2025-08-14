@@ -31,6 +31,7 @@ using static Celeste.DashSwitch;
 using static Celeste.Mod.EndHelper.EndHelperModuleSettings;
 using static Celeste.Mod.EndHelper.EndHelperModuleSettings.GameplayTweaks;
 using static Celeste.Mod.EndHelper.Entities.Misc.RoomStatisticsDisplayer;
+using static Celeste.TrackSpinner;
 
 namespace Celeste.Mod.EndHelper;
 
@@ -84,10 +85,19 @@ public class EndHelperModule : EverestModule {
 
     // Decreases till -ve, enables input if 0 and disables if +
     // Lets me disable, but ensure it gets re-enabled when I don't need it anymore
-    public static int mInputDisableDuration = 0;
+    internal static Utils_General.Countdown mInputDisableTimer = new Utils_General.Countdown(); 
+    internal static Utils_General.Countdown DisableScreenTransitionMovementTimer = new Utils.Utils_General.Countdown();
 
     // Autosave timer
     public static TimeSpan autoSaveTimer = TimeSpan.Zero;
+    public static void TryAutosave(Level level)
+    {
+        if (EndHelperModule.Settings.QOLTweaksMenu.AutosaveTime > 0 && autoSaveTimer.TotalMinutes >= EndHelperModule.Settings.QOLTweaksMenu.AutosaveTime)
+        {
+            level.AutoSave();
+            autoSaveTimer = TimeSpan.Zero;
+        }
+    }
 
     public static bool integratingWithSSMQoL = false; // Cchange multiroom bino speed multiplier if used by this
     public static bool integratingWithFrostHelper = false; // Only to check for frost helper spinners
@@ -162,7 +172,8 @@ public class EndHelperModule : EverestModule {
         On.Celeste.Killbox.OnPlayer += Hook_KillboxKill;
         On.Celeste.CrystalStaticSpinner.InView += Hook_SpinnerInView;
         On.Celeste.Booster.PlayerDied += Hook_BoosterPlayerDied;
-        On.Celeste.Solid.GetRiders += Hook_SolidGetRiders;
+        On.Celeste.Solid.MoveHExact += Hook_SolidMoveHExact;
+        On.Celeste.Solid.MoveVExact += Hook_SolidMoveVExact;
 
         On.Celeste.CassetteBlock.Awake += Hook_CassetteBlockAwake;
         On.Celeste.CassetteBlockManager.Awake += Hook_CassetteBlockManagerAwake;
@@ -228,7 +239,8 @@ public class EndHelperModule : EverestModule {
         On.Celeste.Killbox.OnPlayer -= Hook_KillboxKill;
         On.Celeste.CrystalStaticSpinner.InView -= Hook_SpinnerInView;
         On.Celeste.Booster.PlayerDied -= Hook_BoosterPlayerDied;
-        On.Celeste.Solid.GetRiders -= Hook_SolidGetRiders;
+        On.Celeste.Solid.MoveHExact -= Hook_SolidMoveHExact;
+        On.Celeste.Solid.MoveVExact -= Hook_SolidMoveVExact;
 
         On.Celeste.Editor.MapEditor.Update -= Hook_UsingMapEditor;
         On.Celeste.Strawberry.Added -= Hook_StrawberryAddedToLevel;
@@ -298,7 +310,6 @@ public class EndHelperModule : EverestModule {
     {
         RoomStatisticsDisplayer.hideIfGoldenStrawberryEnabled = false;
         autoSaveTimer = TimeSpan.Zero;
-        Utils_DeathHandler.DisableAllowDeathHandlerEntityChecks();
 
         // If first time (not fromSaveData), check Hook_StartMap since it has access to level
         if (fromSaveData)
@@ -379,6 +390,9 @@ public class EndHelperModule : EverestModule {
         {
             PauseMenuButtonsFuncCooldown(level, menu, minimal);
         }
+
+        // DeathHandler: Modify Retry to run SetManualReset
+        Utils_DeathHandler.RetryButtonsManualCheck(level, menu);
     }
 
     private static EntityID? prevLoadedEntityID = null;
@@ -392,20 +406,17 @@ public class EndHelperModule : EverestModule {
     private static void OnPlayerSpawnFunc(Player player)
     {
         // Spawn facing same direction as DeathHandlerRespawnPoint or DeathHandlerRespawnMarker.
-        // Priority goes to the marker.
+        // Marker is last in priority, doesn't work that well when full resetting
         DeathHandlerRespawnPoint respawnPoint = player.CollideFirst<DeathHandlerRespawnPoint>();
         DeathHandlerThrowableRespawnPoint throwableRespawnPoint = player.CollideFirst<DeathHandlerThrowableRespawnPoint>();
         DeathHandlerRespawnMarker respawnMarker = player.CollideFirst<DeathHandlerRespawnMarker>();
 
         Facings? updateFacings = null;
-        if (respawnMarker != null) updateFacings = respawnMarker.faceLeft ? Facings.Left : Facings.Right;
+        if (respawnPoint != null) updateFacings = respawnPoint.faceLeft ? Facings.Left : Facings.Right;
         else if (throwableRespawnPoint != null) updateFacings = throwableRespawnPoint.faceLeft ? Facings.Left : Facings.Right;
-        else if (respawnPoint != null) updateFacings = respawnPoint.faceLeft ? Facings.Left : Facings.Right;
+        else if (respawnMarker != null) updateFacings = respawnMarker.faceLeft ? Facings.Left : Facings.Right;
 
-        if (updateFacings != null)
-        {
-            player.Facing = updateFacings.Value;
-        }
+        if (updateFacings != null) player.Facing = updateFacings.Value;
     }
 
     async static void PauseMenuButtonsFuncCooldown(Level level, TextMenu menu, bool minimal)
@@ -574,29 +585,15 @@ public class EndHelperModule : EverestModule {
             levelPause = level.FrozenOrPaused;
         }
 
-        if (mInputDisableDuration > -3 && !levelPause)
-        {
-            mInputDisableDuration--;
-        }
-        if (mInputDisableDuration >= 1)
-        {
-            MInput.Disabled = true;
-        }
-        if (mInputDisableDuration >= -2 && mInputDisableDuration <= 0)
-        {
-            MInput.Disabled = false;
-        }
+        // MInput Timer. Note: Set above 3
+        if (!levelPause) mInputDisableTimer.Update();
+        if (mInputDisableTimer.TimeLeft >= 3) MInput.Disabled = true;
+        if (mInputDisableTimer.TimeLeft == 1 || mInputDisableTimer.TimeLeft == 2) MInput.Disabled = false;
         orig(self, gameTime);
 
-        // Scroll Input
-        if (Utils_General.scrollResetInputFrames == 1)
-        {
-            Utils_General.scrollInputFrames = 0;
-        }
-        if (Utils_General.scrollResetInputFrames > 0)
-        {
-            Utils_General.scrollResetInputFrames--;
-        }
+        // Scroll Input Timer. Set above 1
+        if (Utils_General.scrollResetInputFrames.TimeLeft == 1) Utils_General.scrollInputFrames = 0;
+        Utils_General.scrollResetInputFrames.Update();
 
         // Autosave Timer
         if (EndHelperModule.Settings.QOLTweaksMenu.AutosaveTime > 0)
@@ -608,6 +605,8 @@ public class EndHelperModule : EverestModule {
     private static void SessionResetFuncs(Level level)
     {
         Utils_Shaders.LoadCustomShaders(forceReload: true);
+        TryAutosave(level);
+
         if (EndHelperModule.Session.enableRoomSwapFuncs)
         {
             // This only exists so it updates when you respawn from debug. It umm still requires a transition/respawn to work lol
@@ -640,7 +639,7 @@ public class EndHelperModule : EverestModule {
             }
         }
 
-        if (Utils_DeathHandler.AllowDeathHandlerEntityChecks && lastSessionResetCause == SessionResetCause.Debug)
+        if (EndHelperModule.Session.AllowDeathHandlerEntityChecks && lastSessionResetCause == SessionResetCause.Debug)
         {
             Utils_DeathHandler.ResetFullResetAndBypassBetweenRooms(level);
         }
@@ -657,6 +656,12 @@ public class EndHelperModule : EverestModule {
     {
         Level level = self;
 
+        // No Player Death Countdown (used by portable multiroom bino)
+        if (!self.FrozenOrPaused) Utils_General.disablePlayerDeathCountdown.Update();
+
+        // Disable Screen Transition Movement Timer
+        if (!self.FrozenOrPaused && !self.Transitioning) DisableScreenTransitionMovementTimer.Update();
+
         // Session Reset Checker
         EndHelperModule.timeSinceSessionReset++;
         if (EndHelperModule.timeSinceSessionReset == 1)
@@ -672,7 +677,6 @@ public class EndHelperModule : EverestModule {
             }
         }
 
-        // Multi-room Bino Keybind
         if (EndHelperModule.Settings.FreeMultiroomWatchtower.Button.Pressed && !level.FrozenOrPaused && !level.Transitioning)
         {
             Utils_MultiroomWatchtower.SpawnMultiroomWatchtower();
@@ -691,10 +695,7 @@ public class EndHelperModule : EverestModule {
                 } 
                 else if (!player.Dead)
                 {
-                    if (Utils_DeathHandler.AllowDeathHandlerEntityChecks)
-                    {
-                        Utils_DeathHandler.SetManualReset(level); // Set spawnpoint to full reset if it's used
-                    }
+                    Utils_DeathHandler.SetManualReset(level); // Set spawnpoint to full reset if it's used
                     level.Paused = false;
                     level.PauseMainMenuOpen = false;
                     Engine.TimeRate = 1f;
@@ -909,23 +910,47 @@ public class EndHelperModule : EverestModule {
             }
             self.Throw();
         }
+
+        if (EndHelperModule.Session.AllowDeathHandlerEntityChecks)
+        {
+            Utils_DeathHandler.PlayerUpdate(self);
+        }
+
         orig(self);
     }
 
     public static PlayerDeadBody Hook_OnPlayerDeath(On.Celeste.Player.orig_Die orig, global::Celeste.Player self, Vector2 direction, bool evenIfInvincible, bool registerDeathInStats)
     {
-        // Untoggle-ify if set to do so on death
-        if (EndHelperModule.Settings.ToggleGrabMenu.UntoggleUponDeath) { Session.toggleifyEnabled = false; }
-        EndHelperModule.Session.framesSinceRespawn = 0;
+        if (Utils_General.disablePlayerDeathCountdown.IsTicking)
+        {
+            return null; // Prevent death when countdown is not 0
+        }
 
+        // Check if actual death
         Level level = self.SceneAs<Level>();
-        if (!level.IsInBounds(self)) Utils_DeathHandler.ForceShortDeathCooldown(); // Reduce cooldown if player is out of bounds. Will definitely need to die soon!
+        Session session = level.Session;
+        bool invincibilityFlag = !evenIfInvincible && global::Celeste.SaveData.Instance.Assists.Invincible;
+        if (!self.Dead && !invincibilityFlag && self.StateMachine.State != 18)
+        {
+            // Untoggle-ify if set to do so on death
+            if (EndHelperModule.Settings.ToggleGrabMenu.UntoggleUponDeath) { Session.toggleifyEnabled = false; }
+            EndHelperModule.Session.framesSinceRespawn = 0;
 
-        // Prevent death spam (if using seemless respawn).
-        if (Utils_DeathHandler.deathCooldownFrames > 0) return null;
-        Utils_DeathHandler.BeforePlayerDeath(self);
+            if (!level.IsInBounds(self)) Utils_DeathHandler.ForceShortDeathCooldown(); // Reduce cooldown if player is out of bounds. Will definitely need to die soon!
 
-        return orig(self, direction, evenIfInvincible, registerDeathInStats);
+            // Prevent death spam (if using seemless respawn).
+            if (Utils_DeathHandler.deathCooldownFrames > 0) return null;
+            Utils_DeathHandler.BeforePlayerDeath(self);
+        }
+
+        PlayerDeadBody origMethod = orig(self, direction, evenIfInvincible, registerDeathInStats);
+
+        if (origMethod is not null)
+        {
+            DeathCountGate.OnPlayerDeathStatic(level);
+        }
+
+        return origMethod;
     }
 
     public static void ILHook_PlayerDeadBodyUpdate(ILContext il)
@@ -998,7 +1023,6 @@ public class EndHelperModule : EverestModule {
         {
             ILLabel end = cursor.DefineLabel();
 
-            //   Call your helper, branch if true
             cursor.EmitDelegate<Func<bool>>(Utils_DeathHandler.CheckPlayerDeathSkipLoseFollowers);
             cursor.Emit(OpCodes.Brtrue_S, end); // Skip lose followers if true
 
@@ -1097,11 +1121,7 @@ public class EndHelperModule : EverestModule {
         Utils_DeathHandler.AfterPlayerDeath(self);
 
         // Autosave
-        if (EndHelperModule.Settings.QOLTweaksMenu.AutosaveTime > 0 && autoSaveTimer.TotalMinutes >= EndHelperModule.Settings.QOLTweaksMenu.AutosaveTime)
-        {
-            level.AutoSave();
-            autoSaveTimer = TimeSpan.Zero;
-        }
+        TryAutosave(level);
     }
 
     private static Vector2 Hook_SessionGetSpawnPoint(On.Celeste.Session.orig_GetSpawnPoint orig, global::Celeste.Session self, Vector2 from)
@@ -1149,14 +1169,13 @@ public class EndHelperModule : EverestModule {
     {
         Utils_General.framesSinceEnteredRoom = 0;
         yield return new SwapImmediately(orig(self, next, direction));
+        DeathCountGate.OnTransitionStatic(self);
 
-        if (Utils_DeathHandler.AllowDeathHandlerEntityChecks) Utils_DeathHandler.ResetFullResetAndBypassBetweenRooms(self); // AFTER room change
+        if (EndHelperModule.Session.AllowDeathHandlerEntityChecks) Utils_DeathHandler.ResetFullResetAndBypassBetweenRooms(self); // AFTER room change
     }
 
     private static void Hook_StartMapFromBeginning(On.Celeste.LevelLoader.orig_StartLevel orig, global::Celeste.LevelLoader self)
     {
-        // timeSinceSessionReset = 2; // Set this to the default value which ISN'T 1. This shouldn't be necessary, but add it just in case!
-        // nvm don't do this because debug runs this
         Level level = self.Level;
         level.Add(new RoomStatisticsDisplayer(level));
         inactiveDurationFrames = 60; // For maps starting with cutscene. If without, would be set to 0 immediately. Not even sure if this works lol
@@ -1198,7 +1217,8 @@ public class EndHelperModule : EverestModule {
 
     public static void Hook_EntityRemoved(On.Monocle.Entity.orig_Removed orig, global::Monocle.Entity self, global::Monocle.Scene scene)
     {
-        if (Utils_DeathHandler.AllowDeathHandlerEntityChecks && self.Components.Get<DeathBypass>() is DeathBypass deathBypassComponent && deathBypassComponent.bypass
+        if (scene is Level && EndHelperModule.Session is not null && 
+            EndHelperModule.Session.AllowDeathHandlerEntityChecks && self.Components.Get<DeathBypass>() is DeathBypass deathBypassComponent && deathBypassComponent.bypass
             && self is not Player)
         {
             DeathBypass.entityIDDisappearUntilFullReset.Add(deathBypassComponent.entityID);
@@ -1218,61 +1238,70 @@ public class EndHelperModule : EverestModule {
 
     private static void Hook_AreaCompleteVerNumVars(On.Celeste.AreaComplete.orig_VersionNumberAndVariants orig, string version, float ease, float alpha)
     {
-        bool showFullBlender = false;
-        List<string> iconList = [];
-
-        // Check each gameplay tweak, and add relevant GFX / set showFullBlender to true if required
-        Dictionary<string, bool> tweakList = EndHelperModule.Session.usedGameplayTweaks;
-
-        // dashredirect grabrecast seemlessrespawn_minor seemlessrespawn_keepstate | backboost neutraldrop
-        if (tweakList["dashredirect"]) { iconList.Add(":EndHelper/endscreen_dashredirect:"); showFullBlender = true; }
-        if (tweakList["seemlessrespawn_minor"]) { 
-            if (tweakList["seemlessrespawn_keepstate"]) { iconList.Add(":EndHelper/endscreen_seemlessrespawn_keepstate:"); showFullBlender = true; }
-            else iconList.Add(":EndHelper/endscreen_seemlessrespawn_minor:");
-        }
-        if (tweakList["grabrecast"]) iconList.Add(":EndHelper/endscreen_grabrecast:");
-        if (tweakList["backboost"]) iconList.Add(":EndHelper/endscreen_backboost:");
-        if (tweakList["neutraldrop"]) iconList.Add(":EndHelper/endscreen_neutraldrop:");
-
-        // Show blender if at least 1 thing to show!
-        if (iconList.Count >= 1)
+        try
         {
-            // Get and draw the correct blender (half or full)
-            MTexture blenderTexture = showFullBlender ? GFX.Gui["misc/EndHelper/endscreenblender_full"] : GFX.Gui["misc/EndHelper/endscreenblender_half"];
-            Vector2 blenderPos = new Vector2(1820f - 1f + 300f * (1f - Ease.CubeOut(ease)), 1020f - 48f);
+            bool showFullBlender = false;
+            List<string> iconList = [];
 
-            if (global::Celeste.SaveData.Instance.AssistMode || global::Celeste.SaveData.Instance.VariantMode)
-            { blenderPos.Y -= 48; }
+            // Check each gameplay tweak, and add relevant GFX / set showFullBlender to true if required
+            Dictionary<string, bool> tweakList = EndHelperModule.Session.usedGameplayTweaks;
 
-            FieldInfo versionOffsetField = typeof(AreaComplete).GetField("versionOffset", BindingFlags.Static | BindingFlags.NonPublic);
-            float versionOffset = (float)versionOffsetField.GetValue(null);
-            if (Engine.Scene is Level) versionOffset += -32f; // lazy as heck collabui check
-            blenderPos.Y += versionOffset;
-            //Logger.Log(LogLevel.Info, "EndHelper/main", $"why is the versionoffset not publically gettable: {versionOffset}");
-
-            blenderTexture.DrawJustified(blenderPos + new Vector2(0f, -8f), new Vector2(0.5f, 1f), Color.White, 0.6f);
-
-            // Draw the icons
-            Vector2 iconPos = blenderPos + new Vector2(0, -120);
-            string fullIconString = "";
-            int nextLineCounter = 1;
-            foreach (string iconString in iconList)
+            // dashredirect grabrecast seemlessrespawn_minor seemlessrespawn_keepstate | backboost neutraldrop
+            if (tweakList["dashredirect"]) { iconList.Add(":EndHelper/endscreen_dashredirect:"); showFullBlender = true; }
+            if (tweakList["seemlessrespawn_minor"])
             {
-                if (nextLineCounter > 2)
-                {
-                    nextLineCounter = 1;
-                    ActiveFont.DrawOutline(fullIconString, iconPos, new Vector2(0.5f, 0f), Vector2.One * 5f, Color.White, 1f, Color.Black);
-                    fullIconString = "";
-                    iconPos += new Vector2(0, -50);
-                }
-                fullIconString += iconString;
-                nextLineCounter++;
+                if (tweakList["seemlessrespawn_keepstate"]) { iconList.Add(":EndHelper/endscreen_seemlessrespawn_keepstate:"); showFullBlender = true; }
+                else iconList.Add(":EndHelper/endscreen_seemlessrespawn_minor:");
             }
-            if (fullIconString != "")
+            if (tweakList["grabrecast"]) iconList.Add(":EndHelper/endscreen_grabrecast:");
+            if (tweakList["backboost"]) iconList.Add(":EndHelper/endscreen_backboost:");
+            if (tweakList["neutraldrop"]) iconList.Add(":EndHelper/endscreen_neutraldrop:");
+
+            // Show blender if at least 1 thing to show!
+            if (iconList.Count >= 1)
             {
-                ActiveFont.DrawOutline(fullIconString, iconPos, new Vector2(0.5f, 0f), Vector2.One * 5f, Color.White, 1f, Color.Black);
+                // Get and draw the correct blender (half or full)
+                MTexture blenderTexture = showFullBlender ? GFX.Gui["misc/EndHelper/endscreenblender_full"] : GFX.Gui["misc/EndHelper/endscreenblender_half"];
+                Vector2 blenderPos = new Vector2(1820f - 1f + 300f * (1f - Ease.CubeOut(ease)), 1020f - 48f);
+
+                if (global::Celeste.SaveData.Instance.AssistMode || global::Celeste.SaveData.Instance.VariantMode)
+                { blenderPos.Y -= 48; }
+
+                FieldInfo versionOffsetField = typeof(AreaComplete).GetField("versionOffset", BindingFlags.Static | BindingFlags.NonPublic);
+                float versionOffset = (float)versionOffsetField.GetValue(null);
+                if (Engine.Scene is Level) versionOffset += -32f; // lazy as heck collabui check
+                blenderPos.Y += versionOffset;
+                //Logger.Log(LogLevel.Info, "EndHelper/main", $"why is the versionoffset not publically gettable: {versionOffset}");
+
+                blenderTexture.DrawJustified(blenderPos + new Vector2(0f, -8f), new Vector2(0.5f, 1f), Color.White, 0.6f);
+
+                // Draw the icons
+                Vector2 iconPos = blenderPos + new Vector2(0, -120);
+                string fullIconString = "";
+                int nextLineCounter = 1;
+                foreach (string iconString in iconList)
+                {
+                    if (nextLineCounter > 2)
+                    {
+                        nextLineCounter = 1;
+                        ActiveFont.DrawOutline(fullIconString, iconPos, new Vector2(0.5f, 0f), Vector2.One * 5f, Color.White, 1f, Color.Black);
+                        fullIconString = "";
+                        iconPos += new Vector2(0, -50);
+                    }
+                    fullIconString += iconString;
+                    nextLineCounter++;
+                }
+                if (fullIconString != "")
+                {
+                    ActiveFont.DrawOutline(fullIconString, iconPos, new Vector2(0.5f, 0f), Vector2.One * 5f, Color.White, 1f, Color.Black);
+                }
             }
         }
+        catch (Exception e)
+        {
+            Logger.Log(LogLevel.Error, "EndHelper/main", $"Error when showing endscreen gameplay tweaks: {e}");
+        }
+
         orig(version, ease, alpha);
     }
 
@@ -1372,7 +1401,7 @@ public class EndHelperModule : EverestModule {
 
     static int ShouldRunLoopInt(int bottom)
     {
-        if (Session.allowScreenTransitionMovement)
+        if (!DisableScreenTransitionMovementTimer.IsTicking)
         {
             return bottom; // run first loop
         }
@@ -1383,7 +1412,7 @@ public class EndHelperModule : EverestModule {
     }
     static bool ShouldRunLoopBool(bool originalBool)
     {
-        if (Session.allowScreenTransitionMovement)
+        if (!DisableScreenTransitionMovementTimer.IsTicking)
         {
             return originalBool; // run first loop
         }
@@ -1597,7 +1626,7 @@ public class EndHelperModule : EverestModule {
 
     public static void Hook_KillboxKill(On.Celeste.Killbox.orig_OnPlayer orig, global::Celeste.Killbox self, global::Celeste.Player player)
     {
-        if (Utils_DeathHandler.AllowDeathHandlerEntityChecks && !global::Celeste.SaveData.Instance.Assists.Invincible) Utils_DeathHandler.SetNextRespawnFullReset(player.level, true);
+        if (EndHelperModule.Session.AllowDeathHandlerEntityChecks && !global::Celeste.SaveData.Instance.Assists.Invincible) Utils_DeathHandler.SetNextRespawnFullReset(player.level, true);
         orig(self, player);
     }
 
@@ -1626,12 +1655,21 @@ public class EndHelperModule : EverestModule {
             self.AddTag(Tags.Global);
         }
     }
-    public static void Hook_SolidGetRiders(On.Celeste.Solid.orig_GetRiders orig, global::Celeste.Solid self)
+
+    public static void Hook_SolidMoveHExact(On.Celeste.Solid.orig_MoveHExact orig, global::Celeste.Solid self, int move)
     {
-        // This fixes some random obscure crash that sometimes happens with the death handler for some reason i have no idea what causes scene to be null
+        // This fixes a very specific crash - with deathhandler, if a solid has a staticmover that has a subentity, the subentity may have a null scene on reset.
         self.Scene ??= Engine.Scene as Level;
-        orig(self);
+        orig(self, move);
     }
+    public static void Hook_SolidMoveVExact(On.Celeste.Solid.orig_MoveVExact orig, global::Celeste.Solid self, int move)
+    {
+        // Same as above
+        self.Scene ??= Engine.Scene as Level;
+        orig(self, move);
+    }
+
+
     public static void Hook_UsingMapEditor(On.Celeste.Editor.MapEditor.orig_Update orig, global::Celeste.Editor.MapEditor self)
     {
         timeSinceSessionReset = 0;

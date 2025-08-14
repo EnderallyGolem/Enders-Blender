@@ -5,8 +5,6 @@
     - Name: Everest
       Version: 1.5577.0
   OptionalDependencies:
-    - Name: CherryHelper # Just for the outline indicators in the test map
-      Version: 1.8.1
     - Name: SpeedrunTool # Ensure stuff don't break with states
       Version: 3.23.0
     - Name: CollabUtils2 # RoomStats for Collab Lobby Journals

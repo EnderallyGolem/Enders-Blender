@@ -14,7 +14,7 @@ namespace Celeste.Mod.EndHelper.Utils
     static internal class Utils_Shaders
     {
         public static bool loadedShaders = false;
-        public static Effect FxGoldenRipple;
+        public static Effect FxGoldenRipple, FxGoldenRippleDisable;
         public static Effect FxRespawnRipple;
         public static RenderTarget2D tempRender;
 
@@ -34,6 +34,7 @@ namespace Celeste.Mod.EndHelper.Utils
                 );
                 //Logger.Log(LogLevel.Info, "EndHelper/Utils_Shaders", $"Loading custom shaders.");
                 FxGoldenRipple = LoadFxEndHelper("goldenRipple"); GoldenRipple.ResetRipples();
+                FxGoldenRippleDisable = LoadFxEndHelper("goldenRippleDisable");
                 FxRespawnRipple = LoadFxEndHelper("respawnRipple");
             }
             loadedShaders = true;
@@ -129,6 +130,7 @@ namespace Celeste.Mod.EndHelper.Utils
         {
             UpdateRipples(level);
             Effect effect = Utils_Shaders.FxGoldenRipple;
+            Effect effectDisable = Utils_Shaders.FxGoldenRippleDisable;
 
             // Generic Parameters
             effect.Parameters["Time"]?.SetValue(Engine.Scene.TimeActive);
@@ -171,6 +173,48 @@ namespace Celeste.Mod.EndHelper.Utils
             // Blend that tempRender onto sourceTarget (GameplayBuffers.Level)
             Engine.Instance.GraphicsDevice.SetRenderTarget(sourceTarget);
             Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.Default, RasterizerState.CullNone, effect);
+            Draw.SpriteBatch.Draw(Utils_Shaders.tempRender, Vector2.Zero, Color.White);
+            Draw.SpriteBatch.End();
+
+
+
+
+            Vector4 rippleColourFloat4Normalisation2 = new Vector4(0.9f, 0.9f, 1.9f, 0);
+            // Generic Parameters
+            effectDisable.Parameters["Time"]?.SetValue(Engine.Scene.TimeActive);
+            effectDisable.Parameters["Dimensions"]?.SetValue(new Vector2(GameplayBuffers.Gameplay.Width, GameplayBuffers.Gameplay.Height));
+            effectDisable.Parameters["CamPos"]?.SetValue(level.Camera.Position);
+            effectDisable.Parameters["TransformMatrix"]?.SetValue(Matrix.CreateOrthographicOffCenter(0, vp.Width, vp.Height, 0, 0, 1));
+            effectDisable.Parameters["ViewMatrix"]?.SetValue(Matrix.Identity);
+
+            // Special Parameters
+            effectDisable.Parameters["TimeTransitionRoom"]?.SetValue(Utils_General.framesSinceEnteredRoom / 60);
+            effectDisable.Parameters["WaveSpeed"]?.SetValue(waveSpeed);
+            effectDisable.Parameters["WaveStrength"]?.SetValue(waveStrength);
+            effectDisable.Parameters["FadeOutTime"]?.SetValue(fadeOutTime);
+            effectDisable.Parameters["RippleData"]?.SetValue(rippleData);
+            effectDisable.Parameters["RippleNumber"]?.SetValue(rippleData.Length);
+
+            Engine.Instance.GraphicsDevice.SetRenderTarget(Utils_Shaders.tempRender);
+            Engine.Instance.GraphicsDevice.Clear(Color.Transparent);
+            Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullNone, null, level.Camera.Matrix);
+
+            foreach (Entity entity in level.Entities)
+            {
+                if (entity.Components.Get<DeathBypass>() is DeathBypass deathBypassComponent && !deathBypassComponent.bypass && deathBypassComponent.allowBypass 
+                    && deathBypassComponent.showVisuals)
+                {
+                    if (entity.Visible)
+                    {
+                        entity.Render();
+                    }
+                }
+            }
+            Draw.SpriteBatch.End();
+
+            // Blend that tempRender onto sourceTarget (GameplayBuffers.Level)
+            Engine.Instance.GraphicsDevice.SetRenderTarget(sourceTarget);
+            Draw.SpriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.Default, RasterizerState.CullNone, effectDisable);
             Draw.SpriteBatch.Draw(Utils_Shaders.tempRender, Vector2.Zero, Color.White);
             Draw.SpriteBatch.End();
         }

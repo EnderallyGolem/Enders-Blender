@@ -22,6 +22,8 @@ public class DeathHandlerThrowableRespawnPoint : Actor
     internal bool faceLeft = false;
     internal readonly bool fullReset = false;
     private readonly string requireFlag = "";
+    private readonly bool checkInvalid = true;
+    private readonly string flagWhenSpawnpoint = "";
     public EntityID entityID;
 
     public Vector2 entityPosSpawnPointPrevious;
@@ -29,8 +31,6 @@ public class DeathHandlerThrowableRespawnPoint : Actor
     internal bool disabled = false;
     private bool currentlySpawnpoint = false;
 
-    const int width = 20;
-    const int height = 22;
     private bool blockDirectionUpdate = false;
 
     private readonly ParticleType P_Impact;
@@ -61,6 +61,8 @@ public class DeathHandlerThrowableRespawnPoint : Actor
         fullReset = data.Bool("fullReset", false);
         requireFlag = data.Attr("requireFlag", "");
         faceLeft = data.Bool("initialFaceLeft", false);
+        checkInvalid = data.Bool("checkSolid", true);
+        flagWhenSpawnpoint = data.Attr("flagWhenSpawnpoint", "");
         entityID = id;
 
         Add(sprite = EndHelperModule.SpriteBank.Create("DeathHandlerThrowableRespawnPoint"));
@@ -109,6 +111,7 @@ public class DeathHandlerThrowableRespawnPoint : Actor
 
     public override void Added(Scene scene)
     {
+        (scene as Level).Session.SetFlag(flagWhenSpawnpoint, false, true);
         base.Added(scene);
 
         if (fullReset) sprite.Play("fullreset_inactive");
@@ -145,16 +148,19 @@ public class DeathHandlerThrowableRespawnPoint : Actor
         {
             if (entityPosSpawnPoint == level.Session.RespawnPoint || entityPosSpawnPointPrevious == level.Session.RespawnPoint)
             {
-                if (level.Tracker.GetEntity<Player>() is Player player && player.Components.Get<DeathBypass>() is DeathBypass deathBypass && deathBypass.bypass
-                    && !fullReset)
-                {
-                    // If player has deathbypass and this isn't full reset, respawn point is at the player. Don't show as active.
-                    ChangeActiveness(false);
-                }
-                else
-                {
-                    ChangeActiveness(true);
-                }
+                ChangeActiveness(true);
+
+                // i changed my mind i want them to show as active even with player deathbypass
+                //if (level.Tracker.GetEntity<Player>() is Player player && player.Components.Get<DeathBypass>() is DeathBypass deathBypass && deathBypass.bypass
+                //    && !fullReset)
+                //{
+                //    // If player has deathbypass and this isn't full reset, respawn point is at the player. Don't show as active.
+                //    ChangeActiveness(false);
+                //}
+                //else
+                //{
+                //    ChangeActiveness(true);
+                //}
                 level.Session.RespawnPoint = entityPosSpawnPoint;
                 if (fullReset)
                 {
@@ -194,19 +200,22 @@ public class DeathHandlerThrowableRespawnPoint : Actor
             currentlySpawnpoint = false;
         }
 
+        Session session = SceneAs<Level>().Session;
         if (currentlySpawnpoint)
         {
             if (fullReset) sprite.Play("fullreset_active");
             else sprite.Play("normal_active");
+            session.SetFlag(flagWhenSpawnpoint, true, true);
         }
         else
         {
             if (fullReset) sprite.Play("fullreset_inactive");
             else sprite.Play("normal_inactive");
+            session.SetFlag(flagWhenSpawnpoint, false, true);
         }
     }
 
-    private void UpdatePositionVectors(bool firstUpdate = false, bool allowInvalid = false)
+    private void UpdatePositionVectors(bool firstUpdate = false)
     {
         Level level = SceneAs<Level>();
 
@@ -218,7 +227,7 @@ public class DeathHandlerThrowableRespawnPoint : Actor
 
         // Do not update entityPosSpawnPoint if it is in an invalid respawn spot
         //Logger.Log(LogLevel.Info, "EndHelper/DeathHandlerThrowableRespawnPoint", $"y comparising: {respawnPointCheckRect.Y} {level.Bounds.Bottom}");
-        if (firstUpdate == false && (respawnPointCheckRect.Y + 12 > level.Bounds.Bottom || !Utils_DeathHandler.NoSolidCheck(level, respawnPointCheckRect, !allowInvalid, inflate: 0))) 
+        if (firstUpdate == false && (respawnPointCheckRect.Y + 12 > level.Bounds.Bottom || !Utils_DeathHandler.NoInvalidCheck(level, respawnPointCheckRect, checkInvalid, inflate: 0))) 
         {
             blockDirectionUpdate = true;
             return;
@@ -237,16 +246,19 @@ public class DeathHandlerThrowableRespawnPoint : Actor
         // If using a DeathHandlerRespawnMarker, set its direction 
         foreach (DeathHandlerRespawnMarker respawnMarker in level.Tracker.GetEntities<DeathHandlerRespawnMarker>())
         {
+            if (respawnMarker.showRedEffects && !fullReset) return;
+
             if (!blockDirectionUpdate)
             {
+                if (fullReset) respawnMarker.fullResetFaceLeft = faceLeft;
                 respawnMarker.faceLeft = faceLeft;
                 respawnMarker.UpdateSprite();
             }
 
             // If moving and Marker is near, lock position
-            if (entityPosSpawnPoint != entityPosSpawnPointPrevious && respawnMarker.previousDistanceBetweenPosAndTarget <= 8 && respawnMarker.previousDistanceBetweenPosAndTarget != 0 && !DeathHandlerRespawnMarker.attachedToPlayer)
+            if (entityPosSpawnPoint != entityPosSpawnPointPrevious && respawnMarker.previousDistanceBetweenPosAndTarget <= 8 && respawnMarker.previousDistanceBetweenPosAndTarget != 0)
             {
-                respawnMarker.Position = respawnMarker.ConvertSpawnPointPosToActualPos(entityPosSpawnPoint);
+                respawnMarker.Position = DeathHandlerRespawnMarker.ConvertSpawnPointPosToActualPos(entityPosSpawnPoint);
             }
         }
     }
@@ -261,6 +273,12 @@ public class DeathHandlerThrowableRespawnPoint : Actor
             AllowPushing = false;
             RemoveSelf();
         }
+    }
+
+    public override void Removed(Scene scene)
+    {
+        (scene as Level).Session.SetFlag(flagWhenSpawnpoint, false, true);
+        base.Removed(scene);
     }
 
     #region Theo Stuff
@@ -656,7 +674,7 @@ public class DeathHandlerThrowableRespawnPoint : Actor
     {
         previousPosition = position;
         base.Depth = 100;
-        base.Collider = new Hitbox(9f, 12f, -5f, -11f);
+        base.Collider = new Hitbox(9f, 12f, -5f, -12f);
         Add(Hold = new Holdable(0.1f));
         Hold.PickupCollider = new Hitbox(16f, 22f, -8f, -16f);
         Hold.SlowFall = false;

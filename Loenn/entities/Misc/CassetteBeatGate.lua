@@ -172,5 +172,11 @@ function cassetteBeatGate.selection(room, entity)
     return utils.rectangle(x, y, width, height), nodeRectangles
 end
 
+function cassetteBeatGate.onRotate(room, entity, direction)
+    local oldWidth = entity.width
+    entity.width = entity.height
+    entity.height = oldWidth
+end
+
 
 return cassetteBeatGate

@@ -33,7 +33,7 @@ namespace Celeste.Mod.EndHelper.Utils
         private static int journalStatisticsFirstRowShown = 0;
         private static int journalStatisticsEditingRoomIndex = 0;
 
-        internal enum journalRoomStatMenuTypeEnum { FirstClear, LastSession }
+        internal enum journalRoomStatMenuTypeEnum { FirstClear, Saved }
         private static journalRoomStatMenuTypeEnum journalRoomStatMenuType = journalRoomStatMenuTypeEnum.FirstClear;
 
         internal static float journalStatisticsBackgroundAlpha;
@@ -134,7 +134,6 @@ namespace Celeste.Mod.EndHelper.Utils
             {
                 AreaData journalArea = new DynData<Overworld>(self.Overworld).Get<AreaData>("collabInGameForcedArea");
                 String areaLevelSetName = journalArea.LevelSet;
-                //Logger.Log(LogLevel.Info, "EndHelper/main", $"whats this forcearea {areaLevelSetName}");
 
                 LevelSetStats areaLevelSet = null;
                 if (areaLevelSetName != null)
@@ -314,7 +313,7 @@ namespace Celeste.Mod.EndHelper.Utils
             {
                 if (Engine.Scene is Level)
                 {
-                    EndHelperModule.mInputDisableDuration = 3;
+                    EndHelperModule.mInputDisableTimer.Set(5);
                 }
 
                 // Buttons!
@@ -362,7 +361,7 @@ namespace Celeste.Mod.EndHelper.Utils
                     JournalStatisticsGUI();
                 }
             }
-            else if (journalOpen)
+            else if (journalOpen && EndHelperModule.Settings.OpenStatDisplayMenu.Keys.Count > 0 || EndHelperModule.Settings.OpenStatDisplayMenu.MouseButtons.Count > 0 || EndHelperModule.Settings.OpenStatDisplayMenu.Buttons.Count > 0)
             {
                 int instructionXPos = 1681;
                 const int instructionYPos = 980;
@@ -420,6 +419,9 @@ namespace Celeste.Mod.EndHelper.Utils
             const int mapNumXPosOffsetMin = 300; // Minimum offset distance (Has to be at least this far to the right)
             const int mapNumYpos = 30;
 
+            if (totalMapNum >= 10) mapNumXpos += 18;
+            if (totalMapNum >= 100) mapNumXpos += 18;
+
             // Shift num to the right to prevent overlap if too close
             int mapNumXposOffset = (int)(ActiveFont.WidthToNextLine(mapNameSide_Display, 0) * 0.7f) / 2 + 110;
             if (mapNumXposOffset < mapNumXPosOffsetMin)
@@ -430,10 +432,15 @@ namespace Celeste.Mod.EndHelper.Utils
 
             ActiveFont.DrawOutline($"{journalStatisticsMapNameSideIndex + 1}/{totalMapNum}", new Vector2(mapNumXpos, mapNumYpos), new Vector2(0.5f, 0.5f), new Vector2(0.7f, 0.7f), mapNameColor, 2f, Color.Black);
 
-            if (totalMapNum >= 10)
+            if (totalMapNum >= 100)
             {
-                pageArrow.DrawCentered(new Vector2(mapNumXpos - 70, mapNumYpos), mapNameColor, 1, MathF.PI * 0.5f); // Up
-                pageArrow.DrawCentered(new Vector2(mapNumXpos + 70, mapNumYpos), mapNameColor, 1, MathF.PI * 1.5f); // Down
+                pageArrow.DrawCentered(new Vector2(mapNumXpos - 96, mapNumYpos), mapNameColor, 1, MathF.PI * 0.5f); // Up
+                pageArrow.DrawCentered(new Vector2(mapNumXpos + 96, mapNumYpos), mapNameColor, 1, MathF.PI * 1.5f); // Down
+            }
+            else if (totalMapNum >= 10)
+            {
+                pageArrow.DrawCentered(new Vector2(mapNumXpos - 78, mapNumYpos), mapNameColor, 1, MathF.PI * 0.5f); // Up
+                pageArrow.DrawCentered(new Vector2(mapNumXpos + 78, mapNumYpos), mapNameColor, 1, MathF.PI * 1.5f); // Down
             }
             else if (totalMapNum > 1)
             {
@@ -784,7 +791,14 @@ namespace Celeste.Mod.EndHelper.Utils
 
             String totalText = "Total";
             if (filterSetting != roomStatMenuFilter.None) { totalText += $" [{filterString}]"; }
-            RoomStatisticsDisplayer.ShowGUIStats("", 100, 1010, 0.7f, Color.White, true, 0, true, true, false, showTotalMapBerryCount, mapTotalStrawberries, $"{totalText}: ", "", totalDeaths, totalTimer, totalStrawberries, false);
+
+            IconType iconType = IconType.White;
+            if ((journalRoomStatMenuType == journalRoomStatMenuTypeEnum.FirstClear && EndHelperModule.SaveData.mapDict_roomStat_firstClear_pauseType[mapNameSide_Internal].ContainsKey("Level_Invalid") && EndHelperModule.SaveData.mapDict_roomStat_firstClear_pauseType[mapNameSide_Internal]["Level_Invalid"])
+                || (journalRoomStatMenuType == journalRoomStatMenuTypeEnum.Saved && EndHelperModule.SaveData.mapDict_roomStat_latestSession_pauseType[mapNameSide_Internal].ContainsKey("Level_Invalid") && EndHelperModule.SaveData.mapDict_roomStat_latestSession_pauseType[mapNameSide_Internal]["Level_Invalid"]))
+            {
+                iconType = IconType.Gray;
+            }
+            RoomStatisticsDisplayer.ShowGUIStats("", 100, 1010, 0.7f, Color.White, true, 0, true, true, false, showTotalMapBerryCount, mapTotalStrawberries, $"{totalText}: ", "", totalDeaths, totalTimer, totalStrawberries, iconType);
 
             // Instructions
             if (!journalStatisticsRoomNameEditMenuOpen)
@@ -963,9 +977,14 @@ namespace Celeste.Mod.EndHelper.Utils
                 journalStatisticsEditingRoomIndex = Utils_General.ScrollInput(valueToChange: journalStatisticsEditingRoomIndex, increaseInput: MInput.Keyboard.orig_Check(Microsoft.Xna.Framework.Input.Keys.Down), increaseValue: 1,
                     decreaseInput: MInput.Keyboard.orig_Check(Microsoft.Xna.Framework.Input.Keys.Up), decreaseValue: 1, minValue: 0, maxValue: dictSize - 1, loopValues: false, doNotChangeIfPastCap: false,
                     framesFirstHeldChange: 30, framesBetweenHeldChange: 5);
-                journalStatisticsEditingRoomIndex = Utils_General.ScrollInput(valueToChange: journalStatisticsEditingRoomIndex, increaseInput: MInput.Keyboard.orig_Check(Microsoft.Xna.Framework.Input.Keys.Right), increaseValue: roomsPerColumn,
-                    decreaseInput: MInput.Keyboard.orig_Check(Microsoft.Xna.Framework.Input.Keys.Left), decreaseValue: roomsPerColumn, minValue: 0, maxValue: dictSize - 1, loopValues: false, doNotChangeIfPastCap: false,
-                    framesFirstHeldChange: 30, framesBetweenHeldChange: 5);
+
+
+                if (!MInput.Keyboard.orig_Check(Microsoft.Xna.Framework.Input.Keys.Up) && !MInput.Keyboard.orig_Check(Microsoft.Xna.Framework.Input.Keys.Down))
+                {
+                    journalStatisticsEditingRoomIndex = Utils_General.ScrollInput(valueToChange: journalStatisticsEditingRoomIndex, increaseInput: MInput.Keyboard.orig_Check(Microsoft.Xna.Framework.Input.Keys.Right), increaseValue: roomsPerColumn,
+                        decreaseInput: MInput.Keyboard.orig_Check(Microsoft.Xna.Framework.Input.Keys.Left), decreaseValue: roomsPerColumn, minValue: 0, maxValue: dictSize - 1, loopValues: false, doNotChangeIfPastCap: false,
+                        framesFirstHeldChange: 30, framesBetweenHeldChange: 5);
+                }
 
                 int editRoomPage = (int)Math.Ceiling((journalStatisticsEditingRoomIndex + 1f) / (roomsPerColumn * 2));
                 if (currentPage > editRoomPage)
@@ -1070,7 +1089,7 @@ namespace Celeste.Mod.EndHelper.Utils
                     EndHelperModule.SaveData.mapDict_roomStat_firstClear_roomOrder[mapNameSide_Internal].Insert(finalPosIndex, roomNameFirstClear);
                     break;
 
-                case journalRoomStatMenuTypeEnum.LastSession:
+                case journalRoomStatMenuTypeEnum.Saved:
                     String roomNameLastSession = EndHelperModule.SaveData.mapDict_roomStat_latestSession_roomOrder[mapNameSide_Internal][initialPosIndex];
                     EndHelperModule.SaveData.mapDict_roomStat_latestSession_roomOrder[mapNameSide_Internal].RemoveAt(initialPosIndex);
                     EndHelperModule.SaveData.mapDict_roomStat_latestSession_roomOrder[mapNameSide_Internal].Insert(finalPosIndex, roomNameLastSession);

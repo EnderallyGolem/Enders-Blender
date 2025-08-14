@@ -96,11 +96,9 @@ public class DeathHandlerBypassZone : Entity
 
     private bool IsRidingSolid(Solid solid)
     {
-        Collidable = true;
         Collider origCollider = base.Collider;
-        base.Collider = new Hitbox(Width + 2, Height + 2, -1, -1);
+        base.Collider = new Hitbox(Width + 4, Height + 4, -1, -1);
         bool collideCheck = CollideCheck(solid);
-        Collidable = false;
         base.Collider = origCollider;
         return collideCheck;
     }
@@ -220,13 +218,13 @@ public class DeathHandlerBypassZone : Entity
             switch (currentEffect)
             {
                 case BypassEffect.Activate:
-                    deathbypass.ToggleAllowBypass(entity, true);
+                    deathbypass.ToggleAllowBypass(entity, true, newRequireFlag: bypassFlag);
                     break;
                 case BypassEffect.Deactivate:
-                    deathbypass.ToggleAllowBypass(entity, false);
+                    deathbypass.ToggleAllowBypass(entity, false, newRequireFlag: bypassFlag);
                     break;
                 case BypassEffect.Toggle:
-                    deathbypass.ToggleAllowBypass(entity, null);
+                    deathbypass.ToggleAllowBypass(entity, null, newRequireFlag: bypassFlag);
                     break;
                 default:
                     break;
@@ -245,35 +243,39 @@ public class DeathHandlerBypassZone : Entity
         // Main
         base.Render();
 
-        // Glow
-        float sineMultiplier = (float)Math.Sin(Engine.Scene.TimeActive * 4);
-        float sineMultiplierFast = (float)Math.Sin(Engine.Scene.TimeActive * 17);
-        Color color;
-        switch (currentEffect)
+        Level level = SceneAs<Level>();
+        if (level.Camera.GetRect().Intersects(this.HitRect()))
         {
-            case BypassEffect.Activate:
-                color = new Color(256, 249, 139); // Gold
-                Draw.Rect(base.Collider, color * (0.3f + sineMultiplier * 0.05f));
-                RenderParticles(color, 0.08f, 0.04f);
-                break;
-            case BypassEffect.Deactivate:
-                color = new Color(0, 51, 102); // Dark Blue
-                Draw.Rect(base.Collider, color * (0.3f + sineMultiplier * 0.05f));
-                RenderParticles(color, 0.08f, 0.04f);
-                break;
-            case BypassEffect.Toggle:
-                color = Color.Red;
-                Draw.Rect(base.Collider, color * (0.2f + sineMultiplier * 0.03f));
-                RenderParticles(color, 0.08f, 0.04f);
-                break;
-            case BypassEffect.None:
-                break;
-            default:
-                break;
-        }
+            // Glow
+            float sineMultiplier = (float)Math.Sin(Engine.Scene.TimeActive * 4);
+            float sineMultiplierFast = (float)Math.Sin(Engine.Scene.TimeActive * 17);
+            Color color;
+            switch (currentEffect)
+            {
+                case BypassEffect.Activate:
+                    color = new Color(256, 249, 139); // Gold
+                    Draw.Rect(base.Collider, color * (0.3f + sineMultiplier * 0.05f));
+                    RenderParticles(color, 0.08f, 0.04f);
+                    break;
+                case BypassEffect.Deactivate:
+                    color = new Color(0, 51, 102); // Dark Blue
+                    Draw.Rect(base.Collider, color * (0.3f + sineMultiplier * 0.05f));
+                    RenderParticles(color, 0.08f, 0.04f);
+                    break;
+                case BypassEffect.Toggle:
+                    color = Color.Red;
+                    Draw.Rect(base.Collider, color * (0.2f + sineMultiplier * 0.03f));
+                    RenderParticles(color, 0.08f, 0.04f);
+                    break;
+                case BypassEffect.None:
+                    break;
+                default:
+                    break;
+            }
 
-        // Border
-        borderTexture.Render9Slice(width, height, Position);
+            // Border
+            borderTexture.Render9Slice(width, height, Position);
+        }
     }
 
     private void RenderParticles(Color color, float baseOpacity, float deltaOpacity)

@@ -12,6 +12,8 @@ local DeathHandlerRespawnPoint = {
                 attachable = true,
                 requireFlag = "",
                 fullReset = false,
+                checkSolid = true,
+                flagWhenSpawnpoint = "",
             },
         },
     },

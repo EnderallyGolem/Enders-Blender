@@ -5,6 +5,15 @@ mods.EndHelper.name=Ender's Blender
 
 
 
+# Connectable Outline
+entities.EndHelper/ConnectableOutline.placements.name.normal=Connectable Outline
+entities.EndHelper/ConnectableOutline.placements.description.normal=Visual outline that can be connected to other outlines, or attached to an entity.
+entities.EndHelper/ConnectableOutline.attributes.description.texturePath=Texture of the outline.\nThe texture uses the same format as cassette blocks.\nYou can remove the "_filled" for a hollow version of the default texture.
+entities.EndHelper/ConnectableOutline.attributes.description.colour=The colour of the outline.
+entities.EndHelper/ConnectableOutline.attributes.description.connectLayer=Only outlines of the same connect layer number will be connected.\nSet to -1 to disable connections.
+entities.EndHelper/ConnectableOutline.attributes.description.depth=Rendering depth of the outline.
+entities.EndHelper/ConnectableOutline.attributes.description.attachable=If true, the outline will be attached to the nearest entity, or entity closest to its node if a node is added.
+entities.EndHelper/ConnectableOutline.attributes.description.visibleFlag=If specified, the outline is only visible if this flag is enabled.\nA list of flags in the format "flagA, flagB, !flagC | flagD, flagE" can be specified.\nThis means (flagA and flagB and not flagC) or (flagD and flagE).
 
 # Tile Entity
 entities.EndHelper/TileEntity.placements.name.normal=Tile Entity
@@ -32,17 +41,11 @@ entities.EndHelper/TileEntity.attributes.description.offDL=The offscreen tiletyp
 entities.EndHelper/TileEntity.attributes.description.offL=The offscreen tiletype will be used if it extends offscreen to the left.
 entities.EndHelper/TileEntity.attributes.description.offUL=The offscreen tiletype will be used if it extends offscreen to the top left.
 
-
-
-
 # Multiroom Watchtower
 entities.EndHelper/MultiroomWatchtower.placements.name.normal=Multi-Room Watchtower
-entities.EndHelper/MultiroomWatchtower.placements.description.normal=Watchtower that can scroll through to different rooms.\nNodes work, but it cannot skip rooms, and each room must have at least 1 spot along the nodes that the camera can fit.\nFYI: The player will be stored at the bottom left of the room, but with no hitbox.
+entities.EndHelper/MultiroomWatchtower.placements.description.normal=Watchtower that can scroll through to different rooms.\nNodes work, but it cannot skip rooms, and each room must have at least 1 spot along the nodes that the camera can fit.\nNote: This may crash in some maps with theo.
 entities.EndHelper/MultiroomWatchtower.attributes.description.modifiedInterpolation=If you're using nodes, uses Catmull-Rom Splines instead of whatever vanilla uses for the watchtower path,\nwhich have the advantage of ensuring the camera always goes past nodes, but is less smooth.\nBecareful if this is disabled, if the path does not go through a location where the camera can fit in the room,\nthe watchtower cannot access it and any future rooms!
 entities.EndHelper/MultiroomWatchtower.attributes.description.ignoreLookoutBlocker=The lookout bypasses Lookout Blockers.\nThis allows both scrolling past the blockers and looking at rooms past the blockers.\nThis has no effect if nodes are used.
-
-
-
 
 # Conditional Tutorial Bird
 entities.EndHelper/ConditionalBirdTutorial.placements.name.normal=Conditional Bird Tutorial
@@ -58,6 +61,14 @@ entities.EndHelper/ConditionalBirdTutorial.attributes.description.deathsInZone=T
 entities.EndHelper/ConditionalBirdTutorial.attributes.description.deathsInRoom=The mimimum number of deaths madeline must have in the room for the tutorial to appear.
 entities.EndHelper/ConditionalBirdTutorial.attributes.description.requireOnScreen=If the bird must be within the screen bounds for the tutorial to appear.
 entities.EndHelper/ConditionalBirdTutorial.attributes.description.requireFlag=Flag required for tutorial to appear.\nA list of flags in the format "flagA, flagB, !flagC | flagD, flagE" can be specified.\nThis means (flagA and flagB and not flagC) or (flagD and flagE).
+entities.EndHelper/ConditionalBirdTutorial.attributes.description.requireFlagForIncrement=Flag required for the seconds and death conditions to increment.\nIf not specified, they increment as per normal.\nA list of flags in the format "flagA, flagB, !flagC | flagD, flagE" can be specified.\nThis means (flagA and flagB and not flagC) or (flagD and flagE).
+
+entities.EndHelper/ConditionalBirdTutorial.attributes.description.birdId=The unique id of the bird when used in combination with Everest Custom Tutorial Bird triggers. Useful for extra control over multiple birds in one room.\nDo not use Custom Tutorial Bird triggers to make these birds appear, only use it to remove the bird!
+entities.EndHelper/ConditionalBirdTutorial.attributes.description.controls=The controls to display in the bubble, separated by commas. Each part can be:\n- a path to a texture in the Gui atlas (for example "tinyarrow")\n- a direction: Down, DownRight, Right, UpRight, Up, UpLeft, Left, DownLeft\n- a button: Jump, Dash, CrouchDash, Grab, Talk, ESC, Pause, MenuLeft, MenuRight, MenuUp, MenuDown, MenuConfirm, MenuCancel, MenuJournal, QuickRestart\n- a dialog ID, if you prefix it with "dialog:" (for example, "dialog:TUTORIAL_DREAMJUMP")\n- plain text
+entities.EndHelper/ConditionalBirdTutorial.attributes.description.info=The speech bubble title. Can either be a dialog ID or a path to a texture in the GUI atlas.
+entities.EndHelper/ConditionalBirdTutorial.attributes.description.faceLeft=Whether the bird should face left or right.
+entities.EndHelper/ConditionalBirdTutorial.attributes.description.caw=Whether the bird should caw upon displaying the speech bubble.
+entities.EndHelper/ConditionalBirdTutorial.attributes.description.onlyOnce=Whether the bird should respawn after displaying the speech bubble and flying away from an Everest Custom Bird Tutorial Trigger.
 
 
 
@@ -68,6 +79,18 @@ entities.EndHelper/FlagKillbox.placements.description.normal=Flag-toggleable kil
 entities.EndHelper/FlagKillbox.attributes.description.triggerDistance=The number of tiles the player must be above the killbox before it activates.
 entities.EndHelper/FlagKillbox.attributes.description.requireFlag=Flag required for the killbox to activate.\nA list of flags in the format "flagA, flagB, !flagC | flagD, flagE" can be specified.\nThis means (flagA and flagB and not flagC) or (flagD and flagE).
 entities.EndHelper/FlagKillbox.attributes.description.permamentActivate=If true, when the Require Flag condition is met, it will stay activated, even when the flags change.\n(The zone still deactivates upon death/reload or if the player manages to get under it.)
+
+# Death Count Gate
+entities.EndHelper/DeathCountGate.placements.name.normal=Temple Gate (Death Count)
+entities.EndHelper/DeathCountGate.placements.name.altname1=Death-Handler Temple Gate (Death Count)
+entities.EndHelper/DeathCountGate.placements.description.normal=Temple Gate which opens on certain death counts.
+entities.EndHelper/DeathCountGate.attributes.description.sprite=Texture used for the gate.
+entities.EndHelper/DeathCountGate.attributes.description.deathLimit=The number of deaths the gate compares the death count to.
+entities.EndHelper/DeathCountGate.attributes.description.comparison=If the gate should be open if the current death count is above, below, or equal to the death limit.
+entities.EndHelper/DeathCountGate.attributes.description.deathCountType=The type of death count that this gate checks for.\nFull Resets only make sense when Death-Handler is used.
+entities.EndHelper/DeathCountGate.attributes.description.setFlag=If specified, will set this flag when open and remove this flag when closed.
+entities.EndHelper/DeathCountGate.attributes.description.silent=Prevents this gate from making any sound.
+
 
 
 
@@ -88,11 +111,14 @@ triggers.EndHelper/IncrementalFlagTrigger.attributes.description.flag=The flag n
 triggers.EndHelper/IncrementalFlagTrigger.attributes.description.setValue=The flag number.\nThe trigger will create the flag [flag][number] upon entering.\nIf set to 0, the flag will be removed.
 triggers.EndHelper/IncrementalFlagTrigger.attributes.description.setOnlyIfOneBelow=If enabled, the flag number is only set if at the previous number.\nEg: Set flagNum3 only if flagNum2.\nDoes nothing if Set Value is 0.
 triggers.EndHelper/IncrementalFlagTrigger.attributes.description.requireFlag=If specified, the incremental flag is only set if THIS flag is enabled.\nA list of flags in the format "flagA, flagB, !flagC | flagD, flagE" can be specified.\nThis means (flagA and flagB and not flagC) or (flagD and flagE).
-triggers.EndHelper/IncrementalFlagTrigger.attributes.description.singleUse=Trigger can only be used once (until the player dies).
+triggers.EndHelper/IncrementalFlagTrigger.attributes.description.singleUse=Trigger can only be used once (until the player dies).\nIf the trigger is entered but the flag isn't changed, it does NOT count as being used.
 triggers.EndHelper/IncrementalFlagTrigger.attributes.description.temporary=Removes the flag upon room reload.
 
 
 
+
+
+### Cassette stuff lol
 
 # Cassette Manager Trigger
 triggers.EndHelper/CassetteManagerTrigger.placements.name.normal=Cassette Manager
@@ -187,7 +213,7 @@ entities.EndHelper/RoomSwapMap.attributes.description.mapBackgroundFileName=The 
 entities.EndHelper/RoomSwapMap.attributes.description.mapCurrentPosFileName=The name of the file in the folder path used to show the current location.\nKeep it the same/slightly larger than the icon image!\nEmpty = No current position higlight.
 entities.EndHelper/RoomSwapMap.attributes.description.mapIconFilePrefix=The PREFIX of the file in the folder path used for the map's icons.\nIcon size will be dependent on size of this image.\nEg: For prefix="icon_" the file name for row 2 col 3 room is "icon_23".
 entities.EndHelper/RoomSwapMap.attributes.description.animationSpeedMultiplier=Change the rate animated map icons animate.\nYou can turn any icon into an animated icon by adding _{integer} to the end of it, starting from 0.\nEg: icon_23_0, icon_23_1, icon_23_2 for 3 frames of animation.\nNegative multipliers make the animation play backwards.
-entities.EndHelper/RoomSwapMap.attributes.description.hudLayer=Causes the map to display on the HUD layer.\nThis means that it can be scaled down without looking pixelated, but\nwill contain some artifacts like always rendering in front of the player\nand not being darkened when paused.
+entities.EndHelper/RoomSwapMap.attributes.description.hudLayer=Causes the map to display on the SubHUD layer.\nThis means that it can be scaled down without looking pixelated.
 
 # RoomSwap MapUpgrade
 entities.EndHelper/RoomSwapMapUpgrade.placements.name.normal=Room-Swap Map Upgrade
@@ -226,8 +252,8 @@ triggers.EndHelper/RoomSwapChangeRespawnTrigger.placements.name.normal=Updating 
 triggers.EndHelper/RoomSwapChangeRespawnTrigger.placements.name.altname=Room-Swap Change Respawn
 triggers.EndHelper/RoomSwapChangeRespawnTrigger.placements.name.altname2=Death-Handler Change Respawn
 triggers.EndHelper/RoomSwapChangeRespawnTrigger.placements.description.normal=Change respawn trigger that rechecks for spawnpoints when the player enters it.\nThis ensures the trigger sets the correct spawnpoint, even when it is moved.\nIf using Room-Swap or Death-Handler, this should be used in place of the regular Change Respawn Trigger.\nLike the normal trigger, if a node is set, the closest spawnpoint to it is used.
-triggers.EndHelper/RoomSwapChangeRespawnTrigger.attributes.description.checkSolid=If disabled, avoids checking if the respawn point is available before setting the respawn point to there.
-
+triggers.EndHelper/RoomSwapChangeRespawnTrigger.attributes.description.checkSolid=If disabled, avoids checking if the respawn point is not blocked by solids/spinners/spikes/kill-on-enter change respawn regions before setting the respawn point to there.
+triggers.EndHelper/RoomSwapChangeRespawnTrigger.attributes.name.checkSolid=Check Invalid
 
 
 
@@ -242,30 +268,37 @@ entities.EndHelper/DeathHandlerRespawnPoint.placements.name.normal=Death-Handler
 entities.EndHelper/DeathHandlerRespawnPoint.placements.description.normal=Player Respawn that can be attached, be visible, be disabled, etc\nNote: A regular player respawn is still needed in the room.
 entities.EndHelper/DeathHandlerRespawnPoint.attributes.description.faceLeft=Visually shows facing left, and also respawns the player facing left (except for full resets).
 entities.EndHelper/DeathHandlerRespawnPoint.attributes.description.attachable=Attached to objects that spikes can attach to, when place next to the object.
-entities.EndHelper/DeathHandlerRespawnPoint.attributes.description.fullReset=Marks the point as a Full Reset respawn point.\nThe player can only respawn here if they enter a Change Respawn Region set to Full Reset.
+entities.EndHelper/DeathHandlerRespawnPoint.attributes.description.fullReset=Marks the point as a Full Reset respawn point.\nThe player can only respawn here if they enter a Change Respawn Region set to Full Reset.\nRetry and Save & Quit will respawn the player at the first Full Reset Respawn Point they activated in that room.
 entities.EndHelper/DeathHandlerRespawnPoint.attributes.description.requireFlag=If specified, the respawn point will only work if this flag is enabled.\nA list of flags in the format "flagA, flagB, !flagC | flagD, flagE" can be specified.\nThis means (flagA and flagB and not flagC) or (flagD and flagE).
+entities.EndHelper/DeathHandlerRespawnPoint.attributes.description.checkSolid=If enabled, the respawn point will not function when its location is blocked by solids/spinners/spikes/kill-on-enter change respawn regions (its previous free location will be used instead).\nBecareful when disabling this, as it could trap the player in an infinite death loop!
+entities.EndHelper/DeathHandlerRespawnPoint.attributes.name.checkSolid=Check Invalid
+entities.EndHelper/DeathHandlerRespawnPoint.attributes.description.flagWhenSpawnpoint=This flag is set when this point is the current spawnpoint, and removed otherwise.
 
 # Throwable Respawn Point
 entities.EndHelper/DeathHandlerThrowableRespawnPoint.placements.name.normal=Death-Handler Throwable Respawn Point
 entities.EndHelper/DeathHandlerThrowableRespawnPoint.placements.description.normal=Player Respawn that can be thrown.\nNote: A regular player respawn is still needed in the room.
-entities.EndHelper/DeathHandlerThrowableRespawnPoint.attributes.description.fullReset=Marks the point as a Full Reset respawn point.\nThe player can only respawn here if they enter a Change Respawn Region set to Full Reset.
+entities.EndHelper/DeathHandlerThrowableRespawnPoint.attributes.description.fullReset=Marks the point as a Full Reset respawn point.\nThe player can only respawn here if they enter a Change Respawn Region set to Full Reset.\nRetry and Save & Quit will respawn the player at the first Full Reset Respawn Point they activated in that room.
 entities.EndHelper/DeathHandlerThrowableRespawnPoint.attributes.description.initialFaceLeft=Visually shows facing left, and also respawns the player facing left (except for full resets).\nThis only affects the starting direction - the direction will change depending on where it is thrown.
 entities.EndHelper/DeathHandlerThrowableRespawnPoint.attributes.description.requireFlag=If specified, the respawn point will only work if this flag is enabled.\nA list of flags in the format "flagA, flagB, !flagC | flagD, flagE" can be specified.\nThis means (flagA and flagB and not flagC) or (flagD and flagE).
+entities.EndHelper/DeathHandlerThrowableRespawnPoint.attributes.description.checkSolid=If enabled, the respawn point will not function when its location is blocked by solids/spinners/spikes/kill-on-enter change respawn regions (its previous free location will be used instead).\nBecareful when disabling this, as it could trap the player in an infinite death loop!
+entities.EndHelper/DeathHandlerThrowableRespawnPoint.attributes.name.checkSolid=Check Invalid
+entities.EndHelper/DeathHandlerThrowableRespawnPoint.attributes.description.flagWhenSpawnpoint=This flag is set when this point is the current spawnpoint, and removed otherwise.
 
 # Respawn Marker
 entities.EndHelper/DeathHandlerRespawnMarker.placements.name.normal=Death-Handler Respawn Marker
-entities.EndHelper/DeathHandlerRespawnMarker.placements.description.normal=Marks the location of the respawn point.\nIf Death-Handler Respawn Points are used, will face the same direction as them.
+entities.EndHelper/DeathHandlerRespawnMarker.placements.description.normal=Marks the location of the respawn point (place anywhere in the room).\nIf Death-Handler Respawn Points are used, will face the same direction as them.
 entities.EndHelper/DeathHandlerRespawnMarker.attributes.description.speed=How quickly the marker moves when the respawn point changes.\nSet to 0 for instant change.
 entities.EndHelper/DeathHandlerRespawnMarker.attributes.description.offscreenPointer=Adds an arrow pointing to the respawn point if it is off-screen.
 entities.EndHelper/DeathHandlerRespawnMarker.attributes.description.requireFlag=If specified, the respawn marker will only be visible if this flag is enabled.\nA list of flags in the format "flagA, flagB, !flagC | flagD, flagE" can be specified.\nThis means (flagA and flagB and not flagC) or (flagD and flagE).
 
 # Change Respawn Region
 entities.EndHelper/DeathHandlerChangeRespawnRegion.placements.name.normal=Death-Handler Change Respawn Region
-entities.EndHelper/DeathHandlerChangeRespawnRegion.placements.description.normal=Visible (Updating) Change Respawn Trigger. \nNodes act as offsets for where the spawnpoints are checked from (they move with the zone).
-entities.EndHelper/DeathHandlerChangeRespawnRegion.attributes.description.checkSolid=If disabled, avoids checking if the respawn point is available before setting the respawn point to there.
+entities.EndHelper/DeathHandlerChangeRespawnRegion.placements.description.normal=Visible (Updating) Change Respawn Trigger. \nNodes act as offsets for where the spawnpoints are checked from (they move with the zone).\nThe tiles themselves can be offset from the tile grid, but the length and height should still be a multiple of a tile!
+entities.EndHelper/DeathHandlerChangeRespawnRegion.attributes.description.checkSolid=If disabled, avoids checking if the respawn point not blocked by solids/spinners/spikes/kill-on-enter change respawn regions before setting the respawn point to there.\nA blocked spawnpoint can still be targetted, it only prevents it from being changed.
+entities.EndHelper/DeathHandlerChangeRespawnRegion.attributes.name.checkSolid=Check Invalid
 entities.EndHelper/DeathHandlerChangeRespawnRegion.attributes.description.attachable=Attached to objects that spikes can attach to, when place next to the object.
 entities.EndHelper/DeathHandlerChangeRespawnRegion.attributes.description.fullReset=The next respawn will be a Full Reset.\nThis means the player will only be able to respawn at Death-Handler Respawn Points that are marked as Full Reset,\nand Death-Bypass will be ignored.
-entities.EndHelper/DeathHandlerChangeRespawnRegion.attributes.description.killOnEnter=Kills the player once they enter the region.
+entities.EndHelper/DeathHandlerChangeRespawnRegion.attributes.description.killOnEnter=Kills the player once they enter the region.\nNote: There is a ~20 frame cooldown between deaths for seemless respawns!\nThis cooldown is dramatically reduced for Full Resets (~2 frames), but still exists!
 entities.EndHelper/DeathHandlerChangeRespawnRegion.attributes.description.visibleArea=Whether if the region is visible.
 entities.EndHelper/DeathHandlerChangeRespawnRegion.attributes.description.visibleTarget=Whether if the respawn point location that will be set upon activation is visible.
 
@@ -278,7 +311,7 @@ entities.EndHelper/DeathHandlerBypassZone.attributes.description.effect=What thi
 entities.EndHelper/DeathHandlerBypassZone.attributes.description.altEffect=What this zone will do to entities which pass through it, if the alt condition is met.
 entities.EndHelper/DeathHandlerBypassZone.attributes.description.altFlag=The flag that, when activated, triggers the alt effect instead of the main effect.\nA list of flags in the format "flagA, flagB, !flagC | flagD, flagE" can be specified.\nThis means (flagA and flagB and not flagC) or (flagD and flagE).
 entities.EndHelper/DeathHandlerBypassZone.attributes.description.attachable=Attached to objects that spikes can attach to, when place next to the object.
-entities.EndHelper/DeathHandlerBypassZone.attributes.description.bypassFlag=If specified, entities will only bypass death if this flag is enabled.\nNote that if this entity already has Death Bypass (either due to the trigger or a previous zone),\nthe previous flags will be kept, so this will do nothing.\nA list of flags in the format "flagA, flagB, !flagC | flagD, flagE" can be specified.\nThis means (flagA and flagB and not flagC) or (flagD and flagE).
+entities.EndHelper/DeathHandlerBypassZone.attributes.description.bypassFlag=If specified, entities will only bypass death if this flag is enabled.\nNote that if this entity already has Death Bypass (either due to the trigger or a previous zone),\nthis will override the previous flags - even if nothing is specified!\nA list of flags in the format "flagA, flagB, !flagC | flagD, flagE" can be specified.\nThis means (flagA and flagB and not flagC) or (flagD and flagE).
 entities.EndHelper/DeathHandlerBypassZone.attributes.description.affectPlayer=Whether if the zone can apply (and remove) death bypass from/to the player.
 
 # Reload Bypass Trigger

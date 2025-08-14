@@ -18,7 +18,7 @@ public class EndHelperModuleSaveData : EverestModuleSaveData {
     public Dictionary<string, Dictionary<string, bool>> mapDict_roomStat_firstClear_pauseType = [];
 
 
-
+    // It's no longer latest session but last saved but I can't change the name without erasing data lol
     public Dictionary<string, List<string>> mapDict_roomStat_latestSession_roomOrder = [];
     public Dictionary<string, Dictionary<string, int>> mapDict_roomStat_latestSession_death = [];
     public Dictionary<string, Dictionary<string, long>> mapDict_roomStat_latestSession_timer = [];

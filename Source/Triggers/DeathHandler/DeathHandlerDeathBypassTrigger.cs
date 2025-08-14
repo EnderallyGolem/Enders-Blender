@@ -55,7 +55,7 @@ public class DeathHandlerDeathBypassTrigger : Trigger
                 // Not collider in case no collision. And also i haven't figured out how to use collider yet :p
                 Rectangle entityRect = new Rectangle((int)entity.Position.X, (int)entity.Position.Y, (int)entity.Width, (int)entity.Height);
                 //Logger.Log(LogLevel.Info, "EndHelper/DeathHandlerDeathBypassTrigger", $"Compare entity {entity}: {entityRect.Left} {entityRect.Top} with trigger {triggerRange.Left} {triggerRange.Top}");
-                if (triggerRange.Intersects(entityRect) && entity.Components.Get<DeathBypass>() is null && FilterEntity(entity))
+                if ((triggerRange.Intersects(entityRect) || CollideCheck(entity)) && entity.Components.Get<DeathBypass>() is null && FilterEntity(entity))
                 {
                     //Logger.Log(LogLevel.Info, "EndHelper/DeathHandlerDeathBypassTrigger", $"Trigger Range: Add {entity} to DeathBypass");
                     DeathBypass deathBypassComponent = new DeathBypass(requireFlag, showVisuals);
@@ -71,7 +71,7 @@ public class DeathHandlerDeathBypassTrigger : Trigger
                     // Not collider in case no collision. And also i haven't figured out how to use collider yet :p
                     Rectangle entityRect = new Rectangle((int)entity.Position.X, (int)entity.Position.Y, (int)entity.Width, (int)entity.Height);
                     //Logger.Log(LogLevel.Info, "EndHelper/DeathHandlerDeathBypassTrigger", $"Compare entity {entity}: {entityRect.Left} {entityRect.Top} with trigger {triggerRange.Left} {triggerRange.Top}");
-                    if (entityRect.Contains((int)nodePos.X, (int)nodePos.Y) && entity.Components.Get<DeathBypass>() is null && FilterEntity(entity))
+                    if ((entityRect.Contains((int)nodePos.X, (int)nodePos.Y) || Collide.CheckPoint(entity, nodePos)) && entity.Components.Get<DeathBypass>() is null && FilterEntity(entity))
                     {
                         //Logger.Log(LogLevel.Info, "EndHelper/DeathHandlerDeathBypassTrigger", $"Trigger Range: Add {entity} to DeathBypass");
                         DeathBypass deathBypassComponent = new DeathBypass(requireFlag, showVisuals);

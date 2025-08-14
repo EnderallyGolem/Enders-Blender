@@ -40,7 +40,7 @@ public class EndHelperModuleSession : EverestModuleSession
     public OrderedDictionary roomStatDict_colorIndex = new OrderedDictionary { }; // <string, int>
     public string roomStatDict_mapNameSide_Internal = ""; // In order to check for improper session - clears session data if mismatch
 
-    public Dictionary<string, bool> pauseTypeDict = new Dictionary<string, bool> { }; // Stores the type of pauses used
+    public Dictionary<string, bool> pauseTypeDict = new Dictionary<string, bool> { }; // Stores the type of pauses used, and also other bool checks
 
     public Dictionary<string, string> roomStatDict_fuseRoomRedirect = new Dictionary<string, string> { };  // <string, string?> room redirects. null if none.
 
@@ -48,8 +48,9 @@ public class EndHelperModuleSession : EverestModuleSession
     // Frames since respawn, frozen if paused or just respawned.
     public int framesSinceRespawn = 0;
 
-    // If false, screen transitions do not move the player. Used in multi-room binos
-    public bool allowScreenTransitionMovement = true;
+
+    // Death-Handler: If false, skips a lot of checks. Enabled by death bypass component and (throwable) respawn points if full reset is used. Disabled upon entering map.
+    public bool AllowDeathHandlerEntityChecks = false;
 
     // Death-Handler: Store full reset pos. This is null whenever screen transition occurs. When entering full reset zone, set spawn here.
     public Vector2? lastFullResetPos = null;

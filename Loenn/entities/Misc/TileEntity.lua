@@ -159,4 +159,10 @@ tileEntity.fieldInformation = function(entity)
     return orig
 end
 
+function tileEntity.onRotate(room, entity, direction)
+    local oldWidth = entity.width
+    entity.width = entity.height
+    entity.height = oldWidth
+end
+
 return tileEntity

@@ -80,7 +80,6 @@ namespace Celeste.Mod.EndHelper.Integration
         private static void OnLoadState(Level preloadLevel)
         {
             // +1 to death count =) unless prevented
-
             if (preloadLevel.Tracker.GetEntity<Player>() is Player player && preloadLevel.Tracker.GetEntity<RoomStatisticsDisplayer>() is RoomStatisticsDisplayer roomStatDisplayer)
             {
                 if (!player.Dead)

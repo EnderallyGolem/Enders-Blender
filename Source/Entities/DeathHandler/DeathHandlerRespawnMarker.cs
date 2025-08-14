@@ -17,11 +17,11 @@ namespace Celeste.Mod.EndHelper.Entities.DeathHandler;
 [CustomEntity("EndHelper/DeathHandlerRespawnMarker")]
 public class DeathHandlerRespawnMarker : Entity
 {
-    internal bool faceLeft = false; // Internally stored, can't be set by mapper
+    internal bool faceLeft = false; // Internally stored, can't be set by mapper. Modified by respawn points.
     private float speed = 1;
-    private string requireFlag = "";
+    private readonly string requireFlag = "";
     private bool flagEnable = true;
-    private bool offscreenPointer = true;
+    private readonly bool offscreenPointer = true;
 
     public Sprite sprite;
 
@@ -34,12 +34,15 @@ public class DeathHandlerRespawnMarker : Entity
     private int framesGoingFurtherFromTarget = 0;
 
     private SineWave sine;
-    internal static bool attachedToPlayer = false;
 
     private bool previousholdingThrowableRespawn = false;
 
+    internal bool showRedEffects { get; private set; } = false; // True if full reset or player bypass
+
+    internal bool fullResetFaceLeft = true;
+
     // Particles!
-    readonly ParticleType particle = new ParticleType
+    ParticleType particle = new ParticleType
     {
         Color = new Color(255, 232, 89, 128),
         Color2 = Calc.HexToColor("ffffff"),
@@ -91,12 +94,11 @@ public class DeathHandlerRespawnMarker : Entity
         level.Add(new MarkerHUD(this));
 
         // Warp to spawnpoint location
-        Vector2 currentPosSpawnpoint = new Vector2(Position.X, Position.Y + height / 2 - 1);
         Vector2 targetPos = level.Session.RespawnPoint.Value;
-        previousTargetPos = targetPos;
-        currentPosSpawnpoint = targetPos;
 
-        Position = new Vector2(currentPosSpawnpoint.X, currentPosSpawnpoint.Y - height / 2 + 1);
+        // Target player
+        previousTargetPos = targetPos;
+        Position = new Vector2(targetPos.X, targetPos.Y - height / 2 + 1);
     }
 
     private bool pastFirstFrame = false;
@@ -128,26 +130,17 @@ public class DeathHandlerRespawnMarker : Entity
         Vector2 currentPosSpawnpoint = ConvertSpawnPointPosToActualPos(Position, true);
         Vector2 targetPos = level.Session.RespawnPoint.Value;
 
-        // If player is deathbypass, targetPos can only either be the player or lastFullResetPos
+        // If player is deathbypass, targetPos can only be lastFullResetPos
         if (level.Tracker.GetEntity<Player>() is Player player && player.Components.Get<DeathBypass>() is DeathBypass deathBypass && deathBypass.bypass)
         {
-            if (EndHelperModule.Session.nextRespawnFullReset && EndHelperModule.Session.lastFullResetPos is not null)
-            { 
-                targetPos = EndHelperModule.Session.lastFullResetPos.Value;
-                attachedToPlayer = false;
-            }
-            else
-            {
-                targetPos = player.BottomCenter;
-                faceLeft = player.Facing == Facings.Left;
-                if (attachedToPlayer == false)
-                {
-                    Add(new SoundSource("event:/game/06_reflection/feather_bubble_bounce"));
-                    attachedToPlayer = true;
-                }
-            }
+            targetPos = EndHelperModule.Session.lastFullResetPos.Value;
+            faceLeft = fullResetFaceLeft;
+            showRedEffects = true;
         }
-        else attachedToPlayer = false;
+        else
+        {
+            showRedEffects = false;
+        }
 
         float distanceBetweenPosAndTarget = Vector2.Distance(currentPosSpawnpoint, targetPos);
 
@@ -173,15 +166,15 @@ public class DeathHandlerRespawnMarker : Entity
         bool holdableRespawnLock = true;
         if (holdingThrowableRespawn && previousholdingThrowableRespawn) holdableRespawnLock = false;
 
-        // If becoming larger, and distance >= 1 tile, play SFX
-        if (distanceBetweenPosAndTarget >= 8 && framesGoingFurtherFromTarget == 1 && flagEnable && !attachedToPlayer && holdableRespawnLock)
+        // If becoming larger, and distance >= 2 tiles, play SFX
+        if (distanceBetweenPosAndTarget >= 16 && framesGoingFurtherFromTarget == 1 && flagEnable && holdableRespawnLock)
         {
             Add(new SoundSource("event:/game/06_reflection/feather_bubble_bounce"));
         }
 
         if (currentPosSpawnpoint != targetPos)
         {
-            if (speed == 0 || (framesGoingFurtherFromTarget >= 2 && distanceBetweenPosAndTarget <= 8) || (attachedToPlayer && distanceBetweenPosAndTarget <= 8))
+            if (speed == 0 || (framesGoingFurtherFromTarget >= 2 && distanceBetweenPosAndTarget <= 8))
             {
                 // If set to instant teleport (speed == 0) or target is going away (while being close)
                 currentPosSpawnpoint = targetPos;
@@ -203,6 +196,7 @@ public class DeathHandlerRespawnMarker : Entity
         {
             if (flagEnable)
             {
+                particle.Color = showRedEffects ? new Color(255, 80, 80, 64) : new Color(255, 232, 89, 128);
                 SceneAs<Level>().ParticlesBG.Emit(particle, Position + new Vector2(-width / 2 * 0.8f, -height / 2) + Calc.Random.Range(Vector2.Zero, Vector2.One * 16));
             }
             particleLimiter = 0;
@@ -246,17 +240,15 @@ public class DeathHandlerRespawnMarker : Entity
         }
 
         sprite.SetColor(Color.White);
+
+        // Red if full reset (or player deathbypass)
+        if (showRedEffects)
+        {
+            sprite.SetColor(new Color(255, 80, 80, 64) * 0.8f);
+        }
+
         sprite.Color.A = 128;
         sprite.Color.A += (byte)(sine.Value * 120f);
-
-        if (attachedToPlayer && Scene.Tracker.GetEntity<Player>() is Player player)
-        {
-            float distanceFromPlayer = (player.Center - ConvertSpawnPointPosToActualPos(Position, true)).Length();
-            if (distanceFromPlayer <= 64)
-            {
-                sprite.Color *= Math.Clamp(distanceFromPlayer - 8, 0, 64 - 8) / (64 - 8);
-            }
-        }
 
         // Fade in when transitioning into room
         if (Utils_General.framesSinceEnteredRoom < 30)
@@ -265,7 +257,7 @@ public class DeathHandlerRespawnMarker : Entity
         }
     }
 
-    internal Vector2 ConvertSpawnPointPosToActualPos(Vector2 pos, bool reverse = false)
+    internal static Vector2 ConvertSpawnPointPosToActualPos(Vector2 pos, bool reverse = false)
     {
         if (!reverse)
         {
@@ -278,7 +270,7 @@ public class DeathHandlerRespawnMarker : Entity
     }
 
 
-    public class MarkerHUD : Entity
+    private class MarkerHUD : Entity
     {
         private DeathHandlerRespawnMarker p;
 
@@ -289,7 +281,7 @@ public class DeathHandlerRespawnMarker : Entity
         private Vector2 arrowDrawScreenPos;
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        public MarkerHUD(DeathHandlerRespawnMarker parent)
+        internal MarkerHUD(DeathHandlerRespawnMarker parent)
         {
             Depth = -1;
             p = parent;
@@ -325,8 +317,8 @@ public class DeathHandlerRespawnMarker : Entity
 
                 Color iconColour = new Color(255, 232, 89, 64);
 
-                // Red if full reset
-                if (EndHelperModule.Session.lastFullResetPos == SceneAs<Level>().Session.RespawnPoint)
+                // Red if full reset (or player deathbypass)
+                if (p.showRedEffects)
                 {
                     iconColour = new Color(255, 80, 80, 64);
                 }
