@@ -40,7 +40,7 @@ public class EndHelperModuleSettings : EverestModuleSettings {
 
         public enum StoredClearsEnum { Always, Ask, AskIfValidClear, ValidClear, ValidClearFaster, ValidClearLessDeaths, Never }
         [SettingSubText("modoptions_EndHelperModule_StoredClears_Desc")]
-        [DefaultValue(StoredClearsEnum.Ask)]
+        [DefaultValue(StoredClearsEnum.ValidClear)]
         public StoredClearsEnum StoredClears { get; set; }
 
         [SettingSubText("modoptions_EndHelperModule_MenuMulticolor_Desc")]

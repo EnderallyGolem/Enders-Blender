@@ -87,8 +87,22 @@ These are shown in the end-screen. Some of these can be overridden per-map with 
 - Flag Killbox
 
 
-## 1.1.11 changelog:
+## 1.2 changelog:
+- New Additions:
+	- Mapping Tools:
+		- Death Handler:
+			- ...		
+		- Death Count Temple Gate: 
+			- Temple Gate that opens/closes depending on death count in the room/map. 
+			- For room, death count can be set to reset upon transition or/and retry.
+			- When using Death Handler, can be set to reset upon Full Reset.
+			
+- Room Stats Tracker:
+	- Changed Save Clear default to save if valid clear (old behaviour) so it doesn't interrupt you if you aren't using the blender for stats
+			
+## 1.1.12 changelog:
 - Potential crash fix with cassette manager trigger with wonky cassettes
+- fixed 1.1.11 crashing oops
 			
 ## 1.1.10 changelog:
 - New Additions:

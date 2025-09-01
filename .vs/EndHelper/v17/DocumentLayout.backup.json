@@ -3,36 +3,24 @@
   "WorkspaceRootPath": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Celeste\\Mods\\EndersBlender\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{472281A7-9373-412A-8E8E-5B603857A9D6}|Source\\EndHelper.csproj|c:\\program files (x86)\\steam\\steamapps\\common\\celeste\\mods\\endersblender\\source\\integration\\frosthelperintegration.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{472281A7-9373-412A-8E8E-5B603857A9D6}|Source\\EndHelper.csproj|solutionrelative:source\\integration\\frosthelperintegration.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{472281A7-9373-412A-8E8E-5B603857A9D6}|Source\\EndHelper.csproj|c:\\program files (x86)\\steam\\steamapps\\common\\celeste\\mods\\endersblender\\source\\entities\\deathhandler\\deathhandlerchangerespawnregionrenderer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{472281A7-9373-412A-8E8E-5B603857A9D6}|Source\\EndHelper.csproj|solutionrelative:source\\entities\\deathhandler\\deathhandlerchangerespawnregionrenderer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{472281A7-9373-412A-8E8E-5B603857A9D6}|Source\\EndHelper.csproj|c:\\program files (x86)\\steam\\steamapps\\common\\celeste\\mods\\endersblender\\source\\endhelpermodule.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{472281A7-9373-412A-8E8E-5B603857A9D6}|Source\\EndHelper.csproj|solutionrelative:source\\endhelpermodule.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
+      "AbsoluteMoniker": "D:0:0:{472281A7-9373-412A-8E8E-5B603857A9D6}|Source\\EndHelper.csproj|c:\\program files (x86)\\steam\\steamapps\\common\\celeste\\mods\\endersblender\\source\\utils\\utils_shaders.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{472281A7-9373-412A-8E8E-5B603857A9D6}|Source\\EndHelper.csproj|solutionrelative:source\\utils\\utils_shaders.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{472281A7-9373-412A-8E8E-5B603857A9D6}|Source\\EndHelper.csproj|c:\\program files (x86)\\steam\\steamapps\\common\\celeste\\mods\\endersblender\\source\\triggers\\misc\\cassettemanagertrigger.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{472281A7-9373-412A-8E8E-5B603857A9D6}|Source\\EndHelper.csproj|solutionrelative:source\\triggers\\misc\\cassettemanagertrigger.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{472281A7-9373-412A-8E8E-5B603857A9D6}|Source\\EndHelper.csproj|c:\\program files (x86)\\steam\\steamapps\\common\\celeste\\mods\\endersblender\\source\\entities\\misc\\cassettebeatgate.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{472281A7-9373-412A-8E8E-5B603857A9D6}|Source\\EndHelper.csproj|solutionrelative:source\\entities\\misc\\cassettebeatgate.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{472281A7-9373-412A-8E8E-5B603857A9D6}|Source\\EndHelper.csproj|c:\\program files (x86)\\steam\\steamapps\\common\\celeste\\mods\\endersblender\\source\\integration\\quantummechanicsintegration.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{472281A7-9373-412A-8E8E-5B603857A9D6}|Source\\EndHelper.csproj|solutionrelative:source\\integration\\quantummechanicsintegration.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{472281A7-9373-412A-8E8E-5B603857A9D6}|Source\\EndHelper.csproj|c:\\program files (x86)\\steam\\steamapps\\common\\celeste\\mods\\endersblender\\source\\endhelpermodulesavedata.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{472281A7-9373-412A-8E8E-5B603857A9D6}|Source\\EndHelper.csproj|solutionrelative:source\\endhelpermodulesavedata.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{472281A7-9373-412A-8E8E-5B603857A9D6}|Source\\EndHelper.csproj|c:\\program files (x86)\\steam\\steamapps\\common\\celeste\\mods\\endersblender\\source\\endhelpermodulesettings.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{472281A7-9373-412A-8E8E-5B603857A9D6}|Source\\EndHelper.csproj|solutionrelative:source\\endhelpermodulesettings.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{472281A7-9373-412A-8E8E-5B603857A9D6}|Source\\EndHelper.csproj|c:\\program files (x86)\\steam\\steamapps\\common\\celeste\\mods\\endersblender\\source\\entities\\deathhandler\\deathhandlerchangerespawnregion.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{472281A7-9373-412A-8E8E-5B603857A9D6}|Source\\EndHelper.csproj|solutionrelative:source\\entities\\deathhandler\\deathhandlerchangerespawnregion.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{472281A7-9373-412A-8E8E-5B603857A9D6}|Source\\EndHelper.csproj|c:\\program files (x86)\\steam\\steamapps\\common\\celeste\\mods\\endersblender\\source\\utils\\utils_deathhandler.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{472281A7-9373-412A-8E8E-5B603857A9D6}|Source\\EndHelper.csproj|solutionrelative:source\\utils\\utils_deathhandler.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -42,7 +30,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 8,
+          "SelectedChildIndex": 1,
           "Children": [
             {
               "$type": "Bookmark",
@@ -50,104 +38,67 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
-              "Title": "CassetteManagerTrigger.cs",
-              "DocumentMoniker": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Celeste\\Mods\\EndersBlender\\Source\\Triggers\\Misc\\CassetteManagerTrigger.cs",
-              "RelativeDocumentMoniker": "Source\\Triggers\\Misc\\CassetteManagerTrigger.cs",
-              "ToolTip": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Celeste\\Mods\\EndersBlender\\Source\\Triggers\\Misc\\CassetteManagerTrigger.cs",
-              "RelativeToolTip": "Source\\Triggers\\Misc\\CassetteManagerTrigger.cs",
-              "ViewState": "AgIAADgAAAAAAAAAAAAcwFAAAAAFAAAAAAAAAA==",
+              "DocumentIndex": 0,
+              "Title": "FrostHelperIntegration.cs",
+              "DocumentMoniker": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Celeste\\Mods\\EndersBlender\\Source\\Integration\\FrostHelperIntegration.cs",
+              "RelativeDocumentMoniker": "Source\\Integration\\FrostHelperIntegration.cs",
+              "ToolTip": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Celeste\\Mods\\EndersBlender\\Source\\Integration\\FrostHelperIntegration.cs",
+              "RelativeToolTip": "Source\\Integration\\FrostHelperIntegration.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAEAAAAGAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-01T12:37:16.82Z",
+              "WhenOpened": "2025-09-01T14:54:25.994Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "DeathHandlerChangeRespawnRegionRenderer.cs",
+              "DocumentMoniker": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Celeste\\Mods\\EndersBlender\\Source\\Entities\\DeathHandler\\DeathHandlerChangeRespawnRegionRenderer.cs",
+              "RelativeDocumentMoniker": "Source\\Entities\\DeathHandler\\DeathHandlerChangeRespawnRegionRenderer.cs",
+              "ToolTip": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Celeste\\Mods\\EndersBlender\\Source\\Entities\\DeathHandler\\DeathHandlerChangeRespawnRegionRenderer.cs",
+              "RelativeToolTip": "Source\\Entities\\DeathHandler\\DeathHandlerChangeRespawnRegionRenderer.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAAAGAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-09-01T14:28:03.623Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 2,
-              "Title": "CassetteBeatGate.cs",
-              "DocumentMoniker": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Celeste\\Mods\\EndersBlender\\Source\\Entities\\Misc\\CassetteBeatGate.cs",
-              "RelativeDocumentMoniker": "Source\\Entities\\Misc\\CassetteBeatGate.cs",
-              "ToolTip": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Celeste\\Mods\\EndersBlender\\Source\\Entities\\Misc\\CassetteBeatGate.cs",
-              "RelativeToolTip": "Source\\Entities\\Misc\\CassetteBeatGate.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAEAAAAbAAAAAAAAAA==",
+              "Title": "EndHelperModule.cs",
+              "DocumentMoniker": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Celeste\\Mods\\EndersBlender\\Source\\EndHelperModule.cs",
+              "RelativeDocumentMoniker": "Source\\EndHelperModule.cs",
+              "ToolTip": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Celeste\\Mods\\EndersBlender\\Source\\EndHelperModule.cs",
+              "RelativeToolTip": "Source\\EndHelperModule.cs",
+              "ViewState": "AgIAABUAAAAAAAAAAAAAACgAAABAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-01T12:36:31.091Z",
+              "WhenOpened": "2025-09-01T14:27:41.398Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 3,
-              "Title": "QuantumMechanicsIntegration.cs",
-              "DocumentMoniker": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Celeste\\Mods\\EndersBlender\\Source\\Integration\\QuantumMechanicsIntegration.cs",
-              "RelativeDocumentMoniker": "Source\\Integration\\QuantumMechanicsIntegration.cs",
-              "ToolTip": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Celeste\\Mods\\EndersBlender\\Source\\Integration\\QuantumMechanicsIntegration.cs",
-              "RelativeToolTip": "Source\\Integration\\QuantumMechanicsIntegration.cs",
-              "ViewState": "AgIAAA8AAAAAAAAAAAAUwDEAAAANAAAAAAAAAA==",
+              "Title": "Utils_Shaders.cs",
+              "DocumentMoniker": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Celeste\\Mods\\EndersBlender\\Source\\Utils\\Utils_Shaders.cs",
+              "RelativeDocumentMoniker": "Source\\Utils\\Utils_Shaders.cs",
+              "ToolTip": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Celeste\\Mods\\EndersBlender\\Source\\Utils\\Utils_Shaders.cs",
+              "RelativeToolTip": "Source\\Utils\\Utils_Shaders.cs",
+              "ViewState": "AgIAAA4AAAAAAAAAAAAIwCcAAAAhAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-01T12:34:45.389Z",
+              "WhenOpened": "2025-09-01T14:11:10.497Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 4,
-              "Title": "EndHelperModuleSaveData.cs",
-              "DocumentMoniker": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Celeste\\Mods\\EndersBlender\\Source\\EndHelperModuleSaveData.cs",
-              "RelativeDocumentMoniker": "Source\\EndHelperModuleSaveData.cs",
-              "ToolTip": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Celeste\\Mods\\EndersBlender\\Source\\EndHelperModuleSaveData.cs",
-              "RelativeToolTip": "Source\\EndHelperModuleSaveData.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAswA4AAABIAAAAAAAAAA==",
+              "Title": "CassetteManagerTrigger.cs",
+              "DocumentMoniker": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Celeste\\Mods\\EndersBlender\\Source\\Triggers\\Misc\\CassetteManagerTrigger.cs",
+              "RelativeDocumentMoniker": "Source\\Triggers\\Misc\\CassetteManagerTrigger.cs",
+              "ToolTip": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Celeste\\Mods\\EndersBlender\\Source\\Triggers\\Misc\\CassetteManagerTrigger.cs",
+              "RelativeToolTip": "Source\\Triggers\\Misc\\CassetteManagerTrigger.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAACMAAAAxAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-08-19T04:24:39.54Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 5,
-              "Title": "EndHelperModuleSettings.cs",
-              "DocumentMoniker": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Celeste\\Mods\\EndersBlender\\Source\\EndHelperModuleSettings.cs",
-              "RelativeDocumentMoniker": "Source\\EndHelperModuleSettings.cs",
-              "ToolTip": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Celeste\\Mods\\EndersBlender\\Source\\EndHelperModuleSettings.cs",
-              "RelativeToolTip": "Source\\EndHelperModuleSettings.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAABHAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-08-19T04:24:35.061Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 6,
-              "Title": "DeathHandlerChangeRespawnRegion.cs",
-              "DocumentMoniker": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Celeste\\Mods\\EndersBlender\\Source\\Entities\\DeathHandler\\DeathHandlerChangeRespawnRegion.cs",
-              "RelativeDocumentMoniker": "Source\\Entities\\DeathHandler\\DeathHandlerChangeRespawnRegion.cs",
-              "ToolTip": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Celeste\\Mods\\EndersBlender\\Source\\Entities\\DeathHandler\\DeathHandlerChangeRespawnRegion.cs",
-              "RelativeToolTip": "Source\\Entities\\DeathHandler\\DeathHandlerChangeRespawnRegion.cs",
-              "ViewState": "AgIAABoAAAAAAAAAAAAIwDAAAAAtAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-08-17T04:10:09.685Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 7,
-              "Title": "Utils_DeathHandler.cs",
-              "DocumentMoniker": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Celeste\\Mods\\EndersBlender\\Source\\Utils\\Utils_DeathHandler.cs",
-              "RelativeDocumentMoniker": "Source\\Utils\\Utils_DeathHandler.cs",
-              "ToolTip": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Celeste\\Mods\\EndersBlender\\Source\\Utils\\Utils_DeathHandler.cs",
-              "RelativeToolTip": "Source\\Utils\\Utils_DeathHandler.cs",
-              "ViewState": "AgIAADcCAAAAAAAAAAAowEgCAAB4AAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-08-01T06:48:41.995Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": "EndHelperModule.cs",
-              "DocumentMoniker": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Celeste\\Mods\\EndersBlender\\Source\\EndHelperModule.cs",
-              "RelativeDocumentMoniker": "Source\\EndHelperModule.cs",
-              "ToolTip": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Celeste\\Mods\\EndersBlender\\Source\\EndHelperModule.cs*",
-              "RelativeToolTip": "Source\\EndHelperModule.cs*",
-              "ViewState": "AgIAALQAAAAAAAAAAAAIwMoAAAAIAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-07-29T15:03:11.475Z",
+              "WhenOpened": "2025-09-01T12:37:16.82Z",
               "EditorCaption": ""
             }
           ]
