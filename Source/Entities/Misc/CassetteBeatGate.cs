@@ -10,7 +10,6 @@ using Microsoft.Xna.Framework;
 using System.Text;
 using System.Threading.Tasks;
 using Celeste.Mod.EndHelper.Integration;
-using Celeste.Mod.QuantumMechanics.Entities;
 using MonoMod.Utils;
 using Celeste.Mod.EndHelper.Entities.RoomSwap;
 using Celeste.Mod.EndHelper.Utils;

@@ -31,6 +31,9 @@
 		<PackageReference Include="CelesteMod.Publicizer" Version="*" CelesteAssembly="$(CelestePrefix)\Celeste.dll" />
         <Reference Include="$(CelestePrefix)\MMHOOK_Celeste.dll" Private="false" />
         <Reference Include="$(CelestePrefix)\FNA.dll" Private="false" />
+        <Reference Include="Celeste">
+          <HintPath>..\..\..\Celeste.dll</HintPath>
+        </Reference>
         <Reference Include="DotNetZip">
           <HintPath>..\..\..\DotNetZip.dll</HintPath>
         </Reference>

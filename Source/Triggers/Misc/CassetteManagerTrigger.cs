@@ -79,6 +79,15 @@ public class CassetteManagerTrigger : Trigger
     [MethodImpl(MethodImplOptions.NoInlining)]
     public override void Added(Scene scene)
     {
+        if (wonkyCassettes && !QuantumMechanicsIntegration.allowQuantumMechanicsIntegration)
+        {
+            QuantumMechanicsIntegration.Load(); // Secondary check!
+            if (!QuantumMechanicsIntegration.allowQuantumMechanicsIntegration)
+            {
+                throw new ArgumentException($"A Cassette Manager Trigger is set to use Wonky Cassettes, but the Quantum Mechanics mod required for it cannot be found!");
+            }
+        }
+
         base.Added(scene);
         if (showDebugInfo)
         {
@@ -88,11 +97,6 @@ public class CassetteManagerTrigger : Trigger
 
     public override void Awake(Scene scene)
     {
-        if (wonkyCassettes && !QuantumMechanicsIntegration.allowQuantumMechanicsIntegration)
-        {
-            throw new ArgumentException($"A Cassette Manager Trigger is set to use Wonky Cassettes, but the Quantum Mechanics mod required for it cannot be found!");
-        }
-
         Level level = SceneAs<Level>();
 
         allowFunctionality = Utils_General.AreFlagsEnabled(level.Session, requireFlag, true);

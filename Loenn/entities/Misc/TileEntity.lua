@@ -29,9 +29,9 @@ local tileEntity = {
                 offUL = true,
                 surfaceSoundIndex = -1,
                 locationSeeded = true,
-                dashBlock = false;
-                dashBlockPermament = true;
-                dashBlockBreakSound = "event:/game/general/wall_break_stone";
+                dashBlock = false,
+                dashBlockPermament = true,
+                dashBlockBreakSound = "event:/game/general/wall_break_stone",
             }
         }
     }

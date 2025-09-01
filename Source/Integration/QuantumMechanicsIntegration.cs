@@ -28,7 +28,7 @@ namespace Celeste.Mod.EndHelper.Integration
                 Name = "QuantumMechanics",
                 Version = new Version(1, 3, 0)
             };
-            if (Everest.Loader.DependencyLoaded(QuantumMechanicsMetaData))
+            if (Everest.Loader.DependencyLoaded(QuantumMechanicsMetaData) && !allowQuantumMechanicsIntegration)
             {
                 // Do the important stuff here
                 allowQuantumMechanicsIntegration = true; // Check if loaded

@@ -87,7 +87,8 @@ These are shown in the end-screen. Some of these can be overridden per-map with 
 - Flag Killbox
 
 
-
+## 1.1.11 changelog:
+- Potential crash fix with cassette manager trigger with wonky cassettes
 			
 ## 1.1.10 changelog:
 - New Additions:
