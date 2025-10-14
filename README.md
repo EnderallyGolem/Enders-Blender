@@ -87,18 +87,16 @@ These are shown in the end-screen. Some of these can be overridden per-map with 
 - Flag Killbox
 
 
-## 1.2 changelog:
-- New Additions:
-	- Mapping Tools:
-		- Death Handler:
-			- ...		
-		- Death Count Temple Gate: 
-			- Temple Gate that opens/closes depending on death count in the room/map. 
-			- For room, death count can be set to reset upon transition or/and retry.
-			- When using Death Handler, can be set to reset upon Full Reset.
-			
+
+
+## 1.1.14 changelog:
+- Hopefully a crash-fix for room stats? At this point I have zero clue why they are happening and just adding an empty room name check.
+
+## 1.1.13 changelog:
 - Room Stats Tracker:
 	- Changed Save Clear default to save if valid clear (old behaviour) so it doesn't interrupt you if you aren't using the blender for stats
+	- The ask menu now properly pauses the game when ending the map with a complete area trigger. This might also possibly fix a crash?????????
+- The test map has also been removed from the mod (if you want to view it, download from the github.)
 			
 ## 1.1.12 changelog:
 - Potential crash fix with cassette manager trigger with wonky cassettes

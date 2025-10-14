@@ -208,7 +208,6 @@ public class RoomStatisticsDisplayer : Entity
         else
         {
             // Otherwise, check settings to determine if it should be saved
-
             bool validClear = level.Session.StartedFromBeginning;
 
             int current_totalDeaths = 0; long current_totalTimer = 0; int current_totalBerries = 0;
@@ -216,23 +215,37 @@ public class RoomStatisticsDisplayer : Entity
             bool saved_invalidClear = EndHelperModule.SaveData.mapDict_roomStat_latestSession_pauseType[mapNameSide_Internal].ContainsKey("Level_Invalid") 
                 && EndHelperModule.SaveData.mapDict_roomStat_latestSession_pauseType[mapNameSide_Internal]["Level_Invalid"];
             
-                foreach (string roomName in EndHelperModule.SaveData.mapDict_roomStat_latestSession_roomOrder[mapNameSide_Internal])
+            foreach (string roomName in EndHelperModule.SaveData.mapDict_roomStat_latestSession_roomOrder[mapNameSide_Internal])
             {
-                int saved_roomDeaths = EndHelperModule.SaveData.mapDict_roomStat_latestSession_death[mapNameSide_Internal][roomName];
-                long saved_roomTimeTicks = EndHelperModule.SaveData.mapDict_roomStat_latestSession_timer[mapNameSide_Internal][roomName];
-                int saved_roomBerries = EndHelperModule.SaveData.mapDict_roomStat_latestSession_strawberries[mapNameSide_Internal][roomName];
-                saved_totalDeaths += saved_roomDeaths;
-                saved_totalTimer += saved_roomTimeTicks;
-                saved_totalBerries += saved_roomBerries;
+                try
+                {
+                    int saved_roomDeaths = EndHelperModule.SaveData.mapDict_roomStat_latestSession_death[mapNameSide_Internal][roomName];
+                    long saved_roomTimeTicks = EndHelperModule.SaveData.mapDict_roomStat_latestSession_timer[mapNameSide_Internal][roomName];
+                    int saved_roomBerries = EndHelperModule.SaveData.mapDict_roomStat_latestSession_strawberries[mapNameSide_Internal][roomName];
+                    saved_totalDeaths += saved_roomDeaths;
+                    saved_totalTimer += saved_roomTimeTicks;
+                    saved_totalBerries += saved_roomBerries;
+                }
+                catch (Exception e)
+                {
+                    Logger.Log(LogLevel.Error, "EndHelper/RoomStatisticsDisplayer", $"Error when checking last saved room stats data for room ${roomName}: ${e}");
+                }
             }
             foreach (string roomName in EndHelperModule.Session.roomStatDict_death.Keys)
             {
-                int current_roomDeaths = Convert.ToInt32(EndHelperModule.Session.roomStatDict_death[roomName]);
-                long current_roomTimeTicks = Convert.ToInt64(EndHelperModule.Session.roomStatDict_timer[roomName]);
-                int current_roomBerries = Convert.ToInt32(EndHelperModule.Session.roomStatDict_strawberries[roomName]);
-                current_totalDeaths += current_roomDeaths;
-                current_totalTimer += current_roomTimeTicks;
-                current_totalBerries += current_roomBerries;
+                try
+                {
+                    int current_roomDeaths = Convert.ToInt32(EndHelperModule.Session.roomStatDict_death[roomName]);
+                    long current_roomTimeTicks = Convert.ToInt64(EndHelperModule.Session.roomStatDict_timer[roomName]);
+                    int current_roomBerries = Convert.ToInt32(EndHelperModule.Session.roomStatDict_strawberries[roomName]);
+                    current_totalDeaths += current_roomDeaths;
+                    current_totalTimer += current_roomTimeTicks;
+                    current_totalBerries += current_roomBerries;
+                }
+                catch (Exception e)
+                {
+                    Logger.Log(LogLevel.Error, "EndHelper/RoomStatisticsDisplayer", $"Error when checking current run's room stats data for room ${roomName}: ${e}");
+                }
             }
 
             switch (EndHelperModule.Settings.RoomStatMenu.StoredClears)
@@ -544,9 +557,17 @@ public class RoomStatisticsDisplayer : Entity
             //ActiveFont.DrawOutline(prefix, new Vector2(sectionXPos + xOffset, displayYPos), justification, Vector2.One * displayScale, timerColor, 2f, Color.Black);
         }
 
-        if (!hideRoomName && (roomDisplaySettings.ShowRoomName || showAll))
+        if (!hideRoomName && (roomDisplaySettings.ShowRoomName || showAll) && currentEffectiveRoomName != "")
         {
             string displayMsg = "";
+
+            // Crash prevention. Just in case. The currentEffectiveRoomName != "" check should already handle the main source of crash though.
+            if (!EndHelperModule.Session.roomStatDict_customName.ContainsKey(currentEffectiveRoomName))
+            {
+                Logger.Log(LogLevel.Warn, "EndHelper/RoomStatisticsDisplayer", $"Failed to get custom name for room ${currentEffectiveRoomName}. Manually setting custom name as this.");
+                EndHelperModule.Session.roomStatDict_customName[currentEffectiveRoomName] = currentEffectiveRoomName;
+            }
+
             string customRoomName = Convert.ToString(EndHelperModule.Session.roomStatDict_customName[currentEffectiveRoomName]);
 
             if (customRoomName.Length > 35)

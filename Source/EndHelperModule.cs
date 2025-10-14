@@ -32,6 +32,8 @@ using static Celeste.Mod.EndHelper.EndHelperModuleSettings;
 using static Celeste.Mod.EndHelper.EndHelperModuleSettings.GameplayTweaks;
 using static Celeste.Mod.EndHelper.Entities.Misc.RoomStatisticsDisplayer;
 using static Celeste.TrackSpinner;
+using static On.Celeste.HeartGem;
+using static On.Celeste.Level;
 
 namespace Celeste.Mod.EndHelper;
 
@@ -147,6 +149,7 @@ public class EndHelperModule : EverestModule {
         On.Celeste.Level.TransitionRoutine += Hook_TransitionRoutine;
         On.Monocle.Entity.Removed += Hook_EntityRemoved;
         On.Celeste.Glitch.Apply += Hook_GlitchEffectApply;
+        On.Celeste.Level.CompleteArea_bool_bool_bool += Hook_CompleteArea;
 
         On.Celeste.Player.Update += Hook_OnPlayerUpdate;
         On.Celeste.Player.Die += Hook_OnPlayerDeath;
@@ -222,6 +225,7 @@ public class EndHelperModule : EverestModule {
         On.Celeste.Session.GetSpawnPoint -= Hook_SessionGetSpawnPoint;
         On.Celeste.Level.TransitionRoutine -= Hook_TransitionRoutine;
         On.Celeste.Glitch.Apply -= Hook_GlitchEffectApply;
+        On.Celeste.Level.CompleteArea_bool_bool_bool -= Hook_CompleteArea;
 
         On.Celeste.Player.Update -= Hook_OnPlayerUpdate;
         On.Celeste.Player.Die -= Hook_OnPlayerDeath;
@@ -652,9 +656,22 @@ public class EndHelperModule : EverestModule {
 
     // Using player update instead of level update so nothing happens when the level is loading
     // Level update screws with the timeSinceSessionReset.
+    internal static List<Action> actionWhenUnpaused = [];
     private static void Hook_LevelUpdate(On.Celeste.Level.orig_Update orig, global::Celeste.Level self)
     {
         Level level = self;
+
+        if (!level.Paused)
+        {
+            foreach (Action action in actionWhenUnpaused)
+            {
+                if (action is not null)
+                {
+                    action.Invoke();
+                }
+            }
+            actionWhenUnpaused.Clear();
+        }
 
         // No Player Death Countdown (used by portable multiroom bino)
         if (!self.FrozenOrPaused) Utils_General.disablePlayerDeathCountdown.Update();
@@ -1233,6 +1250,21 @@ public class EndHelperModule : EverestModule {
         if (Engine.Scene is Level level)
         {
             Utils_Shaders.ApplyShaders(level);
+        }
+    }
+
+    private static ScreenWipe Hook_CompleteArea(On.Celeste.Level.orig_CompleteArea_bool_bool_bool orig, global::Celeste.Level level, bool spotlightWipe, bool skipScreenWipe, bool skipCompleteScreen)
+    {
+        if (level.Tracker.GetEntity<RoomStatisticsDisplayer>() is RoomStatisticsDisplayer roomStatDisplayer)
+        {
+            level.RegisterAreaComplete();
+            void action() { orig(level, spotlightWipe, skipScreenWipe, skipCompleteScreen); }
+            actionWhenUnpaused.Add(action);
+            return null;
+        }
+        else
+        {
+            return orig(level, spotlightWipe, skipScreenWipe, skipCompleteScreen);
         }
     }
 
