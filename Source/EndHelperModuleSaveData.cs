@@ -14,6 +14,7 @@ public class EndHelperModuleSaveData : EverestModuleSaveData {
     public Dictionary<string, List<string>> mapDict_roomStat_firstClear_roomOrder = [];
     public Dictionary<string, Dictionary<string, int>> mapDict_roomStat_firstClear_death = [];
     public Dictionary<string, Dictionary<string, long>> mapDict_roomStat_firstClear_timer = [];
+    public Dictionary<string, Dictionary<string, long>> mapDict_roomStat_firstClear_rtatimer = [];
     public Dictionary<string, Dictionary<string, int>> mapDict_roomStat_firstClear_strawberries = [];
     public Dictionary<string, Dictionary<string, bool>> mapDict_roomStat_firstClear_pauseType = [];
 
@@ -22,6 +23,7 @@ public class EndHelperModuleSaveData : EverestModuleSaveData {
     public Dictionary<string, List<string>> mapDict_roomStat_latestSession_roomOrder = [];
     public Dictionary<string, Dictionary<string, int>> mapDict_roomStat_latestSession_death = [];
     public Dictionary<string, Dictionary<string, long>> mapDict_roomStat_latestSession_timer = [];
+    public Dictionary<string, Dictionary<string, long>> mapDict_roomStat_latestSession_rtatimer = [];
     public Dictionary<string, Dictionary<string, int>> mapDict_roomStat_latestSession_strawberries = [];
     public Dictionary<string, Dictionary<string, bool>> mapDict_roomStat_latestSession_pauseType = [];
 }

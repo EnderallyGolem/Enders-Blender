@@ -36,6 +36,7 @@ public class EndHelperModuleSession : EverestModuleSession
     public Dictionary<string, string> roomStatDict_customName = new Dictionary<string, string> { }; // <string, string>
     public OrderedDictionary roomStatDict_death = new OrderedDictionary { }; // <string, int>
     public OrderedDictionary roomStatDict_timer = new OrderedDictionary { }; // <string, long>
+    public OrderedDictionary roomStatDict_rtatimer = new OrderedDictionary { }; // <string, long>
     public OrderedDictionary roomStatDict_strawberries = new OrderedDictionary { }; // <string, int>
     public OrderedDictionary roomStatDict_colorIndex = new OrderedDictionary { }; // <string, int>
     public string roomStatDict_mapNameSide_Internal = ""; // In order to check for improper session - clears session data if mismatch

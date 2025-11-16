@@ -190,10 +190,13 @@ public class RoomSwapMapUpgrade : Entity
 
         //level.Flash(Color.White, drawPlayerOver: true);
         //Scene.Add(new BgFlash());
-        Engine.TimeRate = 0.5f;
-        while (Engine.TimeRate < 1f)
+
+        TimeRateModifier timeRateModifier = new TimeRateModifier(0.5f, true);
+        Add(timeRateModifier);
+
+        while (timeRateModifier.Multiplier < 1f)
         {
-            Engine.TimeRate += Engine.RawDeltaTime * 0.5f;
+            timeRateModifier.Multiplier += Engine.RawDeltaTime * 0.5f;
             yield return null;
         }
 

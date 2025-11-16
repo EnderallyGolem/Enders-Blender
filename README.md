@@ -7,7 +7,7 @@ Calling it a blender was funnier. Too lazy to change the internal names though.
 ### Player Tools:
 ###### Room Stat Tracker
 - GUI Display
-    - Overlay which display the number of deaths, time spent, or/and number of strawberries obtained in a room (can be customised)
+    - Overlay which display the number of deaths, time spent (in-game or/and real-time), or/and number of strawberries obtained in a room (can be customised)
     - Timer can be set to freeze on pause/afk/in cutscene.
 - Stats Menu
     - Menu which shows information for all rooms
@@ -87,7 +87,13 @@ These are shown in the end-screen. Some of these can be overridden per-map with 
 - Flag Killbox
 
 
-
+## 1.1.15 changelog:
+- Room Stats Tracker:
+	- New tracked stat: RTA Timer. (Thanks hyper for the suggestion!)
+		- Uses your system time to track the time, hence is unaffected by freeze frames, slowdown, the game-speedup from speedrun tools fast respawn, etc. This is tracked seperately from the regular timer.
+		- Display can be toggled for both the hud and menu
+		- (Note that for maps/rooms played before this update, RTA timer will be 0)
+	- Fixed crash in 7a credits, and a room-rename crash
 
 ## 1.1.14 changelog:
 - Hopefully a crash-fix for room stats? At this point I have zero clue why they are happening and just adding an empty room name check.

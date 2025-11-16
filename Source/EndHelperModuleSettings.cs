@@ -37,6 +37,10 @@ public class EndHelperModuleSettings : EverestModuleSettings {
 
         [SettingSubText("modoptions_EndHelperModule_MenuShowFirstClear_Desc")]
         public bool MenuShowFirstClear { get; set; } = false;
+        public enum MenuShowTimeEnum { Normal, RTA, Both }
+        [SettingSubText("modoptions_EndHelperModule_MenuShowTime_Desc")]
+        [DefaultValue(MenuShowTimeEnum.Normal)]
+        public MenuShowTimeEnum MenuShowTime { get; set; }
 
         public enum StoredClearsEnum { Always, Ask, AskIfValidClear, ValidClear, ValidClearFaster, ValidClearLessDeaths, Never }
         [SettingSubText("modoptions_EndHelperModule_StoredClears_Desc")]
@@ -61,6 +65,8 @@ public class EndHelperModuleSettings : EverestModuleSettings {
         public bool ShowRoomName { get; set; } = false;
         public bool ShowDeaths { get; set; } = false;
         public bool ShowTimeSpent { get; set; } = false;
+        [SettingSubText("modoptions_EndHelperModule_ShowRTATimeSpent_Desc")]
+        public bool ShowRTATimeSpent { get; set; } = false;
 
         [SettingSubText("modoptions_EndHelperModule_ShowStrawberries_Desc")]
         public bool ShowStrawberries { get; set; } = false;

@@ -10,6 +10,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using static Celeste.Mod.EndHelper.EndHelperModuleSettings;
 using static Celeste.Mod.EndHelper.Entities.Misc.RoomStatisticsDisplayer;
 
 namespace Celeste.Mod.EndHelper.Utils
@@ -75,9 +76,15 @@ namespace Celeste.Mod.EndHelper.Utils
             }
             else if (c == (char)8 || c == (char)24)
             {
+                // Getting the length can crash. No, I have absolutely no idea how.
+                try { int roomCustomNameLength = roomCustomName.Length; }
+                catch (Exception) { roomCustomName = ""; }
+
                 // Trim: Backspace, Cancel. Whatever Cancel is.
                 if (roomCustomName.Length > 0)
                 {
+                    Logger.Log(LogLevel.Info, "EndHelper/RoomStatisticsDisplayer", $"removey");
+
                     Audio.Play("event:/ui/main/rename_entry_backspace");
                     roomCustomName = roomCustomName.Remove(roomCustomName.Length - 1);
 
@@ -86,6 +93,10 @@ namespace Celeste.Mod.EndHelper.Utils
                     {
                         roomCustomName = roomCustomName.Remove(roomCustomName.Length - 1);
                     }
+                }
+                else
+                {
+                    Logger.Log(LogLevel.Info, "EndHelper/RoomStatisticsDisplayer", $"nothing should happen?");
                 }
             }
             else if (c == (char)127)
@@ -380,11 +391,13 @@ namespace Celeste.Mod.EndHelper.Utils
         {
             MTexture backgroundTexture = GFX.Gui["misc/EndHelper/statGUI_background"];
             MTexture backgroundTextureShort = GFX.Gui["misc/EndHelper/statGUI_background_short"];
+            MTexture backgroundTextureMed = GFX.Gui["misc/EndHelper/statGUI_background_med"];
             MTexture pageArrow = GFX.Gui["dotarrow_outline"];
             if (!EndHelperModule.Settings.RoomStatMenu.MenuMulticolor)
             {
                 backgroundTexture = GFX.Gui["misc/EndHelper/statGUI_background_purple"];
                 backgroundTextureShort = GFX.Gui["misc/EndHelper/statGUI_background_short_purple"];
+                backgroundTextureMed = GFX.Gui["misc/EndHelper/statGUI_background_med_purple"];
             }
             MTexture backgroundTextureEdit = GFX.Gui["misc/EndHelper/statGUI_background_edit"];
 
@@ -462,15 +475,6 @@ namespace Celeste.Mod.EndHelper.Utils
             }
 
 
-            const int roomsPerColumn = 16;
-            int lastRowShown = journalStatisticsFirstRowShown + 2 * roomsPerColumn;
-
-            int currentItemIndex = 0;
-
-            int startX = 550;
-            int startX_first = 100;
-            const int col2Buffer = 900;
-
             // Create a list of all room names to show
             List<string> roomNamesToShowList = new List<string>();
 
@@ -537,11 +541,16 @@ namespace Celeste.Mod.EndHelper.Utils
                 }
             }
 
+            // Add these in because these will be empty on update
+            if (!EndHelperModule.SaveData.mapDict_roomStat_firstClear_rtatimer.ContainsKey(mapNameSide_Internal)) { EndHelperModule.SaveData.mapDict_roomStat_firstClear_rtatimer[mapNameSide_Internal] = []; }
+            if (!EndHelperModule.SaveData.mapDict_roomStat_latestSession_rtatimer.ContainsKey(mapNameSide_Internal)) { EndHelperModule.SaveData.mapDict_roomStat_latestSession_rtatimer[mapNameSide_Internal] = []; }
+
             foreach (string roomName in new ArrayList(allRoomsList))
             {
                 if (roomName == "") { continue; }
                 int roomDeaths;
                 TimeSpan roomTimeSpan;
+                TimeSpan roomRtaTimeSpan;
                 int roomStrawberriesCollected = 0;
 
                 if (journalRoomStatMenuType == journalRoomStatMenuTypeEnum.FirstClear)
@@ -549,6 +558,10 @@ namespace Celeste.Mod.EndHelper.Utils
                     // Show First Cycle
                     roomDeaths = EndHelperModule.SaveData.mapDict_roomStat_firstClear_death[mapNameSide_Internal][roomName];
                     roomTimeSpan = TimeSpan.FromTicks(EndHelperModule.SaveData.mapDict_roomStat_firstClear_timer[mapNameSide_Internal][roomName]);
+
+                    if (!EndHelperModule.SaveData.mapDict_roomStat_firstClear_rtatimer[mapNameSide_Internal].ContainsKey(roomName)) { EndHelperModule.SaveData.mapDict_roomStat_firstClear_rtatimer[mapNameSide_Internal][roomName] = 0; }
+                    roomRtaTimeSpan = TimeSpan.FromTicks(EndHelperModule.SaveData.mapDict_roomStat_firstClear_rtatimer[mapNameSide_Internal][roomName]);
+
                     EndHelperModule.SaveData.mapDict_roomStat_firstClear_strawberries[mapNameSide_Internal].TryGetValue(roomName, out roomStrawberriesCollected);
                 }
                 else
@@ -556,11 +569,16 @@ namespace Celeste.Mod.EndHelper.Utils
                     // Show last session
                     roomDeaths = EndHelperModule.SaveData.mapDict_roomStat_latestSession_death[mapNameSide_Internal][roomName];
                     roomTimeSpan = TimeSpan.FromTicks(EndHelperModule.SaveData.mapDict_roomStat_latestSession_timer[mapNameSide_Internal][roomName]);
+
+                    if (!EndHelperModule.SaveData.mapDict_roomStat_latestSession_rtatimer[mapNameSide_Internal].ContainsKey(roomName)) { EndHelperModule.SaveData.mapDict_roomStat_latestSession_rtatimer[mapNameSide_Internal][roomName] = 0; }
+                    roomRtaTimeSpan = TimeSpan.FromTicks(EndHelperModule.SaveData.mapDict_roomStat_latestSession_rtatimer[mapNameSide_Internal][roomName]);
+
                     EndHelperModule.SaveData.mapDict_roomStat_latestSession_strawberries[mapNameSide_Internal].TryGetValue(roomName, out roomStrawberriesCollected);
                 }
                 string roomTimeString = Utils_General.MinimalGameplayFormat(roomTimeSpan);
 
                 // Filtering
+                bool checkRTA = EndHelperModule.Settings.RoomStatMenu.MenuShowTime == EndHelperModuleSettings.RoomStatMenuSubMenu.MenuShowTimeEnum.RTA;
                 switch (filterSetting)
                 {
                     case roomStatMenuFilter.Death0:
@@ -572,7 +590,7 @@ namespace Celeste.Mod.EndHelper.Utils
                         break;
 
                     case roomStatMenuFilter.Time60s:
-                        if (roomTimeSpan.TotalSeconds <= 60) { continue; }
+                        if ( (checkRTA && roomRtaTimeSpan.TotalSeconds <= 60) || (!checkRTA && roomTimeSpan.TotalSeconds <= 60)) { continue; }
                         break;
 
                     case roomStatMenuFilter.Renamed:
@@ -612,12 +630,28 @@ namespace Celeste.Mod.EndHelper.Utils
                     break;
             }
 
+            // Menu spacings
+            const int roomsPerColumn = 16;
+            int lastRowShown = journalStatisticsFirstRowShown + 2 * roomsPerColumn;
+            int currentItemIndex = 0;
+
+
+            int startX = 550;
+            int startX_first = 100;
+
+            const int width_twoTimerExt = 90;
+            int twoTimerOffset = EndHelperModule.Settings.RoomStatMenu.MenuShowTime == RoomStatMenuSubMenu.MenuShowTimeEnum.Both ? width_twoTimerExt : 0;
+
+            int col2Buffer = 900;
+            if (EndHelperModule.Settings.RoomStatMenu.MenuShowTime == RoomStatMenuSubMenu.MenuShowTimeEnum.Both){ col2Buffer = col2Buffer + twoTimerOffset - 35; }
+
             int dictSize = roomNamesToShowList.Count;
 
             if (dictSize - journalStatisticsFirstRowShown > roomsPerColumn)
             {
                 startX = startX_first;
             }
+            startX -= twoTimerOffset;
 
             const int startY = 100;
             const int heightBetweenRows = 55;
@@ -625,34 +659,59 @@ namespace Celeste.Mod.EndHelper.Utils
             const int width_death = 140;
             int startX_death = startX + 532;
 
-            const int width_timer = 140;
-            int startX_timer = startX_death + width_timer + 10;
-
+            int width_timer = 140 + twoTimerOffset;
+            int startX_timer = startX_death + width_death + 10;
             int startX_strawberry = startX_timer + width_timer + 20;
 
             const int bufferX = 10;
 
             // The table headers (aka just death and timer icons)
             const int iconHeightOffset = -50;
+            bool useCol2BufferOffset = dictSize - journalStatisticsFirstRowShown > roomsPerColumn;
+
+            String clockIcon = ":EndHelper/uioutline_clock:";
+            if (EndHelperModule.Settings.RoomStatMenu.MenuShowTime == RoomStatMenuSubMenu.MenuShowTimeEnum.RTA)
+            { clockIcon = ":EndHelper/uioutline_rtaclock:"; }
+            else if (EndHelperModule.Settings.RoomStatMenu.MenuShowTime == RoomStatMenuSubMenu.MenuShowTimeEnum.Both)
+            { clockIcon = ":EndHelper/uioutline_clock: / :EndHelper/uioutline_rtaclock:"; }
+
+            // First Column
             ActiveFont.DrawOutline(":EndHelper/uioutline_skull:", new Vector2(startX_death + width_death / 2, startY + iconHeightOffset), new Vector2(0.5f, 0f), new Vector2(0.7f, 0.7f), Color.White, 2f, Color.Black);
-            ActiveFont.DrawOutline(":EndHelper/uioutline_clock:", new Vector2(startX_timer + width_death / 2, startY + iconHeightOffset), new Vector2(0.5f, 0f), new Vector2(0.7f, 0.7f), Color.White, 2f, Color.Black);
-            if (dictSize - journalStatisticsFirstRowShown > roomsPerColumn)
+            ActiveFont.DrawOutline(clockIcon, new Vector2(startX_timer + width_timer / 2, startY + iconHeightOffset), new Vector2(0.5f, 0f), new Vector2(0.7f, 0.7f), Color.White, 2f, Color.Black);
+
+            // Second Column. If needed.
+            if (useCol2BufferOffset)
             {
                 ActiveFont.DrawOutline(":EndHelper/uioutline_skull:", new Vector2(startX_death + col2Buffer + width_death / 2, startY + iconHeightOffset), new Vector2(0.5f, 0f), new Vector2(0.7f, 0.7f), Color.White, 2f, Color.Black);
-                ActiveFont.DrawOutline(":EndHelper/uioutline_clock:", new Vector2(startX_timer + col2Buffer + width_death / 2, startY + iconHeightOffset), new Vector2(0.5f, 0f), new Vector2(0.7f, 0.7f), Color.White, 2f, Color.Black);
+                ActiveFont.DrawOutline(clockIcon, new Vector2(startX_timer + col2Buffer + width_timer / 2, startY + iconHeightOffset), new Vector2(0.5f, 0f), new Vector2(0.7f, 0.7f), Color.White, 2f, Color.Black);
             }
 
             // The table
             int totalDeaths = 0;
             long totalTimer = 0;
+            long totalRtaTimer = 0;
             int totalStrawberries = 0;
-            journalStatisticsClipboardText = $"Room\tDeaths\tTime\tBerries";
+            switch (EndHelperModule.Settings.RoomStatMenu.MenuShowTime)
+            {
+                case RoomStatMenuSubMenu.MenuShowTimeEnum.Normal:
+                    journalStatisticsClipboardText = $"Room\tDeaths\tTime\tBerries";
+                    break;
+                case RoomStatMenuSubMenu.MenuShowTimeEnum.RTA:
+                    journalStatisticsClipboardText = $"Room\tDeaths\tRTA Time\tBerries";
+                    break;
+                case RoomStatMenuSubMenu.MenuShowTimeEnum.Both:
+                    journalStatisticsClipboardText = $"Room\tDeaths\tTime\tRTA Time\tBerries";
+                    break;
+
+            }
 
             foreach (string roomName in roomNamesToShowList)
             {
                 int roomDeaths;
                 long roomTimeTicks;
                 TimeSpan roomTimeSpan;
+                long roomRtaTimeTicks;
+                TimeSpan roomRtaTimeSpan;
                 int roomStrawberriesCollected = 0;
 
                 if (journalRoomStatMenuType == journalRoomStatMenuTypeEnum.FirstClear)
@@ -660,6 +719,7 @@ namespace Celeste.Mod.EndHelper.Utils
                     // Show First Cycle
                     roomDeaths = EndHelperModule.SaveData.mapDict_roomStat_firstClear_death[mapNameSide_Internal][roomName];
                     roomTimeTicks = EndHelperModule.SaveData.mapDict_roomStat_firstClear_timer[mapNameSide_Internal][roomName];
+                    roomRtaTimeTicks = EndHelperModule.SaveData.mapDict_roomStat_firstClear_rtatimer[mapNameSide_Internal][roomName];
                     EndHelperModule.SaveData.mapDict_roomStat_firstClear_strawberries[mapNameSide_Internal].TryGetValue(roomName, out roomStrawberriesCollected);
                 }
                 else
@@ -667,13 +727,17 @@ namespace Celeste.Mod.EndHelper.Utils
                     // Show current stats
                     roomDeaths = EndHelperModule.SaveData.mapDict_roomStat_latestSession_death[mapNameSide_Internal][roomName];
                     roomTimeTicks = EndHelperModule.SaveData.mapDict_roomStat_latestSession_timer[mapNameSide_Internal][roomName];
+                    roomRtaTimeTicks = EndHelperModule.SaveData.mapDict_roomStat_latestSession_rtatimer[mapNameSide_Internal][roomName];
                     EndHelperModule.SaveData.mapDict_roomStat_latestSession_strawberries[mapNameSide_Internal].TryGetValue(roomName, out roomStrawberriesCollected);
                 }
                 roomTimeSpan = TimeSpan.FromTicks(roomTimeTicks);
                 string roomTimeString = Utils_General.MinimalGameplayFormat(roomTimeSpan);
+                roomRtaTimeSpan = TimeSpan.FromTicks(roomRtaTimeTicks);
+                string roomRtaTimeString = Utils_General.MinimalGameplayFormat(roomRtaTimeSpan);
 
                 totalDeaths += roomDeaths;
                 totalTimer += roomTimeTicks;
+                totalRtaTimer += roomRtaTimeTicks;
                 totalStrawberries += roomStrawberriesCollected;
 
                 roomStatCustomNameDict.TryGetValue(roomName, out string customRoomName);
@@ -758,9 +822,28 @@ namespace Celeste.Mod.EndHelper.Utils
                     backgroundTextureShort.Draw(new Vector2(startX_death + col2BufferCurrent, startY + heightBetweenRows * displayRow), Vector2.Zero, bgColor);
                     ActiveFont.DrawOutline($"{roomDeaths}", new Vector2(startX_death + col2BufferCurrent + width_death / 2, startY + heightBetweenRows * displayRow), new Vector2(0.5f, 0f), new Vector2(0.7f, 0.7f), Color.White, 2f, Color.Black);
 
-                    backgroundTextureShort.Draw(new Vector2(startX_timer + col2BufferCurrent, startY + heightBetweenRows * displayRow), Vector2.Zero, bgColor);
-
-                    ActiveFont.DrawOutline(roomTimeString, new Vector2(startX_timer + col2BufferCurrent + width_timer / 2, startY + heightBetweenRows * displayRow), new Vector2(0.5f, 0f), new Vector2(0.7f, 0.7f), Color.White, 2f, Color.Black);
+                    switch (EndHelperModule.Settings.RoomStatMenu.MenuShowTime)
+                    {
+                        case RoomStatMenuSubMenu.MenuShowTimeEnum.Normal:
+                            backgroundTextureShort.Draw(new Vector2(startX_timer + col2BufferCurrent, startY + heightBetweenRows * displayRow), Vector2.Zero, bgColor);
+                            ActiveFont.DrawOutline(roomTimeString, new Vector2(startX_timer + col2BufferCurrent + width_timer / 2, startY + heightBetweenRows * displayRow), new Vector2(0.5f, 0f), new Vector2(0.7f, 0.7f), Color.White, 2f, Color.Black);
+                            break;
+                        case RoomStatMenuSubMenu.MenuShowTimeEnum.RTA:
+                            backgroundTextureShort.Draw(new Vector2(startX_timer + col2BufferCurrent, startY + heightBetweenRows * displayRow), Vector2.Zero, bgColor);
+                            ActiveFont.DrawOutline(roomRtaTimeString, new Vector2(startX_timer + col2BufferCurrent + width_timer / 2, startY + heightBetweenRows * displayRow), new Vector2(0.5f, 0f), new Vector2(0.7f, 0.7f), Color.White, 2f, Color.Black);
+                            break;
+                        case RoomStatMenuSubMenu.MenuShowTimeEnum.Both:
+                            backgroundTextureMed.Draw(new Vector2(startX_timer + col2BufferCurrent, startY + heightBetweenRows * displayRow), Vector2.Zero, bgColor);
+                            if (roomRtaTimeString == "0:00")
+                            {
+                                ActiveFont.DrawOutline(roomTimeString, new Vector2(startX_timer + col2BufferCurrent + width_timer / 2, startY + heightBetweenRows * displayRow), new Vector2(0.5f, 0f), new Vector2(0.7f, 0.7f), Color.White, 2f, Color.Black);
+                            }
+                            else
+                            {
+                                ActiveFont.DrawOutline($"{roomTimeString} / {roomRtaTimeString}", new Vector2(startX_timer + col2BufferCurrent + width_timer / 2, startY + heightBetweenRows * displayRow + 3), new Vector2(0.5f, 0f), new Vector2(0.6f, 0.6f), Color.White, 2f, Color.Black);
+                            }
+                            break;
+                    }
 
                     if (roomStrawberriesCollected > 0)
                     {
@@ -771,14 +854,10 @@ namespace Celeste.Mod.EndHelper.Utils
                         ActiveFont.DrawOutline($"{roomStrawberriesCollected}", new Vector2(startX_strawberry + col2BufferCurrent, startY + heightBetweenRows * displayRow + heightBetweenRows / 2), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Color.White, 2f, Color.Black);
                     }
                 }
-                if (roomStrawberriesCollected == 0)
-                {
-                    journalStatisticsClipboardText += $"\r\n{shortenedRoomName}\t{roomDeaths}\t{roomTimeString}\t";
-                }
-                else
-                {
-                    journalStatisticsClipboardText += $"\r\n{shortenedRoomName}\t{roomDeaths}\t{roomTimeString}\t{roomStrawberriesCollected}";
-                }
+                journalStatisticsClipboardText += $"\r\n{shortenedRoomName}\t{roomDeaths}\t";
+                if (EndHelperModule.Settings.RoomStatMenu.MenuShowTime != RoomStatMenuSubMenu.MenuShowTimeEnum.RTA) { journalStatisticsClipboardText += $"{roomTimeString}\t"; }
+                if (EndHelperModule.Settings.RoomStatMenu.MenuShowTime != RoomStatMenuSubMenu.MenuShowTimeEnum.Normal) { journalStatisticsClipboardText += $"{roomRtaTimeString}\t"; }
+                if (roomStrawberriesCollected > 0) { journalStatisticsClipboardText += $"{roomStrawberriesCollected}\t"; }
                 currentItemIndex++;
             }
 
@@ -798,7 +877,7 @@ namespace Celeste.Mod.EndHelper.Utils
             {
                 iconType = IconType.Gray;
             }
-            RoomStatisticsDisplayer.ShowGUIStats("", 100, 1010, 0.7f, Color.White, true, 0, true, true, false, showTotalMapBerryCount, mapTotalStrawberries, $"{totalText}: ", "", totalDeaths, totalTimer, totalStrawberries, iconType);
+            RoomStatisticsDisplayer.ShowGUIStats("", 100, 1010, 0.7f, Color.White, true, 0, true, true, false, showTotalMapBerryCount, mapTotalStrawberries, $"{totalText}: ", "", totalDeaths, totalTimer, totalRtaTimer, totalStrawberries, iconType);
 
             // Instructions
             if (!journalStatisticsRoomNameEditMenuOpen)
@@ -923,7 +1002,23 @@ namespace Celeste.Mod.EndHelper.Utils
             ActiveFont.DrawOutline(pauseIconMsg, new Vector2(1820, instructionYPos + 80), new Vector2(1f, 0.5f), Vector2.One * 3f, Color.DarkGray, 1f, Color.Black);
 
             string totalTimeString = Utils_General.MinimalGameplayFormat(TimeSpan.FromTicks(totalTimer));
-            journalStatisticsClipboardText += $"\r\n{"Total"}\t{totalDeaths}\t{totalTimeString}\t{totalStrawberries}";
+            string totalRtaTimeString = Utils_General.MinimalGameplayFormat(TimeSpan.FromTicks(totalRtaTimer));
+
+            journalStatisticsClipboardText += $"\r\n{"Total"}\t{totalDeaths}\t";
+            switch (EndHelperModule.Settings.RoomStatMenu.MenuShowTime)
+            {
+                case RoomStatMenuSubMenu.MenuShowTimeEnum.Normal:
+                    journalStatisticsClipboardText += $"{totalTimeString}\t";
+                    break;
+                case RoomStatMenuSubMenu.MenuShowTimeEnum.RTA:
+                    journalStatisticsClipboardText += $"{totalRtaTimeString}\t";
+                    break;
+                case RoomStatMenuSubMenu.MenuShowTimeEnum.Both:
+                    journalStatisticsClipboardText += $"{totalTimeString}\t{totalRtaTimeString}\t";
+                    break;
+
+            }
+            journalStatisticsClipboardText += $"{totalStrawberries}";
 
 
             // Page Number
@@ -1046,6 +1141,7 @@ namespace Celeste.Mod.EndHelper.Utils
             EndHelperModule.Session.roomStatDict_death.Clear();
             EndHelperModule.Session.roomStatDict_strawberries.Clear();
             EndHelperModule.Session.roomStatDict_timer.Clear();
+            EndHelperModule.Session.roomStatDict_rtatimer.Clear();
             if (!statOnly)
             {
                 EndHelperModule.Session.roomStatDict_colorIndex.Clear();
@@ -1072,6 +1168,10 @@ namespace Celeste.Mod.EndHelper.Utils
                     long value_timer = Convert.ToInt64(EndHelperModule.Session.roomStatDict_timer[initialPosIndex]);
                     EndHelperModule.Session.roomStatDict_timer.RemoveAt(initialPosIndex);
                     EndHelperModule.Session.roomStatDict_timer.Insert(finalPosIndex, roomNameKey, value_timer);
+
+                    long value_rtatimer = Convert.ToInt64(EndHelperModule.Session.roomStatDict_timer[initialPosIndex]);
+                    EndHelperModule.Session.roomStatDict_rtatimer.RemoveAt(initialPosIndex);
+                    EndHelperModule.Session.roomStatDict_rtatimer.Insert(finalPosIndex, roomNameKey, value_rtatimer);
 
                     int value_strawberries = Convert.ToInt32(EndHelperModule.Session.roomStatDict_strawberries[initialPosIndex]);
                     EndHelperModule.Session.roomStatDict_strawberries.RemoveAt(initialPosIndex);

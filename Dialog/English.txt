@@ -30,8 +30,8 @@ modoptions_EndHelperModule_DeathIgnoreLoadAfterDeath_Desc=If enabled, if you loa
 The room stat tracker menu will display an icon if this has been used.
 
 modoptions_EndHelperModule_MenuShowFirstClear=Show First Clear Stats
-modoptions_EndHelperModule_MenuShowFirstClear_Desc=Makes the stats display and menu show the combined stats of all sessions
-instead of the current session if the map hasn't been cleared before.
+modoptions_EndHelperModule_MenuShowFirstClear_Desc=In maps, if the map hasn't been cleared before,
+the stats display and menu will show the combined stats of all sessions.
 
 modoptions_EndHelperModule_StoredClears=Overwrite Saved Stats When
 modoptions_EndHelperModule_StoredClears_Desc=Whether if, upon rebeating a map, the stats will be saved over the previous clear's stats.
@@ -75,6 +75,13 @@ modoptions_EndHelperModule_xJustification_Right=Right
 modoptions_EndHelperModule_ShowRoomName=Show Room Name
 modoptions_EndHelperModule_ShowDeaths=Show Deaths
 modoptions_EndHelperModule_ShowTimeSpent=Show Time Spent
+modoptions_EndHelperModule_ShowRTATimeSpent=Show RTA Time Spent
+modoptions_EndHelperModule_ShowRTATimeSpent_Desc=Uses system time to track time, hence is unaffected by freeze frames, slowdowns, etc
+modoptions_EndHelperModule_MenuShowTime=Shown Timer Type
+modoptions_EndHelperModule_MenuShowTime_Desc=RTA uses system time to track time, hence is unaffected by freeze frames, slowdowns, etc
+modoptions_EndHelperModule_MenuShowTime_Normal=Normal
+modoptions_EndHelperModule_MenuShowTime_RTA=RTA
+modoptions_EndHelperModule_MenuShowTime_Both=Both
 modoptions_EndHelperModule_ShowStrawberries=Show Strawberries
 modoptions_EndHelperModule_ShowStrawberries_Desc=Only shown when at least one strawberry is collected.
 modoptions_EndHelperModule_ShowAliveTime=Show Alive Time
@@ -154,8 +161,8 @@ modoptions_EndHelperModule_ConvertDemo_EnabledDiagonal=Enabled - Diagonal
 
 modoptions_EndHelperModule_SeemlessRespawn=Seemless Respawn
 modoptions_EndHelperModule_SeemlessRespawn_Desc=Changes respawns to be more seemless by reloading the room without a wipe.
-May not work properly in rooms which instantly teleport you after respawning.
-Some modded entities (noteably spinners) may also flicker upon death.
+May be visually buggy in rooms which instantly teleport you after respawning, and some modded spinners.
+Potentially buggy with some specific modded entities.
 "Enabled - Keep State" isn't a proper respawn and keeps dash counts, velocity, held berries, etc.
 
 modoptions_EndHelperModule_SeemlessRespawn_Disabled=Disabled

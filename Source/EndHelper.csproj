@@ -21,7 +21,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="MonoMod.RuntimeDetour" Version="25.2.1" PrivateAssets="all" ExcludeAssets="runtime">
+        <PackageReference Include="MonoMod.RuntimeDetour" Version="25.3.3" PrivateAssets="all" ExcludeAssets="runtime">
           <IncludeAssets>compile; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
         <PackageReference Include="MonoMod.Patcher" Version="25.0.0-prerelease.2" />
@@ -53,9 +53,6 @@
         </Reference>
         <Reference Include="SSMQoLMod">
           <HintPath>..\Integrations\SSMQoLMod.dll</HintPath>
-        </Reference>
-        <Reference Include="Steamworks.NET">
-          <HintPath>..\..\..\Steamworks.NET.dll</HintPath>
         </Reference>
     </ItemGroup>
 

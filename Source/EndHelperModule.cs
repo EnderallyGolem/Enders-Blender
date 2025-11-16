@@ -73,6 +73,7 @@ public class EndHelperModule : EverestModule {
     public static Dictionary<string, string> externalRoomStatDict_customName = new Dictionary<string, string> { };
     public static OrderedDictionary externalRoomStatDict_death = new OrderedDictionary { };
     public static OrderedDictionary externalRoomStatDict_timer = new OrderedDictionary { };
+    public static OrderedDictionary externalRoomStatDict_rtatimer = new OrderedDictionary { };
     public static OrderedDictionary externalRoomStatDict_strawberries = new OrderedDictionary { };
 
     public static OrderedDictionary externalRoomStatDict_colorIndex = new OrderedDictionary { };
@@ -82,6 +83,7 @@ public class EndHelperModule : EverestModule {
     public static List<string> externalRoomStatDict_firstClear_roomOrder = [];
     public static Dictionary<string, int> externalRoomStatDict_firstClear_death = [];
     public static Dictionary<string, long> externalRoomStatDict_firstClear_timer = [];
+    public static Dictionary<string, long> externalRoomStatDict_firstClear_rtatimer = [];
     public static Dictionary<string, int> externalRoomStatDict_firstClear_strawberries = [];
 
 
@@ -553,6 +555,7 @@ public class EndHelperModule : EverestModule {
                 EndHelperModule.SaveData.mapDict_roomStat_firstClear_roomOrder.Add(mapNameSide_Internal, []);
                 EndHelperModule.SaveData.mapDict_roomStat_firstClear_death.Add(mapNameSide_Internal, []);
                 EndHelperModule.SaveData.mapDict_roomStat_firstClear_timer.Add(mapNameSide_Internal, []);
+                EndHelperModule.SaveData.mapDict_roomStat_firstClear_rtatimer.Add(mapNameSide_Internal, []);
                 EndHelperModule.SaveData.mapDict_roomStat_firstClear_strawberries.Add(mapNameSide_Internal, []);
                 EndHelperModule.SaveData.mapDict_roomStat_firstClear_pauseType.Add(mapNameSide_Internal, []);
             }
@@ -572,6 +575,7 @@ public class EndHelperModule : EverestModule {
                 EndHelperModule.SaveData.mapDict_roomStat_firstClear_roomOrder.Remove(earliestMapNameSide);
                 EndHelperModule.SaveData.mapDict_roomStat_firstClear_death.Remove(earliestMapNameSide);
                 EndHelperModule.SaveData.mapDict_roomStat_firstClear_timer.Remove(earliestMapNameSide);
+                EndHelperModule.SaveData.mapDict_roomStat_firstClear_rtatimer.Remove(earliestMapNameSide);
                 EndHelperModule.SaveData.mapDict_roomStat_firstClear_strawberries.Remove(earliestMapNameSide);
                 EndHelperModule.SaveData.mapDict_roomStat_firstClear_pauseType.Remove(earliestMapNameSide);
             } catch { }
@@ -657,6 +661,7 @@ public class EndHelperModule : EverestModule {
     // Using player update instead of level update so nothing happens when the level is loading
     // Level update screws with the timeSinceSessionReset.
     internal static List<Action> actionWhenUnpaused = [];
+
     private static void Hook_LevelUpdate(On.Celeste.Level.orig_Update orig, global::Celeste.Level self)
     {
         Level level = self;
@@ -715,7 +720,6 @@ public class EndHelperModule : EverestModule {
                     Utils_DeathHandler.SetManualReset(level); // Set spawnpoint to full reset if it's used
                     level.Paused = false;
                     level.PauseMainMenuOpen = false;
-                    Engine.TimeRate = 1f;
                     Distort.GameRate = 1f;
                     Distort.Anxiety = 0f;
                     level.InCutscene = (level.SkippingCutscene = false);
@@ -794,8 +798,25 @@ public class EndHelperModule : EverestModule {
     public static long previousSessionTime;
     public static long previousSaveDataTime;
     public static bool allowIncrementLevelTimer = true;
+
+    // Store timers for RTA Timer
+    private static long roomStatRtaTimeChecker_currTime;
+    private static long roomStatRtaTimeChecker_timeChange;
+
     private static void Hook_LevelUpdateTime(On.Celeste.Level.orig_UpdateTime orig, global::Celeste.Level self)
     {
+        // Update RTA Timer
+        roomStatRtaTimeChecker_timeChange = System.DateTime.Now.Ticks - roomStatRtaTimeChecker_currTime;
+        roomStatRtaTimeChecker_currTime = System.DateTime.Now.Ticks;
+
+        if (roomStatRtaTimeChecker_timeChange < -3e7 || roomStatRtaTimeChecker_timeChange > 6e9) 
+        {
+            // Don't change if its too large (> 10mins) or negative (under -3s)
+            Logger.Log(LogLevel.Warn, "EndHelper/main", $"Identified overly huge real-time change of {roomStatRtaTimeChecker_timeChange / 1e7}s. Ignoring change!");
+            roomStatRtaTimeChecker_timeChange = 0;
+        }
+        ;
+
         Level level = self;
         previousSessionTime = level.Session.Time;
         AreaKey area = level.Session.Area;
@@ -873,6 +894,7 @@ public class EndHelperModule : EverestModule {
                 if (allowIncrementRoomTimer)
                 {
                     roomStatDisplayer.AddTimer();
+                    roomStatDisplayer.AddRTATimer(roomStatRtaTimeChecker_timeChange);
                 }
             }
         }

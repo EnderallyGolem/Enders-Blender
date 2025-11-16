@@ -2,7 +2,6 @@
 using Celeste.Mod.Entities;
 using Microsoft.Xna.Framework;
 using Monocle;
-using Steamworks;
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
