@@ -1626,16 +1626,6 @@ public class RoomStatisticsDisplayer : Entity
         // All the first clear stuff
         if (dictsHaveKeyType == DictsHaveKeyType.All)
         {
-            // For version updating - Empty rtatimer
-            if (!EndHelperModule.SaveData.mapDict_roomStat_firstClear_rtatimer.ContainsKey(mapNameSide_Internal) || EndHelperModule.SaveData.mapDict_roomStat_firstClear_rtatimer[mapNameSide_Internal].Count == 0)
-            {
-                EndHelperModule.SaveData.mapDict_roomStat_firstClear_rtatimer[mapNameSide_Internal] = [];
-                foreach (String timerRooms in EndHelperModule.SaveData.mapDict_roomStat_firstClear_timer[mapNameSide_Internal].Keys)
-                {
-                    EndHelperModule.SaveData.mapDict_roomStat_firstClear_rtatimer[mapNameSide_Internal][timerRooms] = 0;
-                }
-            }
-
             if (dealWithFirstClear && (!EndHelperModule.SaveData.mapDict_roomStat_firstClear_roomOrder[mapNameSide_Internal].Contains(roomName) || !EndHelperModule.SaveData.mapDict_roomStat_firstClear_strawberries[mapNameSide_Internal].ContainsKey(roomName)))
             {
                 // Take existing data if it exists. This is pretty much just so if updating from prev ver the first clear doesn't reset if it doesn't need to
@@ -1684,16 +1674,36 @@ public class RoomStatisticsDisplayer : Entity
                     }
                 }
             }
+            // For version updating - Empty/Nonexistent rtatimer: Copy from regular timer
+            if (
+                dealWithFirstClear && EndHelperModule.SaveData.mapDict_roomStat_firstClear_timer.ContainsKey(mapNameSide_Internal) &&
+                (!EndHelperModule.SaveData.mapDict_roomStat_firstClear_rtatimer.ContainsKey(mapNameSide_Internal) || EndHelperModule.SaveData.mapDict_roomStat_firstClear_rtatimer[mapNameSide_Internal].Count == 0)
+               )
+            {
+                EndHelperModule.SaveData.mapDict_roomStat_firstClear_rtatimer[mapNameSide_Internal] = [];
+                foreach (String timerRooms in EndHelperModule.SaveData.mapDict_roomStat_firstClear_timer[mapNameSide_Internal].Keys)
+                { EndHelperModule.SaveData.mapDict_roomStat_firstClear_rtatimer[mapNameSide_Internal][timerRooms] = 0; }
+            }
         }
 
         else if (dictsHaveKeyType == DictsHaveKeyType.FirstClear)
         {
-            // Updating just the first clear isn't used, but this is here just in case.
             if (dealWithFirstClear && !EndHelperModule.SaveData.mapDict_roomStat_firstClear_roomOrder[mapNameSide_Internal].Contains(roomName))
             {
                 EndHelperModule.SaveData.mapDict_roomStat_firstClear_roomOrder[mapNameSide_Internal].Add(roomName);
                 EndHelperModule.SaveData.mapDict_roomStat_firstClear_death[mapNameSide_Internal][roomName] = 0;
                 EndHelperModule.SaveData.mapDict_roomStat_firstClear_timer[mapNameSide_Internal][roomName] = 0;
+
+                // For version updating - Empty/Nonexistent rtatimer: Copy from regular timer
+                if (
+                    EndHelperModule.SaveData.mapDict_roomStat_firstClear_timer.ContainsKey(mapNameSide_Internal) &&
+                    (!EndHelperModule.SaveData.mapDict_roomStat_firstClear_rtatimer.ContainsKey(mapNameSide_Internal) || EndHelperModule.SaveData.mapDict_roomStat_firstClear_rtatimer[mapNameSide_Internal].Count == 0)
+                   )
+                {
+                    EndHelperModule.SaveData.mapDict_roomStat_firstClear_rtatimer[mapNameSide_Internal] = [];
+                    foreach (String timerRooms in EndHelperModule.SaveData.mapDict_roomStat_firstClear_timer[mapNameSide_Internal].Keys)
+                    {  EndHelperModule.SaveData.mapDict_roomStat_firstClear_rtatimer[mapNameSide_Internal][timerRooms] = 0; }
+                }
                 EndHelperModule.SaveData.mapDict_roomStat_firstClear_rtatimer[mapNameSide_Internal][roomName] = 0;
             }
             if (dealWithFirstClear && !EndHelperModule.SaveData.mapDict_roomStat_firstClear_strawberries[mapNameSide_Internal].ContainsKey(roomName))

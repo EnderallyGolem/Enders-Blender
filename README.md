@@ -86,6 +86,8 @@ These are shown in the end-screen. Some of these can be overridden per-map with 
 	- Increments a counter when you reach the trigger with a specific value, which then sets a flag
 - Flag Killbox
 
+## 1.1.16 changelog:
+- Room stat tracker crash fix
 
 ## 1.1.15 changelog:
 - Room Stats Tracker:
