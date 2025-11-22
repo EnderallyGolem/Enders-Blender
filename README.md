@@ -16,7 +16,8 @@ Calling it a blender was funnier. Too lazy to change the internal names though.
     - Stats can be copied onto clipboard
 
 ###### Gameplay Tweaks
-These are shown in the end-screen. Some of these can be overridden per-map with a Gameplay Tweaks Override Trigger.
+These are shown at the bottom-left of the screen if enabled, and in the end-screen if used.
+Some of these can be overridden per-map with a Gameplay Tweaks Override Trigger.
 - Grab Recast
     - Keybind which can act as a toggle grab keybind, or modify the grab key to be invert/toggle.
 - Prevent Down Dash Redirects
@@ -85,6 +86,10 @@ These are shown in the end-screen. Some of these can be overridden per-map with 
 - Incremental Flag Trigger
 	- Increments a counter when you reach the trigger with a specific value, which then sets a flag
 - Flag Killbox
+
+## 1.1.17 changelog:
+- Gameplay Tweaks shows an icon at the bottom left when enabled (same as endscreen ones)
+	- Button bindings only show up if they have been used at least once in the map
 
 ## 1.1.16 changelog:
 - Room stat tracker crash fix

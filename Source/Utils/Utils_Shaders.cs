@@ -13,6 +13,9 @@ namespace Celeste.Mod.EndHelper.Utils
 {
     static internal class Utils_Shaders
     {
+        // UNUSED. instances of loading shaders in EndHelperModule are commented out.
+        // This is to be shifted to a different mod when im not lazy
+
         public static bool loadedShaders = false;
         public static Effect FxGoldenRipple, FxGoldenRippleDisable;
         public static Effect FxRespawnRipple;

@@ -589,6 +589,7 @@ public class RoomStatisticsDisplayer : Entity
         Vector2 justification = new Vector2(0, yCentered ? 0.5f : 0f);
         List<DisplayInfo> displayInfoList = [];
 
+
         if (prefix != "")
         {
             displayInfoList.Add(new DisplayInfo("prefix", prefix, (int)(ActiveFont.WidthToNextLine($"{prefix}", 0) * displayScale)));
@@ -2154,8 +2155,38 @@ public class RoomStatisticsDisplayer : Entity
         }
     }
 
-    private void RenderOtherStuffCompletelyUnrelatedToRoomStatsButAddedHereDueToConvenience(Level level)
+    private static void RenderOtherStuffCompletelyUnrelatedToRoomStatsButAddedHereDueToConvenience(Level level)
     {
+        // Cheaty Watermark TO-DO
+        if (!level.Paused)
+        {
+            List<String> watermarkIconList = [];
+
+            Dictionary<string, bool> tweakList = EndHelperModule.Session.usedGameplayTweaks;
+
+            if (EndHelperModule.Settings.GameplayTweaksMenu.ConvertDemo != GameplayTweaks.ConvertDemoEnum.Disabled) watermarkIconList.Add("endscreen_dashredirect");
+            if (tweakList["backboost"] && (EndHelperModule.Settings.Backboost.Buttons.Count > 0 || EndHelperModule.Settings.Backboost.Keys.Count > 0)) watermarkIconList.Add("endscreen_backboost");
+            if (tweakList["neutraldrop"] && (EndHelperModule.Settings.NeutralDrop.Buttons.Count > 0 || EndHelperModule.Settings.NeutralDrop.Keys.Count > 0)) watermarkIconList.Add("endscreen_neutraldrop");
+
+            if (EndHelperModule.Settings.GameplayTweaksMenu.SeemlessRespawn != GameplayTweaks.SeemlessRespawnEnum.Disabled)
+            {
+                if (EndHelperModule.Settings.GameplayTweaksMenu.SeemlessRespawn == GameplayTweaks.SeemlessRespawnEnum.EnabledKeepState) { watermarkIconList.Add("endscreen_seemlessrespawn_keepstate"); }
+                else { watermarkIconList.Add("endscreen_seemlessrespawn_minor"); }
+            }
+            if (tweakList["grabrecast"] && (EndHelperModule.Settings.ToggleGrab.Buttons.Count > 0 || EndHelperModule.Settings.ToggleGrab.Keys.Count > 0)) watermarkIconList.Add("endscreen_grabrecast");
+
+            if (watermarkIconList.Count > 0)
+            {
+                String watermarkStr = "";
+                foreach (String watermark in watermarkIconList)
+                {
+                    watermarkStr += $":EndHelper/{watermark}:";
+                }
+                ActiveFont.Draw(watermarkStr, new Vector2(0, 1050), Vector2.Zero, Vector2.One * 3.2f, Color.Black * 0.5f);
+            }
+        }
+
+
         // Toggle-ify
         if (EndHelperModule.Session.toggleifyEnabled && !(EndHelperModule.Settings.ToggleGrabMenu.HideWhenPause && level.Paused))
         {

@@ -612,7 +612,7 @@ public class EndHelperModule : EverestModule {
 
     private static void SessionResetFuncs(Level level)
     {
-        Utils_Shaders.LoadCustomShaders(forceReload: true);
+        //Utils_Shaders.LoadCustomShaders(forceReload: true);
         TryAutosave(level);
 
         if (EndHelperModule.Session.enableRoomSwapFuncs)
@@ -1223,7 +1223,7 @@ public class EndHelperModule : EverestModule {
         // Set up the save data custom name dictionaries if starting a map from the beginning
         SetupRoomTrackerSaveDataDicts(level.Session);
 
-        Utils_Shaders.LoadCustomShaders(forceReload: true);
+        //Utils_Shaders.LoadCustomShaders(forceReload: true);
 
         orig(self);
     }
@@ -1271,7 +1271,7 @@ public class EndHelperModule : EverestModule {
         orig(source, timer, seed, amplitude);
         if (Engine.Scene is Level level)
         {
-            Utils_Shaders.ApplyShaders(level);
+            //Utils_Shaders.ApplyShaders(level);
         }
     }
 
@@ -1300,16 +1300,18 @@ public class EndHelperModule : EverestModule {
             // Check each gameplay tweak, and add relevant GFX / set showFullBlender to true if required
             Dictionary<string, bool> tweakList = EndHelperModule.Session.usedGameplayTweaks;
 
-            // dashredirect grabrecast seemlessrespawn_minor seemlessrespawn_keepstate | backboost neutraldrop
+            // dashredirect backboost neutraldrop | seemlessrespawn_keepstate seemlessrespawn_minor grabrecast
+
             if (tweakList["dashredirect"]) { iconList.Add(":EndHelper/endscreen_dashredirect:"); showFullBlender = true; }
+            if (tweakList["backboost"]) { iconList.Add(":EndHelper/endscreen_backboost:"); showFullBlender = true; }
+            if (tweakList["neutraldrop"]) { iconList.Add(":EndHelper/endscreen_neutraldrop:"); showFullBlender = true; }
+
             if (tweakList["seemlessrespawn_minor"])
             {
                 if (tweakList["seemlessrespawn_keepstate"]) { iconList.Add(":EndHelper/endscreen_seemlessrespawn_keepstate:"); showFullBlender = true; }
                 else iconList.Add(":EndHelper/endscreen_seemlessrespawn_minor:");
             }
             if (tweakList["grabrecast"]) iconList.Add(":EndHelper/endscreen_grabrecast:");
-            if (tweakList["backboost"]) iconList.Add(":EndHelper/endscreen_backboost:");
-            if (tweakList["neutraldrop"]) iconList.Add(":EndHelper/endscreen_neutraldrop:");
 
             // Show blender if at least 1 thing to show!
             if (iconList.Count >= 1)
