@@ -396,7 +396,7 @@ namespace Celeste.Mod.EndHelper.Utils
             Vector2? firstFullResetRespawnPoint = GetFullResetSpawnPoint(level);
             EndHelperModule.Session.nextRespawnFullReset = false;
 
-            Logger.Log(LogLevel.Info, "EndHelper/Utils_DeathHandler", $"Full Reset and bypass between rooms. firstFullResetRespawnPoint: {firstFullResetRespawnPoint}");
+            //Logger.Log(LogLevel.Info, "EndHelper/Utils_DeathHandler", $"Full Reset and bypass between rooms. firstFullResetRespawnPoint: {firstFullResetRespawnPoint}");
 
             if (firstFullResetRespawnPoint is not null)
             {

@@ -84,7 +84,7 @@ public class RoomStatisticsDisplayer : Entity
         //if (SpeedrunToolIntegration.SpeedrunToolInstalled)
         //{
         //    SpeedrunToolImport.IgnoreSaveState?.Invoke(this, true);
-        //    Logger.Log(LogLevel.Info, "EndHelper/RoomStatisticsDisplayer", $"ignore save state !!!!!!!!!");
+        //    Logger.Log(LogLevel.Info, "EndHelper/RoomStatisticsDisplayer", $"ignore save state !!");
         //}
     }
 
@@ -404,6 +404,13 @@ public class RoomStatisticsDisplayer : Entity
         if (!disableRoomChangeTimer.IsTicking && roomDialogName != "%skip")
         {
             currentRoomName = level.Session.LevelData.Name;
+            currentEffectiveRoomName = GetEffectiveRoomName(currentRoomName);
+        }
+
+        if (currentEffectiveRoomName == "")
+        {
+            Logger.Log(LogLevel.Warn, "EndHelper/RoomStatisticsDisplayer", $"Effective room name is empty! Room name: {currentRoomName}. Likely warped to %skip room. Resorting to starting first room.");
+            currentRoomName = level.Session.MapData.StartLevel().Name;
             currentEffectiveRoomName = GetEffectiveRoomName(currentRoomName);
         }
 
@@ -1529,9 +1536,8 @@ public class RoomStatisticsDisplayer : Entity
     }
     public void AddDeath()
     {
-        // NOTE: Mnaual AddDeath at EndHelperModule > EnterMapFunc
-        Level level = SceneAs<Level>();
-        EnsureDictsHaveKey(level, currentEffectiveRoomName, DictsHaveKeyType.All); // Check if dict has current room, just in case.
+        // NOTE: Manual AddDeath at EndHelperModule > EnterMapFunc
+        EnsureDictsHaveKey(SceneAs<Level>(), currentEffectiveRoomName, DictsHaveKeyType.All);
         EndHelperModule.Session.roomStatDict_death[currentEffectiveRoomName] = Convert.ToInt32(EndHelperModule.Session.roomStatDict_death[currentEffectiveRoomName]) + 1;
 
         if (dealWithFirstClear)
@@ -1542,6 +1548,7 @@ public class RoomStatisticsDisplayer : Entity
 
     public void AddTimer()
     {
+        if (currentEffectiveRoomName == "") return;
         EndHelperModule.Session.roomStatDict_timer[currentEffectiveRoomName] = TimeSpanShims.FromSeconds((double)Engine.RawDeltaTime).Ticks + Convert.ToInt64(EndHelperModule.Session.roomStatDict_timer[currentEffectiveRoomName]);
 
         if (dealWithFirstClear)
@@ -1552,6 +1559,7 @@ public class RoomStatisticsDisplayer : Entity
 
     public void AddRTATimer(long addTicks)
     {
+        if (currentEffectiveRoomName == "") return;
         EndHelperModule.Session.roomStatDict_rtatimer[currentEffectiveRoomName] = addTicks + Convert.ToInt64(EndHelperModule.Session.roomStatDict_rtatimer[currentEffectiveRoomName]);
 
         if (dealWithFirstClear)
@@ -1627,12 +1635,24 @@ public class RoomStatisticsDisplayer : Entity
         // All the first clear stuff
         if (dictsHaveKeyType == DictsHaveKeyType.All)
         {
+            // For version updating - Empty/Nonexistent rtatimer: Copy from regular timer
+            // If there's no regular timer, this won't run, and the next ver-updating will take over
+            if (
+                dealWithFirstClear && EndHelperModule.SaveData.mapDict_roomStat_firstClear_timer.ContainsKey(mapNameSide_Internal) &&
+                (!EndHelperModule.SaveData.mapDict_roomStat_firstClear_rtatimer.ContainsKey(mapNameSide_Internal) || EndHelperModule.SaveData.mapDict_roomStat_firstClear_rtatimer[mapNameSide_Internal].Count == 0)
+               )
+            {
+                EndHelperModule.SaveData.mapDict_roomStat_firstClear_rtatimer[mapNameSide_Internal] = [];
+                foreach (String timerRooms in EndHelperModule.SaveData.mapDict_roomStat_firstClear_timer[mapNameSide_Internal].Keys)
+                { EndHelperModule.SaveData.mapDict_roomStat_firstClear_rtatimer[mapNameSide_Internal][timerRooms] = 0; }
+            }
+            
+            // For version updating OR new room - Empty/Nonexistent everything: Go copy from session data
             if (dealWithFirstClear && (!EndHelperModule.SaveData.mapDict_roomStat_firstClear_roomOrder[mapNameSide_Internal].Contains(roomName) || !EndHelperModule.SaveData.mapDict_roomStat_firstClear_strawberries[mapNameSide_Internal].ContainsKey(roomName)))
             {
-                // Take existing data if it exists. This is pretty much just so if updating from prev ver the first clear doesn't reset if it doesn't need to
                 if (EndHelperModule.SaveData.mapDict_roomStat_firstClear_roomOrder[mapNameSide_Internal].Count == 0)
                 {
-                    // This is for upgrading from prev ver. Add every room in order.
+                    // No data for everything (Ver Updating) - Copy EVERYTHING from session data
                     foreach (DictionaryEntry sessionDeathDict in EndHelperModule.Session.roomStatDict_death)
                     {
                         string sessionDeathDictRoomName = (String)sessionDeathDict.Key;
@@ -1656,7 +1676,7 @@ public class RoomStatisticsDisplayer : Entity
                     }
                 }
                 else {
-                    // Else just add the new room
+                    // Only missing new room: Just add the new room
                     if (!EndHelperModule.SaveData.mapDict_roomStat_firstClear_roomOrder[mapNameSide_Internal].Contains(roomName))
                     {
                         EndHelperModule.SaveData.mapDict_roomStat_firstClear_roomOrder[mapNameSide_Internal].Add(roomName);
@@ -1674,16 +1694,6 @@ public class RoomStatisticsDisplayer : Entity
                         EndHelperModule.SaveData.mapDict_roomStat_firstClear_strawberries[mapNameSide_Internal][roomName] = 0;
                     }
                 }
-            }
-            // For version updating - Empty/Nonexistent rtatimer: Copy from regular timer
-            if (
-                dealWithFirstClear && EndHelperModule.SaveData.mapDict_roomStat_firstClear_timer.ContainsKey(mapNameSide_Internal) &&
-                (!EndHelperModule.SaveData.mapDict_roomStat_firstClear_rtatimer.ContainsKey(mapNameSide_Internal) || EndHelperModule.SaveData.mapDict_roomStat_firstClear_rtatimer[mapNameSide_Internal].Count == 0)
-               )
-            {
-                EndHelperModule.SaveData.mapDict_roomStat_firstClear_rtatimer[mapNameSide_Internal] = [];
-                foreach (String timerRooms in EndHelperModule.SaveData.mapDict_roomStat_firstClear_timer[mapNameSide_Internal].Keys)
-                { EndHelperModule.SaveData.mapDict_roomStat_firstClear_rtatimer[mapNameSide_Internal][timerRooms] = 0; }
             }
         }
 
@@ -1920,9 +1930,9 @@ public class RoomStatisticsDisplayer : Entity
         roomName = GetRoomNameNoSeg(roomName); // Make sure we are dealing with the raw, non-segmented room names.
 
         // Key is the current room, value is the redirected room. Set value as roomName to get redirect.
-        if (EndHelperModule.Session.roomStatDict_fuseRoomRedirect.ContainsKey(roomName))
+        if (EndHelperModule.Session.roomStatDict_fuseRoomRedirect.TryGetValue(roomName, out string value))
         {
-            roomName = EndHelperModule.Session.roomStatDict_fuseRoomRedirect[roomName];
+            roomName = value;
         }
 
         // If allRedirects == true, repeat this until the room isn't found to get the head room.

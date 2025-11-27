@@ -27,7 +27,7 @@ entities.EndHelper/TileEntity.attributes.description.noEdge=If true, the tiles w
 entities.EndHelper/TileEntity.attributes.description.locationSeeded=If true, the tile's seed will depend on its position relative to the room (and width and height).\nThus the randomisation will stay consistent upon room swaps,\nor if teleporting to a room with the tile entity in the same location.
 entities.EndHelper/TileEntity.attributes.description.surfaceSoundIndex=Overrides the surfaceSoundIndex (sfx when stepping on the block).\nSet to -1 to use default value.
 entities.EndHelper/TileEntity.attributes.description.dashBlock=Turns the Tile Entity into a Dash Block (broken when dashed into).\nDash Blocks will not connect with non-Dash Blocks!
-entities.EndHelper/TileEntity.attributes.description.dashBlockPermament=For Dash Blocks: If the block stays broken after room reload.\nIf connected blocks are partially permament and partially not,\nonly the non-permament parts will reappear on reload.
+entities.EndHelper/TileEntity.attributes.description.dashBlockPermament=For Dash Blocks: If the block stays broken after room reload.\nIf connected blocks are partially permanent and partially not,\nonly the non-permanent parts will reappear on reload.
 entities.EndHelper/TileEntity.attributes.description.dashBlockBreakSound=For Dash Blocks: Sound event which plays when broken.\nIf connected, the sound will depend on which segment was broken.
 entities.EndHelper/TileEntity.attributes.description.collidable=Affects whether the tile entity is solid, and if it blocks light.
 entities.EndHelper/TileEntity.attributes.description.colour=Colour of the Tile Entity. (White = normal)\nDifferent coloured entities cannot connect.
@@ -224,7 +224,7 @@ entities.EndHelper/RoomSwapMapUpgrade.attributes.description.floatAmplitude=Fact
 entities.EndHelper/RoomSwapMapUpgrade.attributes.description.changeLevel=Number to increase the map level by. Levels are positive integers or 0.
 entities.EndHelper/RoomSwapMapUpgrade.attributes.description.setLevel=If ticked, sets the level to a value (0 or positive integer) insteads of increasing it.
 entities.EndHelper/RoomSwapMapUpgrade.attributes.description.obtainSoundEvent=Sound event that plays when the map is obtained.
-entities.EndHelper/RoomSwapMapUpgrade.attributes.description.oneTime=If ticked, the map permamently disappears when obtained.\nOtherwise, it respawns when the room is re-entered.
+entities.EndHelper/RoomSwapMapUpgrade.attributes.description.oneTime=If ticked, the map permanently disappears when obtained.\nOtherwise, it respawns when the room is re-entered.
 
 
 

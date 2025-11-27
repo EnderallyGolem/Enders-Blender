@@ -87,6 +87,13 @@ Some of these can be overridden per-map with a Gameplay Tweaks Override Trigger.
 	- Increments a counter when you reach the trigger with a specific value, which then sets a flag
 - Flag Killbox
 
+## 1.1.19 changelog:
+- Fixed crash when entering a map without blender and then entering with it later on, due to rta timer. I think.
+
+## 1.1.18 changelog:
+- Fixed bug with skipping room stat rooms - now defaults to the starting room in the map
+	- (aka fixed bug where debugging around in some sj heartsides rooms can crash the game)
+
 ## 1.1.17 changelog:
 - Gameplay Tweaks shows an icon at the bottom left when enabled (same as endscreen ones)
 	- Button bindings only show up if they have been used at least once in the map
