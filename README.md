@@ -87,6 +87,12 @@ Some of these can be overridden per-map with a Gameplay Tweaks Override Trigger.
 	- Increments a counter when you reach the trigger with a specific value, which then sets a flag
 - Flag Killbox
 
+## 1.1.20 changelog:
+- Fixed crash for collabutils2 journal after its update
+	- This is kind of a rushy fix (im not free right now, and won't be for a while), for some lobbies like totem collab,
+	the map list might be empty.
+	might fix that down the road. or maybe not, it might require mod hook crimes that i should not touch
+
 ## 1.1.19 changelog:
 - Fixed crash when entering a map without blender and then entering with it later on, due to rta timer. I think.
 

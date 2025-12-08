@@ -143,8 +143,9 @@ namespace Celeste.Mod.EndHelper.Utils
 
             if (Engine.Scene is Level level && CollabUtils2Integration.CollabUtils2Installed)
             {
-                AreaData journalArea = new DynData<Overworld>(self.Overworld).Get<AreaData>("collabInGameForcedArea");
-                String areaLevelSetName = journalArea.LevelSet;
+                //AreaData journalArea = new DynData<Overworld>(self.Overworld).Get<AreaData>("collabInGameForcedArea");
+                //String areaLevelSetName = journalArea.LevelSet;
+                String areaLevelSetName = CollabUtils2Import.GetLobbyLevelSet(level.Session.Area.SID);
 
                 LevelSetStats areaLevelSet = null;
                 if (areaLevelSetName != null)

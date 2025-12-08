@@ -45,6 +45,9 @@
         <Reference Include="MMHOOK_Celeste">
           <HintPath>..\..\..\MMHOOK_Celeste.dll</HintPath>
         </Reference>
+        <Reference Include="Mono.Cecil">
+          <HintPath>..\..\..\Mono.Cecil.dll</HintPath>
+        </Reference>
         <Reference Include="NETCoreifier">
           <HintPath>..\..\..\NETCoreifier.dll</HintPath>
         </Reference>
