@@ -32,6 +32,7 @@ using static Celeste.Mod.EndHelper.EndHelperModuleSettings;
 using static Celeste.Mod.EndHelper.EndHelperModuleSettings.GameplayTweaks;
 using static Celeste.Mod.EndHelper.Entities.Misc.RoomStatisticsDisplayer;
 using static Celeste.TrackSpinner;
+using static On.Celeste.AreaData;
 using static On.Celeste.HeartGem;
 using static On.Celeste.Level;
 
@@ -156,6 +157,7 @@ public class EndHelperModule : EverestModule {
         On.Celeste.Player.Update += Hook_OnPlayerUpdate;
         On.Celeste.Player.Die += Hook_OnPlayerDeath;
         On.Celeste.Player.IntroRespawnBegin += Hook_OnPlayerRespawn;
+        On.Celeste.ScreenWipe.Update += Hook_OnScreenWipeUpdate;
         IL.Celeste.PlayerDeadBody.Update += ILHook_PlayerDeadBodyUpdate;
         IL.Celeste.PlayerDeadBody.End += ILHook_PlayerDeadBodyEnd;
         MethodInfo ILOrigDie = typeof(Player).GetMethod("orig_Die", BindingFlags.Public | BindingFlags.Instance);
@@ -232,6 +234,7 @@ public class EndHelperModule : EverestModule {
         On.Celeste.Player.Update -= Hook_OnPlayerUpdate;
         On.Celeste.Player.Die -= Hook_OnPlayerDeath;
         On.Celeste.Player.IntroRespawnBegin -= Hook_OnPlayerRespawn;
+        On.Celeste.ScreenWipe.Update -= Hook_OnScreenWipeUpdate;
         IL.Celeste.PlayerDeadBody.Update -= ILHook_PlayerDeadBodyUpdate;
         IL.Celeste.PlayerDeadBody.End -= ILHook_PlayerDeadBodyEnd;
         Loadhook_Player_OrigDie?.Dispose(); Loadhook_Player_OrigDie = null;
@@ -930,13 +933,13 @@ public class EndHelperModule : EverestModule {
 
     public static void Hook_OnPlayerUpdate(On.Celeste.Player.orig_Update orig, Player self)
     {
-        if (EndHelperModule.Settings.NeutralDrop.Button.Pressed && self.Holding != null)
+        if (EndHelperModule.Settings.NeutralDrop.Button.Pressed && self.Holding != null && self.minHoldTimer <= 0f)
         {
             EndHelperModule.Session.usedGameplayTweaks["neutraldrop"] = true;
             Input.MoveY.Value = 1;
             self.Throw();
         }
-        if (EndHelperModule.Settings.Backboost.Button.Pressed && self.Holding != null)
+        if (EndHelperModule.Settings.Backboost.Button.Pressed && self.Holding != null && self.minHoldTimer <= 0f)
         {
             EndHelperModule.Session.usedGameplayTweaks["backboost"] = true;
             if (self.Facing == Facings.Left)
@@ -996,7 +999,7 @@ public class EndHelperModule : EverestModule {
     {
         ILCursor cursor = new ILCursor(il);
 
-        // Replace the Input.MenuConfirm.Pressed check, so we can force it to true if using the quick retry keybind
+        // Replace the Input.MenuConfirm.Pressed check, so we can force it to true if using the quick retry keybind or have Always Quick Respawn enabled
         if (cursor.TryGotoNext(MoveType.After,
             instr => instr.MatchCallvirt(typeof(VirtualButton), "get_Pressed")
         ))
@@ -1006,7 +1009,7 @@ public class EndHelperModule : EverestModule {
     }
     private static bool ILHook_PlayerDeadBodyUpdate_ReplacementMenuConfirmPressed(bool origPressed)
     {
-        bool forceFast = Utils_DeathHandler.CheckPlayerNextFastReload();
+        bool forceFast = Utils_DeathHandler.CheckPlayerNextFastReload() || EndHelperModule.Settings.QOLTweaksMenu.AlwaysQuickRespawn;
         return forceFast || origPressed; // Same as original, unless forceFast
     }
 
@@ -1161,6 +1164,25 @@ public class EndHelperModule : EverestModule {
 
         // Autosave
         TryAutosave(level);
+    }
+
+    public static void Hook_OnScreenWipeUpdate(On.Celeste.ScreenWipe.orig_Update orig, global::Celeste.ScreenWipe self, Scene scene)
+    {
+        // Immediately end transition if player is dead
+        if (EndHelperModule.Settings.QOLTweaksMenu.NoRespawnTransition && scene.Entities.AmountOf<PlayerDeadBody>() > 0)
+        {
+            self.Duration = 0.1f;
+            self.Percent = 1;
+            self.EndTimer = 0f;
+            self.ending = true;
+            scene.Remove(self);
+            if (scene is Level && (scene as Level).Wipe == self)
+            {
+                (scene as Level).Wipe = null;
+            }
+            self.OnComplete?.Invoke();
+        }
+        orig(self, scene);
     }
 
     private static Vector2 Hook_SessionGetSpawnPoint(On.Celeste.Session.orig_GetSpawnPoint orig, global::Celeste.Session self, Vector2 from)

@@ -11,15 +11,17 @@ public class EndHelperModuleSettings : EverestModuleSettings {
     [SettingSubHeader("modoptions_EndHelperModule_SubHeader_RoomStat")]
     public ButtonBinding OpenStatDisplayMenu { get; set; }
 
+    [SettingSubHeader("modoptions_EndHelperModule_SubHeader_QOLTweaks")]
+    public ButtonBinding QuickRetry { get; set; }
+    [SettingSubText("modoptions_EndHelperModule_DisableFrequentScreenShake_Desc")]
+    public ButtonBinding FreeMultiroomWatchtower { get; set; }
+
     [SettingSubHeader("modoptions_EndHelperModule_SubHeader_GameplayTweaks")]
     public ButtonBinding ToggleGrab { get; set; }
 
     public ButtonBinding NeutralDrop { get; set; }
     public ButtonBinding Backboost { get; set; }
 
-    [SettingSubHeader("modoptions_EndHelperModule_SubHeader_QOLTweaks")]
-    public ButtonBinding QuickRetry { get; set; }[SettingSubText("modoptions_EndHelperModule_DisableFrequentScreenShake_Desc")]
-    public ButtonBinding FreeMultiroomWatchtower { get; set; }
 
 
     // Room Statistics Menu
@@ -144,6 +146,12 @@ public class EndHelperModuleSettings : EverestModuleSettings {
         [SettingRange(min: 0, max: 30, largeRange: false)]
         public int AutosaveTime { get; set; } = 0;
 
+        [SettingSubText("modoptions_EndHelperModule_AlwaysQuickRespawn_Desc")]
+        public bool AlwaysQuickRespawn { get; set; } = false;
+
+        [SettingSubText("modoptions_EndHelperModule_NoRespawnTransition_Desc")]
+        public bool NoRespawnTransition { get; set; } = false;
+
         [SettingSubText("modoptions_EndHelperModule_DisableQuickRestart_Desc")]
         public bool DisableQuickRestart { get; set; } = false;
 
@@ -169,10 +177,10 @@ public class EndHelperModuleSettings : EverestModuleSettings {
     public RoomStatMenuSubMenu RoomStatMenu { get; set; } = new();
     public RoomStatDisplaySubMenu RoomStatDisplayMenu { get; set; } = new();
 
+    [SettingSubHeader("modoptions_EndHelperModule_SubHeader_QOLTweaks")]
+    public QOLTweaks QOLTweaksMenu { get; set; } = new();
+
     [SettingSubHeader("modoptions_EndHelperModule_SubHeader_GameplayTweaks")]
     public ToggleGrabSubMenu ToggleGrabMenu { get; set; } = new();
     public GameplayTweaks GameplayTweaksMenu { get; set; } = new();
-
-    [SettingSubHeader("modoptions_EndHelperModule_SubHeader_QOLTweaks")]
-    public QOLTweaks QOLTweaksMenu { get; set; } = new();
 }

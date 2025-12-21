@@ -29,6 +29,8 @@ Some of these can be overridden per-map with a Gameplay Tweaks Override Trigger.
 ###### QOL Tweaks
 - Quick-Retry Keybind
     - Instant Retry. Disabled when carrying a golden.
+- Always Quick Respawn
+- No Respawn Transition
 - Disable Quick-Restart Key
 - Disable Frequent Screen Shakes
     - Disables screen shake from dashes, boosters, springs, (vanilla) refills, and the death animation
@@ -86,6 +88,14 @@ Some of these can be overridden per-map with a Gameplay Tweaks Override Trigger.
 - Incremental Flag Trigger
 	- Increments a counter when you reach the trigger with a specific value, which then sets a flag
 - Flag Killbox
+
+
+## 1.1.21 changelog:
+- QOL Tweaks: 
+	- Added Always Quick Respawn. Respawn quickly upon death without the need of pressing any buttons.
+	- Added No Respawn Transition. Removes screen transition during death.
+- Gameplay Tweaks: 
+	- Backboost and Neutral Drop buttons now takes checks minHoldTimer (suggestion by Jade)
 
 ## 1.1.20 changelog:
 - Fixed crash for collabutils2 journal after its update

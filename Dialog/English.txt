@@ -183,6 +183,14 @@ modoptions_EndHelperModule_AutosaveTime=Autosave Time
 modoptions_EndHelperModule_AutosaveTime_Desc=Saves the game every few minutes (only after a death / load state).
 Set to 0 to disable.
 
+# Always Quick Respawn
+modoptions_EndHelperModule_AlwaysQuickRespawn=Always Quick Respawn
+modoptions_EndHelperModule_AlwaysQuickRespawn_Desc=Respawn quickly upon death without the need of pressing any buttons.
+
+# No Respawn Transition
+modoptions_EndHelperModule_NoRespawnTransition=No Respawn Transition
+modoptions_EndHelperModule_NoRespawnTransition_Desc=Removes the screen transition when respawning.
+
 # Quick Restart
 modoptions_EndHelperModule_DisableQuickRestart=Disable Quick Restart Keybind
 modoptions_EndHelperModule_DisableQuickRestart_Desc=Why is this set to R if empty

@@ -145,6 +145,7 @@ namespace Celeste.Mod.EndHelper.Utils
             {
                 //AreaData journalArea = new DynData<Overworld>(self.Overworld).Get<AreaData>("collabInGameForcedArea");
                 //String areaLevelSetName = journalArea.LevelSet;
+
                 String areaLevelSetName = CollabUtils2Import.GetLobbyLevelSet(level.Session.Area.SID);
 
                 LevelSetStats areaLevelSet = null;
