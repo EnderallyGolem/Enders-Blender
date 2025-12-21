@@ -23,6 +23,9 @@ Some of these can be overridden per-map with a Gameplay Tweaks Override Trigger.
 - Prevent Down Dash Redirects
     - Prevents down dashes from being redirected out of dashing down, aka prevent manual demos (except upward ones), by forcing them to be down or down diagonal
     - Does not affect demo keys.
+- Seemless Respawns
+	- Smoothly transitions the camera without a screen transition upon death
+	- Unaffected by Always Quick Respawn and No Respawn Transition QOL Tweaks
 - Neutral Drop Keybind
 - Backboost Keybind
 
@@ -30,7 +33,7 @@ Some of these can be overridden per-map with a Gameplay Tweaks Override Trigger.
 - Quick-Retry Keybind
     - Instant Retry. Disabled when carrying a golden.
 - Always Quick Respawn
-- No Respawn Transition
+- Instant Respawn Transition
 - Disable Quick-Restart Key
 - Disable Frequent Screen Shakes
     - Disables screen shake from dashes, boosters, springs, (vanilla) refills, and the death animation
