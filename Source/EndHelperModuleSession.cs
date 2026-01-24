@@ -68,11 +68,13 @@ public class EndHelperModuleSession : EverestModuleSession
 
     // Track if gameplay tweaks were used at any point. These track what tweaks are used and show them in the endscreen.
     // dashredirect grabrecast seemlessrespawn_minor seemlessrespawn_keepstate | backboost neutraldrop
+    // Note the icons are also shown in ui by room stats menu, though it checks currently enabled instead.
     public Dictionary<string, bool> usedGameplayTweaks = new Dictionary<string, bool> {
         ["dashredirect"] = false,
         ["grabrecast"] = false,
         ["seemlessrespawn_minor"] = false,
         ["seemlessrespawn_keepstate"] = false,
+        ["norespawnanim"] = false,
         ["backboost"] = false,
         ["neutraldrop"] = false
     };

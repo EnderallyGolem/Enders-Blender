@@ -23,6 +23,7 @@ Some of these can be overridden per-map with a Gameplay Tweaks Override Trigger.
 - Prevent Down Dash Redirects
     - Prevents down dashes from being redirected out of dashing down, aka prevent manual demos (except upward ones), by forcing them to be down or down diagonal
     - Does not affect demo keys.
+- No Respawn Animation
 - Seemless Respawns
 	- Smoothly transitions the camera without a screen transition upon death
 	- Unaffected by Always Quick Respawn and No Respawn Transition QOL Tweaks
@@ -92,6 +93,10 @@ Some of these can be overridden per-map with a Gameplay Tweaks Override Trigger.
 	- Increments a counter when you reach the trigger with a specific value, which then sets a flag
 - Flag Killbox
 
+## 1.1.22 changelog:
+- Fixed crash when changing maps with head2head
+- Gameplay Tweaks: 
+	- Added no respawn animation. Gives you control immediately after the death transition.
 
 ## 1.1.21 changelog:
 - QOL Tweaks: 

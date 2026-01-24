@@ -1648,7 +1648,7 @@ public class RoomStatisticsDisplayer : Entity
             }
             
             // For version updating OR new room - Empty/Nonexistent everything: Go copy from session data
-            if (dealWithFirstClear && (!EndHelperModule.SaveData.mapDict_roomStat_firstClear_roomOrder[mapNameSide_Internal].Contains(roomName) || !EndHelperModule.SaveData.mapDict_roomStat_firstClear_strawberries[mapNameSide_Internal].ContainsKey(roomName)))
+            if (dealWithFirstClear && EndHelperModule.SaveData.mapDict_roomStat_firstClear_roomOrder.ContainsKey(mapNameSide_Internal) && (!EndHelperModule.SaveData.mapDict_roomStat_firstClear_roomOrder[mapNameSide_Internal].Contains(roomName) || !EndHelperModule.SaveData.mapDict_roomStat_firstClear_strawberries[mapNameSide_Internal].ContainsKey(roomName)))
             {
                 if (EndHelperModule.SaveData.mapDict_roomStat_firstClear_roomOrder[mapNameSide_Internal].Count == 0)
                 {
@@ -2167,7 +2167,7 @@ public class RoomStatisticsDisplayer : Entity
 
     private static void RenderOtherStuffCompletelyUnrelatedToRoomStatsButAddedHereDueToConvenience(Level level)
     {
-        // Cheaty Watermark TO-DO
+        // Cheaty Watermark
         if (!level.Paused)
         {
             List<String> watermarkIconList = [];
@@ -2183,6 +2183,7 @@ public class RoomStatisticsDisplayer : Entity
                 if (EndHelperModule.Settings.GameplayTweaksMenu.SeemlessRespawn == GameplayTweaks.SeemlessRespawnEnum.EnabledKeepState) { watermarkIconList.Add("endscreen_seemlessrespawn_keepstate"); }
                 else { watermarkIconList.Add("endscreen_seemlessrespawn_minor"); }
             }
+            if (EndHelperModule.Settings.GameplayTweaksMenu.NoRespawnAnimation) { watermarkIconList.Add("endscreen_norespawnanim"); }
             if (tweakList["grabrecast"] && (EndHelperModule.Settings.ToggleGrab.Buttons.Count > 0 || EndHelperModule.Settings.ToggleGrab.Keys.Count > 0)) watermarkIconList.Add("endscreen_grabrecast");
 
             if (watermarkIconList.Count > 0)

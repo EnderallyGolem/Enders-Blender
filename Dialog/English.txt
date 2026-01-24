@@ -161,8 +161,7 @@ modoptions_EndHelperModule_ConvertDemo_EnabledDiagonal=Enabled - Diagonal
 
 modoptions_EndHelperModule_SeemlessRespawn=Seemless Respawn
 modoptions_EndHelperModule_SeemlessRespawn_Desc=Changes respawns to be more seemless by reloading the room without a wipe.
-May be visually buggy in rooms which instantly teleport you after respawning, and some modded spinners.
-Potentially buggy with some specific modded entities.
+May be buggy in rooms which instantly teleport you after respawning, and with some modded entities!
 "Enabled - Keep State" isn't a proper respawn and keeps dash counts, velocity, held berries, etc.
 
 modoptions_EndHelperModule_SeemlessRespawn_Disabled=Disabled
@@ -170,6 +169,13 @@ modoptions_EndHelperModule_SeemlessRespawn_EnabledNormal=Enabled - Normal
 modoptions_EndHelperModule_SeemlessRespawn_EnabledNear=Enabled - Near Only
 modoptions_EndHelperModule_SeemlessRespawn_EnabledInstant=Enabled - Instant
 modoptions_EndHelperModule_SeemlessRespawn_EnabledKeepState=Enabled - Keep State
+
+
+# No Respawn Animation
+modoptions_EndHelperModule_NoRespawnAnimation=No Respawn Animation
+modoptions_EndHelperModule_NoRespawnAnimation_Desc=Removes the respawn animation.
+Note that this lets you get control of Madeline earlier than normal.
+Combine with QOL Tweaks > Instant Respawn Transition for instant respawns!
 
 
 ######### QOL Tweaks #########

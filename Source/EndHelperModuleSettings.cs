@@ -120,24 +120,6 @@ public class EndHelperModuleSettings : EverestModuleSettings {
         public ToggleGrabBehaviourEnum toggleGrabBehaviour { get; set; }
     }
 
-    [SettingSubMenu]
-    public class GameplayTweaks
-    {
-        public enum ConvertDemoEnum { Disabled, EnabledNormal, EnabledDiagonal }
-        [DefaultValue(ConvertDemoEnum.Disabled)]
-        [SettingSubText("modoptions_EndHelperModule_ConvertDemo_Desc")]
-        public ConvertDemoEnum ConvertDemo { get; set; }
-
-        public enum SeemlessRespawnEnum { Disabled, EnabledNormal, EnabledNear, EnabledInstant, EnabledKeepState }
-        [DefaultValue(SeemlessRespawnEnum.Disabled)]
-        [SettingSubText("modoptions_EndHelperModule_SeemlessRespawn_Desc")]
-        public SeemlessRespawnEnum SeemlessRespawn { get; set; }
-
-        // These were removed due to too buggy
-        //[SettingRange(min: 0, max: 30, largeRange: false)]
-        //[SettingSubText("modoptions_EndHelperModule_SeemlessRespawnDelay_Desc")]
-        //public int SeemlessRespawnDelay { get; set; } = 0;
-    }
 
     [SettingSubMenu]
     public class QOLTweaks
@@ -162,6 +144,24 @@ public class EndHelperModuleSettings : EverestModuleSettings {
         [DefaultValue(PreventAccidentalQuitEnum.Disabled)]
         [SettingSubText("modoptions_EndHelperModule_PreventAccidentalQuit_Desc")]
         public PreventAccidentalQuitEnum PreventAccidentalQuit { get; set; }
+    }
+
+    [SettingSubMenu]
+    public class GameplayTweaks
+    {
+        public enum ConvertDemoEnum { Disabled, EnabledNormal, EnabledDiagonal }
+        [DefaultValue(ConvertDemoEnum.Disabled)]
+        [SettingSubText("modoptions_EndHelperModule_ConvertDemo_Desc")]
+        public ConvertDemoEnum ConvertDemo { get; set; }
+
+        [SettingSubText("modoptions_EndHelperModule_NoRespawnAnimation_Desc")]
+        public bool NoRespawnAnimation { get; set; } = false;
+
+        public enum SeemlessRespawnEnum { Disabled, EnabledNormal, EnabledNear, EnabledInstant, EnabledKeepState }
+        [DefaultValue(SeemlessRespawnEnum.Disabled)]
+        [SettingSubText("modoptions_EndHelperModule_SeemlessRespawn_Desc")]
+        public SeemlessRespawnEnum SeemlessRespawn { get; set; }
+
     }
 
 

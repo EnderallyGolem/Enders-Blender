@@ -1149,10 +1149,12 @@ public class EndHelperModule : EverestModule {
         Utils_RoomSwap.ReupdateAllRooms();
 
         orig(self);
-        if (Utils_DeathHandler.seemlessRespawn == SeemlessRespawnEnum.EnabledInstant)
+        if (Utils_DeathHandler.seemlessRespawn == SeemlessRespawnEnum.EnabledInstant || EndHelperModule.Settings.GameplayTweaksMenu.NoRespawnAnimation)
         {
             self.StateMachine.State = 0;
             self.Sprite.Scale = new Vector2(1.5f, 0.5f);
+
+            if (EndHelperModule.Settings.GameplayTweaksMenu.NoRespawnAnimation) EndHelperModule.Session.usedGameplayTweaks["norespawnanim"] = true;
         }
         if (Utils_DeathHandler.seemlessRespawn == SeemlessRespawnEnum.EnabledKeepState || Utils_DeathHandler.playerHasDeathBypass)
         {
@@ -1333,6 +1335,7 @@ public class EndHelperModule : EverestModule {
                 if (tweakList["seemlessrespawn_keepstate"]) { iconList.Add(":EndHelper/endscreen_seemlessrespawn_keepstate:"); showFullBlender = true; }
                 else iconList.Add(":EndHelper/endscreen_seemlessrespawn_minor:");
             }
+            if (tweakList["norespawnanim"]) iconList.Add(":EndHelper/endscreen_norespawnanim:");
             if (tweakList["grabrecast"]) iconList.Add(":EndHelper/endscreen_grabrecast:");
 
             // Show blender if at least 1 thing to show!
