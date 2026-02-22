@@ -30,9 +30,6 @@
 
     <ItemGroup>
 		<PackageReference Include="CelesteMod.Publicizer" Version="*" CelesteAssembly="$(CelestePrefix)\Celeste.dll" />
-        <Reference Include="DotNetZip">
-          <HintPath>..\..\..\DotNetZip.dll</HintPath>
-        </Reference>
         <Reference Include="FNA">
           <HintPath>..\..\..\FNA.dll</HintPath>
         </Reference>

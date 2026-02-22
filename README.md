@@ -4,7 +4,9 @@ Calling it a blender was funnier. Too lazy to change the internal names though.
 [Gamebanana page](https://gamebanana.com/mods/568903)
 
 # Features
+
 ### Player Tools:
+
 ###### Room Stat Tracker
 - GUI Display
     - Overlay which display the number of deaths, time spent (in-game or/and real-time), or/and number of strawberries obtained in a room (can be customised)
@@ -14,6 +16,17 @@ Calling it a blender was funnier. Too lazy to change the internal names though.
     - Rooms can be fused together, segmented, or rearranged
     - Total first clear stats and one other clear's stats are saved and are viewable in the journal
     - Stats can be copied onto clipboard
+
+###### QOL Tweaks
+- Quick-Retry Keybind
+    - Instant Retry. Disabled when carrying a golden.
+- Always Quick Respawn
+- Instant Respawn Transition
+- Disable Quick-Restart Key
+- Disable Frequent Screen Shakes
+    - Disables screen shake from dashes, boosters, springs, (vanilla) refills, and the death animation
+- Restart/Quit Map Cooldown
+    - Disables quit/restart map in the menu for a short while to prevent accidental clicking
 
 ###### Gameplay Tweaks
 These are shown at the bottom-left of the screen if enabled, and in the end-screen if used.
@@ -30,17 +43,6 @@ Some of these can be overridden per-map with a Gameplay Tweaks Override Trigger.
 - Neutral Drop Keybind
 - Backboost Keybind
 
-###### QOL Tweaks
-- Quick-Retry Keybind
-    - Instant Retry. Disabled when carrying a golden.
-- Always Quick Respawn
-- Instant Respawn Transition
-- Disable Quick-Restart Key
-- Disable Frequent Screen Shakes
-    - Disables screen shake from dashes, boosters, springs, (vanilla) refills, and the death animation
-- Restart/Quit Map Cooldown
-    - Disables quit/restart map in the menu for a short while to prevent accidental clicking
-
 ###### Misc
 - Freeze Level Timer
     - Option to freeze the level timer (+ journal timer) on pause and/or while afk. 
@@ -48,6 +50,7 @@ Some of these can be overridden per-map with a Gameplay Tweaks Override Trigger.
 - [Portable Multi-room Watchtower](#multi-room-watchtower)
 
 ### Mapping Tools:
+
 ###### Room-Swap
 - Create a grid of rooms that can swap positions with each other (baring some limitations: no collectables and FG/BG tiles).
 - You can check out how they work in my [Crossroads Contest map](https://www.youtube.com/watch?v=xB6RLAKZC0g).
@@ -92,6 +95,10 @@ Some of these can be overridden per-map with a Gameplay Tweaks Override Trigger.
 - Incremental Flag Trigger
 	- Increments a counter when you reach the trigger with a specific value, which then sets a flag
 - Flag Killbox
+
+
+## 1.1.23 changelog:
+- Fixed crash at the end of SJ credits
 
 ## 1.1.22 changelog:
 - Fixed crash when changing maps with head2head

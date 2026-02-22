@@ -1,15 +1,9 @@
-﻿using AsmResolver.DotNet.Code.Cil;
-using Celeste.Mod.EndHelper.Entities.DeathHandler;
+﻿using Celeste.Mod.EndHelper.Entities.DeathHandler;
 using Celeste.Mod.EndHelper.Entities.Misc;
 using Celeste.Mod.EndHelper.Integration;
 using Celeste.Mod.EndHelper.SharedCode;
 using Celeste.Mod.EndHelper.Utils;
-using Celeste.Mod.Entities;
-using Celeste.Mod.Helpers;
-using FMOD.Studio;
-using Microsoft.VisualBasic;
 using Microsoft.Xna.Framework;
-using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Monocle;
 using MonoMod.Cil;
@@ -21,20 +15,13 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
-using System.Net.Sockets;
 using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Text.Json;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using static Celeste.DashSwitch;
 using static Celeste.Mod.EndHelper.EndHelperModuleSettings;
 using static Celeste.Mod.EndHelper.EndHelperModuleSettings.GameplayTweaks;
 using static Celeste.Mod.EndHelper.Entities.Misc.RoomStatisticsDisplayer;
-using static Celeste.TrackSpinner;
-using static On.Celeste.AreaData;
-using static On.Celeste.HeartGem;
-using static On.Celeste.Level;
+
+// Update: MMHook_Celeste, MonoMod.Cecil
 
 namespace Celeste.Mod.EndHelper;
 
@@ -665,10 +652,8 @@ public class EndHelperModule : EverestModule {
     // Level update screws with the timeSinceSessionReset.
     internal static List<Action> actionWhenUnpaused = [];
 
-    private static void Hook_LevelUpdate(On.Celeste.Level.orig_Update orig, global::Celeste.Level self)
+    private static void RunUnpauseActions(Level level)
     {
-        Level level = self;
-
         if (!level.Paused)
         {
             foreach (Action action in actionWhenUnpaused)
@@ -680,6 +665,11 @@ public class EndHelperModule : EverestModule {
             }
             actionWhenUnpaused.Clear();
         }
+    }
+    private static void Hook_LevelUpdate(On.Celeste.Level.orig_Update orig, global::Celeste.Level self)
+    {
+        Level level = self;
+        RunUnpauseActions(level);
 
         // No Player Death Countdown (used by portable multiroom bino)
         if (!self.FrozenOrPaused) Utils_General.disablePlayerDeathCountdown.Update();
@@ -1301,10 +1291,15 @@ public class EndHelperModule : EverestModule {
 
     private static ScreenWipe Hook_CompleteArea(On.Celeste.Level.orig_CompleteArea_bool_bool_bool orig, global::Celeste.Level level, bool spotlightWipe, bool skipScreenWipe, bool skipCompleteScreen)
     {
-        if (level.Tracker.GetEntity<RoomStatisticsDisplayer>() is RoomStatisticsDisplayer roomStatDisplayer)
+        if (level.Tracker.GetEntity<RoomStatisticsDisplayer>() is RoomStatisticsDisplayer roomStatDisplayer && level.Paused)
         {
+            Logger.Log(LogLevel.Info, "EndHelper/Main", $"Running CompleteArea pause for potential RoomStatisticsDisplay stats. Hope it doesn't crash!");
+
             level.RegisterAreaComplete();
-            void action() { orig(level, spotlightWipe, skipScreenWipe, skipCompleteScreen); }
+            void action()
+            {
+                orig(level, spotlightWipe, skipScreenWipe, skipCompleteScreen);
+            }
             actionWhenUnpaused.Add(action);
             return null;
         }

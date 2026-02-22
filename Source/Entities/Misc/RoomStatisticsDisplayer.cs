@@ -1,32 +1,16 @@
-﻿using System;
+﻿using Celeste.Mod.EndHelper.Utils;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using Monocle;
+using MonoMod.Utils;
+using NETCoreifier;
+using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Reflection;
 using System.Runtime.CompilerServices;
-using Microsoft.Xna.Framework;
-using Monocle;
-using MonoMod;
-using Celeste.Mod.Entities;
-using Celeste.Mod;
-using static On.Celeste.Level;
-using System.Threading.Tasks;
-using static Celeste.Mod.EndHelper.EndHelperModuleSettings;
 using static Celeste.Mod.EndHelper.EndHelperModule;
-using static Celeste.Mod.UI.CriticalErrorHandler;
-using static Celeste.Mod.EndHelper.Entities.Misc.RoomStatisticsDisplayer;
-using static Celeste.Mod.EndHelper.EndHelperModuleSettings.RoomStatDisplaySubMenu;
-using NETCoreifier;
-using System.Net.NetworkInformation;
-using FMOD.Studio;
-using static Celeste.Tentacles;
-using Microsoft.Xna.Framework.Graphics.PackedVector;
-using Celeste.Mod.EndHelper.Integration;
-using MonoMod.Utils;
-using System.Linq;
-using Celeste.Mod.EndHelper.Utils;
+using static Celeste.Mod.EndHelper.EndHelperModuleSettings;
 using static Celeste.Mod.EndHelper.Utils.Utils_JournalStatistics;
-using IL.MonoMod;
-using Microsoft.Xna.Framework.Graphics;
 
 
 namespace Celeste.Mod.EndHelper.Entities.Misc;
@@ -386,7 +370,6 @@ public class RoomStatisticsDisplayer : Entity
 
     public override void Update()
     {
-
         // Keep these updated!
         Level level = SceneAs<Level>();
         EnsureDictsHaveKey(level);
@@ -600,7 +583,6 @@ public class RoomStatisticsDisplayer : Entity
         if (prefix != "")
         {
             displayInfoList.Add(new DisplayInfo("prefix", prefix, (int)(ActiveFont.WidthToNextLine($"{prefix}", 0) * displayScale)));
-            //ActiveFont.DrawOutline(prefix, new Vector2(sectionXPos + xOffset, displayYPos), justification, Vector2.One * displayScale, timerColor, 2f, Color.Black);
         }
 
         if (!hideRoomName && (roomDisplaySettings.ShowRoomName || showMenuStats) && currentEffectiveRoomName != "")
@@ -1648,7 +1630,8 @@ public class RoomStatisticsDisplayer : Entity
             }
             
             // For version updating OR new room - Empty/Nonexistent everything: Go copy from session data
-            if (dealWithFirstClear && EndHelperModule.SaveData.mapDict_roomStat_firstClear_roomOrder.ContainsKey(mapNameSide_Internal) && (!EndHelperModule.SaveData.mapDict_roomStat_firstClear_roomOrder[mapNameSide_Internal].Contains(roomName) || !EndHelperModule.SaveData.mapDict_roomStat_firstClear_strawberries[mapNameSide_Internal].ContainsKey(roomName)))
+            if (dealWithFirstClear && EndHelperModule.SaveData.mapDict_roomStat_firstClear_roomOrder.TryGetValue(mapNameSide_Internal, out List<string> firstClearRoomOrderList) && 
+                (!firstClearRoomOrderList.Contains(roomName) || !EndHelperModule.SaveData.mapDict_roomStat_firstClear_strawberries[mapNameSide_Internal].ContainsKey(roomName)))
             {
                 if (EndHelperModule.SaveData.mapDict_roomStat_firstClear_roomOrder[mapNameSide_Internal].Count == 0)
                 {
