@@ -74,13 +74,13 @@ modoptions_EndHelperModule_xJustification_Right=Right
 
 modoptions_EndHelperModule_ShowRoomName=Show Room Name
 modoptions_EndHelperModule_ShowDeaths=Show Deaths
-modoptions_EndHelperModule_ShowTimeSpent=Show Time Spent
-modoptions_EndHelperModule_ShowRTATimeSpent=Show RTA Time Spent
+modoptions_EndHelperModule_ShowTimeSpent=Show In-Game Time Spent
+modoptions_EndHelperModule_ShowRTATimeSpent=Show Real-Time Spent
 modoptions_EndHelperModule_ShowRTATimeSpent_Desc=Uses system time to track time, hence is unaffected by freeze frames, slowdowns, etc
 modoptions_EndHelperModule_MenuShowTime=Shown Timer Type
-modoptions_EndHelperModule_MenuShowTime_Desc=RTA uses system time to track time, hence is unaffected by freeze frames, slowdowns, etc
-modoptions_EndHelperModule_MenuShowTime_Normal=Normal
-modoptions_EndHelperModule_MenuShowTime_RTA=RTA
+modoptions_EndHelperModule_MenuShowTime_Desc=Real-Time uses system time to track time, hence is unaffected by freeze frames, slowdowns, etc
+modoptions_EndHelperModule_MenuShowTime_Normal=In-Game Time
+modoptions_EndHelperModule_MenuShowTime_RTA=Real-Time
 modoptions_EndHelperModule_MenuShowTime_Both=Both
 modoptions_EndHelperModule_ShowStrawberries=Show Strawberries
 modoptions_EndHelperModule_ShowStrawberries_Desc=Only shown when at least one strawberry is collected.
@@ -122,6 +122,8 @@ Clear a map, and the stats for that clear will appear here!
 
 EndHelper_Dialog_MultiroomWatchtower_FreeCameraON=Unlock Camera: ON
 EndHelper_Dialog_MultiroomWatchtower_FreeCameraOFF=Unlock Camera: OFF
+EndHelper_Dialog_MultiroomWatchtower_SpectatingPlayer=Spectating
+EndHelper_Dialog_MultiroomWatchtower_SpectatingUnable=No player to spectate. (Hop on a map with CelesteNet!)
 
 ######### Gameplay Tweaks #########
 modoptions_EndHelperModule_SubHeader_GameplayTweaks=Gameplay Tweaks

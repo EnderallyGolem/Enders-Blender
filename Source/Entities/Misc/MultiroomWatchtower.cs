@@ -241,6 +241,36 @@ public class MultiroomWatchtower : Entity
                 return;
             }
 
+
+
+
+            if (p is Utils_MultiroomWatchtower.PortableMultiroomWatchtower && EndHelperModule.integratingWithCNet && CelesteNetIntegration.lockedGhostName != null)
+            {
+                return; // Spectating player. Remove arrows and instructions.
+            }
+
+            // Instructions
+            if (p is Utils_MultiroomWatchtower.PortableMultiroomWatchtower)
+            {
+                int instructionXPos = 150;
+                int instructionYPos = 1060 + 100 - (int)(100 * num_ease);
+                const float instructionScale = 0.4f;
+                Color instructionColor = Color.LightGray;
+
+                ActiveFont.DrawOutline("Unlock Camera: ", new Vector2(instructionXPos, instructionYPos), new Vector2(0f, 0.5f), new Vector2(instructionScale, instructionScale), instructionColor * num_ease, 2f, Color.Black * num_ease);
+                instructionXPos += (int)(ActiveFont.WidthToNextLine($"Unlock Camera: XI", 0) * instructionScale);
+                Input.GuiButton(EndHelperModule.Settings.FreeMultiroomWatchtower.Button, mode: Input.PrefixMode.Latest).DrawCentered(new Vector2(instructionXPos, instructionYPos), instructionColor * num_ease, instructionScale, 0);
+                instructionXPos += (int)(ActiveFont.WidthToNextLine($"XXXXX", 0) * instructionScale);
+
+                if (EndHelperModule.integratingWithCNet)
+                {
+                    ActiveFont.DrawOutline("Spectate: ", new Vector2(instructionXPos, instructionYPos), new Vector2(0f, 0.5f), new Vector2(instructionScale, instructionScale), instructionColor * num_ease, 2f, Color.Black * num_ease);
+                    instructionXPos += (int)(ActiveFont.WidthToNextLine($"Spectate: XI", 0) * instructionScale);
+                    Input.GuiButton(Input.MenuJournal, mode: Input.PrefixMode.Latest).DrawCentered(new Vector2(instructionXPos, instructionYPos), instructionColor * num_ease, instructionScale, 0);
+                    instructionXPos += (int)(ActiveFont.WidthToNextLine($"XXXXX", 0) * instructionScale);
+                }
+            }
+
             Color upColor, downColor, leftColor, rightColor;
             if (!p.trackMode)
             {
@@ -554,11 +584,19 @@ public class MultiroomWatchtower : Entity
 
     [MethodImpl(MethodImplOptions.NoInlining)]
 
+    private static void BinoLockReset()
+    {
+        CelesteNetIntegration.ClearLockedGhost();
+    }
+
 
     public IEnumerator LookRoutine(Player player)
     {
         // For portable multiroom bino - early invinciblity, as there's a delay before the loop starts
         if (invincibleWhenUsing) Utils_General.disablePlayerDeathCountdown.Set(30);
+
+        // Reset ghost tracker for CNET
+        if (EndHelperModule.integratingWithCNet) { BinoLockReset(); }
 
         trackPercent = 0f;
         Level level = SceneAs<Level>();
@@ -679,6 +717,62 @@ public class MultiroomWatchtower : Entity
             // Prevent room from changing when using the bino. Set to high number to account for shifting the camera back
             if (level.Tracker.GetEntity<RoomStatisticsDisplayer>() is RoomStatisticsDisplayer roomStatDisplayer) roomStatDisplayer.disableRoomChangeTimer.Set(60);
 
+            #region PortableStuff
+
+            // Instructions (Portable only!)
+            if (this is Utils_MultiroomWatchtower.PortableMultiroomWatchtower && EndHelperModule.integratingWithCNet)
+            {
+                BinoLockOnGhostCheck(); // If CNET enabled - Spectating
+            }
+
+
+            void BinoLockOnGhostCheck()
+            {
+                Level level = SceneAs<Level>();
+
+                // Lock onto ghost if journal is clicked
+                if (Input.MenuJournal.Pressed)
+                {
+                    CelesteNetIntegration.LockOnClosestGhost(level, screenCenterOffset + level.Camera.Position);
+                }
+
+                // Unlock if arrow keys
+                if (Input.Aim.Value.X != 0 || Input.Aim.Value.Y != 0)
+                {
+                    BinoLockReset();
+                }
+
+                // Move camera to ghost location (and also update ghost position)
+                BinoLockOnPos(CelesteNetIntegration.UpdateGhostPos(level));
+            }
+
+            void BinoLockOnPos(Vector2? pos)
+            {
+                if (pos is null || pos == new Vector2(0, 0)) return;
+
+                Level level = SceneAs<Level>();
+
+                LevelData currentRoomLevelData = level.Session.LevelData;
+                Rectangle currentRoomBounds = currentRoomLevelData.Bounds;
+
+                bool ghostInRoom = currentRoomBounds.Contains(new Point((int)pos.Value.X, (int)pos.Value.Y));
+                if (!ghostInRoom)
+                {
+                    LevelData ghostRoomData = FindRoomAtPos(level, pos.Value);
+
+
+                    if (ghostRoomData != null)
+                    {
+                        TransitionToTarget(pos.Value, ghostRoomData, out _, 0.65f);
+                    }
+                }
+
+                // Smoothly move camera
+                level.Camera.Position = level.Camera.Position + ((pos.Value - screenCenterOffset) - level.Camera.Position) * (1f - (float)Math.Pow(0.01f, Engine.DeltaTime));
+            }
+
+            #endregion CNETSpectatePlayer
+
             // Disable player movement in screen transition. Otherwise respawn softlock kicks in.
             EndHelperModule.DisableScreenTransitionMovementTimer.Set(3);
 
@@ -770,17 +864,10 @@ public class MultiroomWatchtower : Entity
                     TransitionToTarget(targetTransitionPos, lookoutRoom, out Vector2 newTargetPositionPos);
 
                     lookoutRoom = null; //This is set to null (almost) immediately so the (c) prompt can't show up during the transition
-
-                    // Update the current level (and camera) after a frame
-                    // Do it twice, cause sometimes the first one fails
-                    UpdateLevelAfterFrame(1, newTargetPositionPos - screenCenterOffset);
-                    UpdateLevelAfterFrame(2, newTargetPositionPos - screenCenterOffset);
-
-                    PleaseStopFlickeringThankYou(); // padding please freaking stay on
                 }
             }
 
-            void TransitionToTarget(Vector2 targetTransitionPos, LevelData newRoomLevelData, out Vector2 newTargetPositionPos)
+            void TransitionToTarget(Vector2 targetTransitionPos, LevelData newRoomLevelData, out Vector2 newTargetPositionPos, float? overrideNextTransitionDuration = null)
             {
                 Vector2 camCenter = camCorner + screenCenterOffset;
 
@@ -796,6 +883,7 @@ public class MultiroomWatchtower : Entity
                 player.CameraAnchor = targetTransitionPos - screenCenterOffset;
 
                 level.NextTransitionDuration = 0.65f * transitionDurationScale;
+                if (overrideNextTransitionDuration != null) level.NextTransitionDuration = overrideNextTransitionDuration.Value;
                 level.TransitionTo(newRoomLevelData, transitionDirection);
                 ResetCameraTrackSettings(level, player, false);
 
@@ -819,6 +907,10 @@ public class MultiroomWatchtower : Entity
 
                 changeRoomCooldown = 10; // Rooms can't be changed for this number of frames
                 newTargetPositionPos = targetTransitionPos;
+
+                UpdateLevelAfterFrame(1, camCorner); // Update the current level (and camera) after a frame
+                UpdateLevelAfterFrame(2, camCorner); // Do it twice, cause sometimes the first one fails
+                PleaseStopFlickeringThankYou();      // padding please freaking stay on
             }
 
             async void PleaseStopFlickeringThankYou()
@@ -1255,15 +1347,6 @@ public class MultiroomWatchtower : Entity
                             {
                                 Rectangle roomBounds = room.Bounds;
 
-                                //Logger.Log(LogLevel.Info, "EndHelper/Misc/MultiroomWatchtower", $"%: {trackPercent} | Checking room {room.Name} --- {checkRequireTransitionBox.Right - checkRequireTransitionBox.Left} x {checkRequireTransitionBox.Bottom - checkRequireTransitionBox.Top} vs {room.Bounds.Right - room.Bounds.Left} x {room.Bounds.Bottom - room.Bounds.Top}:");
-                                //Logger.Log(LogLevel.Info, "EndHelper/Misc/MultiroomWatchtower", $"FALL WITHIN: {roomBounds.Contains(checkRequireTransitionBoxInner)} (located at {camCenter})");
-                                //Logger.Log(LogLevel.Info, "EndHelper/Misc/MultiroomWatchtower", $"LEFT: {checkRequireTransitionBox.Left} > {roomBounds.Left} -- {checkRequireTransitionBox.Left > roomBounds.Left}");
-                                //Logger.Log(LogLevel.Info, "EndHelper/Misc/MultiroomWatchtower", $"RIGHT: {checkRequireTransitionBox.Right} < {roomBounds.Right} -- {checkRequireTransitionBox.Right < roomBounds.Right}");
-                                //Logger.Log(LogLevel.Info, "EndHelper/Misc/MultiroomWatchtower", $"UP: {checkRequireTransitionBox.Top} > {roomBounds.Top} -- {checkRequireTransitionBox.Top > roomBounds.Top}");
-                                //Logger.Log(LogLevel.Info, "EndHelper/Misc/MultiroomWatchtower", $"DOWN: {checkRequireTransitionBox.Bottom} < {roomBounds.Bottom} -- {checkRequireTransitionBox.Bottom < roomBounds.Bottom}");
-
-                                //if (checkRequireTransitionBox.Left > roomBounds.Left && checkRequireTransitionBox.Right < roomBounds.Right
-                                //    && checkRequireTransitionBox.Top > roomBounds.Top && checkRequireTransitionBox.Bottom < roomBounds.Bottom) //If onscreen
                                 if (
                                     roomBounds.Contains(checkRequireTransitionBoxInner) &&
                                     (checkRequireTransitionBox.Left > roomBounds.Left && checkRequireTransitionBox.Right < roomBounds.Right
@@ -1277,15 +1360,7 @@ public class MultiroomWatchtower : Entity
                                     // Transition camera to target pos (slightly farther that roomAimPos)
                                     TransitionToTarget(camCorner + screenCenterOffset, room, out Vector2 transitionPosTarget);
 
-                                    // Update the current level (and camera) after a frame
-                                    // Do it twice, cause sometimes the first one fails
-
                                     camCorner = transitionPosTarget - screenCenterOffset;
-
-                                    UpdateLevelAfterFrame(1, camCorner);
-                                    UpdateLevelAfterFrame(2, camCorner);
-
-                                    PleaseStopFlickeringThankYou(); // padding please freaking stay on
 
                                     break; //Note: moveBino triggers one more time to update camera pos
                                 }
@@ -1445,7 +1520,34 @@ public class MultiroomWatchtower : Entity
         return edgeRoomDataList;
     }
 
-    void ResetCameraTrackSettings(Level level, Player player, bool endWatchtowerView)
+    /// <summary>
+    /// Searches whole level to find a valid room (with spawn point) the position belongs in.
+    /// Returns null if no room is found.
+    /// </summary>
+    /// <param name="level"></param>
+    /// <param name="pos"></param>
+    /// <returns></returns>
+    internal static LevelData FindRoomAtPos(Level level, Vector2 pos)
+    {
+        LevelData currentRoomLevelData = level.Session.LevelData;
+
+        List<LevelData> edgeRoomDataList = [];
+
+        foreach (LevelData levelData in level.Session.MapData.Levels)
+        {
+            if (levelData.Spawns.Count > 0)
+            {
+                Rectangle roomBounds = levelData.Bounds;
+                if (roomBounds.Contains(new Point((int) pos.X, (int) pos.Y)))
+                {
+                    return levelData;
+                }
+            }
+        }
+        return null;
+    }
+
+    static void ResetCameraTrackSettings(Level level, Player player, bool endWatchtowerView)
     {
         if (endWatchtowerView)
         {

@@ -2201,9 +2201,9 @@ public class RoomStatisticsDisplayer : Entity
         if (tooltipDuration < 0 && alpha > 0) { alpha -= 0.03f; }
     }
 
-    public static string tooltipText = "";
-    public static int tooltipDuration = 0;
-    public static float alpha = 0;
+    internal static string tooltipText = "";
+    internal static int tooltipDuration = 0;
+    internal static float alpha = 0;
 
     public static void ShowTooltip(String message, float durationSeconds)
     {

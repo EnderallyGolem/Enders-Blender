@@ -94,6 +94,7 @@ public class EndHelperModule : EverestModule {
     public static bool integratingWithSSMQoL = false; // Cchange multiroom bino speed multiplier if used by this
     public static bool integratingWithFrostHelper = false; // Only to check for frost helper spinners
     public static bool integratingWithCommunualHelper = false; // Make some entities work better with death handler
+    public static bool integratingWithCNet = false; // Spectator tracker
 
     // Event Listener for when room modification occurs
     public static event EventHandler<RoomModificationEventArgs> RoomModificationEvent;
@@ -129,6 +130,7 @@ public class EndHelperModule : EverestModule {
         Everest.Events.Level.OnCreatePauseMenuButtons += CreatePauseMenuButtonsFunc;
         Everest.Events.Level.OnLoadEntity += OnLoadEntityFunc;
         Everest.Events.Player.OnSpawn += OnPlayerSpawnFunc;
+        Everest.Events.Input.OnInitialize += OnInitialiseInput;
 
         On.Monocle.Engine.Update += Hook_EngineUpdate;
         On.Celeste.Level.Update += Hook_LevelUpdate;
@@ -196,6 +198,7 @@ public class EndHelperModule : EverestModule {
         ImGuiHelperIntegration.Load();
         QuantumMechanicsIntegration.Load();
         CollabUtils2Integration.Load();
+        CelesteNetIntegration.Load();
     }
 
     // Unload the entirety of your mod's content. Free up any native resources.
@@ -207,6 +210,7 @@ public class EndHelperModule : EverestModule {
         Everest.Events.Level.OnCreatePauseMenuButtons -= CreatePauseMenuButtonsFunc;
         Everest.Events.Level.OnLoadEntity -= OnLoadEntityFunc;
         Everest.Events.Player.OnSpawn -= OnPlayerSpawnFunc;
+        Everest.Events.Input.OnInitialize -= OnInitialiseInput;
 
         On.Monocle.Engine.Update -= Hook_EngineUpdate;
         On.Celeste.Level.Update -= Hook_LevelUpdate;
@@ -264,6 +268,7 @@ public class EndHelperModule : EverestModule {
         ImGuiHelperIntegration.Unload();
         QuantumMechanicsIntegration.Unload();
         CollabUtils2Integration.Unload();
+        CelesteNetIntegration.Unload();
     }
 
     // Optional, initialize anything after Celeste has initialized itself properly.
@@ -413,6 +418,11 @@ public class EndHelperModule : EverestModule {
         else if (respawnMarker != null) updateFacings = respawnMarker.faceLeft ? Facings.Left : Facings.Right;
 
         if (updateFacings != null) player.Facing = updateFacings.Value;
+    }
+
+    private static void OnInitialiseInput()
+    {
+        Utils_Buttons.Initialise();
     }
 
     async static void PauseMenuButtonsFuncCooldown(Level level, TextMenu menu, bool minimal)
@@ -923,13 +933,14 @@ public class EndHelperModule : EverestModule {
 
     public static void Hook_OnPlayerUpdate(On.Celeste.Player.orig_Update orig, Player self)
     {
-        if (EndHelperModule.Settings.NeutralDrop.Button.Pressed && self.Holding != null && self.minHoldTimer <= 0f)
+        if (Utils_Buttons.NeutralDrop.Pressed && self.Holding != null && self.minHoldTimer <= 0f)
         {
             EndHelperModule.Session.usedGameplayTweaks["neutraldrop"] = true;
             Input.MoveY.Value = 1;
+            Utils_Buttons.NeutralDrop.ConsumeBuffer();
             self.Throw();
         }
-        if (EndHelperModule.Settings.Backboost.Button.Pressed && self.Holding != null && self.minHoldTimer <= 0f)
+        if (Utils_Buttons.Backboost.Pressed && self.Holding != null && self.minHoldTimer <= 0f)
         {
             EndHelperModule.Session.usedGameplayTweaks["backboost"] = true;
             if (self.Facing == Facings.Left)
@@ -940,6 +951,7 @@ public class EndHelperModule : EverestModule {
             {
                 self.Facing = Facings.Left;
             }
+            Utils_Buttons.Backboost.ConsumeBuffer();
             self.Throw();
         }
 

@@ -47,7 +47,7 @@ Some of these can be overridden per-map with a Gameplay Tweaks Override Trigger.
 - Freeze Level Timer
     - Option to freeze the level timer (+ journal timer) on pause and/or while afk. 
     - Does not affect the file timer.
-- [Portable Multi-room Watchtower](#multi-room-watchtower)
+- [Portable Multi-room Watchtower](#multi-room-watchtower) Multi-room watchtower keybind that can be used anywhere. Can also spectate players in CelesteNet.
 
 ### Mapping Tools:
 
@@ -74,7 +74,6 @@ Some of these can be overridden per-map with a Gameplay Tweaks Override Trigger.
 
 ###### Multi-Room Watchtower
 - Watchtower that can view multiple rooms (blocked by Lookout Blocker as per usual). Works both as normal and with a node path, with modifiable scroll speed.
-- Keybind to use anywhere
 
 ###### Tile Entity
 - Foreground tile entity that allows customising: 
@@ -97,42 +96,52 @@ Some of these can be overridden per-map with a Gameplay Tweaks Override Trigger.
 - Flag Killbox
 
 
-## 1.1.23 changelog:
+## 1.1.24: 
+- QOL Tweaks:
+	- Renamed RTA to Real-Time to avoid confusion
+
+- Gameplay Tweaks:
+	- Backboost and Neutral Drop buttons are now bufferable
+	
+- Misc:
+	- Portable Multi-room Watchtower: Added ability to spectate players on CelesteNet (Camera will follow them)
+
+## 1.1.23:
 - Fixed crash at the end of SJ credits
 
-## 1.1.22 changelog:
+## 1.1.22:
 - Fixed crash when changing maps with head2head
 - Gameplay Tweaks: 
 	- Added no respawn animation. Gives you control immediately after the death transition.
 
-## 1.1.21 changelog:
+## 1.1.21:
 - QOL Tweaks: 
 	- Added Always Quick Respawn. Respawn quickly upon death without the need of pressing any buttons.
 	- Added No Respawn Transition. Removes screen transition during death.
 - Gameplay Tweaks: 
 	- Backboost and Neutral Drop buttons now takes checks minHoldTimer (suggestion by Jade)
 
-## 1.1.20 changelog:
+## 1.1.20:
 - Fixed crash for collabutils2 journal after its update
 	- This is kind of a rushy fix (im not free right now, and won't be for a while), for some lobbies like totem collab,
 	the map list might be empty.
 	might fix that down the road. or maybe not, it might require mod hook crimes that i should not touch
 
-## 1.1.19 changelog:
+## 1.1.19:
 - Fixed crash when entering a map without blender and then entering with it later on, due to rta timer. I think.
 
-## 1.1.18 changelog:
+## 1.1.18:
 - Fixed bug with skipping room stat rooms - now defaults to the starting room in the map
 	- (aka fixed bug where debugging around in some sj heartsides rooms can crash the game)
 
-## 1.1.17 changelog:
+## 1.1.17:
 - Gameplay Tweaks shows an icon at the bottom left when enabled (same as endscreen ones)
 	- Button bindings only show up if they have been used at least once in the map
 
-## 1.1.16 changelog:
+## 1.1.16:
 - Room stat tracker crash fix
 
-## 1.1.15 changelog:
+## 1.1.15:
 - Room Stats Tracker:
 	- New tracked stat: RTA Timer. (Thanks hyper for the suggestion!)
 		- Uses your system time to track the time, hence is unaffected by freeze frames, slowdown, the game-speedup from speedrun tools fast respawn, etc. This is tracked seperately from the regular timer.
@@ -140,20 +149,20 @@ Some of these can be overridden per-map with a Gameplay Tweaks Override Trigger.
 		- (Note that for maps/rooms played before this update, RTA timer will be 0)
 	- Fixed crash in 7a credits, and a room-rename crash
 
-## 1.1.14 changelog:
+## 1.1.14:
 - Hopefully a crash-fix for room stats? At this point I have zero clue why they are happening and just adding an empty room name check.
 
-## 1.1.13 changelog:
+## 1.1.13:
 - Room Stats Tracker:
 	- Changed Save Clear default to save if valid clear (old behaviour) so it doesn't interrupt you if you aren't using the blender for stats
 	- The ask menu now properly pauses the game when ending the map with a complete area trigger. This might also possibly fix a crash?????????
 - The test map has also been removed from the mod (if you want to view it, download from the github.)
 			
-## 1.1.12 changelog:
+## 1.1.12:
 - Potential crash fix with cassette manager trigger with wonky cassettes
 - fixed 1.1.11 crashing oops
 			
-## 1.1.10 changelog:
+## 1.1.10:
 - New Additions:
 	- Mapping Tools:
 		- Connectable Outline - Outline indicator which can be (visually) connceted to each other and attached.
@@ -182,7 +191,7 @@ Some of these can be overridden per-map with a Gameplay Tweaks Override Trigger.
 - Misc:
 	- Multi-room Watchtower: Fixed issues when you die while using it. You also now just can't die when using it.
 
-## 1.1.9 changelog:
+## 1.1.9:
 - New Additions:
 	- QOL Tweaks:
 		- Autosave. Automatically saves the game every few minutes.
@@ -203,13 +212,13 @@ Some of these can be overridden per-map with a Gameplay Tweaks Override Trigger.
 	- Freeze Timer When Pause/AFK: Icons now only show up when game is paused.
 	- Fixed a crash that can happen on the first clear of 3a (or whenever a map ends on a room transition).
 
-## 1.1.8 changelog:
+## 1.1.8:
 	- Fixed crash when trying to enter an unloaded map
 	- Fixed crash from having tracker storage size set to 0, then increased mid-level
 	- Fixed crash from checking an empty nonexistent room (i don't really know what causes this but i know how to fix it yay)
 	- Fixed the issue of a previous session room sometimes showing up in the stats tracker
 
-## 1.1.5 changelog:
+## 1.1.5:
 - Updated to NET 8.0
 
 - Gameplay Tweaks:
@@ -217,13 +226,13 @@ Some of these can be overridden per-map with a Gameplay Tweaks Override Trigger.
 	- Added a Backboost keybind.
 	- Modified Neutral Drop keybind so it sets MoveY to 1 and throws, so it should be more akin to pressing down for 1 frame and throwing.
 		
-## 1.1.4 changelog:
+## 1.1.4:
 - patch for viewing journal stats in some maps
 		
-## 1.1.3 changelog:
+## 1.1.3:
 - seemless respawn crash patch
 
-## 1.1.1 changelog:
+## 1.1.1:
 - New Additions:
     - Gameplay Tweaks:
         - Seemless Respawns: Changes respawns to be more seemless by reloading the room without a wipe. This is kind of buggy and only meant for maps (enabled with gameplay tweak trigger) for now.
@@ -233,7 +242,7 @@ Some of these can be overridden per-map with a Gameplay Tweaks Override Trigger.
 	- Made custom room names for SJ Heartsides
 	- Menu no longer freezes if viewed from the journal, in the world map, without imguihelper
 
-## 1.1 changelog:
+## 1.1:
 - New Additions: 
     - QOL Tweaks:
         - Disable Frequent Screen Shakes: Disables screen shake from dashes, boosters, springs, (vanilla) refills, and the death animation, while keeping the rest because they look cool
@@ -269,7 +278,7 @@ Some of these can be overridden per-map with a Gameplay Tweaks Override Trigger.
     - Using gameplay tweaks (grab recast, down dash redirect, neutral drop key) now causes the end screen to show that variant mode is used
 
 
-### 1.0.5 changelog:
+### 1.0.5:
 - New Additions:
     - Cassette Beat Gates: Blocks that move along nodes in accordance to cassette beats.
     - Cassette Manager Trigger: Trigger that lets you set varying tempo speeds and changing beats for cassette themes.

@@ -37,7 +37,7 @@ namespace Celeste.Mod.EndHelper.Utils
         }
 
         [Tracked(true)]
-        private class PortableMultiroomWatchtower : MultiroomWatchtower
+        internal class PortableMultiroomWatchtower : MultiroomWatchtower
         {
             internal PortableMultiroomWatchtower(EntityData data, Vector2 offset) : base(data, offset)
             {
