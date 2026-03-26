@@ -6,7 +6,7 @@ using Monocle;
 using System;
 using System.Collections;
 
-namespace Celeste.Mod.EndHelper.Entities.Misc;
+namespace Celeste.Mod.EndHelper.Deprecated.Entities.Misc;
 [Tracked(true)]
 [TrackedAs(typeof(CustomBirdTutorial))]
 [CustomEntity("EndHelper/ConditionalBirdTutorial")]
@@ -91,7 +91,7 @@ public class ConditionalBirdTutorial : CustomBirdTutorial
         //I don't want the regular awake to trigger
 
         if (flewInBefore && onlyOnceFlyIn && 
-            ( onlyFulfillConditionOnce ) || (!onlyFulfillConditionOnce && CheckMetFlyInCondition(level, true))
+             onlyFulfillConditionOnce  || !onlyFulfillConditionOnce && CheckMetFlyInCondition(level, true)
            )
         {
             // Stay flown in (but not triggered). If no onlyFulfillConditionOnce, flewInBefore is temporarily saved for this check. If condition met, start already flown in.

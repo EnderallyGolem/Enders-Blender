@@ -6,7 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
-namespace Celeste.Mod.EndHelper.Entities.Misc
+namespace Celeste.Mod.EndHelper.Deprecated.Entities.Misc
 {
     [CustomEntity("EndHelper/ConnectableOutline")]
     [Tracked(false)]
@@ -34,7 +34,7 @@ namespace Celeste.Mod.EndHelper.Entities.Misc
         public ConnectableOutline(EntityData data, Vector2 offset)
             : base(data.Position + offset)
         {
-            this.colour = Calc.HexToColorWithAlpha(data.Attr("colour", "ffffffff"));
+            colour = Calc.HexToColorWithAlpha(data.Attr("colour", "ffffffff"));
             visibleFlag = data.Attr("visibleFlag", "");
             connectLayer = data.Int("connectLayer", 0);
             attachable = data.Bool("attachable", true);
@@ -65,10 +65,10 @@ namespace Celeste.Mod.EndHelper.Entities.Misc
 
         private bool IsRidingSolid(Solid solid)
         {
-            Collider origCollider = base.Collider;
-            base.Collider = new Hitbox(Width + 2, Height + 2, -1 + nodeOffset.X, -1 + nodeOffset.Y);
+            Collider origCollider = Collider;
+            Collider = new Hitbox(Width + 2, Height + 2, -1 + nodeOffset.X, -1 + nodeOffset.Y);
             bool collideCheck = CollideCheck(solid);
-            base.Collider = origCollider;
+            Collider = origCollider;
             return collideCheck;
         }
 
@@ -105,9 +105,9 @@ namespace Celeste.Mod.EndHelper.Entities.Misc
                 }
             }
 
-            for (float num5 = base.Left; num5 < base.Right; num5 += 8f)
+            for (float num5 = Left; num5 < Right; num5 += 8f)
             {
-                for (float num6 = base.Top; num6 < base.Bottom; num6 += 8f)
+                for (float num6 = Top; num6 < Bottom; num6 += 8f)
                 {
                     bool flag = CheckForSame(num5 - 8f, num6);
                     bool flag2 = CheckForSame(num5 + 8f, num6);
@@ -174,7 +174,7 @@ namespace Celeste.Mod.EndHelper.Entities.Misc
 
         public void FindInGroup(ConnectableOutline block)
         {
-            foreach (ConnectableOutline entity in base.Scene.Tracker.GetEntities<ConnectableOutline>())
+            foreach (ConnectableOutline entity in Scene.Tracker.GetEntities<ConnectableOutline>())
             {
                 if (entity != this && entity != block && entity.connectLayer == connectLayer && entity.connectLayer != -1
                     && (entity.CollideRect(new Rectangle((int)block.X - 1, (int)block.Y, (int)block.Width + 2, (int)block.Height)) || entity.CollideRect(new Rectangle((int)block.X, (int)block.Y - 1, (int)block.Width, (int)block.Height + 2))) && !group.Contains(entity))
@@ -188,7 +188,7 @@ namespace Celeste.Mod.EndHelper.Entities.Misc
 
         public bool CheckForSame(float x, float y)
         {
-            foreach (ConnectableOutline entity in base.Scene.Tracker.GetEntities<ConnectableOutline>())
+            foreach (ConnectableOutline entity in Scene.Tracker.GetEntities<ConnectableOutline>())
             {
                 if (entity.connectLayer == connectLayer && entity.Collider.Collide(new Rectangle((int)x, (int)y, 8, 8)))
                 {
@@ -206,7 +206,7 @@ namespace Celeste.Mod.EndHelper.Entities.Misc
 
         public Image CreateImage(float x, float y, int tx, int ty, MTexture tex)
         {
-            Vector2 vector = new Vector2(x - base.X, y - base.Y);
+            Vector2 vector = new Vector2(x - X, y - Y);
             Image image = new Image(tex.GetSubtexture(tx * 8, ty * 8, 8, 8));
             Vector2 vector2 = groupOrigin - Position;
             image.Origin = vector2 - vector;
@@ -225,7 +225,7 @@ namespace Celeste.Mod.EndHelper.Entities.Misc
             flagAllow = Utils_General.AreFlagsEnabled(level.Session, visibleFlag, true);
             //Logger.Log(LogLevel.Info, "EndHelper/ConnectableOutline", $"flag allow: {flagAllow} -- {visibleFlag}");
 
-            if ( (flagAllow != previousFlagAllow) || (opacity != 0 && opacity != 1) )
+            if ( flagAllow != previousFlagAllow || opacity != 0 && opacity != 1 )
             {
                 if (flagAllow && opacity < 1)
                 {

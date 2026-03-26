@@ -1,10 +1,12 @@
 ﻿using Celeste.Mod.CelesteNet.Client.Entities;
 using Celeste.Mod.EndHelper.Entities.Misc;
 using Celeste.Mod.EndHelper.Utils;
-using Celeste.Mod.SSMQoLMod;
+using FrostHelper.Helpers;
 using Microsoft.Xna.Framework;
+using Monocle;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using static Celeste.Mod.EndHelper.EndHelperModule;
 
 namespace Celeste.Mod.EndHelper.Integration
@@ -36,7 +38,7 @@ namespace Celeste.Mod.EndHelper.Integration
 
         internal static void LockOnClosestGhost(Level level, Vector2 pos)
         {
-            Ghost lockedGhost = GetClosestGhost(level, pos);
+            Ghost lockedGhost = GetClosestGhost(level, pos, true);
 
             if (lockedGhost != null)
             {
@@ -50,8 +52,33 @@ namespace Celeste.Mod.EndHelper.Integration
                 RoomStatisticsDisplayer.ShowTooltip(message, 2);
             }
         }
-        internal static Ghost GetClosestGhost(Level level, Vector2 pos)
+        internal static Ghost GetClosestGhost(Level level, Vector2 pos, bool prioritiseCurrentRoom)
         {
+            List<Entity> ghostList = level.Tracker.GetEntities<Ghost>();
+            if (prioritiseCurrentRoom)
+            {
+                Ghost closestGhostInRoom = null;
+                float closestGhostDistanceSq = float.MaxValue;
+
+                // Get closest ghost in room
+                foreach (Ghost ghost in ghostList.Cast<Ghost>()) {
+                    // Ignore ghost if outside screen bounds
+                    Rectangle levelBounds = level.Session.LevelData.Bounds;
+                    if (!levelBounds.Contains(ghost.Position.ToPoint())) continue;
+
+                    float ghostDistanceSq = Vector2.DistanceSquared(ghost.Position, pos);
+                    if (ghostDistanceSq < closestGhostDistanceSq)
+                    {
+                        closestGhostInRoom = ghost;
+                        closestGhostDistanceSq = ghostDistanceSq;
+                    }
+                }
+
+                // Return if not null
+                if (closestGhostInRoom != null) return closestGhostInRoom;
+
+                // Otherwise just get closest entity like normal
+            }
             return level.Tracker.GetNearestEntity<Ghost>(pos);
         }
 

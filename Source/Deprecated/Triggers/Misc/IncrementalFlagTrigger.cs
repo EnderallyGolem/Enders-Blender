@@ -1,27 +1,19 @@
-using Celeste.Mod.EndHelper.Integration;
 using Celeste.Mod.EndHelper.Utils;
 using Celeste.Mod.Entities;
-using Celeste.Mod.QuantumMechanics.Entities;
 using Microsoft.Xna.Framework;
 using Monocle;
-using MonoMod.Utils;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Reflection.Metadata.Ecma335;
 using System.Runtime.CompilerServices;
-using static Celeste.Mod.EndHelper.EndHelperModuleSettings.GameplayTweaks;
 
-namespace Celeste.Mod.EndHelper.Triggers.RoomSwap;
+namespace Celeste.Mod.EndHelper.Deprecated.Triggers.Misc;
 
 [CustomEntity("EndHelper/IncrementalFlagTrigger")]
 public class IncrementalFlagTrigger : Trigger
 {
-    private readonly String flag;
+    private readonly string flag;
     private readonly int setValue;
     private readonly bool setOnlyIfOneBelow;
-    private readonly String requireFlag;
+    private readonly string requireFlag;
     private readonly bool singleUse;
     private readonly bool temporary;
 

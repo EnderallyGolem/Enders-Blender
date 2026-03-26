@@ -10,7 +10,7 @@ using System.Runtime.CompilerServices;
 using System.ComponentModel.Design.Serialization;
 using Celeste.Mod.EndHelper.Utils;
 
-namespace Celeste.Mod.EndHelper.Entities.Misc;
+namespace Celeste.Mod.EndHelper.Deprecated.Entities.Misc;
 [Tracked]
 [CustomEntity("EndHelper/TileEntity")]
 
@@ -62,7 +62,7 @@ public class TileEntity : Solid
 
     public TileEntity(Vector2 position, float width, float height, EntityID id, char tileType, char tiletypeOffscreen, int depth, bool backgroundTiles, bool collidable, string colourStr, bool allowMergeDifferentType = false, bool allowMerge = true, 
         bool extendOffscreen = false, bool noEdges = false, List<bool> offDirecBoolList = null, bool locationSeeded = false,
-        bool dashBlock = false, bool dashBlockPermament = false, String dashBlockBreakSound = "")
+        bool dashBlock = false, bool dashBlockPermament = false, string dashBlockBreakSound = "")
     : base(position, width, height, safe: true)
     {
         
@@ -81,7 +81,7 @@ public class TileEntity : Solid
         this.dashBlockPermament = dashBlockPermament;
         this.dashBlockBreakSound = dashBlockBreakSound;
         this.collidable = collidable;
-        this.colour = Calc.HexToColorWithAlpha(colourStr);
+        colour = Calc.HexToColorWithAlpha(colourStr);
 
         this.id = id;
 
@@ -289,11 +289,11 @@ public class TileEntity : Solid
         {
             foreach (TileEntity tileEntity in Group)
             {
-                for (int i = 0; (float)i < tileEntity.Width / 8f; i++)
+                for (int i = 0; i < tileEntity.Width / 8f; i++)
                 {
-                    for (int j = 0; (float)j < tileEntity.Height / 8f; j++)
+                    for (int j = 0; j < tileEntity.Height / 8f; j++)
                     {
-                        base.Scene.Add(Engine.Pooler.Create<Debris>().Init(tileEntity.Position + new Vector2(4 + i * 8, 4 + j * 8), tileEntity.tileType, true).BlastFrom(from));
+                        Scene.Add(Engine.Pooler.Create<Debris>().Init(tileEntity.Position + new Vector2(4 + i * 8, 4 + j * 8), tileEntity.tileType, true).BlastFrom(from));
                     }
                 }
 

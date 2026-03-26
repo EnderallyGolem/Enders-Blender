@@ -57,6 +57,8 @@ public class RoomStatisticsDisplayer : Entity
         mapNameColor = GetMapColour(session.Area);
 
         EndHelperModule.Session.roomStatDict_mapNameSide_Internal = mapNameSide_Internal; // Store mapNameSide of map into session - for error reference
+
+        Utils_JournalStatistics.InitEmotes();
     }
 
     public override void Awake(Scene scene)
@@ -300,18 +302,18 @@ public class RoomStatisticsDisplayer : Entity
         if (showRtaTimer)
         {
             current_timer_string = Utils_General.MinimalGameplayFormat(TimeSpan.FromTicks(current_rtatimer));
-            currentStatString = $":EndHelper/uioutline_skull: {current_deaths}   :EndHelper/uioutline_rtaclock: {current_timer_string}   :EndHelper/uioutline_strawberry: {current_berries}";
+            currentStatString = $"{emote_skull.white} {current_deaths}   {emote_rtaclock.white} {current_timer_string}   {emote_strawberry.white} {current_berries}";
 
             saved_timer_string = Utils_General.MinimalGameplayFormat(TimeSpan.FromTicks(saved_rtatimer));
-            savedStatString = $":EndHelper/uioutline_skull: {saved_deaths}   :EndHelper/uioutline_rtaclock: {saved_timer_string}   :EndHelper/uioutline_strawberry: {saved_berries}";
+            savedStatString = $"{emote_skull.white} {saved_deaths}   {emote_rtaclock.white} {saved_timer_string}   {emote_strawberry.white} {saved_berries}";
         }
         else
         {
             current_timer_string = Utils_General.MinimalGameplayFormat(TimeSpan.FromTicks(current_timer));
-            currentStatString = $":EndHelper/uioutline_skull: {current_deaths}   :EndHelper/uioutline_clock: {current_timer_string}   :EndHelper/uioutline_strawberry: {current_berries}";
+            currentStatString = $"{emote_skull.white} {current_deaths}   {emote_clock.white} {current_timer_string}   {emote_strawberry.white} {current_berries}";
 
             saved_timer_string = Utils_General.MinimalGameplayFormat(TimeSpan.FromTicks(saved_timer));
-            savedStatString = $":EndHelper/uioutline_skull: {saved_deaths}   :EndHelper/uioutline_clock: {saved_timer_string}   :EndHelper/uioutline_strawberry: {saved_berries}";
+            savedStatString = $"{emote_skull.white} {saved_deaths}   {emote_clock.white} {saved_timer_string}   {emote_strawberry.white} {saved_berries}";
         }
         if (current_invalidClear) currentStatString += $" [Not Valid]";
         if (saved_invalidClear) savedStatString += $" [Not Valid]";
@@ -618,10 +620,10 @@ public class RoomStatisticsDisplayer : Entity
 
         if (showMenuStats || roomDisplaySettings.ShowDeaths)
         {
-            string displayMsg = $":EndHelper/uioutline_skull: {deathNum}";
-            if (iconType == IconType.Gray) displayMsg = $":EndHelper/uioutline_skull_gray: {deathNum}";
-            if (iconType == IconType.Green) displayMsg = $":EndHelper/uioutline_skull_green: {deathNum}";
-            else if (iconType == IconType.Yellow) displayMsg = $":EndHelper/uioutline_skull_yellow: {deathNum}";
+            string displayMsg = $"{emote_skull.white} {deathNum}";
+            if (iconType == IconType.Gray) displayMsg = $"{emote_skull.gray} {deathNum}";
+            if (iconType == IconType.Green) displayMsg = $"{emote_skull.green} {deathNum}";
+            else if (iconType == IconType.Yellow) displayMsg = $"{emote_skull.yellow} {deathNum}";
 
             displayInfoList.Add(new DisplayInfo("deaths", displayMsg, (int)(ActiveFont.WidthToNextLine($"{deathNum}XXX|", 0) * displayScale)));
         }
@@ -629,11 +631,11 @@ public class RoomStatisticsDisplayer : Entity
         {
             TimeSpan timeSpent = TimeSpan.FromTicks(timerNum);
             string timeString = Utils_General.MinimalGameplayFormat(timeSpent);
-            string displayMsg = $":EndHelper/uioutline_clock: {timeString}";
+            string displayMsg = $"{emote_clock.white} {timeString}";
 
-            if (timerColor == Color.Gray || iconType == IconType.Gray) displayMsg = $":EndHelper/uioutline_clock_gray: {timeString}";
-            if (iconType == IconType.Green) displayMsg = $":EndHelper/uioutline_clock_green: {timeString}";
-            if (iconType == IconType.Yellow) displayMsg = $":EndHelper/uioutline_clock_yellow: {timeString}";
+            if (timerColor == Color.Gray || iconType == IconType.Gray) displayMsg = $"{emote_clock.gray} {timeString}";
+            if (iconType == IconType.Green) displayMsg = $"{emote_clock.green} {timeString}";
+            if (iconType == IconType.Yellow) displayMsg = $"{emote_clock.yellow} {timeString}";
 
             int textWidth = 0;
             if (timeSpent.TotalHours < 1)
@@ -650,11 +652,11 @@ public class RoomStatisticsDisplayer : Entity
         {
             TimeSpan rtatimeSpent = TimeSpan.FromTicks(rtatimerNum);
             string rtatimeString = Utils_General.MinimalGameplayFormat(rtatimeSpent);
-            string displayMsg = $":EndHelper/uioutline_rtaclock: {rtatimeString}";
+            string displayMsg = $"{emote_rtaclock.white} {rtatimeString}";
 
-            if (timerColor == Color.Gray || iconType == IconType.Gray) displayMsg = $":EndHelper/uioutline_rtaclock_gray: {rtatimeString}";
-            if (iconType == IconType.Green) displayMsg = $":EndHelper/uioutline_rtaclock_green: {rtatimeString}";
-            if (iconType == IconType.Yellow) displayMsg = $":EndHelper/uioutline_rtaclock_yellow: {rtatimeString}";
+            if (timerColor == Color.Gray || iconType == IconType.Gray) displayMsg = $"{emote_rtaclock.gray} {rtatimeString}";
+            if (iconType == IconType.Green) displayMsg = $"{emote_rtaclock.green} {rtatimeString}";
+            if (iconType == IconType.Yellow) displayMsg = $"{emote_rtaclock.yellow} {rtatimeString}";
 
             int textWidth = 0;
             if (rtatimeSpent.TotalHours < 1)
@@ -698,10 +700,10 @@ public class RoomStatisticsDisplayer : Entity
                 {
                     displayMsgNoEmote += $"/{mapBerryCount}";
                 }
-                String displayMsg = $":EndHelper/uioutline_strawberry:{displayMsgNoEmote}";
-                if (iconType == IconType.Gray) displayMsg = $":EndHelper/uioutline_strawberry_gray:{displayMsgNoEmote}";
-                if (iconType == IconType.Green) displayMsg = $":EndHelper/uioutline_strawberry_green:{displayMsgNoEmote}";
-                if (iconType == IconType.Yellow) displayMsg = $":EndHelper/uioutline_strawberry_yellow:{displayMsgNoEmote}";
+                String displayMsg = $"{emote_strawberry.white}{displayMsgNoEmote}";
+                if (iconType == IconType.Gray) displayMsg = $"{emote_strawberry.gray}{displayMsgNoEmote}";
+                if (iconType == IconType.Green) displayMsg = $"{emote_strawberry.green}{displayMsgNoEmote}";
+                if (iconType == IconType.Yellow) displayMsg = $"{emote_strawberry.yellow}{displayMsgNoEmote}";
 
                 displayInfoList.Add(new DisplayInfo("strawberries", displayMsg, (int)(ActiveFont.WidthToNextLine($"{displayMsgNoEmote}XXX", 0) * displayScale)));
             }
@@ -921,20 +923,20 @@ public class RoomStatisticsDisplayer : Entity
         if (!inCreateSegmentRoomMenu)
         {
             bool useCol2BufferOffset = dictSize - firstRowShown > roomsPerColumn;
-            String clockIcon = ":EndHelper/uioutline_clock:";
+            String clockIcon = $"{emote_clock.white}";
             if (EndHelperModule.Settings.RoomStatMenu.MenuShowTime == RoomStatMenuSubMenu.MenuShowTimeEnum.RTA)
-            { clockIcon = ":EndHelper/uioutline_rtaclock:"; }
+            { clockIcon = $"{emote_rtaclock.white}"; }
             else if (EndHelperModule.Settings.RoomStatMenu.MenuShowTime == RoomStatMenuSubMenu.MenuShowTimeEnum.Both)
-            { clockIcon = ":EndHelper/uioutline_clock: / :EndHelper/uioutline_rtaclock:"; }
+            { clockIcon = $"{emote_clock.white} / {emote_rtaclock.white}"; }
 
             // First Column
-            ActiveFont.DrawOutline(":EndHelper/uioutline_skull:", new Vector2(startX_death + width_death / 2, startY + iconHeightOffset), new Vector2(0.5f, 0f), new Vector2(0.7f, 0.7f), Color.White, 2f, Color.Black);
+            ActiveFont.DrawOutline($"{emote_skull.white}", new Vector2(startX_death + width_death / 2, startY + iconHeightOffset), new Vector2(0.5f, 0f), new Vector2(0.7f, 0.7f), Color.White, 2f, Color.Black);
             ActiveFont.DrawOutline(clockIcon, new Vector2(startX_timer + width_timer / 2, startY + iconHeightOffset), new Vector2(0.5f, 0f), new Vector2(0.7f, 0.7f), Color.White, 2f, Color.Black);
 
             // Second Column. If needed.
             if (useCol2BufferOffset)
             {
-                ActiveFont.DrawOutline(":EndHelper/uioutline_skull:", new Vector2(startX_death + col2Buffer + width_death / 2, startY + iconHeightOffset), new Vector2(0.5f, 0f), new Vector2(0.7f, 0.7f), Color.White, 2f, Color.Black);
+                ActiveFont.DrawOutline($"{emote_skull.white}", new Vector2(startX_death + col2Buffer + width_death / 2, startY + iconHeightOffset), new Vector2(0.5f, 0f), new Vector2(0.7f, 0.7f), Color.White, 2f, Color.Black);
                 ActiveFont.DrawOutline(clockIcon, new Vector2(startX_timer + col2Buffer + width_timer / 2, startY + iconHeightOffset), new Vector2(0.5f, 0f), new Vector2(0.7f, 0.7f), Color.White, 2f, Color.Black);
             }
         }
@@ -1111,14 +1113,21 @@ public class RoomStatisticsDisplayer : Entity
                             }
                             else
                             {
-                                ActiveFont.DrawOutline($"{roomTimeString} / {roomRtaTimeString}", new Vector2(startX_timer + col2BufferCurrent + width_timer / 2, startY + heightBetweenRows * displayRow + 3), new Vector2(0.5f, 0f), new Vector2(0.6f, 0.6f), Color.White, 2f, Color.Black);
+                                if (roomTimeSpan.TotalHours >= 10 || roomRtaTimeSpan.TotalHours >= 10)
+                                {
+                                    ActiveFont.DrawOutline($"{roomTimeString} / {roomRtaTimeString}", new Vector2(startX_timer + col2BufferCurrent + width_timer / 2, startY + heightBetweenRows * displayRow + 5), new Vector2(0.5f, 0f), new Vector2(0.5f, 0.5f), Color.White, 2f, Color.Black);
+                                }
+                                else
+                                {
+                                    ActiveFont.DrawOutline($"{roomTimeString} / {roomRtaTimeString}", new Vector2(startX_timer + col2BufferCurrent + width_timer / 2, startY + heightBetweenRows * displayRow + 3), new Vector2(0.5f, 0f), new Vector2(0.6f, 0.6f), Color.White, 2f, Color.Black);
+                                }
                             }
                             break;
                     }
 
                     if (roomStrawberriesCollected > 0)
                     {
-                        ActiveFont.DrawOutline($":EndHelper/uioutline_strawberry:", new Vector2(startX_strawberry + col2BufferCurrent, startY + heightBetweenRows * displayRow + heightBetweenRows / 2 - 3), new Vector2(0.5f, 0.5f), new Vector2(0.7f, 0.7f), Color.White, 2f, Color.Black);
+                        ActiveFont.DrawOutline($"{emote_strawberry.white}", new Vector2(startX_strawberry + col2BufferCurrent, startY + heightBetweenRows * displayRow + heightBetweenRows / 2 - 3), new Vector2(0.5f, 0.5f), new Vector2(0.7f, 0.7f), Color.White, 2f, Color.Black);
                     }
                     if (roomStrawberriesCollected > 1)
                     {
@@ -1542,6 +1551,7 @@ public class RoomStatisticsDisplayer : Entity
     public void AddRTATimer(long addTicks)
     {
         if (currentEffectiveRoomName == "") return;
+        // !!!!!!!!!!!!!!!!!!!!!!!!!!!
         EndHelperModule.Session.roomStatDict_rtatimer[currentEffectiveRoomName] = addTicks + Convert.ToInt64(EndHelperModule.Session.roomStatDict_rtatimer[currentEffectiveRoomName]);
 
         if (dealWithFirstClear)
@@ -2211,6 +2221,5 @@ public class RoomStatisticsDisplayer : Entity
         tooltipDuration = (int)durationSeconds * 60;
         //Logger.Log(LogLevel.Info, "EndHelper/RoomStatisticsDisplayer", $"Show tooltip {message} for {durationSeconds} seconds.");
     }
-
     #endregion
 }

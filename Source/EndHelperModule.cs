@@ -1,4 +1,5 @@
-﻿using Celeste.Mod.EndHelper.Entities.DeathHandler;
+﻿using Celeste.Mod.EndHelper.Deprecated.Entities.Misc;
+using Celeste.Mod.EndHelper.Entities.DeathHandler;
 using Celeste.Mod.EndHelper.Entities.Misc;
 using Celeste.Mod.EndHelper.Integration;
 using Celeste.Mod.EndHelper.SharedCode;
@@ -199,6 +200,8 @@ public class EndHelperModule : EverestModule {
         QuantumMechanicsIntegration.Load();
         CollabUtils2Integration.Load();
         CelesteNetIntegration.Load();
+
+        Utils_Interop.InitialiseInteropExports();
     }
 
     // Unload the entirety of your mod's content. Free up any native resources.
@@ -989,10 +992,8 @@ public class EndHelperModule : EverestModule {
 
         PlayerDeadBody origMethod = orig(self, direction, evenIfInvincible, registerDeathInStats);
 
-        if (origMethod is not null)
-        {
-            DeathCountGate.OnPlayerDeathStatic(level);
-        }
+        //if (origMethod is not null)
+        //{ }
 
         return origMethod;
     }
@@ -1234,7 +1235,6 @@ public class EndHelperModule : EverestModule {
     {
         Utils_General.framesSinceEnteredRoom = 0;
         yield return new SwapImmediately(orig(self, next, direction));
-        DeathCountGate.OnTransitionStatic(self);
 
         if (EndHelperModule.Session.AllowDeathHandlerEntityChecks) Utils_DeathHandler.ResetFullResetAndBypassBetweenRooms(self); // AFTER room change
     }

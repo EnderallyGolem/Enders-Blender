@@ -768,7 +768,11 @@ public class MultiroomWatchtower : Entity
                 }
 
                 // Smoothly move camera
-                level.Camera.Position = level.Camera.Position + ((pos.Value - screenCenterOffset) - level.Camera.Position) * (1f - (float)Math.Pow(0.01f, Engine.DeltaTime));
+                float targetPosX = Calc.Clamp(pos.Value.X, currentRoomBounds.Left + screenCenterOffset.X -8, currentRoomBounds.Right - screenCenterOffset.X + 8);
+                float targetPosY = Calc.Clamp(pos.Value.Y, currentRoomBounds.Top + screenCenterOffset.Y -8, currentRoomBounds.Bottom - screenCenterOffset.Y + 8);
+                Vector2 targetPos = new Vector2(targetPosX, targetPosY);
+
+                level.Camera.Position = level.Camera.Position + ((targetPos - screenCenterOffset) - level.Camera.Position) * (1f - (float)Math.Pow(0.01f, Engine.DeltaTime));
             }
 
             #endregion CNETSpectatePlayer

@@ -5,41 +5,6 @@ mods.EndHelper.name=Ender's Blender
 
 
 
-# Connectable Outline
-entities.EndHelper/ConnectableOutline.placements.name.normal=Connectable Outline
-entities.EndHelper/ConnectableOutline.placements.description.normal=Visual outline that can be connected to other outlines, or attached to an entity.
-entities.EndHelper/ConnectableOutline.attributes.description.texturePath=Texture of the outline.\nThe texture uses the same format as cassette blocks.\nYou can remove the "_filled" for a hollow version of the default texture.
-entities.EndHelper/ConnectableOutline.attributes.description.colour=The colour of the outline.
-entities.EndHelper/ConnectableOutline.attributes.description.connectLayer=Only outlines of the same connect layer number will be connected.\nSet to -1 to disable connections.
-entities.EndHelper/ConnectableOutline.attributes.description.depth=Rendering depth of the outline.
-entities.EndHelper/ConnectableOutline.attributes.description.attachable=If true, the outline will be attached to the nearest entity, or entity closest to its node if a node is added.
-entities.EndHelper/ConnectableOutline.attributes.description.visibleFlag=If specified, the outline is only visible if this flag is enabled.\nA list of flags in the format "flagA, flagB, !flagC | flagD, flagE" can be specified.\nThis means (flagA and flagB and not flagC) or (flagD and flagE).
-
-# Tile Entity
-entities.EndHelper/TileEntity.placements.name.normal=Tile Entity
-entities.EndHelper/TileEntity.placements.description.normal=Modified VivHelper Custom Depth Tile Entity
-entities.EndHelper/TileEntity.attributes.description.depth=Entity depth. Connected tiles will have the same depth.
-entities.EndHelper/TileEntity.attributes.description.tiletypeOffscreen=The portion of the entity that is outside a room will show up as this.\nSet this to an invisible tile ("fake air") and extend the tiles offscreen to allow seemless room transitions.\nAlternatively, add <Tileset id="◯" copy="y" path="EndHelper/fakeAir" sound="0"/> to your ForegroundTiles.xml (◯ is U+25EF).
-entities.EndHelper/TileEntity.attributes.description.extendOffscreen=If the tiles are placed at the edge of the room, they will be extended one tile outside the room.
-entities.EndHelper/TileEntity.attributes.description.allowMerge=Allows the tiles to connect to each other.\nBoth tile entities must have this enabled for them to connect.
-entities.EndHelper/TileEntity.attributes.description.allowMergeDifferentType=Allows DIFFERENT tiles to connect to each other.\nBoth tile entities must have this and Allow Merge enabled for them to connect.\nNote: Groups of multiple tiles sometimes only connect to those with this enabled (depending on connection order),\neven if the part of the group share the same time.
-entities.EndHelper/TileEntity.attributes.description.noEdge=If true, the tiles will have no edge (all parts look like the middle of the tile).\nNote: When merged, as long as one of the parts have this enabled, \nthe full block will act as though this is enabled.
-entities.EndHelper/TileEntity.attributes.description.locationSeeded=If true, the tile's seed will depend on its position relative to the room (and width and height).\nThus the randomisation will stay consistent upon room swaps,\nor if teleporting to a room with the tile entity in the same location.
-entities.EndHelper/TileEntity.attributes.description.surfaceSoundIndex=Overrides the surfaceSoundIndex (sfx when stepping on the block).\nSet to -1 to use default value.
-entities.EndHelper/TileEntity.attributes.description.dashBlock=Turns the Tile Entity into a Dash Block (broken when dashed into).\nDash Blocks will not connect with non-Dash Blocks!
-entities.EndHelper/TileEntity.attributes.description.dashBlockPermament=For Dash Blocks: If the block stays broken after room reload.\nIf connected blocks are partially permanent and partially not,\nonly the non-permanent parts will reappear on reload.
-entities.EndHelper/TileEntity.attributes.description.dashBlockBreakSound=For Dash Blocks: Sound event which plays when broken.\nIf connected, the sound will depend on which segment was broken.
-entities.EndHelper/TileEntity.attributes.description.collidable=Affects whether the tile entity is solid, and if it blocks light.
-entities.EndHelper/TileEntity.attributes.description.colour=Colour of the Tile Entity. (White = normal)\nDifferent coloured entities cannot connect.
-entities.EndHelper/TileEntity.attributes.description.backgroundTiles=Use background tiles instead of foreground tiles.\nThis is purely visual - you might still want to change the Depth (BG: 10000, FG: -10000) and Collidable.\nForeground and background tiles cannot be connected.\nReopen this menu to update the Tiletype selections!
-entities.EndHelper/TileEntity.attributes.description.offU=The offscreen tiletype will be used if it extends offscreen to the top.
-entities.EndHelper/TileEntity.attributes.description.offUR=The offscreen tiletype will be used if it extends offscreen to the top right.
-entities.EndHelper/TileEntity.attributes.description.offR=The offscreen tiletype will be used if it extends offscreen to the right.
-entities.EndHelper/TileEntity.attributes.description.offDR=The offscreen tiletype will be used if it extends offscreen to the bottom right.
-entities.EndHelper/TileEntity.attributes.description.offD=The offscreen tiletype will be used if it extends offscreen to the bottom.
-entities.EndHelper/TileEntity.attributes.description.offDL=The offscreen tiletype will be used if it extends offscreen to the bottom left.
-entities.EndHelper/TileEntity.attributes.description.offL=The offscreen tiletype will be used if it extends offscreen to the left.
-entities.EndHelper/TileEntity.attributes.description.offUL=The offscreen tiletype will be used if it extends offscreen to the top left.
 
 # Multiroom Watchtower
 entities.EndHelper/MultiroomWatchtower.placements.name.normal=Multi-Room Watchtower
@@ -47,49 +12,7 @@ entities.EndHelper/MultiroomWatchtower.placements.description.normal=Watchtower 
 entities.EndHelper/MultiroomWatchtower.attributes.description.modifiedInterpolation=If you're using nodes, uses Catmull-Rom Splines instead of whatever vanilla uses for the watchtower path,\nwhich have the advantage of ensuring the camera always goes past nodes, but is less smooth.\nBecareful if this is disabled, if the path does not go through a location where the camera can fit in the room,\nthe watchtower cannot access it and any future rooms!
 entities.EndHelper/MultiroomWatchtower.attributes.description.ignoreLookoutBlocker=The lookout bypasses Lookout Blockers.\nThis allows both scrolling past the blockers and looking at rooms past the blockers.\nThis has no effect if nodes are used.
 
-# Conditional Tutorial Bird
-entities.EndHelper/ConditionalBirdTutorial.placements.name.normal=Conditional Bird Tutorial
-entities.EndHelper/ConditionalBirdTutorial.placements.description.normal=Everest Custom Bird Tutorial with custom ways to activate them and fly-in animation.\nThe 2 nodes create a zone which can be used for the fly-in condition.\nEverest Custom Bird Tutorial Trigger works for removing the bird,\nbut you shouldn't use them to get the birds to show text.
-entities.EndHelper/ConditionalBirdTutorial.attributes.description.flyInSpeedMultiplier=When the condition is met, the bird will fly to its location. This multiplies the Fly-in animation speed when the condition is met.\nSet to 0 for no fly-in (already at location by default)
-entities.EndHelper/ConditionalBirdTutorial.attributes.description.showSprite=If false, the bird will be invisible and skip the fly-in animation.
-entities.EndHelper/ConditionalBirdTutorial.attributes.description.onlyOnceFlyIn=The bird will only fly-in once.\nIn future room loads, the bird will already be at the landing spot, \nwith the tutorial checks apart from Require On Screen being skipped.
-entities.EndHelper/ConditionalBirdTutorial.attributes.description.onlyFulfillConditionOnce=If true, after the bird flies in once, the condition (other than Require On Screen) will not need to be met again for the bird to fly in again.
-entities.EndHelper/ConditionalBirdTutorial.attributes.description.secInZoneTotal=The mimimum total time (in seconds) madeline must be between the nodes for the tutorial to appear.
-entities.EndHelper/ConditionalBirdTutorial.attributes.description.secInZoneAtOnce=The mimimum time (in seconds) madeline must be between the nodes without leaving for the tutorial to appear.
-entities.EndHelper/ConditionalBirdTutorial.attributes.description.secInRoom=The mimimum total time (in seconds) madeline must be in the room for the tutorial to appear.
-entities.EndHelper/ConditionalBirdTutorial.attributes.description.deathsInZone=The mimimum number of deaths madeline must have between the nodes for the tutorial to appear.
-entities.EndHelper/ConditionalBirdTutorial.attributes.description.deathsInRoom=The mimimum number of deaths madeline must have in the room for the tutorial to appear.
-entities.EndHelper/ConditionalBirdTutorial.attributes.description.requireOnScreen=If the bird must be within the screen bounds for the tutorial to appear.
-entities.EndHelper/ConditionalBirdTutorial.attributes.description.requireFlag=Flag required for tutorial to appear.\nA list of flags in the format "flagA, flagB, !flagC | flagD, flagE" can be specified.\nThis means (flagA and flagB and not flagC) or (flagD and flagE).
-entities.EndHelper/ConditionalBirdTutorial.attributes.description.requireFlagForIncrement=Flag required for the seconds and death conditions to increment.\nIf not specified, they increment as per normal.\nA list of flags in the format "flagA, flagB, !flagC | flagD, flagE" can be specified.\nThis means (flagA and flagB and not flagC) or (flagD and flagE).
 
-entities.EndHelper/ConditionalBirdTutorial.attributes.description.birdId=The unique id of the bird when used in combination with Everest Custom Tutorial Bird triggers. Useful for extra control over multiple birds in one room.\nDo not use Custom Tutorial Bird triggers to make these birds appear, only use it to remove the bird!
-entities.EndHelper/ConditionalBirdTutorial.attributes.description.controls=The controls to display in the bubble, separated by commas. Each part can be:\n- a path to a texture in the Gui atlas (for example "tinyarrow")\n- a direction: Down, DownRight, Right, UpRight, Up, UpLeft, Left, DownLeft\n- a button: Jump, Dash, CrouchDash, Grab, Talk, ESC, Pause, MenuLeft, MenuRight, MenuUp, MenuDown, MenuConfirm, MenuCancel, MenuJournal, QuickRestart\n- a dialog ID, if you prefix it with "dialog:" (for example, "dialog:TUTORIAL_DREAMJUMP")\n- plain text
-entities.EndHelper/ConditionalBirdTutorial.attributes.description.info=The speech bubble title. Can either be a dialog ID or a path to a texture in the GUI atlas.
-entities.EndHelper/ConditionalBirdTutorial.attributes.description.faceLeft=Whether the bird should face left or right.
-entities.EndHelper/ConditionalBirdTutorial.attributes.description.caw=Whether the bird should caw upon displaying the speech bubble.
-entities.EndHelper/ConditionalBirdTutorial.attributes.description.onlyOnce=Whether the bird should respawn after displaying the speech bubble and flying away from an Everest Custom Bird Tutorial Trigger.
-
-
-
-# Flag Killbox
-entities.EndHelper/FlagKillbox.placements.name.normal=Flag Killbox
-entities.EndHelper/FlagKillbox.placements.name.altname=Flag Kill Box
-entities.EndHelper/FlagKillbox.placements.description.normal=Flag-toggleable killbox.\n(When above the killbox, the killbox becomes the new bottom deathzone.)
-entities.EndHelper/FlagKillbox.attributes.description.triggerDistance=The number of tiles the player must be above the killbox before it activates.
-entities.EndHelper/FlagKillbox.attributes.description.requireFlag=Flag required for the killbox to activate.\nA list of flags in the format "flagA, flagB, !flagC | flagD, flagE" can be specified.\nThis means (flagA and flagB and not flagC) or (flagD and flagE).
-entities.EndHelper/FlagKillbox.attributes.description.permamentActivate=If true, when the Require Flag condition is met, it will stay activated, even when the flags change.\n(The zone still deactivates upon death/reload or if the player manages to get under it.)
-
-# Death Count Gate
-entities.EndHelper/DeathCountGate.placements.name.normal=Temple Gate (Death Count)
-entities.EndHelper/DeathCountGate.placements.name.altname1=Death-Handler Temple Gate (Death Count)
-entities.EndHelper/DeathCountGate.placements.description.normal=Temple Gate which opens on certain death counts.
-entities.EndHelper/DeathCountGate.attributes.description.sprite=Texture used for the gate.
-entities.EndHelper/DeathCountGate.attributes.description.deathLimit=The number of deaths the gate compares the death count to.
-entities.EndHelper/DeathCountGate.attributes.description.comparison=If the gate should be open if the current death count is above, below, or equal to the death limit.
-entities.EndHelper/DeathCountGate.attributes.description.deathCountType=The type of death count that this gate checks for.\nFull Resets only make sense when Death-Handler is used.
-entities.EndHelper/DeathCountGate.attributes.description.setFlag=If specified, will set this flag when open and remove this flag when closed.
-entities.EndHelper/DeathCountGate.attributes.description.silent=Prevents this gate from making any sound.
 
 
 
@@ -102,17 +25,6 @@ triggers.EndHelper/GameplayTweaksOverrideTrigger.attributes.description.activate
 triggers.EndHelper/GameplayTweaksOverrideTrigger.attributes.description.requireFlag=If specified, the trigger will only run if this flag is enabled.\nA list of flags in the format "flagA, flagB, !flagC | flagD, flagE" can be specified.\nThis means (flagA and flagB and not flagC) or (flagD and flagE).
 triggers.EndHelper/GameplayTweaksOverrideTrigger.attributes.description.preventDownDashRedirects=Converts manual demos into down/down-diagonal dashes.
 triggers.EndHelper/GameplayTweaksOverrideTrigger.attributes.description.seemlessRespawn=Changes respawns to be more seemless with no wipes.
-
-
-# IncrementalFlagTrigger
-triggers.EndHelper/IncrementalFlagTrigger.placements.name.normal=Incremental Flag
-triggers.EndHelper/IncrementalFlagTrigger.placements.description.normal=Trigger that creates or increments a Flag with a number.\nEg: Make entering a region adds flagNum2 and removes flagNum1 if flagNum1 is set.\n(This also creates a counter, for tracking purposes.)
-triggers.EndHelper/IncrementalFlagTrigger.attributes.description.flag=The flag name, without the number.\nThe trigger will create the flag [flag][number] upon entering.
-triggers.EndHelper/IncrementalFlagTrigger.attributes.description.setValue=The flag number.\nThe trigger will create the flag [flag][number] upon entering.\nIf set to 0, the flag will be removed.
-triggers.EndHelper/IncrementalFlagTrigger.attributes.description.setOnlyIfOneBelow=If enabled, the flag number is only set if at the previous number.\nEg: Set flagNum3 only if flagNum2.\nDoes nothing if Set Value is 0.
-triggers.EndHelper/IncrementalFlagTrigger.attributes.description.requireFlag=If specified, the incremental flag is only set if THIS flag is enabled.\nA list of flags in the format "flagA, flagB, !flagC | flagD, flagE" can be specified.\nThis means (flagA and flagB and not flagC) or (flagD and flagE).
-triggers.EndHelper/IncrementalFlagTrigger.attributes.description.singleUse=Trigger can only be used once (until the player dies).\nIf the trigger is entered but the flag isn't changed, it does NOT count as being used.
-triggers.EndHelper/IncrementalFlagTrigger.attributes.description.temporary=Removes the flag upon room reload.
 
 
 
@@ -319,3 +231,112 @@ triggers.EndHelper/DeathHandlerDeathBypassTrigger.placements.name.normal=Death-H
 triggers.EndHelper/DeathHandlerDeathBypassTrigger.placements.description.normal=On death, entities inside it and entities overlapping its nodes will persist through the room reload on death.\nEntities that are removed with the bypass won't appear until a Full Reset (including room transition).\nNote: This check will rerun each time you die!\nWarning: This may be buggy with custom entities which are internally made of multiple entities (eg: zip/move blocks).
 triggers.EndHelper/DeathHandlerDeathBypassTrigger.attributes.description.requireFlag=If specified, entities will only bypass death if this flag is enabled.\nA list of flags in the format "flagA, flagB, !flagC | flagD, flagE" can be specified.\nThis means (flagA and flagB and not flagC) or (flagD and flagE).
 triggers.EndHelper/DeathHandlerDeathBypassTrigger.attributes.description.showVisuals=Marks death-bypass entities with a golden glint.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+### Depracated
+
+
+# Tile Entity
+entities.EndHelper/TileEntity.placements.name.normal=Tile Entity
+entities.EndHelper/TileEntity.placements.description.normal=Modified VivHelper Custom Depth Tile Entity
+entities.EndHelper/TileEntity.attributes.description.depth=Entity depth. Connected tiles will have the same depth.
+entities.EndHelper/TileEntity.attributes.description.tiletypeOffscreen=The portion of the entity that is outside a room will show up as this.\nSet this to an invisible tile ("fake air") and extend the tiles offscreen to allow seemless room transitions.\nAlternatively, add <Tileset id="◯" copy="y" path="EndHelper/fakeAir" sound="0"/> to your ForegroundTiles.xml (◯ is U+25EF).
+entities.EndHelper/TileEntity.attributes.description.extendOffscreen=If the tiles are placed at the edge of the room, they will be extended one tile outside the room.
+entities.EndHelper/TileEntity.attributes.description.allowMerge=Allows the tiles to connect to each other.\nBoth tile entities must have this enabled for them to connect.
+entities.EndHelper/TileEntity.attributes.description.allowMergeDifferentType=Allows DIFFERENT tiles to connect to each other.\nBoth tile entities must have this and Allow Merge enabled for them to connect.\nNote: Groups of multiple tiles sometimes only connect to those with this enabled (depending on connection order),\neven if the part of the group share the same time.
+entities.EndHelper/TileEntity.attributes.description.noEdge=If true, the tiles will have no edge (all parts look like the middle of the tile).\nNote: When merged, as long as one of the parts have this enabled, \nthe full block will act as though this is enabled.
+entities.EndHelper/TileEntity.attributes.description.locationSeeded=If true, the tile's seed will depend on its position relative to the room (and width and height).\nThus the randomisation will stay consistent upon room swaps,\nor if teleporting to a room with the tile entity in the same location.
+entities.EndHelper/TileEntity.attributes.description.surfaceSoundIndex=Overrides the surfaceSoundIndex (sfx when stepping on the block).\nSet to -1 to use default value.
+entities.EndHelper/TileEntity.attributes.description.dashBlock=Turns the Tile Entity into a Dash Block (broken when dashed into).\nDash Blocks will not connect with non-Dash Blocks!
+entities.EndHelper/TileEntity.attributes.description.dashBlockPermament=For Dash Blocks: If the block stays broken after room reload.\nIf connected blocks are partially permanent and partially not,\nonly the non-permanent parts will reappear on reload.
+entities.EndHelper/TileEntity.attributes.description.dashBlockBreakSound=For Dash Blocks: Sound event which plays when broken.\nIf connected, the sound will depend on which segment was broken.
+entities.EndHelper/TileEntity.attributes.description.collidable=Affects whether the tile entity is solid, and if it blocks light.
+entities.EndHelper/TileEntity.attributes.description.colour=Colour of the Tile Entity. (White = normal)\nDifferent coloured entities cannot connect.
+entities.EndHelper/TileEntity.attributes.description.backgroundTiles=Use background tiles instead of foreground tiles.\nThis is purely visual - you might still want to change the Depth (BG: 10000, FG: -10000) and Collidable.\nForeground and background tiles cannot be connected.\nReopen this menu to update the Tiletype selections!
+entities.EndHelper/TileEntity.attributes.description.offU=The offscreen tiletype will be used if it extends offscreen to the top.
+entities.EndHelper/TileEntity.attributes.description.offUR=The offscreen tiletype will be used if it extends offscreen to the top right.
+entities.EndHelper/TileEntity.attributes.description.offR=The offscreen tiletype will be used if it extends offscreen to the right.
+entities.EndHelper/TileEntity.attributes.description.offDR=The offscreen tiletype will be used if it extends offscreen to the bottom right.
+entities.EndHelper/TileEntity.attributes.description.offD=The offscreen tiletype will be used if it extends offscreen to the bottom.
+entities.EndHelper/TileEntity.attributes.description.offDL=The offscreen tiletype will be used if it extends offscreen to the bottom left.
+entities.EndHelper/TileEntity.attributes.description.offL=The offscreen tiletype will be used if it extends offscreen to the left.
+entities.EndHelper/TileEntity.attributes.description.offUL=The offscreen tiletype will be used if it extends offscreen to the top left.
+
+
+
+# Connectable Outline
+entities.EndHelper/ConnectableOutline.placements.name.normal=Connectable Outline
+entities.EndHelper/ConnectableOutline.placements.description.normal=Visual outline that can be connected to other outlines, or attached to an entity.
+entities.EndHelper/ConnectableOutline.attributes.description.texturePath=Texture of the outline.\nThe texture uses the same format as cassette blocks.\nYou can remove the "_filled" for a hollow version of the default texture.
+entities.EndHelper/ConnectableOutline.attributes.description.colour=The colour of the outline.
+entities.EndHelper/ConnectableOutline.attributes.description.connectLayer=Only outlines of the same connect layer number will be connected.\nSet to -1 to disable connections.
+entities.EndHelper/ConnectableOutline.attributes.description.depth=Rendering depth of the outline.
+entities.EndHelper/ConnectableOutline.attributes.description.attachable=If true, the outline will be attached to the nearest entity, or entity closest to its node if a node is added.
+entities.EndHelper/ConnectableOutline.attributes.description.visibleFlag=If specified, the outline is only visible if this flag is enabled.\nA list of flags in the format "flagA, flagB, !flagC | flagD, flagE" can be specified.\nThis means (flagA and flagB and not flagC) or (flagD and flagE).
+
+
+
+# Flag Killbox
+entities.EndHelper/FlagKillbox.placements.name.normal=Flag Killbox
+entities.EndHelper/FlagKillbox.placements.name.altname=Flag Kill Box
+entities.EndHelper/FlagKillbox.placements.description.normal=Flag-toggleable killbox.\n(When above the killbox, the killbox becomes the new bottom deathzone.)
+entities.EndHelper/FlagKillbox.attributes.description.triggerDistance=The number of tiles the player must be above the killbox before it activates.
+entities.EndHelper/FlagKillbox.attributes.description.requireFlag=Flag required for the killbox to activate.\nA list of flags in the format "flagA, flagB, !flagC | flagD, flagE" can be specified.\nThis means (flagA and flagB and not flagC) or (flagD and flagE).
+entities.EndHelper/FlagKillbox.attributes.description.permamentActivate=If true, when the Require Flag condition is met, it will stay activated, even when the flags change.\n(The zone still deactivates upon death/reload or if the player manages to get under it.)
+
+
+
+# Conditional Tutorial Bird
+entities.EndHelper/ConditionalBirdTutorial.placements.name.normal=Conditional Bird Tutorial
+entities.EndHelper/ConditionalBirdTutorial.placements.description.normal=Everest Custom Bird Tutorial with custom ways to activate them and fly-in animation.\nThe 2 nodes create a zone which can be used for the fly-in condition.\nEverest Custom Bird Tutorial Trigger works for removing the bird,\nbut you shouldn't use them to get the birds to show text.
+entities.EndHelper/ConditionalBirdTutorial.attributes.description.flyInSpeedMultiplier=When the condition is met, the bird will fly to its location. This multiplies the Fly-in animation speed when the condition is met.\nSet to 0 for no fly-in (already at location by default)
+entities.EndHelper/ConditionalBirdTutorial.attributes.description.showSprite=If false, the bird will be invisible and skip the fly-in animation.
+entities.EndHelper/ConditionalBirdTutorial.attributes.description.onlyOnceFlyIn=The bird will only fly-in once.\nIn future room loads, the bird will already be at the landing spot, \nwith the tutorial checks apart from Require On Screen being skipped.
+entities.EndHelper/ConditionalBirdTutorial.attributes.description.onlyFulfillConditionOnce=If true, after the bird flies in once, the condition (other than Require On Screen) will not need to be met again for the bird to fly in again.
+entities.EndHelper/ConditionalBirdTutorial.attributes.description.secInZoneTotal=The mimimum total time (in seconds) madeline must be between the nodes for the tutorial to appear.
+entities.EndHelper/ConditionalBirdTutorial.attributes.description.secInZoneAtOnce=The mimimum time (in seconds) madeline must be between the nodes without leaving for the tutorial to appear.
+entities.EndHelper/ConditionalBirdTutorial.attributes.description.secInRoom=The mimimum total time (in seconds) madeline must be in the room for the tutorial to appear.
+entities.EndHelper/ConditionalBirdTutorial.attributes.description.deathsInZone=The mimimum number of deaths madeline must have between the nodes for the tutorial to appear.
+entities.EndHelper/ConditionalBirdTutorial.attributes.description.deathsInRoom=The mimimum number of deaths madeline must have in the room for the tutorial to appear.
+entities.EndHelper/ConditionalBirdTutorial.attributes.description.requireOnScreen=If the bird must be within the screen bounds for the tutorial to appear.
+entities.EndHelper/ConditionalBirdTutorial.attributes.description.requireFlag=Flag required for tutorial to appear.\nA list of flags in the format "flagA, flagB, !flagC | flagD, flagE" can be specified.\nThis means (flagA and flagB and not flagC) or (flagD and flagE).
+entities.EndHelper/ConditionalBirdTutorial.attributes.description.requireFlagForIncrement=Flag required for the seconds and death conditions to increment.\nIf not specified, they increment as per normal.\nA list of flags in the format "flagA, flagB, !flagC | flagD, flagE" can be specified.\nThis means (flagA and flagB and not flagC) or (flagD and flagE).
+
+entities.EndHelper/ConditionalBirdTutorial.attributes.description.birdId=The unique id of the bird when used in combination with Everest Custom Tutorial Bird triggers. Useful for extra control over multiple birds in one room.\nDo not use Custom Tutorial Bird triggers to make these birds appear, only use it to remove the bird!
+entities.EndHelper/ConditionalBirdTutorial.attributes.description.controls=The controls to display in the bubble, separated by commas. Each part can be:\n- a path to a texture in the Gui atlas (for example "tinyarrow")\n- a direction: Down, DownRight, Right, UpRight, Up, UpLeft, Left, DownLeft\n- a button: Jump, Dash, CrouchDash, Grab, Talk, ESC, Pause, MenuLeft, MenuRight, MenuUp, MenuDown, MenuConfirm, MenuCancel, MenuJournal, QuickRestart\n- a dialog ID, if you prefix it with "dialog:" (for example, "dialog:TUTORIAL_DREAMJUMP")\n- plain text
+entities.EndHelper/ConditionalBirdTutorial.attributes.description.info=The speech bubble title. Can either be a dialog ID or a path to a texture in the GUI atlas.
+entities.EndHelper/ConditionalBirdTutorial.attributes.description.faceLeft=Whether the bird should face left or right.
+entities.EndHelper/ConditionalBirdTutorial.attributes.description.caw=Whether the bird should caw upon displaying the speech bubble.
+entities.EndHelper/ConditionalBirdTutorial.attributes.description.onlyOnce=Whether the bird should respawn after displaying the speech bubble and flying away from an Everest Custom Bird Tutorial Trigger.
+
+
+
+
+
+# IncrementalFlagTrigger
+triggers.EndHelper/IncrementalFlagTrigger.placements.name.normal=Incremental Flag
+triggers.EndHelper/IncrementalFlagTrigger.placements.description.normal=Trigger that creates or increments a Flag with a number.\nEg: Make entering a region adds flagNum2 and removes flagNum1 if flagNum1 is set.\n(This also creates a counter, for tracking purposes.)
+triggers.EndHelper/IncrementalFlagTrigger.attributes.description.flag=The flag name, without the number.\nThe trigger will create the flag [flag][number] upon entering.
+triggers.EndHelper/IncrementalFlagTrigger.attributes.description.setValue=The flag number.\nThe trigger will create the flag [flag][number] upon entering.\nIf set to 0, the flag will be removed.
+triggers.EndHelper/IncrementalFlagTrigger.attributes.description.setOnlyIfOneBelow=If enabled, the flag number is only set if at the previous number.\nEg: Set flagNum3 only if flagNum2.\nDoes nothing if Set Value is 0.
+triggers.EndHelper/IncrementalFlagTrigger.attributes.description.requireFlag=If specified, the incremental flag is only set if THIS flag is enabled.\nA list of flags in the format "flagA, flagB, !flagC | flagD, flagE" can be specified.\nThis means (flagA and flagB and not flagC) or (flagD and flagE).
+triggers.EndHelper/IncrementalFlagTrigger.attributes.description.singleUse=Trigger can only be used once (until the player dies).\nIf the trigger is entered but the flag isn't changed, it does NOT count as being used.
+triggers.EndHelper/IncrementalFlagTrigger.attributes.description.temporary=Removes the flag upon room reload.

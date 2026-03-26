@@ -533,6 +533,14 @@ namespace Celeste.Mod.EndHelper.Utils
             return new Vector2(point.X, point.Y);
         }
 
+        /// <summary>
+        /// Converts a Vector2 to a Point
+        /// </summary>
+        public static Point ToPoint(this Vector2 vector2)
+        {
+            return new Point((int)vector2.X, (int)vector2.Y);
+        }
+
         public static Entity GetNearestGenericEntity(this Level level, Vector2 nearestTo, Entity excludeEntity)
         {
             EntityList entityList = level.Entities;

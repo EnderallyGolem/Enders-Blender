@@ -302,7 +302,7 @@ namespace Celeste.Mod.EndHelper.Utils
                 oldWallSlideDir = player.wallSlideDir;
                 oldLaunched = player.launched;
                 oldLaunchedTimer = player.launchedTimer;
-    }
+            }
         }
 
         internal static void SetManualReset(Level level)
@@ -373,7 +373,13 @@ namespace Celeste.Mod.EndHelper.Utils
                 }
 
                 playerHasDeathBypass = false;
-                player.Add(new Coroutine(AfterPlayerDeathDelayed()));                
+
+                // Delay removing manual reset for a frame if using death-handler, in order to shift lastFullResetPos -> firstFullResetPos
+                player.Add(new Coroutine(AfterPlayerDeathDelayed()));           
+            }
+            else
+            {
+                manualReset = false;
             }
         }
 

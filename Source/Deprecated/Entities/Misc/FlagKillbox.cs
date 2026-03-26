@@ -4,7 +4,7 @@ using Microsoft.Xna.Framework;
 using Monocle;
 using System.Runtime.CompilerServices;
 
-namespace Celeste.Mod.EndHelper.Entities.Misc
+namespace Celeste.Mod.EndHelper.Deprecated.Entities.Misc
 {
     [CustomEntity("EndHelper/FlagKillbox")]
     [Tracked(false)]
@@ -41,16 +41,16 @@ namespace Celeste.Mod.EndHelper.Entities.Misc
 
             if (!Collidable)
             {
-                Player player = base.Scene.Tracker.GetEntity<Player>();
-                if (player != null && player.Bottom < base.Top - triggerPixels && flagAllow)
+                Player player = Scene.Tracker.GetEntity<Player>();
+                if (player != null && player.Bottom < Top - triggerPixels && flagAllow)
                 {
                     Collidable = true;
                 }
             }
             else
             {
-                Player entity2 = base.Scene.Tracker.GetEntity<Player>();
-                if ((entity2 != null && entity2.Top > base.Bottom + 32f) || !flagAllow)
+                Player entity2 = Scene.Tracker.GetEntity<Player>();
+                if (entity2 != null && entity2.Top > Bottom + 32f || !flagAllow)
                 {
                     Collidable = false;
                 }

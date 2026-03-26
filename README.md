@@ -75,34 +75,17 @@ Some of these can be overridden per-map with a Gameplay Tweaks Override Trigger.
 ###### Multi-Room Watchtower
 - Watchtower that can view multiple rooms (blocked by Lookout Blocker as per usual). Works both as normal and with a node path, with modifiable scroll speed.
 
-###### Tile Entity
-- Foreground tile entity that allows customising: 
-    - Entity depth
-    - Connections to the same/different tile entities or the edge of the room, 
-    - Whether/what direction it renders off-screen in (Note: done via an invisible tileset)
-    - If the seed depends on the relative position in the room
-- Option to be breakable
 
-###### Conditional Bird Tutorial
-- Tutorial bird which flies in when certain conditions are met:
-	- Certain time in room / part of room (total or at once)
-	- Certain number of deaths in room / part of room
-	- Flag enabled (either as a seperate condition, or required for the above 2 conditions to increment)
-	- If on screen
 
-###### Misc
-- Incremental Flag Trigger
-	- Increments a counter when you reach the trigger with a specific value, which then sets a flag
-- Flag Killbox
-
+# 1.1.25:
+- Misc:
+	- Portable Multi-room Watchtower: Spectating now prioritises players in the same room when searching for a player to spectate.
 
 ## 1.1.24: 
 - QOL Tweaks:
 	- Renamed RTA to Real-Time to avoid confusion
-
 - Gameplay Tweaks:
 	- Backboost and Neutral Drop buttons are now bufferable
-	
 - Misc:
 	- Portable Multi-room Watchtower: Added ability to spectate players on CelesteNet (Camera will follow them)
 

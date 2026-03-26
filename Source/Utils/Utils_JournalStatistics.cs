@@ -39,6 +39,11 @@ namespace Celeste.Mod.EndHelper.Utils
 
         internal static float journalStatisticsBackgroundAlpha;
 
+        public static RoomStatisticsEmotes emote_clock = new RoomStatisticsEmotes("uioutline_clock");
+        public static RoomStatisticsEmotes emote_rtaclock = new RoomStatisticsEmotes("uioutline_rtaclock");
+        public static RoomStatisticsEmotes emote_skull = new RoomStatisticsEmotes("uioutline_skull");
+        public static RoomStatisticsEmotes emote_strawberry = new RoomStatisticsEmotes("uioutline_strawberry");
+
         private static void JournalStatisticsMenuCloseNameEditor()
         {
             //Logger.Log(LogLevel.Info, "EndHelper/RoomStatisticsDisplayer", $"MenuCloseNameEditor: close text menu");
@@ -136,6 +141,8 @@ namespace Celeste.Mod.EndHelper.Utils
             journalStatisticsEditingRoomIndex = 0;
 
             journalOpen = true;
+
+            Utils_JournalStatistics.InitEmotes();
 
             Oui currentOui = self.Overworld.Current;
 
@@ -671,20 +678,20 @@ namespace Celeste.Mod.EndHelper.Utils
             const int iconHeightOffset = -50;
             bool useCol2BufferOffset = dictSize - journalStatisticsFirstRowShown > roomsPerColumn;
 
-            String clockIcon = ":EndHelper/uioutline_clock:";
+            String clockIcon = $"{emote_clock.white}";
             if (EndHelperModule.Settings.RoomStatMenu.MenuShowTime == RoomStatMenuSubMenu.MenuShowTimeEnum.RTA)
-            { clockIcon = ":EndHelper/uioutline_rtaclock:"; }
+            { clockIcon = $"{emote_rtaclock.white}"; }
             else if (EndHelperModule.Settings.RoomStatMenu.MenuShowTime == RoomStatMenuSubMenu.MenuShowTimeEnum.Both)
-            { clockIcon = ":EndHelper/uioutline_clock: / :EndHelper/uioutline_rtaclock:"; }
+            { clockIcon = $"{emote_clock.white} / {emote_rtaclock.white}"; }
 
             // First Column
-            ActiveFont.DrawOutline(":EndHelper/uioutline_skull:", new Vector2(startX_death + width_death / 2, startY + iconHeightOffset), new Vector2(0.5f, 0f), new Vector2(0.7f, 0.7f), Color.White, 2f, Color.Black);
+            ActiveFont.DrawOutline($"{emote_skull.white}", new Vector2(startX_death + width_death / 2, startY + iconHeightOffset), new Vector2(0.5f, 0f), new Vector2(0.7f, 0.7f), Color.White, 2f, Color.Black);
             ActiveFont.DrawOutline(clockIcon, new Vector2(startX_timer + width_timer / 2, startY + iconHeightOffset), new Vector2(0.5f, 0f), new Vector2(0.7f, 0.7f), Color.White, 2f, Color.Black);
 
             // Second Column. If needed.
             if (useCol2BufferOffset)
             {
-                ActiveFont.DrawOutline(":EndHelper/uioutline_skull:", new Vector2(startX_death + col2Buffer + width_death / 2, startY + iconHeightOffset), new Vector2(0.5f, 0f), new Vector2(0.7f, 0.7f), Color.White, 2f, Color.Black);
+                ActiveFont.DrawOutline($"{emote_skull.white}", new Vector2(startX_death + col2Buffer + width_death / 2, startY + iconHeightOffset), new Vector2(0.5f, 0f), new Vector2(0.7f, 0.7f), Color.White, 2f, Color.Black);
                 ActiveFont.DrawOutline(clockIcon, new Vector2(startX_timer + col2Buffer + width_timer / 2, startY + iconHeightOffset), new Vector2(0.5f, 0f), new Vector2(0.7f, 0.7f), Color.White, 2f, Color.Black);
             }
 
@@ -842,14 +849,21 @@ namespace Celeste.Mod.EndHelper.Utils
                             }
                             else
                             {
-                                ActiveFont.DrawOutline($"{roomTimeString} / {roomRtaTimeString}", new Vector2(startX_timer + col2BufferCurrent + width_timer / 2, startY + heightBetweenRows * displayRow + 3), new Vector2(0.5f, 0f), new Vector2(0.6f, 0.6f), Color.White, 2f, Color.Black);
+                                if (roomTimeSpan.TotalHours >= 10 || roomRtaTimeSpan.TotalHours >= 10)
+                                {
+                                    ActiveFont.DrawOutline($"{roomTimeString} / {roomRtaTimeString}", new Vector2(startX_timer + col2BufferCurrent + width_timer / 2, startY + heightBetweenRows * displayRow + 5), new Vector2(0.5f, 0f), new Vector2(0.5f, 0.5f), Color.White, 2f, Color.Black);
+                                }
+                                else
+                                {
+                                    ActiveFont.DrawOutline($"{roomTimeString} / {roomRtaTimeString}", new Vector2(startX_timer + col2BufferCurrent + width_timer / 2, startY + heightBetweenRows * displayRow + 3), new Vector2(0.5f, 0f), new Vector2(0.6f, 0.6f), Color.White, 2f, Color.Black);
+                                }
                             }
                             break;
                     }
 
                     if (roomStrawberriesCollected > 0)
                     {
-                        ActiveFont.DrawOutline($":EndHelper/uioutline_strawberry:", new Vector2(startX_strawberry + col2BufferCurrent, startY + heightBetweenRows * displayRow + heightBetweenRows / 2 - 3), new Vector2(0.5f, 0.5f), new Vector2(0.7f, 0.7f), Color.White, 2f, Color.Black);
+                        ActiveFont.DrawOutline($"{emote_strawberry.white}", new Vector2(startX_strawberry + col2BufferCurrent, startY + heightBetweenRows * displayRow + heightBetweenRows / 2 - 3), new Vector2(0.5f, 0.5f), new Vector2(0.7f, 0.7f), Color.White, 2f, Color.Black);
                     }
                     if (roomStrawberriesCollected > 1)
                     {
@@ -1200,6 +1214,54 @@ namespace Celeste.Mod.EndHelper.Utils
                 default:
                     break;
             }
+        }
+
+
+        public static void InitEmotes()
+        {
+            emote_clock = new RoomStatisticsEmotes("uioutline_clock");
+            emote_rtaclock = new RoomStatisticsEmotes("uioutline_rtaclock");
+            emote_skull = new RoomStatisticsEmotes("uioutline_skull");
+            emote_strawberry = new RoomStatisticsEmotes("uioutline_strawberry");
+
+
+            // Shh! Don't tell anybody!
+            DateTime dateTime = System.DateTime.Today;
+            int day = dateTime.Day;
+            int month = dateTime.Month;
+
+            if (day == 1 && month == 4)
+            {
+                emote_clock = new RoomStatisticsEmotes("c/uioutline_clock");
+                emote_rtaclock = new RoomStatisticsEmotes("c/uioutline_rtaclock");
+                emote_skull = new RoomStatisticsEmotes("c/uioutline_skull");
+                emote_strawberry = new RoomStatisticsEmotes("c/uioutline_strawberry");
+            }
+        }
+    }
+
+    public class RoomStatisticsEmotes
+    {
+        public String filename { get; }
+        public String white { 
+            get { return $":EndHelper/{filename}:"; }
+        }
+        public String gray
+        {
+            get { return $":EndHelper/{filename}_gray:"; }
+        }
+        public String green
+        {
+            get { return $":EndHelper/{filename}_green:"; }
+        }
+        public String yellow
+        {
+            get { return $":EndHelper/{filename}_yellow:"; }
+        }
+
+        public RoomStatisticsEmotes(String filename)
+        {
+            this.filename = filename;
         }
     }
 }

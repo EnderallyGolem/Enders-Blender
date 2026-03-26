@@ -33,9 +33,6 @@
 		<Reference Include="CelesteNet.Client">
 		  <HintPath>..\Integrations\CelesteNet.Client.dll</HintPath>
 		</Reference>
-		<Reference Include="CelesteNet.Shared">
-		  <HintPath>..\Integrations\CelesteNet.Shared.dll</HintPath>
-		</Reference>
         <Reference Include="FNA">
           <HintPath>..\..\..\FNA.dll</HintPath>
         </Reference>
