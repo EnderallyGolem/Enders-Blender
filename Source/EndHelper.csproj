@@ -48,6 +48,9 @@
         <Reference Include="Mono.Cecil">
           <HintPath>..\..\..\Mono.Cecil.dll</HintPath>
         </Reference>
+        <Reference Include="MonoMod.Core">
+          <HintPath>..\..\..\MonoMod.Core.dll</HintPath>
+        </Reference>
         <Reference Include="NETCoreifier">
           <HintPath>..\..\..\NETCoreifier.dll</HintPath>
         </Reference>

@@ -1,25 +1,19 @@
-﻿using Celeste.Mod.EndHelper.Entities.DeathHandler;
-using Celeste.Mod.EndHelper.Integration;
+﻿using Celeste.Mod.EndHelper.Integration;
 using IL.Celeste;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Monocle;
-using MonoMod.Utils;
-using On.Celeste;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
 using System.Threading.Tasks;
 using static Celeste.Mod.EndHelper.EndHelperModule;
 using static Celeste.Mod.EndHelper.EndHelperModuleSettings.GameplayTweaks;
-using static Celeste.TrackSpinner;
 
 namespace Celeste.Mod.EndHelper.Utils
 {
-    static internal class Utils_DeathHandler
+    static public class Utils_DeathHandler
     {
         internal static bool deathWipe = true;              // If false, skips wipe when dying.
         private static bool previousDeathWipe = true;
@@ -63,7 +57,7 @@ namespace Celeste.Mod.EndHelper.Utils
         internal static int oldStateMachine;
 
         // Prevent death spam
-        internal static float deathCooldownFrames = 0;
+        public static float deathCooldownFrames { private set; get; } = 0;
 
         #region Hook Functions
         
@@ -96,6 +90,15 @@ namespace Celeste.Mod.EndHelper.Utils
             }
         }
 
+        public static bool getNextRespawnFullReset()
+        {
+            return EndHelperModule.Session.nextRespawnFullReset;
+        }
+        public static Vector2? getLastFullResetPos()
+        {
+            return EndHelperModule.Session.lastFullResetPos;
+        }
+
         public static void EnableDeathHandlerEntityChecks()
         {
             if (!EndHelperModule.Session.AllowDeathHandlerEntityChecks)
@@ -106,12 +109,12 @@ namespace Celeste.Mod.EndHelper.Utils
             EndHelperModule.Session.AllowDeathHandlerEntityChecks = true;
         }
 
-        internal static void ForceShortDeathCooldown()
+        public static void ForceShortDeathCooldown()
         {
             // 5 frames is the minimum cooldown which prevents pauses
             if (deathCooldownFrames > 5) deathCooldownFrames = 5;
         }
-        internal static void ForceNoDeathCooldown() { deathCooldownFrames = 0; }
+        public static void ForceNoDeathCooldown() { deathCooldownFrames = 0; }
 
         public static void UpdateSeemlessRespawn()
         {
@@ -265,7 +268,6 @@ namespace Celeste.Mod.EndHelper.Utils
                             deathWipe = true;
                         }
                         break;
-                        // TO-DO: For all of these other than EnabledKeepState, for X-death golden i still need to keep the golden somehow
                 }
             }
 
@@ -318,7 +320,115 @@ namespace Celeste.Mod.EndHelper.Utils
             //Logger.Log(LogLevel.Info, "EndHelper/Utils_DeathHandler", $"manual reset. {EndHelperModule.Session.firstFullResetPos is not null}");
         }
 
-        internal static void SetNextRespawnFullReset(Level level, bool setTo, bool manualReset = false)
+        /// <summary>
+        /// Moves the respawn position to the point closest to targetPos. Outputs true if successful change.
+        /// </summary>
+        /// <param name="targetPos"></param>
+        /// <returns></returns>
+        public static bool UpdateRespawnPos(Vector2 targetPos, Level level, bool checkSolid, bool fullResetOnly = false)
+        {
+            bool changedRespawn = false;
+
+            if (fullResetOnly && EndHelperModule.Session.lastFullResetPos is not null)
+            {
+                // For full reset, only target the lastFullRestPos, regardless of targetPos
+                targetPos = EndHelperModule.Session.lastFullResetPos.Value;
+                SetNextRespawnFullReset(level, true);
+            }
+            else
+            {
+                targetPos = level.GetSpawnPoint(targetPos);
+                SetNextRespawnFullReset(level, false);
+            }
+
+            Session session = level.Session;
+            if (NoInvalidCheck(level, targetPos, checkSolid) && (!session.RespawnPoint.HasValue || session.RespawnPoint.Value != targetPos))
+            {
+                session.HitCheckpoint = true;
+                if (session.RespawnPoint != targetPos)
+                {
+                    changedRespawn = true;
+                }
+                session.RespawnPoint = targetPos;
+                session.UpdateLevelStartDashes();
+            }
+
+            //Logger.Log(LogLevel.Info, "EndHelper/Utils_DeathHandler", $"Tried updating respawn point to {targetPos}. Success: {changedRespawn}");
+            return changedRespawn;
+        }
+
+        /// Returns false for locations invalid for spawn points.
+        public static bool NoInvalidCheck(Level level, Vector2 targetPos, bool checkInvalid = true)
+        {
+            if (!checkInvalid)
+            {
+                return true; // Avoid any checks for solid. Always return true (no solids), since they are already invalid by default.
+            }
+
+            Vector2 point = targetPos + Vector2.UnitY * -4f;
+
+            if (level.CollideCheck<CrystalStaticSpinner>(point) || level.CollideCheck<DustStaticSpinner>(point) || level.CollideCheck<Spikes>(point) ||
+                (integratingWithFrostHelper && FrostHelperIntegration.CheckCollisionWithCustomSpinners(level, point)))
+            {
+                return false;
+            }
+            if (level.CollideCheck<Solid>(point))
+            {
+                return level.CollideCheck<FloatySpaceBlock>(point);
+            }
+            foreach (Entity entity in level.Entities)
+            {
+                if (entity.CollidePoint(point) && entity.Components.Get<LedgeBlocker>() != null) return false;
+            }
+
+            return true;
+        }
+        public static bool NoInvalidCheck(Level level, Rectangle targetRect, bool checkInvalid = true, int inflate = 0)
+        {
+            if (!checkInvalid)
+            {
+                return true; // Avoid any checks for solid. Always return true (no solids), since they are already invalid by default.
+            }
+
+            targetRect.X += inflate;
+            targetRect.Y += inflate;
+            targetRect.Width += inflate * 2;
+            targetRect.Height += inflate * 2;
+
+            if (level.CollideCheck<CrystalStaticSpinner>(targetRect) || level.CollideCheck<DustStaticSpinner>(targetRect) || level.CollideCheck<Spikes>(targetRect) ||
+                (integratingWithFrostHelper && FrostHelperIntegration.CheckCollisionWithCustomSpinners(level, targetRect)))
+            {
+                return false;
+            }
+            if (level.CollideCheck<Solid>(targetRect))
+            {
+                return level.CollideCheck<FloatySpaceBlock>(targetRect);
+            }
+
+
+            targetRect.Height += 2;
+            foreach (Entity entity in level.Entities)
+            {
+                if (entity.CollideRect(targetRect) && entity.Components.Get<LedgeBlocker>() != null) return false;
+            }
+
+            return true;
+        }
+
+        public static void SetFullResetPos(Vector2? setPos, bool overrideFirstPos = false)
+        {
+            //Logger.Log(LogLevel.Info, "EndHelper/Utils_DeathHandler", $"try set {setPos} as full reset. first full reset pos is {EndHelperModule.Session.firstFullResetPos}");
+            if (setPos is null) return;
+
+            EndHelperModule.Session.lastFullResetPos = setPos.Value;
+            if (EndHelperModule.Session.firstFullResetPos is null || overrideFirstPos)
+            {
+                //Logger.Log(LogLevel.Info, "EndHelper/Utils_DeathHandler", $"{setPos} is the first full reset pos");
+                EndHelperModule.Session.firstFullResetPos = setPos.Value;
+            }
+        }
+
+        public static void SetNextRespawnFullReset(Level level, bool setTo, bool manualReset = false)
         {
             //Logger.Log(LogLevel.Info, "EndHelper/Utils_DeathHandler", $"Set Next Respawn Full Reset: setTo {setTo} | manualReset {manualReset}");
             if (setTo)
@@ -396,59 +506,6 @@ namespace Celeste.Mod.EndHelper.Utils
             yield break;
         }
 
-        public static void ResetFullResetAndBypassBetweenRooms(Level level)
-        {
-            DeathBypass.ClearDeathBypassID(level);
-            Vector2? firstFullResetRespawnPoint = GetFullResetSpawnPoint(level);
-            EndHelperModule.Session.nextRespawnFullReset = false;
-
-            //Logger.Log(LogLevel.Info, "EndHelper/Utils_DeathHandler", $"Full Reset and bypass between rooms. firstFullResetRespawnPoint: {firstFullResetRespawnPoint}");
-
-            if (firstFullResetRespawnPoint is not null)
-            {
-                EndHelperModule.Session.firstFullResetPos = firstFullResetRespawnPoint.Value;
-                EndHelperModule.Session.lastFullResetPos = firstFullResetRespawnPoint.Value;
-            }
-            else
-            {
-                EndHelperModule.Session.firstFullResetPos = null;
-                EndHelperModule.Session.lastFullResetPos = null;
-            }
-            //Logger.Log(LogLevel.Info, "EndHelper/Utils_DeathHandler", $"room transitiionnn. firstfullresetpos is {firstFullResetRespawnPoint}. null? : {firstFullResetRespawnPoint is null}");
-        }
-
-        public static Vector2? GetFullResetSpawnPoint(this Level level)
-        {
-            Player player = level.Tracker.GetEntity<Player>();
-            if (player is null) return null;
-
-            // Look at every single death handler respawn point. Get the one closest to the player.
-            if (level.Tracker.GetEntity<DeathHandlerRespawnPoint>() is not null || level.Tracker.GetEntity<DeathHandlerThrowableRespawnPoint>() is not null)
-            {
-                List<Vector2> deathHandlerFullResetSpawnPoints = [];
-                foreach (DeathHandlerRespawnPoint deathHandlerSpawnPointEntity in level.Tracker.GetEntities<DeathHandlerRespawnPoint>())
-                {
-                    if (deathHandlerSpawnPointEntity.disabled == false && deathHandlerSpawnPointEntity.fullReset)
-                    {
-                        Vector2 deathHandlerSpawnPointPos = deathHandlerSpawnPointEntity.entityPosSpawnPoint;
-                        deathHandlerFullResetSpawnPoints.Add(deathHandlerSpawnPointPos);
-                    }
-                }
-                foreach (DeathHandlerThrowableRespawnPoint deathHandlerThrowableSpawnPointEntity in level.Tracker.GetEntities<DeathHandlerThrowableRespawnPoint>())
-                {
-                    if (deathHandlerThrowableSpawnPointEntity.disabled == false && deathHandlerThrowableSpawnPointEntity.fullReset)
-                    {
-                        Vector2 deathHandlerThrowableSpawnPointPos = deathHandlerThrowableSpawnPointEntity.entityPosSpawnPoint;
-                        deathHandlerFullResetSpawnPoints.Add(deathHandlerThrowableSpawnPointPos);
-                    }
-                }
-
-                // Search for closest spot to player
-                Vector2 closestSpawnPos = Calc.ClosestTo(deathHandlerFullResetSpawnPoints, player.BottomCenter);
-                return closestSpawnPos;
-            }
-            return null;
-        }
 
         internal static bool CheckPlayerNextFastReload()
         {
@@ -494,18 +551,6 @@ namespace Celeste.Mod.EndHelper.Utils
             ReloadRoomSeemlessly(level, ReloadRoomSeemlesslyEffect.Death);
         }
 
-        internal static void ReplaceTransitionRoutineGetSpawnpointWithTheActualFunction()
-        {
-            // Returning the actual function should always be better
-            // but since this is a little jank, just in case, we'll add a DeathHanderRespawnPoint check
-            if (Engine.Scene is Level level && 
-                (level.Tracker.GetEntity<DeathHandlerRespawnPoint>() is not null || level.Tracker.GetEntity<DeathHandlerThrowableRespawnPoint>() is not null))
-            {
-                Player player = level.Tracker.GetEntity<Player>();
-                Vector2 to = player.CollideFirst<RespawnTargetTrigger>()?.Target ?? player.Position;
-                level.Session.RespawnPoint = level.Session.GetSpawnPoint(to);
-            }
-        }
         #endregion
 
         #region Reload Logic
@@ -590,7 +635,10 @@ namespace Celeste.Mod.EndHelper.Utils
 
                         // First, if deathbypass respawning at same location, set spawnpoint at current player location.
                         // This prevents the player from starting at a different location when level is loaded (before tping back instantly)
-                        if (playerDyingWithDeathBypass && !EndHelperModule.Session.nextRespawnFullReset) level.Session.RespawnPoint = oldPlayerPos;
+                        //if (playerDyingWithDeathBypass && !EndHelperModule.Session.nextRespawnFullReset) level.Session.RespawnPoint = oldPlayerPos;
+
+                        // edit: i added that code above ages ago and it causes issues when dying with deathbypass then reverting to not-bypass,
+                        // the respawn location will be where you just died. idk why i did this, i don't understand that issue, wtf????
 
                         level.LoadLevel(Player.IntroTypes.Respawn);
                         level.Wipe = null;
@@ -811,116 +859,6 @@ namespace Celeste.Mod.EndHelper.Utils
             }
         }
         #endregion
-
-        #region Misc Functions
-
-        internal static void SetFullResetPos(Vector2? setPos, bool overrideFirstPos = false)
-        {
-            //Logger.Log(LogLevel.Info, "EndHelper/Utils_DeathHandler", $"try set {setPos} as full reset. first full reset pos is {EndHelperModule.Session.firstFullResetPos}");
-            if (setPos is null) return;
-
-            EndHelperModule.Session.lastFullResetPos = setPos.Value;
-            if (EndHelperModule.Session.firstFullResetPos is null || overrideFirstPos)
-            {
-                //Logger.Log(LogLevel.Info, "EndHelper/Utils_DeathHandler", $"{setPos} is the first full reset pos");
-                EndHelperModule.Session.firstFullResetPos = setPos.Value;
-            }
-        }
-
-        /// <summary>
-        /// Moves the respawn position to the point closest to targetPos. Outputs true if successful change.
-        /// </summary>
-        /// <param name="targetPos"></param>
-        /// <returns></returns>
-        internal static bool UpdateRespawnPos(Vector2 targetPos, Level level, bool checkSolid, bool fullResetOnly = false)
-        {
-            bool changedRespawn = false;
-
-            if (fullResetOnly && EndHelperModule.Session.lastFullResetPos is not null)
-            {
-                // For full reset, only target the lastFullRestPos, regardless of targetPos
-                targetPos = EndHelperModule.Session.lastFullResetPos.Value;
-                SetNextRespawnFullReset(level, true);
-            }
-            else
-            {
-                targetPos = level.GetSpawnPoint(targetPos);
-                SetNextRespawnFullReset(level, false);
-            }
-
-            Session session = level.Session;
-            if (NoInvalidCheck(level, targetPos, checkSolid) && (!session.RespawnPoint.HasValue || session.RespawnPoint.Value != targetPos))
-            {
-                session.HitCheckpoint = true;
-                if (session.RespawnPoint != targetPos)
-                {
-                    changedRespawn = true;
-                }
-                session.RespawnPoint = targetPos;
-                session.UpdateLevelStartDashes();
-            }
-
-            //Logger.Log(LogLevel.Info, "EndHelper/Utils_DeathHandler", $"Tried updating respawn point to {targetPos}. Success: {changedRespawn}");
-            return changedRespawn;
-        }
-        internal static bool NoInvalidCheck(Level level, Vector2 targetPos, bool checkInvalid = true)
-        {
-            if (!checkInvalid)
-            {
-                return true; // Avoid any checks for solid. Always return true (no solids)
-            }
-
-            Vector2 point = targetPos + Vector2.UnitY * -4f;
-
-            if (level.CollideCheck<CrystalStaticSpinner>(point) || level.CollideCheck<DustStaticSpinner>(point) || level.CollideCheck<Spikes>(point) ||
-                (integratingWithFrostHelper && Integration.FrostHelperIntegration.CheckCollisionWithCustomSpinners(level, point)))
-            {
-                return false;
-            }
-            if (level.CollideCheck<Solid>(point))
-            {
-                return level.CollideCheck<FloatySpaceBlock>(point);
-            }
-            foreach (DeathHandlerChangeRespawnRegion spawnRegion in level.CollideAll<DeathHandlerChangeRespawnRegion>(point))
-            {
-                if (spawnRegion.killOnEnter) return false;
-            }
-
-            return true;
-        }
-        internal static bool NoInvalidCheck(Level level, Rectangle targetRect, bool checkInvalid = true, int inflate = 0)
-        {
-            if (!checkInvalid)
-            {
-                return true; // Avoid any checks for solid. Always return true (no solids)
-            }
-
-            targetRect.X += inflate;
-            targetRect.Y += inflate;
-            targetRect.Width += inflate * 2;
-            targetRect.Height += inflate * 2;
-
-            if (level.CollideCheck<CrystalStaticSpinner>(targetRect) || level.CollideCheck<DustStaticSpinner>(targetRect) || level.CollideCheck<Spikes>(targetRect) ||
-                (integratingWithFrostHelper && Integration.FrostHelperIntegration.CheckCollisionWithCustomSpinners(level, targetRect)))
-            {
-                return false;
-            }
-            if (level.CollideCheck<Solid>(targetRect))
-            {
-                return level.CollideCheck<FloatySpaceBlock>(targetRect);
-            }
-
-
-            targetRect.Height += 2;
-            foreach (DeathHandlerChangeRespawnRegion spawnRegion in level.CollideAll<DeathHandlerChangeRespawnRegion>(targetRect))
-            {
-                if (spawnRegion.killOnEnter) return false;
-            }
-
-            return true;
-        }
-
-        #endregion
     }
 
 
@@ -932,13 +870,13 @@ namespace Celeste.Mod.EndHelper.Utils
         public static List<EntityID> entityIDDisappearUntilFullReset = new List<EntityID>();
 
         public bool bypass { get; internal set; }
-        internal bool showVisuals = showVisuals;
+        public bool showVisuals { get; internal set; } = showVisuals;
         internal EntityID entityID;
 
-        internal bool allowBypass = initialAllowBypass; // Modified by Zone
+        public bool allowBypass { get; internal set; } = initialAllowBypass; // Modified by Zone
 
         internal string RequireFlag { get; private set; } = requireFlag;
-        internal readonly bool preventChange = preventChange;
+        public readonly bool preventChange = preventChange;
         private readonly bool isAttached = isAttached;
 
         public List<Entity> subEntitiesList = [];
@@ -969,7 +907,11 @@ namespace Celeste.Mod.EndHelper.Utils
             }
 
             // Special entity considerations - Subentities (entities that create more entities)
-            if (entity is ZipMover zipmover) AddSubentity(zipmover.pathRenderer);
+            if (entity.Get<DeathBypassModifier>() is DeathBypassModifier modifier && modifier.subEntityList.Count > 0)
+            {
+                foreach (Entity subEntity in modifier.subEntityList) AddSubentity(subEntity);
+            }
+            else if (entity is ZipMover zipmover) AddSubentity(zipmover.pathRenderer);
             else if (entity is SwapBlock swapBlock) AddSubentity(swapBlock.path);
             else if (entity is MoveBlock moveBlock) AddSubentity(moveBlock.border);
             else if (entity is CrystalStaticSpinner crystalStaticSpinner) AddSubentity(crystalStaticSpinner.border);
@@ -986,22 +928,7 @@ namespace Celeste.Mod.EndHelper.Utils
                         Entity staticMowerEntity = component.Entity;
                         if (staticMowerEntity.Components.Get<DeathBypass>() is null)
                         {
-                            if (staticMowerEntity is DeathHandlerRespawnPoint respawnPoint)
-                            {
-                                respawnPoint.Add(new DeathBypass(RequireFlag, showVisuals, id: respawnPoint.entityID, isAttached: true));
-                            }
-                            else if (staticMowerEntity is DeathHandlerChangeRespawnRegion changeRespawnRegion)
-                            {
-                                changeRespawnRegion.Add(new DeathBypass(RequireFlag, showVisuals, id: changeRespawnRegion.entityID, isAttached: true));
-                            }
-                            else if (staticMowerEntity is DeathHandlerBypassZone bypassZone)
-                            {
-                                bypassZone.Add(new DeathBypass(RequireFlag, showVisuals, id: bypassZone.entityID, isAttached: true));
-                            }
-                            else
-                            {
-                                staticMowerEntity.Add(new DeathBypass(RequireFlag, showVisuals, isAttached: true));
-                            }
+                            staticMowerEntity.Add(new DeathBypass(RequireFlag, showVisuals, id: staticMowerEntity.SourceId, isAttached: true));
                         }
                     }
                 }
@@ -1014,6 +941,11 @@ namespace Celeste.Mod.EndHelper.Utils
         private bool previouslyInDoNotLoadList = false;
         internal void BeforeDeathBypass(Entity entity)
         {
+            if (entity.Get<DeathBypassModifier>() is DeathBypassModifier modifier && modifier.beforeDeathBypassAction != null)
+            {
+                modifier.beforeDeathBypassAction.Invoke();
+            }
+
             Level level = entity.SceneAs<Level>();
             try
             {
@@ -1026,7 +958,7 @@ namespace Celeste.Mod.EndHelper.Utils
             }
             catch (Exception)
             {
-                Logger.Log(LogLevel.Warn, "EndHelper/Utils_DeathHandler", $"{entity}: Failed to death-bypass. Removing entitiy!");
+                Logger.Log(LogLevel.Warn, "EndHelper/Utils_DeathHandler", $"{entity}: Failed to death-bypass. Removing entity!");
                 RemoveSelf();
             }
         }
@@ -1060,9 +992,9 @@ namespace Celeste.Mod.EndHelper.Utils
             entity.Scene = Engine.Scene as Level;
 
             // Entity itself
-            if (entity is DeathHandlerChangeRespawnRegion changeRespawnRegion)
+            if (entity.Get<DeathBypassModifier>() is DeathBypassModifier modifier && modifier.onDeathBypassAction != null)
             {
-                changeRespawnRegion.Add(new Coroutine(changeRespawnRegion.OnDeathBypass()));
+                modifier.onDeathBypassAction.Invoke();
             }
 
             if (entity is Solid solid)
@@ -1094,7 +1026,7 @@ namespace Celeste.Mod.EndHelper.Utils
             }
         }
 
-        static internal void ClearDeathBypassID(Level level)
+        static public void ClearDeathBypassID(Level level)
         {
             OnDeathBypassID(level);
             entityIDDisappearUntilFullReset = [];
@@ -1138,7 +1070,7 @@ namespace Celeste.Mod.EndHelper.Utils
             base.Removed(entity);
         }
 
-        internal void ToggleAllowBypass(Entity entity, bool? setValue, String newRequireFlag = null)
+        public void ToggleAllowBypass(Entity entity, bool? setValue, String newRequireFlag = null)
         {
             if (isAttached) return; // Do not toggle if this entity is a staticmover attacked to something, unless set otherwise
 
@@ -1171,7 +1103,7 @@ namespace Celeste.Mod.EndHelper.Utils
             }
         }
 
-        internal void ToggleAllowBypassAttached(Entity entity, bool? setValue, String newRequireFlag = null)
+        public void ToggleAllowBypassAttached(Entity entity, bool? setValue, String newRequireFlag = null)
         {
             Level level = entity.SceneAs<Level>();
 
@@ -1215,7 +1147,17 @@ namespace Celeste.Mod.EndHelper.Utils
                 }
             }
         }
-}
+    }
+
+    /// <summary>
+    /// Modifies the effect of DeathBypass
+    /// </summary>
+    public class DeathBypassModifier(List<Entity> subEntityList = null, Action beforeDeathBypassAction = null, Action onDeathBypassAction = null) : Component(true, true)
+    {
+        public List<Entity> subEntityList { get; } = subEntityList;
+        public Action beforeDeathBypassAction { get; } = beforeDeathBypassAction;
+        public Action onDeathBypassAction { get; } = onDeathBypassAction;
+    }
 
     #endregion
 }

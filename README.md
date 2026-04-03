@@ -76,6 +76,9 @@ Some of these can be overridden per-map with a Gameplay Tweaks Override Trigger.
 - Watchtower that can view multiple rooms (blocked by Lookout Blocker as per usual). Works both as normal and with a node path, with modifiable scroll speed.
 
 
+# 1.2.0:
+- Mapping Tools:
+	- Depracted several entities and triggers. These have been shifted to EndersExtras.
 
 # 1.1.25:
 - Misc:

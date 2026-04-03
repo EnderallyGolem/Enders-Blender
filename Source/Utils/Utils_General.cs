@@ -330,6 +330,7 @@ namespace Celeste.Mod.EndHelper.Utils
         public static void Render9Slice(this MTexture texture, float spriteWidth, float spriteHeight, Vector2 renderPos)
         { texture.Render9Slice((int)spriteWidth, (int)spriteHeight, renderPos); }
 
+
         // SetFlag overload for ignoreIfEmpty
         public static void SetFlag(this Session session, String flag, bool setTo, bool ignoreIfEmpty)
         {

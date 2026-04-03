@@ -1,9 +1,9 @@
 - DLL: bin/EndHelper.dll
   Name: EndersBlender
-  Version: 1.1.25
+  Version: 1.2.0
   Dependencies:
     - Name: Everest
-      Version: 1.5986.0
+      Version: 1.6194.0
   OptionalDependencies:
     - Name: SpeedrunTool # Ensure stuff don't break with states
       Version: 3.23.0
