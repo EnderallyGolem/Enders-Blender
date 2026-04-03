@@ -79,6 +79,7 @@ Some of these can be overridden per-map with a Gameplay Tweaks Override Trigger.
 # 1.2.0:
 - Mapping Tools:
 	- Depracted several entities and triggers. These have been shifted to EndersExtras.
+	- 
 
 # 1.1.25:
 - Misc:

@@ -44,7 +44,7 @@
               "RelativeDocumentMoniker": "Source\\Utils\\Utils_General.cs",
               "ToolTip": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Celeste\\Mods\\EndersBlender\\Source\\Utils\\Utils_General.cs",
               "RelativeToolTip": "Source\\Utils\\Utils_General.cs",
-              "ViewState": "AgIAAD4BAAAAAAAAAAAIwFQBAAAJAAAAAAAAAA==",
+              "ViewState": "AgIAAD4BAAAAAAAAAAAIwEoBAABRAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-04-03T13:12:58.114Z",
               "EditorCaption": ""
@@ -59,8 +59,7 @@
               "RelativeToolTip": "Source\\Entities\\Misc\\CassetteBeatGate.cs",
               "ViewState": "AgIAAJ4AAAAAAAAAAAAhwK0AAAAgAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-04-03T13:12:47.666Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-04-03T13:12:47.666Z"
             },
             {
               "$type": "Document",
@@ -72,8 +71,7 @@
               "RelativeToolTip": "Source\\Triggers\\RoomSwap\\RoomSwapChangeRespawnTrigger.cs",
               "ViewState": "AgIAACEAAAAAAAAAAAAmwC8AAAAhAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-04-03T11:05:52.078Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-04-03T11:05:52.078Z"
             },
             {
               "$type": "Document",
@@ -85,8 +83,7 @@
               "RelativeToolTip": "Source\\Utils\\Utils_DeathHandler.cs",
               "ViewState": "AgIAAGwCAAAAAAAAAAAjwH0CAACFAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-04-03T08:12:14.06Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-04-03T08:12:14.06Z"
             },
             {
               "$type": "Document",
@@ -98,8 +95,7 @@
               "RelativeToolTip": "Source\\EndHelperModuleSession.cs",
               "ViewState": "AgIAAB8AAAAAAAAAAAAswDgAAAAsAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-04-03T09:12:51.065Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-04-03T09:12:51.065Z"
             },
             {
               "$type": "Document",
@@ -111,8 +107,7 @@
               "RelativeToolTip": "Source\\EndHelperModule.cs",
               "ViewState": "AgIAAA0BAAAAAAAAAAASwBQBAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-11-16T01:02:40.138Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-11-16T01:02:40.138Z"
             }
           ]
         }
