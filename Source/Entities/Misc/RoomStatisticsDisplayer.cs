@@ -1,6 +1,5 @@
 ﻿using Celeste.Mod.EndHelper.Utils;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using Monocle;
 using MonoMod.Utils;
 using NETCoreifier;
@@ -22,16 +21,16 @@ public class RoomStatisticsDisplayer : Entity
     #region Initialisation
 
     private string clipboardText = "";
-    public string currentEffectiveRoomName = "";
-    public string currentRoomName = "";
+    public string currentEffectiveRoomName { get; private set; } = "";
+    public string currentRoomName { get; private set; } = "";
     public bool statisticsGuiOpen = false;
     internal Utils_General.Countdown disableRoomChangeTimer = new Utils_General.Countdown();   // Eg: When viewing other rooms with multi-room bino
 
-    public string mapNameSide_Internal = ""; // Internally checked to distinguish between map and sides & to determine which lang to pick for room names
-    public string mapNameSide_Display = "";  // Text to display to the player
+    public string mapNameSide_Internal { get; private set; } = ""; // Internally checked to distinguish between map and sides & to determine which lang to pick for room names
+    public string mapNameSide_Display { get; private set; } = "";  // Text to display to the player
 
-    public Color mapNameColor;    // for fun :D
-    public bool dealWithFirstClear = false;
+    public Color mapNameColor { get; private set; }    // for fun :D
+    public bool dealWithFirstClear { get; private set; } = false;
     public enum roomStatMenuFilter { None, Death0, Death10, Time60s, Renamed }
     public static roomStatMenuFilter filterSetting = roomStatMenuFilter.None;
 
