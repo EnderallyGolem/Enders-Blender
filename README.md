@@ -47,39 +47,17 @@ Some of these can be overridden per-map with a Gameplay Tweaks Override Trigger.
 - Freeze Level Timer
     - Option to freeze the level timer (+ journal timer) on pause and/or while afk. 
     - Does not affect the file timer.
-- [Portable Multi-room Watchtower](#multi-room-watchtower) Multi-room watchtower keybind that can be used anywhere. Can also spectate players in CelesteNet.
+- (Portable) Multi-room Watchtower
+	- Multi-room watchtower keybind that can be used anywhere. Can also spectate players in CelesteNet.
+	- An entity-version of this exists for mappers to use
 
-### Mapping Tools:
 
-###### Room-Swap
-- Create a grid of rooms that can swap positions with each other (baring some limitations: no collectables and FG/BG tiles).
-- You can check out how they work in my [Crossroads Contest map](https://www.youtube.com/watch?v=xB6RLAKZC0g).
-	- Setup a grid with Room-Swap Controller (ensure it is loaded before entering the grid)
-	- Create template rooms (with names matching the controller) and actual rooms of the same size. Actual rooms are empty, template rooms have the actual room.
-	- Add Room-Swap Respawn Force Same Room Triggers in each template room.
-	- Use Updating Change Respawn Triggers instead of the regular trigger.
-	- Change room order using Room-Swap Breaker Box or Room-Swap Modify Room Trigger.
-	- Create a map with Room-Swap Map. Implement map upgrades with Room-Swap Map Upgrade.
-
-###### Cassette Entity/Triggers
-- Cassette Beat Gates
-    - Blocks that move along nodes in accordance to cassette beats
-    - Can be dependent on bar progress or full track progress, as well as flags
-    - Option to move entities/triggers/decals within it instead
-- Cassette Manager Trigger
-    - Set varying tempo speeds (speed multiplies at predefined beats, either set or multiply existing)
-    - Change the current beat
-    - Can be different depending on entering/exiting trigger, flags, or if within beat range
-- Both of these have support for Quantum Mechanic's wonky cassettes.
-
-###### Multi-Room Watchtower
-- Watchtower that can view multiple rooms (blocked by Lookout Blocker as per usual). Works both as normal and with a node path, with modifiable scroll speed.
 
 
 # 1.2.0:
 - Mapping Tools:
-	- Depracted several entities and triggers. These have been shifted to EndersExtras.
-	- 
+	- Depracted most entities and triggers. These have been shifted to EndersExtras.
+	- Only entities left are the multi-room bino and gameplay tweaks override trigger.
 
 # 1.1.25:
 - Misc:

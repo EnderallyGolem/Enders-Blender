@@ -1,7 +1,6 @@
 ﻿using Celeste.Mod.EndHelper.Deprecated.Entities.Misc;
 using Celeste.Mod.EndHelper.Entities.Misc;
 using Celeste.Mod.EndHelper.Integration;
-using Celeste.Mod.EndHelper.SharedCode;
 using Celeste.Mod.EndHelper.Utils;
 using Microsoft.Xna.Framework;
 using Mono.Cecil.Cil;
@@ -17,6 +16,8 @@ using System.Collections.Specialized;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using Celeste.Mod.EndHelper.Deprecated.Integration;
+using Celeste.Mod.EndHelper.Deprecated.Utils;
 using static Celeste.Mod.EndHelper.EndHelperModuleSettings;
 using static Celeste.Mod.EndHelper.EndHelperModuleSettings.GameplayTweaks;
 using static Celeste.Mod.EndHelper.Entities.Misc.RoomStatisticsDisplayer;
@@ -96,23 +97,6 @@ public class EndHelperModule : EverestModule {
     public static bool integratingWithCommunualHelper = false; // Make some entities work better with death handler
     public static bool integratingWithCNet = false; // Spectator tracker
 
-    // Event Listener for when room modification occurs
-    public static event EventHandler<RoomModificationEventArgs> RoomModificationEvent;
-    public class RoomModificationEventArgs : EventArgs
-    {
-        public string gridID { get; set; }
-        public RoomModificationEventArgs(string gridID)
-        {
-            this.gridID = gridID;
-        }
-    }
-
-    public static void RoomModificationEventTrigger(string gridID)
-    {
-        RoomModificationEvent?.Invoke(null, new RoomModificationEventArgs(gridID));
-    }
-
-
     private static ILHook Loadhook_Level_OrigTransitionRoutine;
     private static ILHook Loadhook_Refill_RefillRoutine;
     private static ILHook Loadhook_Input_GrabCheckGet;
@@ -169,10 +153,6 @@ public class EndHelperModule : EverestModule {
         On.Celeste.Solid.MoveHExact += Hook_SolidMoveHExact;
         On.Celeste.Solid.MoveVExact += Hook_SolidMoveVExact;
 
-        On.Celeste.CassetteBlock.Awake += Hook_CassetteBlockAwake;
-        On.Celeste.CassetteBlockManager.Awake += Hook_CassetteBlockManagerAwake;
-        IL.Celeste.CassetteBlockManager.AdvanceMusic += ILHook_CassetteBlockManagerAdvMusic;
-
         MethodInfo ILRefillCoroutine = typeof(Refill).GetMethod("RefillRoutine", BindingFlags.NonPublic | BindingFlags.Instance).GetStateMachineTarget();
         Loadhook_Refill_RefillRoutine = new ILHook(ILRefillCoroutine, Hook_IL_RefillRefillCoroutine);
 
@@ -192,11 +172,11 @@ public class EndHelperModule : EverestModule {
 
         SpeedrunToolIntegration.Load();
         SSMQoLIntegration.Load();
-        FrostHelperIntegration.Load();
         ImGuiHelperIntegration.Load();
-        QuantumMechanicsIntegration.Load();
         CollabUtils2Integration.Load();
         CelesteNetIntegration.Load();
+        FrostHelperIntegration.Load();
+        QuantumMechanicsIntegration.Load(); // Deprecated
 
         Utils_Interop.InitialiseInteropExports();
     }
@@ -246,10 +226,6 @@ public class EndHelperModule : EverestModule {
         On.Celeste.SpeedrunTimerDisplay.Render -= Hook_SpeedrunTimerRender;
         IL.Celeste.GrabbyIcon.Update -= ILHook_GrabbyIconUpdate;
 
-        On.Celeste.CassetteBlock.Awake -= Hook_CassetteBlockAwake;
-        On.Celeste.CassetteBlockManager.Awake -= Hook_CassetteBlockManagerAwake;
-        IL.Celeste.CassetteBlockManager.AdvanceMusic -= ILHook_CassetteBlockManagerAdvMusic;
-
         Loadhook_Refill_RefillRoutine?.Dispose(); Loadhook_Refill_RefillRoutine = null;
         Loadhook_Level_OrigTransitionRoutine?.Dispose(); Loadhook_Level_OrigTransitionRoutine = null;
 
@@ -262,11 +238,18 @@ public class EndHelperModule : EverestModule {
 
         SpeedrunToolIntegration.Unload();
         SSMQoLIntegration.Unload();
-        FrostHelperIntegration.Unload();
         ImGuiHelperIntegration.Unload();
-        QuantumMechanicsIntegration.Unload();
         CollabUtils2Integration.Unload();
         CelesteNetIntegration.Unload();
+        FrostHelperIntegration.Unload();
+        QuantumMechanicsIntegration.Unload(); // Deprecated
+
+        UnloadTempHooks();
+    }
+
+    private static void UnloadTempHooks()
+    {
+        Utils_CassetteManager.DisableHooks();
     }
 
     // Optional, initialize anything after Celeste has initialized itself properly.
@@ -307,6 +290,9 @@ public class EndHelperModule : EverestModule {
     }
     private static void EnterMapFunc(global::Celeste.Session session, bool fromSaveData)
     {
+        // Disable level-dependent hooks
+        UnloadTempHooks();
+
         RoomStatisticsDisplayer.hideIfGoldenStrawberryEnabled = false;
         autoSaveTimer = TimeSpan.Zero;
 
@@ -741,12 +727,6 @@ public class EndHelperModule : EverestModule {
             {
                 Input.UpdateGrab(); // If NothingIfGrab and Toggle Grab, LOCK THIS during toggleify. (Locking being just update twice)
             }
-        }
-
-        // Tick up Respawn Ripple Shader
-        if (RespawnRipple.enableShader)
-        {
-            RespawnRipple.UpdateRipples(self);
         }
 
         Utils_DeathHandler.Update(level);
@@ -1792,81 +1772,6 @@ public class EndHelperModule : EverestModule {
         return grabMode;
     }
 
-    #endregion
-
-    #region CassetteBlockManager
-
-    private static void Hook_CassetteBlockAwake(On.Celeste.CassetteBlock.orig_Awake orig, global::Celeste.CassetteBlock self, Scene scene)
-    {
-        // Set initial dynamic data stuff
-        DynamicData cassetteBlockData = DynamicData.For(self);
-        cassetteBlockData.Set("EndHelper_CassetteInitialPos", self.Position);
-
-        orig(self, scene);
-
-        // Do it for spikes and springs attached too
-        List<StaticMover> c_staticMovers = cassetteBlockData.Get<List<StaticMover>>("staticMovers");
-        foreach (StaticMover staticMover in c_staticMovers)
-        {
-            if (staticMover.Entity is Spikes spikes)
-            {
-                DynamicData spikeData = DynamicData.For(spikes);
-                spikeData.Set("EndHelper_CassetteInitialPos", spikes.Position);
-            }
-            if (staticMover.Entity is Spring spring)
-            {
-                DynamicData springData = DynamicData.For(spring);
-                springData.Set("EndHelper_CassetteInitialPos", spring.Position);
-            }
-        }
-    }
-
-    private static void Hook_CassetteBlockManagerAwake(On.Celeste.CassetteBlockManager.orig_Awake orig, global::Celeste.CassetteBlockManager self, Scene scene)
-    {
-        // Set initial dynamic data stuff
-        DynamicData cassetteManagerData = DynamicData.For(self);
-        cassetteManagerData.Set("EndHelper_CassetteHaveCheckedBeat", int.MinValue);
-        cassetteManagerData.Set("EndHelper_CassettePreviousTempoNum", 1f);
-        cassetteManagerData.Set("EndHelper_CassetteManagerTriggerTempoMultiplierMultiplyOnTop", false);
-        List<List<object>> tempoChangeTimeDefault = [];
-        cassetteManagerData.Set("EndHelper_CassetteManagerTriggerTempoMultiplierList", tempoChangeTimeDefault);
-        cassetteManagerData.Set("EndHelper_CassetteStartedSFX", false);
-
-        // effectivebeatindex lol
-        int c_beatIndex = cassetteManagerData.Get<int>("beatIndex");
-        int effectiveBeatIndex = c_beatIndex;
-        int c_leadBeats = cassetteManagerData.Get<int>("leadBeats");
-        if (c_leadBeats > 0)
-        {
-            effectiveBeatIndex = -c_leadBeats;
-        }
-        cassetteManagerData.Set("EndHelper_CassetteManagerTriggerEffectiveBeatIndex", effectiveBeatIndex);
-
-        orig(self, scene);
-    }
-
-    private static void ILHook_CassetteBlockManagerAdvMusic(ILContext il)
-    {
-        ILCursor cursor = new ILCursor(il);
-
-        // Hooks the very start in order to multiply tempo
-        if (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdarg(1)))
-        {
-            // Multiply `time` by CassetteManagerTrigger multiplier
-            cursor.EmitDelegate<Func<float, float>>(Utils_CassetteManager.ManagerMultiplyCassetteSpeed);
-        }
-
-        // Find "if (leadBeats > 0)" condition check. Replace the whole thing with new logic if using the manager
-        if (cursor.TryGotoNext(MoveType.After, 
-            instr => instr.MatchLdarg(0),
-            instr => instr.MatchLdfld<CassetteBlockManager>("leadBeats"),
-            instr => instr.MatchLdcI4(0)
-        ))
-        {
-            // Condition in IL code is 0 <= leadBeats mean skip instr. This here force-changes the 0 to int limit (true, skip) if using the manager.
-            cursor.EmitDelegate<Func<int, int>>(Utils_CassetteManager.ManagerLeadBeatShenanigans);
-        }
-    }
     #endregion
 
     #endregion

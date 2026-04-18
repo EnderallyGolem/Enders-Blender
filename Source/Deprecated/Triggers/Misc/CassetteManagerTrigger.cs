@@ -11,6 +11,8 @@ using System.Linq;
 using System.Reflection;
 using System.Reflection.Metadata.Ecma335;
 using System.Runtime.CompilerServices;
+using Celeste.Mod.EndHelper.Deprecated.Integration;
+using Celeste.Mod.EndHelper.Deprecated.Utils;
 
 namespace Celeste.Mod.EndHelper.Triggers.RoomSwap;
 
@@ -49,6 +51,8 @@ public class CassetteManagerTrigger : Trigger
     public CassetteManagerTrigger(EntityData data, Vector2 offset)
         : base(data, offset)
     {
+        Utils_CassetteManager.EnableHooks();
+
         wonkyCassettes = data.Bool("wonkyCassettes", false);
         showDebugInfo = data.Bool("showDebugInfo", false);
 

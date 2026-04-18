@@ -9,10 +9,27 @@ using Celeste.Mod.EndHelper.Utils;
 using Microsoft.Xna.Framework;
 using Monocle;
 
-namespace Celeste.Mod.EndHelper.SharedCode
+namespace Celeste.Mod.EndHelper.Deprecated.Utils
 {
     static internal class Utils_RoomSwap
     {
+
+        // Event Listener for when room modification occurs
+        internal static event EventHandler<RoomModificationEventArgs> RoomModificationEvent;
+        internal class RoomModificationEventArgs : EventArgs
+        {
+            public string gridID { get; set; }
+            public RoomModificationEventArgs(string gridID)
+            {
+                this.gridID = gridID;
+            }
+        }
+
+        internal static void RoomModificationEventTrigger(string gridID)
+        {
+            RoomModificationEvent?.Invoke(null, new RoomModificationEventArgs(gridID));
+        }
+
         internal static void ReupdateAllRooms()
         {
             if (Engine.Scene is not Level level)
@@ -41,7 +58,7 @@ namespace Celeste.Mod.EndHelper.SharedCode
                         ReplaceRoomAfterReloadEnd(gridID, roomSwapPrefix, row, column, level);
                     }
                 }
-                EndHelperModule.RoomModificationEventTrigger(gridID);
+                RoomModificationEventTrigger(gridID);
             }
         }
 
@@ -611,7 +628,7 @@ namespace Celeste.Mod.EndHelper.SharedCode
 
             void swapEffects()
             {
-                EndHelperModule.RoomModificationEventTrigger(gridID);
+                RoomModificationEventTrigger(gridID);
 
                 if (flashEffect)
                 {

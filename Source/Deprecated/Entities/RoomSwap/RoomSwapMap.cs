@@ -14,7 +14,7 @@ using System.Threading.Tasks;
 using static Celeste.Mod.EndHelper.EndHelperModule;
 using System.Data.Common;
 using AsmResolver.PE.DotNet.ReadyToRun;
-using Celeste.Mod.EndHelper.SharedCode;
+using Celeste.Mod.EndHelper.Deprecated.Utils;
 using Celeste.Mod.EndHelper.Utils;
 
 
@@ -95,7 +95,7 @@ public class RoomSwapMap : Entity
         base.Added(scene);
 
         //Add listener
-        RoomModificationEvent += RoomModificationEventListener;
+        Utils_RoomSwap.RoomModificationEvent += RoomModificationEventListener;
 
         //Background Image
         string backgroundFileName = entityData.Attr("mapBackgroundFileName");
@@ -124,7 +124,7 @@ public class RoomSwapMap : Entity
         }
     }
 
-    public void RoomModificationEventListener(object sender, RoomModificationEventArgs e)
+    internal void RoomModificationEventListener(object sender, Utils_RoomSwap.RoomModificationEventArgs e)
     {
         //Logger.Log(LogLevel.Info, "EndHelper/RoomSwap/TransitionMap", $"If this runs the event listener is probably working! grid id {e.gridID}");
         if (e.gridID == gridID)
@@ -136,7 +136,7 @@ public class RoomSwapMap : Entity
     public override void Removed(Scene scene)
     {
         //Remove Listener
-        RoomModificationEvent -= RoomModificationEventListener;
+        Utils_RoomSwap.RoomModificationEvent -= RoomModificationEventListener;
         base.Removed(scene);
     }
 

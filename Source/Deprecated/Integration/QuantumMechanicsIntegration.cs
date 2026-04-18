@@ -2,13 +2,14 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using Celeste.Mod.EndHelper.Deprecated.Entities.Misc;
 using Celeste.Mod.EndHelper.Entities.Misc;
 using Celeste.Mod.QuantumMechanics;
 using MonoMod.Utils;
 using MonoMod.Cil;
 using Celeste.Mod.QuantumMechanics.Entities;
 
-namespace Celeste.Mod.EndHelper.Integration
+namespace Celeste.Mod.EndHelper.Deprecated.Integration
 {
     public static class QuantumMechanicsIntegration
     {

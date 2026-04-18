@@ -1,13 +1,7 @@
+using Celeste.Mod.EndHelper.Deprecated.Utils;
 using Celeste.Mod.Entities;
-using Celeste.Mod.EndHelper.Triggers;
 using Microsoft.Xna.Framework;
 using Monocle;
-using System.Runtime.CompilerServices;
-using static Celeste.TempleGate;
-using static On.Celeste.Level;
-using System.Security.Cryptography.X509Certificates;
-using System;
-using Celeste.Mod.EndHelper.SharedCode;
 
 
 

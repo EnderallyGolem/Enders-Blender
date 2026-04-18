@@ -1,20 +1,14 @@
 ﻿using Celeste.Mod.Entities;
-using Microsoft.Xna.Framework.Graphics;
 using Monocle;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using Microsoft.Xna.Framework;
-using System.Text;
-using System.Threading.Tasks;
-using Celeste.Mod.EndHelper.Integration;
-using MonoMod.Utils;
-using Celeste.Mod.EndHelper.Entities.RoomSwap;
+using Celeste.Mod.EndHelper.Deprecated.Utils;
 using Celeste.Mod.EndHelper.Utils;
 
-namespace Celeste.Mod.EndHelper.Entities.Misc
+namespace Celeste.Mod.EndHelper.Deprecated.Entities.Misc
 {
     [CustomEntity("EndHelper/CassetteBeatGate")]
     [Tracked(false)]
@@ -81,6 +75,8 @@ namespace Celeste.Mod.EndHelper.Entities.Misc
 
         public CassetteBeatGate(EntityData data, Vector2 offset) : base(data.Position + offset, data.Width, data.Height, safe: false)
         {
+            Utils_CassetteManager.EnableHooks();
+
             // parse all options
             nodes = data.NodesOffset(offset);
             moveTime = data.Float("moveTime", 0.3f);

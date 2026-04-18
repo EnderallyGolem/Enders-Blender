@@ -3,8 +3,8 @@ using Microsoft.Xna.Framework;
 using Monocle;
 using System.Runtime.CompilerServices;
 using System;
+using Celeste.Mod.EndHelper.Deprecated.Utils;
 using static MonoMod.InlineRT.MonoModRule;
-using Celeste.Mod.EndHelper.SharedCode;
 using Celeste.Mod.EndHelper.Utils;
 using Microsoft.Xna.Framework.Graphics;
 

@@ -1,20 +1,10 @@
 using Celeste.Mod.Entities;
-using Celeste.Mod.EndHelper.Triggers;
 using Microsoft.Xna.Framework;
 using Monocle;
 using System.Runtime.CompilerServices;
-using static Celeste.TempleGate;
-using static On.Celeste.Level;
-using System.Security.Cryptography.X509Certificates;
 using System;
-using Microsoft.Xna.Framework.Graphics;
-using System.Collections.Generic;
-using static MonoMod.InlineRT.MonoModRule;
-using System.Threading.Tasks;
 using System.Collections;
-using static Celeste.Mod.EndHelper.EndHelperModule;
-using System.Linq;
-using System.Threading;
+using Celeste.Mod.EndHelper.Deprecated.Utils;
 
 namespace Celeste.Mod.EndHelper.Entities.RoomSwap;
 
@@ -209,7 +199,7 @@ public class RoomSwapMapUpgrade : Entity
         }
         level.Flash(new Color(200, 200, 200, 200), drawPlayerOver: true);
         Scene.Add(new BgFlash());
-        RoomModificationEventTrigger(gridID);
+        Utils_RoomSwap.RoomModificationEventTrigger(gridID);
 
         RemoveSelf();
     }

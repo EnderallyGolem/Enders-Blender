@@ -9,6 +9,7 @@
         <CelestePrefix Condition="'$(CelestePrefix)' == ''">lib-stripped</CelestePrefix>
         <ZippedFiles>..\everest.yaml;..\bin\**\*.*;..\Audio\**\*.*;..\Dialog\**\*.*;..\Graphics\**\*.*;..\Ahorn\**\*.*;..\Effects\**\*.*;..\Loenn\**\*.*</ZippedFiles>
 		<MSBuildWarningsAsMessages>$(MSBuildWarningsAsMessages);MSB3270</MSBuildWarningsAsMessages>
+		<Nullable>enable</Nullable>
     </PropertyGroup>
 
     <!--Disable "Copy Local" for all references-->
