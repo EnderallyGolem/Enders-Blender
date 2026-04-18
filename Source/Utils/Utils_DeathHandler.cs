@@ -907,7 +907,8 @@ namespace Celeste.Mod.EndHelper.Utils
             }
 
             // Special entity considerations - Subentities (entities that create more entities)
-            if (entity.Get<DeathBypassModifier>() is DeathBypassModifier modifier && modifier.subEntityList.Count > 0)
+            if (entity.Get<DeathBypassModifier>() is { } modifier &&
+                modifier.subEntityList != null && modifier.subEntityList.Count > 0)
             {
                 foreach (Entity subEntity in modifier.subEntityList) AddSubentity(subEntity);
             }
@@ -1152,11 +1153,11 @@ namespace Celeste.Mod.EndHelper.Utils
     /// <summary>
     /// Modifies the effect of DeathBypass
     /// </summary>
-    public class DeathBypassModifier(List<Entity> subEntityList = null, Action beforeDeathBypassAction = null, Action onDeathBypassAction = null) : Component(true, true)
+    public class DeathBypassModifier(List<Entity>? subEntityList = null, Action? beforeDeathBypassAction = null, Action? onDeathBypassAction = null) : Component(true, true)
     {
-        public List<Entity> subEntityList { get; } = subEntityList;
-        public Action beforeDeathBypassAction { get; } = beforeDeathBypassAction;
-        public Action onDeathBypassAction { get; } = onDeathBypassAction;
+        public List<Entity>? subEntityList { get; } = subEntityList;
+        public Action? beforeDeathBypassAction { get; } = beforeDeathBypassAction;
+        public Action? onDeathBypassAction { get; } = onDeathBypassAction;
     }
 
     #endregion

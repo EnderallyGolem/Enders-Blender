@@ -48,7 +48,7 @@ triggers.EndHelper/GameplayTweaksOverrideTrigger.attributes.description.seemless
 
 
 # Tile Entity
-entities.EndHelper/TileEntity.placements.name.normal=(Deprecated) Tile Entity
+entities.EndHelper/TileEntity.placements.name.normal=<Deprecated> Tile Entity
 entities.EndHelper/TileEntity.placements.description.normal=Modified VivHelper Custom Depth Tile Entity
 entities.EndHelper/TileEntity.attributes.description.depth=Entity depth. Connected tiles will have the same depth.
 entities.EndHelper/TileEntity.attributes.description.tiletypeOffscreen=The portion of the entity that is outside a room will show up as this.\nSet this to an invisible tile ("fake air") and extend the tiles offscreen to allow seemless room transitions.\nAlternatively, add <Tileset id="◯" copy="y" path="EndHelper/fakeAir" sound="0"/> to your ForegroundTiles.xml (◯ is U+25EF).
@@ -76,7 +76,7 @@ entities.EndHelper/TileEntity.attributes.description.offUL=The offscreen tiletyp
 
 
 # Connectable Outline
-entities.EndHelper/ConnectableOutline.placements.name.normal=(Deprecated) Connectable Outline
+entities.EndHelper/ConnectableOutline.placements.name.normal=<Deprecated> Connectable Outline
 entities.EndHelper/ConnectableOutline.placements.description.normal=Visual outline that can be connected to other outlines, or attached to an entity.
 entities.EndHelper/ConnectableOutline.attributes.description.texturePath=Texture of the outline.\nThe texture uses the same format as cassette blocks.\nYou can remove the "_filled" for a hollow version of the default texture.
 entities.EndHelper/ConnectableOutline.attributes.description.colour=The colour of the outline.
@@ -88,7 +88,7 @@ entities.EndHelper/ConnectableOutline.attributes.description.visibleFlag=If spec
 
 
 # Flag Killbox
-entities.EndHelper/FlagKillbox.placements.name.normal=(Deprecated) Flag Killbox
+entities.EndHelper/FlagKillbox.placements.name.normal=<Deprecated> Flag Killbox
 entities.EndHelper/FlagKillbox.placements.name.altname=Flag Kill Box
 entities.EndHelper/FlagKillbox.placements.description.normal=Flag-toggleable killbox.\n(When above the killbox, the killbox becomes the new bottom deathzone.)
 entities.EndHelper/FlagKillbox.attributes.description.triggerDistance=The number of tiles the player must be above the killbox before it activates.
@@ -98,7 +98,7 @@ entities.EndHelper/FlagKillbox.attributes.description.permamentActivate=If true,
 
 
 # Conditional Tutorial Bird
-entities.EndHelper/ConditionalBirdTutorial.placements.name.normal=(Deprecated) Conditional Bird Tutorial
+entities.EndHelper/ConditionalBirdTutorial.placements.name.normal=<Deprecated> Conditional Bird Tutorial
 entities.EndHelper/ConditionalBirdTutorial.placements.description.normal=Everest Custom Bird Tutorial with custom ways to activate them and fly-in animation.\nThe 2 nodes create a zone which can be used for the fly-in condition.\nEverest Custom Bird Tutorial Trigger works for removing the bird,\nbut you shouldn't use them to get the birds to show text.
 entities.EndHelper/ConditionalBirdTutorial.attributes.description.flyInSpeedMultiplier=When the condition is met, the bird will fly to its location. This multiplies the Fly-in animation speed when the condition is met.\nSet to 0 for no fly-in (already at location by default)
 entities.EndHelper/ConditionalBirdTutorial.attributes.description.showSprite=If false, the bird will be invisible and skip the fly-in animation.
@@ -125,7 +125,7 @@ entities.EndHelper/ConditionalBirdTutorial.attributes.description.onlyOnce=Wheth
 
 
 # IncrementalFlagTrigger
-triggers.EndHelper/IncrementalFlagTrigger.placements.name.normal=(Deprecated) Incremental Flag
+triggers.EndHelper/IncrementalFlagTrigger.placements.name.normal=<Deprecated> Incremental Flag
 triggers.EndHelper/IncrementalFlagTrigger.placements.description.normal=Trigger that creates or increments a Flag with a number.\nEg: Make entering a region adds flagNum2 and removes flagNum1 if flagNum1 is set.\n(This also creates a counter, for tracking purposes.)
 triggers.EndHelper/IncrementalFlagTrigger.attributes.description.flag=The flag name, without the number.\nThe trigger will create the flag [flag][number] upon entering.
 triggers.EndHelper/IncrementalFlagTrigger.attributes.description.setValue=The flag number.\nThe trigger will create the flag [flag][number] upon entering.\nIf set to 0, the flag will be removed.
@@ -141,7 +141,7 @@ triggers.EndHelper/IncrementalFlagTrigger.attributes.description.temporary=Remov
 ### Cassette stuff lol
 
 # Cassette Manager Trigger
-triggers.EndHelper/CassetteManagerTrigger.placements.name.normal=(Deprecated) Cassette Manager
+triggers.EndHelper/CassetteManagerTrigger.placements.name.normal=<Deprecated> Cassette Manager
 triggers.EndHelper/CassetteManagerTrigger.placements.description.normal=Lets you create cassette music with changing tempo,\nor force a cassette theme to move to a certain beat.
 triggers.EndHelper/CassetteManagerTrigger.attributes.description.wonkyCassettes=If this should work for Wonky Cassettes (Quantum Mechanics mod) rather than vanilla cassettes.\nThese only affect the main cassette controller.
 triggers.EndHelper/CassetteManagerTrigger.attributes.description.showDebugInfo=If enabled, displays debug info regarding current beat/bar/etc
@@ -163,7 +163,7 @@ triggers.EndHelper/CassetteManagerTrigger.attributes.description.setBeatResetCas
 triggers.EndHelper/CassetteManagerTrigger.attributes.description.requireFlag=If specified, the tempo and beat will only be set/changed if this flag is enabled.\nA list of flags in the format "flagA, flagB, !flagC | flagD, flagE" can be specified.\nThis means (flagA and flagB and not flagC) or (flagD and flagE).
 
 # Cassette Beat Block
-entities.EndHelper/CassetteBeatGate.placements.name.normal=(Deprecated) Cassette Beat Block
+entities.EndHelper/CassetteBeatGate.placements.name.normal=<Deprecated> Cassette Beat Block
 entities.EndHelper/CassetteBeatGate.placements.name.blue=Cassette Beat Block (Blue)
 entities.EndHelper/CassetteBeatGate.placements.name.red=Cassette Beat Block (Red)
 entities.EndHelper/CassetteBeatGate.placements.name.yellow=Cassette Beat Block (Yellow)
@@ -191,7 +191,7 @@ entities.EndHelper/CassetteBeatGate.attributes.description.requireFlag=If specif
 ############ Room-Swap
 
 # RoomSwap Controller
-entities.EndHelper/RoomSwapController.placements.name.normal=(Deprecated) Room-Swap Controller
+entities.EndHelper/RoomSwapController.placements.name.normal=<Deprecated> Room-Swap Controller
 entities.EndHelper/RoomSwapController.placements.description.normal=Informs the level on how many rows/cols to swap.\nThis should be loaded once before entering any swap-zones (load it at the start of the map, or global load it).\nThe zones DO NOT swap FG/BG tiles.\nRoom-Swap Respawn Force Same Room Triggers should be added in each template room for respawn points to work properly, and Room-Swap Change Respawn Triggers should be used in place of the regular ones.\nCollectables/Gates/etc don't properly save between swaps (are room dependent) so don't use them!
 entities.EndHelper/RoomSwapController.attributes.description.gridId=The identifier (any string) for this set of moveable grid. One Room-Swap controller sets information for 1 moveable grid.
 entities.EndHelper/RoomSwapController.attributes.description.totalRows=The total number of rows in the moveable grid.
@@ -203,7 +203,7 @@ entities.EndHelper/RoomSwapController.attributes.description.activateSoundEvent1
 entities.EndHelper/RoomSwapController.attributes.description.activateSoundEvent2=2nd Sound event that plays when room changing occurs.
 
 # RoomSwap Breaker Box
-entities.EndHelper/RoomSwapBox.placements.name.normal=(Deprecated) Room-Swap Breaker Box
+entities.EndHelper/RoomSwapBox.placements.name.normal=<Deprecated> Room-Swap Breaker Box
 entities.EndHelper/RoomSwapBox.placements.description.normal=Breaker Box that modifies room order depending on dash direction. And also does not break.
 entities.EndHelper/RoomSwapBox.attributes.description.gridId=The identifier for the moveable grid this box affects.
 entities.EndHelper/RoomSwapBox.attributes.description.modificationTypeLeft=Room order modification when box is hit from the left.\nFor Set To Order, the format is _{row1}{col1}_{row2}{col2}_{row3}{col3}_... from left to right, top down.\nPutting a # makes the room not affected.
@@ -223,7 +223,7 @@ entities.EndHelper/RoomSwapBox.attributes.description.flagRequire=[Outdated] Tru
 entities.EndHelper/RoomSwapBox.attributes.description.flagToggle=[Outdated] If true, the flag's state (set or unset) will be changed when the trigger activates.
 
 # RoomSwap Map
-entities.EndHelper/RoomSwapMap.placements.name.normal=(Deprecated) Room-Swap Map
+entities.EndHelper/RoomSwapMap.placements.name.normal=<Deprecated> Room-Swap Map
 entities.EndHelper/RoomSwapMap.placements.description.normal=A dynamically changing map that shows the current room order.\nYou can check for a specific arrangement with the flag\n{Swap Room Name Prefix}_{row1}{col1}_{row2}{col2}_{row3}{col3}_...\nfrom left to right, top down. Eg: swap_11_12_13_21_22_23_31_32_33
 entities.EndHelper/RoomSwapMap.attributes.description.gridId=The identifier for the moveable grid this map displays.
 entities.EndHelper/RoomSwapMap.attributes.description.scale=Factor that the map is scaled by.
@@ -236,7 +236,7 @@ entities.EndHelper/RoomSwapMap.attributes.description.animationSpeedMultiplier=C
 entities.EndHelper/RoomSwapMap.attributes.description.hudLayer=Causes the map to display on the SubHUD layer.\nThis means that it can be scaled down without looking pixelated.
 
 # RoomSwap MapUpgrade
-entities.EndHelper/RoomSwapMapUpgrade.placements.name.normal=(Deprecated) Room-Swap Map Upgrade
+entities.EndHelper/RoomSwapMapUpgrade.placements.name.normal=<Deprecated> Room-Swap Map Upgrade
 entities.EndHelper/RoomSwapMapUpgrade.placements.description.normal=Collectable that increases/sets a gridID's map level.\nThis causes Room-Swap Map to show icons with the name {map level}{file prefix}{row}{col}.\nEg: icon_11 (level 0) -> 1icon11 (level 1) -> 2icon11 (level 2) -> 3icon11 (level 3) -> ...
 entities.EndHelper/RoomSwapMapUpgrade.attributes.description.gridId=The identifier for the moveable grid this affects.
 entities.EndHelper/RoomSwapMapUpgrade.attributes.description.texturePath=Texture used for the upgrade.\nMake sure it is under Graphics\Atlases\Gameplay\objects
@@ -249,7 +249,7 @@ entities.EndHelper/RoomSwapMapUpgrade.attributes.description.oneTime=If ticked, 
 
 
 # RoomSwap Modify Room Trigger
-triggers.EndHelper/RoomSwapModifyRoomTrigger.placements.name.normal=(Deprecated) Room-Swap Modify Room
+triggers.EndHelper/RoomSwapModifyRoomTrigger.placements.name.normal=<Deprecated> Room-Swap Modify Room
 triggers.EndHelper/RoomSwapModifyRoomTrigger.placements.description.normal=Trigger that modifies room order
 triggers.EndHelper/RoomSwapModifyRoomTrigger.attributes.description.gridId=The identifier for the moveable grid this trigger affects.
 triggers.EndHelper/RoomSwapModifyRoomTrigger.attributes.description.modificationType=How does entering this trigger affect the room order?\nFor Set To Order, the format is _{row1}{col1}_{row2}{col2}_{row3}{col3}_... from left to right, top down.
@@ -263,12 +263,12 @@ triggers.EndHelper/RoomSwapModifyRoomTrigger.attributes.description.flagRequire=
 triggers.EndHelper/RoomSwapModifyRoomTrigger.attributes.description.flagToggle=[Outdated] If true, the flag's state (set or unset) will be changed when the trigger activates.
 
 # RoomSwap Respawn Force Same Room Trigger
-triggers.EndHelper/RoomSwapRespawnForceSameRoomTrigger.placements.name.normal=(Deprecated) Room-Swap Respawn Force Same Room Trigger
+triggers.EndHelper/RoomSwapRespawnForceSameRoomTrigger.placements.name.normal=<Deprecated> Room-Swap Respawn Force Same Room Trigger
 triggers.EndHelper/RoomSwapRespawnForceSameRoomTrigger.placements.description.normal=Corrects respawn positions set at a template room to the current room.\nJust place one of these in every template room.
 triggers.EndHelper/RoomSwapRespawnForceSameRoomTrigger.attributes.description.onAwake=Does it corrects the spawn points when the trigger is awake (upon entering room) rather than when entering the trigger?\nYou should probably leave this on.
 
 # RoomSwap Change Respawn Trigger
-triggers.EndHelper/RoomSwapChangeRespawnTrigger.placements.name.normal=(Deprecated) Updating Change Respawn
+triggers.EndHelper/RoomSwapChangeRespawnTrigger.placements.name.normal=<Deprecated> Updating Change Respawn
 triggers.EndHelper/RoomSwapChangeRespawnTrigger.placements.name.altname=Room-Swap Change Respawn
 triggers.EndHelper/RoomSwapChangeRespawnTrigger.placements.name.altname2=Death-Handler Change Respawn
 triggers.EndHelper/RoomSwapChangeRespawnTrigger.placements.description.normal=Change respawn trigger that rechecks for spawnpoints when the player enters it.\nThis ensures the trigger sets the correct spawnpoint, even when it is moved.\nIf using Room-Swap or Death-Handler, this should be used in place of the regular Change Respawn Trigger.\nLike the normal trigger, if a node is set, the closest spawnpoint to it is used.
