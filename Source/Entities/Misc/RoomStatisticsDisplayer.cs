@@ -428,6 +428,11 @@ public class RoomStatisticsDisplayer : Entity
             Depth = -9000;
             level.Paused = true;
             Audio.Play("event:/ui/game/pause");
+
+            // Very hacky way to prevent double-pressing
+            Input.MenuJournal.ConsumePress();
+            Input.QuickRestart.ConsumePress();
+            Input.MenuCancel.ConsumePress();
         }
         else if (statisticsGuiOpen && !roomNameEditMenuOpen && (!level.Paused || Utils_JournalStatistics.journalOpen || Input.ESC.Pressed || Input.MenuCancel.Pressed || Input.Pause
             || level.Transitioning || EndHelperModule.Settings.OpenStatDisplayMenu.Button.Pressed))
