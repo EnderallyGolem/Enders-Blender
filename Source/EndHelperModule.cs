@@ -97,14 +97,14 @@ public class EndHelperModule : EverestModule {
     public static bool integratingWithCommunualHelper = false; // Make some entities work better with death handler
     public static bool integratingWithCNet = false; // Spectator tracker
 
-    private static ILHook Loadhook_Level_OrigTransitionRoutine;
-    private static ILHook Loadhook_Refill_RefillRoutine;
-    private static ILHook Loadhook_Input_GrabCheckGet;
+    private static ILHook? Loadhook_Level_OrigTransitionRoutine;
+    private static ILHook? Loadhook_Refill_RefillRoutine;
+    private static ILHook? Loadhook_Input_GrabCheckGet;
 
-    private static ILHook Loadhook_Player_DashCoroutine;
-    private static ILHook Loadhook_Player_RedDashCoroutine;
-    private static ILHook Loadhook_Player_OrigDie;
-    private static ILHook Loadhook_PlayerDeadBody_DeathRoutine;
+    private static ILHook? Loadhook_Player_DashCoroutine;
+    private static ILHook? Loadhook_Player_RedDashCoroutine;
+    private static ILHook? Loadhook_Player_OrigDie;
+    private static ILHook? Loadhook_PlayerDeadBody_DeathRoutine;
 
     public override void Load() {
         Everest.Events.AssetReload.OnReloadLevel += AssetReloadLevelFunc;
@@ -131,10 +131,10 @@ public class EndHelperModule : EverestModule {
         On.Celeste.ScreenWipe.Update += Hook_OnScreenWipeUpdate;
         IL.Celeste.PlayerDeadBody.Update += ILHook_PlayerDeadBodyUpdate;
         IL.Celeste.PlayerDeadBody.End += ILHook_PlayerDeadBodyEnd;
-        MethodInfo ILOrigDie = typeof(Player).GetMethod("orig_Die", BindingFlags.Public | BindingFlags.Instance);
-        Loadhook_Player_OrigDie = new ILHook(ILOrigDie, Hook_ILOrigDie);
-        MethodInfo ILDeadBodyDeathRoutine = typeof(PlayerDeadBody).GetMethod("DeathRoutine", BindingFlags.NonPublic | BindingFlags.Instance).GetStateMachineTarget();
-        Loadhook_PlayerDeadBody_DeathRoutine = new ILHook(ILDeadBodyDeathRoutine, Hook_ILDeadBodyDeathRoutine);
+        MethodInfo ILOrigDie = typeof(Player).GetMethod("orig_Die", BindingFlags.Public | BindingFlags.Instance)!;
+        Loadhook_Player_OrigDie = new ILHook(ILOrigDie!, Hook_ILOrigDie);
+        MethodInfo ILDeadBodyDeathRoutine = typeof(PlayerDeadBody)!.GetMethod("DeathRoutine", BindingFlags.NonPublic | BindingFlags.Instance)!.GetStateMachineTarget()!;
+        Loadhook_PlayerDeadBody_DeathRoutine = new ILHook(ILDeadBodyDeathRoutine!, Hook_ILDeadBodyDeathRoutine);
 
         On.Celeste.AreaComplete.VersionNumberAndVariants += Hook_AreaCompleteVerNumVars;
         On.Celeste.OuiJournal.Update += Hook_JournalUpdate;
@@ -153,22 +153,22 @@ public class EndHelperModule : EverestModule {
         On.Celeste.Solid.MoveHExact += Hook_SolidMoveHExact;
         On.Celeste.Solid.MoveVExact += Hook_SolidMoveVExact;
 
-        MethodInfo ILRefillCoroutine = typeof(Refill).GetMethod("RefillRoutine", BindingFlags.NonPublic | BindingFlags.Instance).GetStateMachineTarget();
-        Loadhook_Refill_RefillRoutine = new ILHook(ILRefillCoroutine, Hook_IL_RefillRefillCoroutine);
+        MethodInfo ILRefillCoroutine = typeof(Refill).GetMethod("RefillRoutine", BindingFlags.NonPublic | BindingFlags.Instance)!.GetStateMachineTarget()!;
+        Loadhook_Refill_RefillRoutine = new ILHook(ILRefillCoroutine!, Hook_IL_RefillRefillCoroutine);
 
-        MethodInfo ILTransitionCoroutine = typeof(Level).GetMethod("orig_TransitionRoutine", BindingFlags.NonPublic | BindingFlags.Instance).GetStateMachineTarget();
-        Loadhook_Level_OrigTransitionRoutine = new ILHook(ILTransitionCoroutine, Hook_IL_OrigTransitionRoutine);
+        MethodInfo ILTransitionCoroutine = typeof(Level).GetMethod("orig_TransitionRoutine", BindingFlags.NonPublic | BindingFlags.Instance)!.GetStateMachineTarget()!;
+        Loadhook_Level_OrigTransitionRoutine = new ILHook(ILTransitionCoroutine!, Hook_IL_OrigTransitionRoutine);
 
         On.Celeste.Player.DashBegin += Hook_DashBegin;
         IL.Celeste.Player.SuperBounce += ILHook_SuperBounce;
         IL.Celeste.Player.SideBounce += ILHook_SideBounce;
-        MethodInfo ILDashCoroutine = typeof(Player).GetMethod("DashCoroutine", BindingFlags.NonPublic | BindingFlags.Instance).GetStateMachineTarget();
-        Loadhook_Player_DashCoroutine = new ILHook(ILDashCoroutine, Hook_IL_DashCoroutine);
-        MethodInfo ILRedDashCoroutine = typeof(Player).GetMethod("RedDashCoroutine", BindingFlags.NonPublic | BindingFlags.Instance).GetStateMachineTarget();
-        Loadhook_Player_RedDashCoroutine = new ILHook(ILRedDashCoroutine, Hook_IL_RedDashCoroutine);
+        MethodInfo ILDashCoroutine = typeof(Player).GetMethod("DashCoroutine", BindingFlags.NonPublic | BindingFlags.Instance)!.GetStateMachineTarget()!;
+        Loadhook_Player_DashCoroutine = new ILHook(ILDashCoroutine!, Hook_IL_DashCoroutine);
+        MethodInfo ILRedDashCoroutine = typeof(Player).GetMethod("RedDashCoroutine", BindingFlags.NonPublic | BindingFlags.Instance)!.GetStateMachineTarget()!;
+        Loadhook_Player_RedDashCoroutine = new ILHook(ILRedDashCoroutine!, Hook_IL_RedDashCoroutine);
 
-        MethodInfo ILInputGrabCheckGet = typeof(Input).GetProperty("GrabCheck").GetGetMethod();
-        Loadhook_Input_GrabCheckGet = new ILHook(ILInputGrabCheckGet, Hook_IL_GrabCheckGet);
+        MethodInfo ILInputGrabCheckGet = typeof(Input).GetProperty("GrabCheck")!.GetGetMethod()!;
+        Loadhook_Input_GrabCheckGet = new ILHook(ILInputGrabCheckGet!, Hook_IL_GrabCheckGet);
 
         SpeedrunToolIntegration.Load();
         SSMQoLIntegration.Load();

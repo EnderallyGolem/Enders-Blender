@@ -10,7 +10,10 @@ mods.EndHelper.name=Ender's Blender
 entities.EndHelper/MultiroomWatchtower.placements.name.normal=Multi-Room Watchtower
 entities.EndHelper/MultiroomWatchtower.placements.description.normal=Watchtower that can scroll through to different rooms.\nNodes work, but it cannot skip rooms, and each room must have at least 1 spot along the nodes that the camera can fit.\nNote: This may crash in some maps with theo.
 entities.EndHelper/MultiroomWatchtower.attributes.description.modifiedInterpolation=If you're using nodes, uses Catmull-Rom Splines instead of whatever vanilla uses for the watchtower path,\nwhich have the advantage of ensuring the camera always goes past nodes, but is less smooth.\nBecareful if this is disabled, if the path does not go through a location where the camera can fit in the room,\nthe watchtower cannot access it and any future rooms!
-entities.EndHelper/MultiroomWatchtower.attributes.description.ignoreLookoutBlocker=The lookout bypasses Lookout Blockers.\nThis allows both scrolling past the blockers and looking at rooms past the blockers.\nThis has no effect if nodes are used.
+entities.EndHelper/MultiroomWatchtower.attributes.description.ignoreLookoutBlocker=If enabled, the lookout bypasses Lookout Blockers.\nThis allows both scrolling past the blockers and looking at rooms past the blockers.\nThis has no effect if nodes are used.
+entities.EndHelper/MultiroomWatchtower.attributes.description.onlyX=If the watchtower can only scroll horizontally.
+entities.EndHelper/MultiroomWatchtower.attributes.description.onlyY=If the watchtower can only scroll vertically.
+
 
 
 
