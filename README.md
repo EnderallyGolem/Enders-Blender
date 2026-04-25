@@ -56,8 +56,10 @@ Some of these can be overridden per-map with a Gameplay Tweaks Override Trigger.
 
 # 1.2.0:
 - Mapping Tools:
-	- Depracted most entities and triggers. These have been shifted to EndersExtras.
-	- Only entities left are the multi-room bino and gameplay tweaks override trigger.
+	- Depracted most entities and triggers. These have been shifted to EndersExtras. They will be removed from loenn soon.
+	- In the future, I will probably remove the code for those that aren't used by any maps. 
+		- Afaik the only ones used are cassette beat blocks by buffer contest, let me know if your map uses anything else currently!
+	- Only entities/triggers left are the multi-room bino and gameplay tweaks override trigger.
 
 # 1.1.25:
 - Misc:
