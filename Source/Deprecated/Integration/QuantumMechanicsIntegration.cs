@@ -129,7 +129,7 @@ namespace Celeste.Mod.EndHelper.Deprecated.Integration
 
         private static float WonkyManagerMultiplyCassetteSpeed(float originalTime)
         {
-            if (Monocle.Engine.Scene is Level level && level.Tracker.GetEntity<WonkyCassetteBlockController>() is WonkyCassetteBlockController wonkyCassetteBlockManager)
+            if (Monocle.Engine.Scene is Level level && level.Tracker.GetEntity<WonkyCassetteBlockController>() is { } wonkyCassetteBlockManager)
             {
                 // Logger.Log(LogLevel.Info, "EndHelper/main", $"changing multiply speed. id: {wonkyCassetteBlockManager.ID}");
                 DynamicData wonkyCassetteManagerData = DynamicData.For(wonkyCassetteBlockManager);

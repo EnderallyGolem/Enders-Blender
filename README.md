@@ -53,6 +53,10 @@ Some of these can be overridden per-map with a Gameplay Tweaks Override Trigger.
 
 
 
+Changelog:
+
+# 1.2.1
+- Room Stats Tracker: Fixed timers not updating during game freeze during load/save state
 
 # 1.2.0:
 - Mapping Tools:

@@ -196,7 +196,7 @@ namespace Celeste.Mod.EndHelper.Utils
             {
                 // If level was paused when this happens and lastFullResetPos is not null, player retried from menu: count as manual reset
 
-                if (player.Components.Get<DeathBypass>() is DeathBypass deathBypass && deathBypass.bypass)
+                if (player.Components.Get<DeathBypass>() is { } deathBypass && deathBypass.bypass)
                 {
                     oldbypass_requireFlag = deathBypass.RequireFlag;
                     oldbypass_showVisuals = deathBypass.showVisuals;
@@ -214,7 +214,7 @@ namespace Celeste.Mod.EndHelper.Utils
                 {
                     foreach (Entity entity in level.Entities)
                     {
-                        if (entity.Components.Get<DeathBypass>() is DeathBypass deathBypassComponent && entity is not Player)
+                        if (entity.Components.Get<DeathBypass>() is { } deathBypassComponent && entity is not Player)
                         {
                             // Bypass component has to update, no matter if the entity itself is active
                             // Sometimes, eg in a move block, the entity might become inactive, but should still be affected by flag changes for example
@@ -469,7 +469,7 @@ namespace Celeste.Mod.EndHelper.Utils
                 {
                     foreach (Entity entity in level.Entities)
                     {
-                        if (entity.Components.Get<DeathBypass>() is DeathBypass deathBypassComponent && deathBypassComponent.bypass && entity is not Player)
+                        if (entity.Components.Get<DeathBypass>() is { } deathBypassComponent && deathBypassComponent.bypass && entity is not Player)
                         {
                             // Bypass flag should hopefully not have changed in this time. If it does it might lead to issues. But another bypass update isn't necessary.
                             deathBypassComponent.OnDeathBypass(entity);
@@ -559,7 +559,7 @@ namespace Celeste.Mod.EndHelper.Utils
         public static void ReloadRoomSeemlessly(Level level, ReloadRoomSeemlesslyEffect effect = ReloadRoomSeemlesslyEffect.None)
         {
             // Allow reload when paused if it's by player death - since death occurs when (un)pause(ing) when clicking retry
-            if (level.Tracker.GetEntity<Player>() is Player player && (!level.InCutscene && !level.Paused || effect == ReloadRoomSeemlesslyEffect.Death))
+            if (level.Tracker.GetEntity<Player>() is { } player && (!level.InCutscene && !level.Paused || effect == ReloadRoomSeemlesslyEffect.Death))
             {
                 bool playerDyingWithDeathBypass = false;
                 if (effect == ReloadRoomSeemlesslyEffect.Death && playerHasDeathBypass && !manualReset) playerDyingWithDeathBypass = true;
@@ -643,7 +643,7 @@ namespace Celeste.Mod.EndHelper.Utils
                         level.LoadLevel(Player.IntroTypes.Respawn);
                         level.Wipe = null;
 
-                        if (level.Tracker.GetEntity<Player>() is Player respawnPlayer)
+                        if (level.Tracker.GetEntity<Player>() is { } respawnPlayer)
                         {
                             if (seemlessRespawn == SeemlessRespawnEnum.EnabledInstant || seemlessRespawn == SeemlessRespawnEnum.EnabledKeepState || playerDyingWithDeathBypass)
                             {
@@ -942,7 +942,7 @@ namespace Celeste.Mod.EndHelper.Utils
         private bool previouslyInDoNotLoadList = false;
         internal void BeforeDeathBypass(Entity entity)
         {
-            if (entity.Get<DeathBypassModifier>() is DeathBypassModifier modifier && modifier.beforeDeathBypassAction != null)
+            if (entity.Get<DeathBypassModifier>() is { } modifier && modifier.beforeDeathBypassAction != null)
             {
                 modifier.beforeDeathBypassAction.Invoke();
             }
@@ -993,7 +993,7 @@ namespace Celeste.Mod.EndHelper.Utils
             entity.Scene = Engine.Scene as Level;
 
             // Entity itself
-            if (entity.Get<DeathBypassModifier>() is DeathBypassModifier modifier && modifier.onDeathBypassAction != null)
+            if (entity.Get<DeathBypassModifier>() is { } modifier && modifier.onDeathBypassAction != null)
             {
                 modifier.onDeathBypassAction.Invoke();
             }
@@ -1061,7 +1061,7 @@ namespace Celeste.Mod.EndHelper.Utils
                     if (component.Platform != null && component.IsAttachedTo(solid))
                     {
                         Entity staticMowerEntity = component.Entity;
-                        if (staticMowerEntity.Components.Get<DeathBypass>() is DeathBypass staticDeathBypass)
+                        if (staticMowerEntity.Components.Get<DeathBypass>() is { } staticDeathBypass)
                         {
                             entity.Remove(staticDeathBypass);
                         }
@@ -1095,7 +1095,7 @@ namespace Celeste.Mod.EndHelper.Utils
                     if (component.Platform != null && component.IsAttachedTo(solid))
                     {
                         Entity staticMowerEntity = component.Entity;
-                        if (staticMowerEntity.Components.Get<DeathBypass>() is DeathBypass staticDeathBypass)
+                        if (staticMowerEntity.Components.Get<DeathBypass>() is { } staticDeathBypass)
                         {
                             staticDeathBypass.ToggleAllowBypassAttached(staticMowerEntity, setValue);
                         }
@@ -1131,7 +1131,7 @@ namespace Celeste.Mod.EndHelper.Utils
         {
             while (subEntitiesList.Count > 0)
             {
-                if (subEntitiesList[0] is not null && subEntitiesList[0].Components.Get<DeathBypass>() is DeathBypass deathBypass) 
+                if (subEntitiesList[0] is not null && subEntitiesList[0].Components.Get<DeathBypass>() is { } deathBypass) 
                 {
                     subEntitiesList[0].Remove(deathBypass);
                 }
@@ -1142,7 +1142,7 @@ namespace Celeste.Mod.EndHelper.Utils
         {
             foreach (Entity subentity in subEntitiesList)
             {
-                if (subentity is not null && subentity.Components.Get<DeathBypass>() is DeathBypass deathBypass)
+                if (subentity is not null && subentity.Components.Get<DeathBypass>() is { } deathBypass)
                 {
                     deathBypass.ToggleAllowBypassAttached(subentity, setValue, newRequireFlag);
                 }

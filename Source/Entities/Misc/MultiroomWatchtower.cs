@@ -715,7 +715,7 @@ public class MultiroomWatchtower : Entity
             if (preWatchRespawnPoint != null) level.Session.RespawnPoint = preWatchRespawnPoint;
 
             // Prevent room from changing when using the bino. Set to high number to account for shifting the camera back
-            if (level.Tracker.GetEntity<RoomStatisticsDisplayer>() is RoomStatisticsDisplayer roomStatDisplayer) roomStatDisplayer.disableRoomChangeTimer.Set(60);
+            if (level.Tracker.GetEntity<RoomStatisticsDisplayer>() is { } roomStatDisplayer) roomStatDisplayer.disableRoomChangeTimer.Set(60);
 
             #region PortableStuff
 

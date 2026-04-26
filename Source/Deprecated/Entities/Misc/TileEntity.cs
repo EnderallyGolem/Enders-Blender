@@ -307,7 +307,7 @@ public class TileEntity : Solid
                 }
             }
         }
-        else if (getMasterOfGroup is TileEntity)
+        else if (getMasterOfGroup is not null)
         {
             getMasterOfGroup.Break(from, direction, false);
         }

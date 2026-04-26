@@ -116,6 +116,7 @@ public class EndHelperModule : EverestModule {
         Everest.Events.Input.OnInitialize += OnInitialiseInput;
 
         On.Monocle.Engine.Update += Hook_EngineUpdate;
+        On.Celeste.Level.Update += Hook_LevelUpdate;
         Everest.Events.Level.OnBeforeUpdate += OnBeforeLevelUpdate;
         On.Celeste.Level.UpdateTime += Hook_LevelUpdateTime;
         On.Celeste.LevelLoader.StartLevel += Hook_StartMapFromBeginning;
@@ -192,6 +193,7 @@ public class EndHelperModule : EverestModule {
         Everest.Events.Input.OnInitialize -= OnInitialiseInput;
 
         On.Monocle.Engine.Update -= Hook_EngineUpdate;
+        On.Celeste.Level.Update -= Hook_LevelUpdate;
         Everest.Events.Level.OnBeforeUpdate -= OnBeforeLevelUpdate;
         On.Celeste.Level.UpdateTime -= Hook_LevelUpdateTime;
         On.Celeste.LevelLoader.StartLevel -= Hook_StartMapFromBeginning;
@@ -591,7 +593,7 @@ public class EndHelperModule : EverestModule {
 
             if (lastSessionResetCause == SessionResetCause.Debug || lastSessionResetCause == SessionResetCause.ReenterMap)
             {
-                // Check if require double reload - if room the player is in is in a grid
+                // Check if require double reload - if room the player is in a grid
                 String currentRoom = level.Session.LevelData.Name;
                 foreach (String gridID in EndHelperModule.Session.roomSwapOrderList.Keys)
                 {
@@ -609,7 +611,7 @@ public class EndHelperModule : EverestModule {
         }
         if (lastSessionResetCause != SessionResetCause.ReenterMap)
         {
-            if (level.Tracker.GetEntity<RoomStatisticsDisplayer>() is RoomStatisticsDisplayer roomStatDisplayer)
+            if (level.Tracker.GetEntity<RoomStatisticsDisplayer>() is { } roomStatDisplayer)
             {
                 roomStatDisplayer.ImportRoomStatInfo();
             }
@@ -623,22 +625,46 @@ public class EndHelperModule : EverestModule {
 
     // Using player update instead of level update so nothing happens when the level is loading
     // Level update screws with the timeSinceSessionReset.
-    internal static List<Action> actionWhenUnpaused = [];
+    internal static List<Action?> ActionWhenUnpaused = [];
 
     private static void RunUnpauseActions(Level level)
     {
         if (!level.Paused)
         {
-            foreach (Action action in actionWhenUnpaused)
+            foreach (Action? action in ActionWhenUnpaused)
             {
                 if (action is not null)
                 {
                     action.Invoke();
                 }
             }
-            actionWhenUnpaused.Clear();
+            ActionWhenUnpaused.Clear();
         }
     }
+
+    private static void Hook_LevelUpdate(On.Celeste.Level.orig_Update orig, global::Celeste.Level self)
+    {
+        Level level = self;
+        // Session Reset Checker. This isn't in the everest event as it makes the ui not reset until unpause on load state.
+        // Maybe related to SpeedrunTools hooking level update without orig?
+        EndHelperModule.timeSinceSessionReset++;
+        if (EndHelperModule.timeSinceSessionReset == 1) { SessionResetFuncs(self); }
+
+        // Update RTA Timer
+        roomStatRtaTimeChecker_timeChange = System.DateTime.Now.Ticks - roomStatRtaTimeChecker_currTime;
+        roomStatRtaTimeChecker_currTime = System.DateTime.Now.Ticks;
+
+        if (roomStatRtaTimeChecker_timeChange < -3e7 || roomStatRtaTimeChecker_timeChange > 6e9)
+        {
+            // Don't change if its too large (> 10mins) or negative (under -3s)
+            Logger.Log(LogLevel.Warn, "EndHelper/main", $"Identified overly huge real-time change of {roomStatRtaTimeChecker_timeChange / 1e7}s. Ignoring change!");
+            roomStatRtaTimeChecker_timeChange = 0;
+        }
+
+        if (allowIncrementRoomTimer) level.Tracker.GetEntity<RoomStatisticsDisplayer>()?.AddRTATimer(roomStatRtaTimeChecker_timeChange);
+        orig(self);
+    }
+
     private static void OnBeforeLevelUpdate(global::Celeste.Level self)
     {
         Level level = self;
@@ -659,7 +685,7 @@ public class EndHelperModule : EverestModule {
 
         {
             // Increment timeSinceRespawn if player is alive. and also not paused
-            if (level.Tracker.GetEntity<Player>() is Player player && !player.Dead && !player.JustRespawned && !level.FrozenOrPaused)
+            if (level.Tracker.GetEntity<Player>() is { } player && !player.Dead && !player.JustRespawned && !level.FrozenOrPaused)
             {
                 EndHelperModule.Session.framesSinceRespawn++;
             }
@@ -672,7 +698,7 @@ public class EndHelperModule : EverestModule {
 
         // Quick Restart Keybind
         {
-            if (EndHelperModule.Settings.QuickRetry.Button.Pressed && level.Tracker.GetEntity<Player>() is Player player && !level.Paused && level.CanPause && level.CanRetry && !player.Dead && !level.InCutscene)
+            if (EndHelperModule.Settings.QuickRetry.Button.Pressed && level.Tracker.GetEntity<Player>() is { } player && !level.Paused && level.CanPause && level.CanRetry && !player.Dead && !level.InCutscene)
             {
                 if (level.Session.GrabbedGolden)
                 {
@@ -752,25 +778,13 @@ public class EndHelperModule : EverestModule {
 
     private static void Hook_LevelUpdateTime(On.Celeste.Level.orig_UpdateTime orig, global::Celeste.Level self)
     {
-        // Update RTA Timer
-        roomStatRtaTimeChecker_timeChange = System.DateTime.Now.Ticks - roomStatRtaTimeChecker_currTime;
-        roomStatRtaTimeChecker_currTime = System.DateTime.Now.Ticks;
-
-        if (roomStatRtaTimeChecker_timeChange < -3e7 || roomStatRtaTimeChecker_timeChange > 6e9) 
-        {
-            // Don't change if its too large (> 10mins) or negative (under -3s)
-            Logger.Log(LogLevel.Warn, "EndHelper/main", $"Identified overly huge real-time change of {roomStatRtaTimeChecker_timeChange / 1e7}s. Ignoring change!");
-            roomStatRtaTimeChecker_timeChange = 0;
-        }
-        ;
-
         Level level = self;
         previousSessionTime = level.Session.Time;
         AreaKey area = level.Session.Area;
         previousSaveDataTime = global::Celeste.SaveData.Instance.Areas_Safe[area.ID].Modes[(int)area.Mode].TimePlayed;
 
         {
-            if (level.Tracker.GetEntity<RoomStatisticsDisplayer>() is RoomStatisticsDisplayer roomStatDisplayer)
+            if (level.Tracker.GetEntity<RoomStatisticsDisplayer>() is { } roomStatDisplayer)
             {
                 // Timer will be increased here instead of the entity's update as otherwise pause menu appearing will freeze the timer temporarily
                 String incrementRoomName = roomStatDisplayer.currentEffectiveRoomName;
@@ -788,7 +802,7 @@ public class EndHelperModule : EverestModule {
 
                 //Inactive Checker
                 {
-                    if (level.Tracker.GetEntity<Player>() is Player player && (player.InControl == false || level.InCutscene))
+                    if (level.Tracker.GetEntity<Player>() is { } player && (player.InControl == false || level.InCutscene))
                     {
                         inactiveDurationFrames++;
                     }
@@ -841,7 +855,6 @@ public class EndHelperModule : EverestModule {
                 if (allowIncrementRoomTimer)
                 {
                     roomStatDisplayer.AddTimer();
-                    roomStatDisplayer.AddRTATimer(roomStatRtaTimeChecker_timeChange);
                 }
             }
         }
@@ -1160,7 +1173,7 @@ public class EndHelperModule : EverestModule {
         {
             { 
                 if (EndHelperModule.Settings.QOLTweaksMenu.DisableQuickRestart ||
-                (EndHelperModule.Settings.QuickRetry.Button.Pressed && level.Tracker.GetEntity<Player>() is Player player && !level.Paused && level.CanPause && level.CanRetry))
+                (EndHelperModule.Settings.QuickRetry.Button.Pressed && level.Tracker.GetEntity<Player>() is { } player && !level.Paused && level.CanPause && level.CanRetry))
                 {
                     // Do not quick reset if you are quick dying (or if disabled)
                     return;
@@ -1181,7 +1194,7 @@ public class EndHelperModule : EverestModule {
     public static void Hook_EntityRemoved(On.Monocle.Entity.orig_Removed orig, global::Monocle.Entity self, global::Monocle.Scene scene)
     {
         if (scene is Level && EndHelperModule.Session is not null && 
-            EndHelperModule.Session.AllowDeathHandlerEntityChecks && self.Components.Get<DeathBypass>() is DeathBypass deathBypassComponent && deathBypassComponent.bypass
+            EndHelperModule.Session.AllowDeathHandlerEntityChecks && self.Components.Get<DeathBypass>() is { } deathBypassComponent && deathBypassComponent.bypass
             && self is not Player)
         {
             DeathBypass.entityIDDisappearUntilFullReset.Add(deathBypassComponent.entityID);
@@ -1201,7 +1214,7 @@ public class EndHelperModule : EverestModule {
 
     private static ScreenWipe Hook_CompleteArea(On.Celeste.Level.orig_CompleteArea_bool_bool_bool orig, global::Celeste.Level level, bool spotlightWipe, bool skipScreenWipe, bool skipCompleteScreen)
     {
-        if (level.Tracker.GetEntity<RoomStatisticsDisplayer>() is RoomStatisticsDisplayer roomStatDisplayer && level.Paused)
+        if (level.Tracker.GetEntity<RoomStatisticsDisplayer>() is { } roomStatDisplayer && level.Paused)
         {
             Logger.Log(LogLevel.Info, "EndHelper/Main", $"Running CompleteArea pause for potential RoomStatisticsDisplay stats. Hope it doesn't crash!");
 
@@ -1210,7 +1223,7 @@ public class EndHelperModule : EverestModule {
             {
                 orig(level, spotlightWipe, skipScreenWipe, skipCompleteScreen);
             }
-            actionWhenUnpaused.Add(action);
+            ActionWhenUnpaused.Add(action);
             return null;
         }
         else
@@ -1497,7 +1510,7 @@ public class EndHelperModule : EverestModule {
         if (usedConvertDemoSetting != GameplayTweaks.ConvertDemoEnum.Disabled && !global::Celeste.SaveData.Instance.Assists.ThreeSixtyDashing
             && preRedirectDashDir.Y > 0.01 && redirectedVector.Y == 0)
         {
-            if (usedConvertDemoSetting != ConvertDemoEnum.Disabled && EndHelperModule.Session.GameplayTweaksOverride_ConvertDemo == null)
+            if (EndHelperModule.Session.GameplayTweaksOverride_ConvertDemo == null)
             {
                 EndHelperModule.Session.usedGameplayTweaks["dashredirect"] = true;
             }
@@ -1626,7 +1639,7 @@ public class EndHelperModule : EverestModule {
         orig(self);
         // Booster forces tag to be 1 (idk what 1 is but its not global) upon death. I don't want that to happen with deathbypass
         // Otherwise the booster kind of just disappears forever
-        if (self.Components.Get<DeathBypass>() is DeathBypass deathBypassComponent && deathBypassComponent.bypass)
+        if (self.Components.Get<DeathBypass>() is { } deathBypassComponent && deathBypassComponent.bypass)
         {
             self.AddTag(Tags.Global);
         }
@@ -1672,7 +1685,7 @@ public class EndHelperModule : EverestModule {
     private static void Hook_CollectStrawberry(On.Celeste.Strawberry.orig_OnCollect orig, global::Celeste.Strawberry self)
     {
         Level level = self.SceneAs<Level>();
-        if (level.Tracker.GetEntity<RoomStatisticsDisplayer>() is RoomStatisticsDisplayer roomStatDisplayer)
+        if (level.Tracker.GetEntity<RoomStatisticsDisplayer>() is { } roomStatDisplayer)
         {
             roomStatDisplayer.AddStrawberry(self);
         }
@@ -1682,7 +1695,7 @@ public class EndHelperModule : EverestModule {
     private static void Hook_SpeedrunTimerRender(On.Celeste.SpeedrunTimerDisplay.orig_Render orig, global::Celeste.SpeedrunTimerDisplay self)
     {
         bool renderTimer = true;
-        if (Engine.Scene is Level level && level.Tracker.GetEntity<RoomStatisticsDisplayer>() is RoomStatisticsDisplayer roomStatDisplayer && roomStatDisplayer.statisticsGuiOpen)
+        if (Engine.Scene is Level level && level.Tracker.GetEntity<RoomStatisticsDisplayer>() is { } roomStatDisplayer && roomStatDisplayer.statisticsGuiOpen)
         { renderTimer = false; }
 
         if (!self.Active || self.DrawLerp <= 0) { renderTimer = false; }

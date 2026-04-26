@@ -313,7 +313,7 @@ namespace Celeste.Mod.EndHelper.Deprecated.Entities.Misc
                     // Round to's coords to integers
                     to = new Vector2((int)Math.Round(to.X), (int)Math.Round(to.Y));
 
-                    if (entity.Get<StaticMover>() is StaticMover staticMoverComponent && staticMoverComponent.Platform != null)
+                    if (entity.Get<StaticMover>() is { } staticMoverComponent && staticMoverComponent.Platform != null)
                     {
                         return; // Do not move StaticMovers (that has a platform). Their movement is already handled by moving the actual platform.
                     }

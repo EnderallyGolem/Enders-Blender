@@ -126,7 +126,7 @@ public class ConditionalBirdTutorial : CustomBirdTutorial
             avoidIncrement = true; // Avoid incrementing if require flag for condition fails
         }
 
-        if (level.Tracker.GetEntity<Player>() is Player player)
+        if (level.Tracker.GetEntity<Player>() is { } player)
         {
             string trackerPrefix = $"EndHelper_ConditionalBirdTutorial_{entityData.ID}";
             if (nodeBounds.Contains((int)player.X, (int)player.Y))
@@ -167,7 +167,7 @@ public class ConditionalBirdTutorial : CustomBirdTutorial
             avoidIncrement = true; // Avoid incrementing if require flag for condition fails
         }
 
-        if (level.Tracker.GetEntity<Player>() is Player player)
+        if (level.Tracker.GetEntity<Player>() is { } player)
         {
             string trackerPrefix = $"EndHelper_ConditionalBirdTutorial_{entityData.ID}";
             if (nodeBounds.Contains((int)player.X, (int)player.Y))
@@ -217,7 +217,7 @@ public class ConditionalBirdTutorial : CustomBirdTutorial
     {
         if (recheckIfOutsideZone) UpdateConditionTracking_Time(true);
 
-        if (level.Tracker.GetEntity<Player>() is Player player)
+        if (level.Tracker.GetEntity<Player>() is { } player)
         {
             // Look through each condition. If any fails, exit.
             // Ensure hasn't triggered yet

@@ -437,7 +437,7 @@ namespace Celeste.Mod.EndHelper.Deprecated.Utils
                         break;
 
                     //set_11_12_21_22
-                    case string s when s.StartsWith("Set_"):
+                    case { } s when s.StartsWith("Set_"):
                         {
                             string oldTemplateRoomAtThisPos = "";
                             int roomCol = 0; int roomRow = 0;

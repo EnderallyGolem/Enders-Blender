@@ -17,11 +17,11 @@ namespace Celeste.Mod.EndHelper.Utils
             {
                 return;
             }
-            if (level.Tracker.GetEntity<Player>() is not Player player || !player.InControl)
+            if (level.Tracker.GetEntity<Player>() is not { } player || !player.InControl)
             {
                 return;
             }
-            if (level.Tracker.GetEntity<PortableMultiroomWatchtower>() is PortableMultiroomWatchtower)
+            if (level.Tracker.GetEntity<PortableMultiroomWatchtower>() is not null)
             {
                 return;
             }
