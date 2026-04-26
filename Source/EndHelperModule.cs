@@ -642,13 +642,14 @@ public class EndHelperModule : EverestModule {
         }
     }
 
-    private static void Hook_LevelUpdate(On.Celeste.Level.orig_Update orig, global::Celeste.Level self)
+    private static void Hook_LevelUpdate(On.Celeste.Level.orig_Update orig, global::Celeste.Level level)
     {
-        Level level = self;
         // Session Reset Checker. This isn't in the everest event as it makes the ui not reset until unpause on load state.
         // Maybe related to SpeedrunTools hooking level update without orig?
         EndHelperModule.timeSinceSessionReset++;
-        if (EndHelperModule.timeSinceSessionReset == 1) { SessionResetFuncs(self); }
+        if (EndHelperModule.timeSinceSessionReset == 1) { SessionResetFuncs(level); }
+
+        UpdateCanIncrementRoomTimer(level);
 
         // Update RTA Timer
         roomStatRtaTimeChecker_timeChange = System.DateTime.Now.Ticks - roomStatRtaTimeChecker_currTime;
@@ -662,7 +663,7 @@ public class EndHelperModule : EverestModule {
         }
 
         if (allowIncrementRoomTimer) level.Tracker.GetEntity<RoomStatisticsDisplayer>()?.AddRTATimer(roomStatRtaTimeChecker_timeChange);
-        orig(self);
+        orig(level);
     }
 
     private static void OnBeforeLevelUpdate(global::Celeste.Level self)
@@ -776,6 +777,70 @@ public class EndHelperModule : EverestModule {
     private static long roomStatRtaTimeChecker_currTime;
     private static long roomStatRtaTimeChecker_timeChange;
 
+
+    private static void UpdateCanIncrementRoomTimer(Level level)
+    {
+        //AFK Checker
+        if (Input.Aim == Vector2.Zero && !Input.Dash.Pressed && !Input.Grab.Pressed && !Input.CrouchDash.Pressed && !Input.Talk.Pressed
+            && !Input.MenuCancel.Pressed && !Input.MenuConfirm.Pressed && !Input.ESC.Pressed && !Settings.OpenStatDisplayMenu.Button.Pressed)
+        {
+            afkDurationFrames++;
+        }
+        else
+        {
+            afkDurationFrames = 0;
+        }
+
+        //Inactive Checker
+        {
+            if (level.Tracker.GetEntity<Player>() is { } player && (!player.InControl || level.InCutscene))
+            {
+                inactiveDurationFrames++;
+            }
+            else
+            {
+                inactiveDurationFrames = 0;
+            }
+        }
+
+        allowIncrementRoomTimer = true;
+
+        if (!level.TimerStarted || level.TimerStopped || level.Completed)
+        { allowIncrementRoomTimer = false; }
+
+        if (allowIncrementRoomTimer && level.FrozenOrPaused && (
+            Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.RoomPauseScenarioEnum.Pause ||
+            Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.RoomPauseScenarioEnum.PauseAFK ||
+            Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.RoomPauseScenarioEnum.PauseInactive ||
+            Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.RoomPauseScenarioEnum.PauseInactiveAFK
+        ))
+        {
+            allowIncrementRoomTimer = false;
+            Session.pauseTypeDict["Pause"] = true;
+        }
+
+
+        if (allowIncrementRoomTimer && inactiveDurationFrames >= 60 && (
+            Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.RoomPauseScenarioEnum.PauseInactive ||
+            Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.RoomPauseScenarioEnum.PauseInactiveAFK
+         ))
+        {
+            allowIncrementRoomTimer = false;
+            if (level.TimerStarted && !level.TimerStopped && !level.Completed)
+            { Session.pauseTypeDict["Inactive"] = true; }
+        }
+
+        if (allowIncrementRoomTimer && afkDurationFrames >= 1800 && (
+            Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.RoomPauseScenarioEnum.AFK ||
+            Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.RoomPauseScenarioEnum.PauseAFK ||
+            Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.RoomPauseScenarioEnum.PauseInactiveAFK
+        ))
+        {
+            allowIncrementRoomTimer = false;
+            Session.pauseTypeDict["AFK"] = true;
+        }
+    }
+
     private static void Hook_LevelUpdateTime(On.Celeste.Level.orig_UpdateTime orig, global::Celeste.Level self)
     {
         Level level = self;
@@ -786,70 +851,8 @@ public class EndHelperModule : EverestModule {
         {
             if (level.Tracker.GetEntity<RoomStatisticsDisplayer>() is { } roomStatDisplayer)
             {
-                // Timer will be increased here instead of the entity's update as otherwise pause menu appearing will freeze the timer temporarily
-                String incrementRoomName = roomStatDisplayer.currentEffectiveRoomName;
-
-                //AFK Checker
-                if (Input.Aim == Vector2.Zero && Input.Dash.Pressed == false && Input.Grab.Pressed == false && Input.CrouchDash.Pressed == false && Input.Talk.Pressed == false
-                    && Input.MenuCancel.Pressed == false && Input.MenuConfirm.Pressed == false && Input.ESC.Pressed == false && EndHelperModule.Settings.OpenStatDisplayMenu.Button.Pressed == false)
-                {
-                    afkDurationFrames++;
-                }
-                else
-                {
-                    afkDurationFrames = 0;
-                }
-
-                //Inactive Checker
-                {
-                    if (level.Tracker.GetEntity<Player>() is { } player && (player.InControl == false || level.InCutscene))
-                    {
-                        inactiveDurationFrames++;
-                    }
-                    else
-                    {
-                        inactiveDurationFrames = 0;
-                    }
-                }
-
-                // Check if can increment time spent in room
-                allowIncrementRoomTimer = true;
-
-                if (!level.TimerStarted || level.TimerStopped || level.Completed)
-                { allowIncrementRoomTimer = false; }
-
-                if (allowIncrementRoomTimer && level.FrozenOrPaused && (
-                    EndHelperModule.Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.RoomPauseScenarioEnum.Pause ||
-                    EndHelperModule.Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.RoomPauseScenarioEnum.PauseAFK ||
-                    EndHelperModule.Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.RoomPauseScenarioEnum.PauseInactive ||
-                    EndHelperModule.Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.RoomPauseScenarioEnum.PauseInactiveAFK
-                ))
-                {
-                    allowIncrementRoomTimer = false;
-                    EndHelperModule.Session.pauseTypeDict["Pause"] = true;
-                }
-
-
-                if (allowIncrementRoomTimer && inactiveDurationFrames >= 60 && (
-                    EndHelperModule.Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.RoomPauseScenarioEnum.PauseInactive ||
-                    EndHelperModule.Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.RoomPauseScenarioEnum.PauseInactiveAFK
-                 ))
-                {
-                    allowIncrementRoomTimer = false;
-                    if (level.TimerStarted && !level.TimerStopped && !level.Completed)
-                    { EndHelperModule.Session.pauseTypeDict["Inactive"] = true; }
-                }
-
-                if (allowIncrementRoomTimer && afkDurationFrames >= 1800 && (
-                    EndHelperModule.Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.RoomPauseScenarioEnum.AFK ||
-                    EndHelperModule.Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.RoomPauseScenarioEnum.PauseAFK ||
-                    EndHelperModule.Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.RoomPauseScenarioEnum.PauseInactiveAFK
-                ))
-                {
-                    allowIncrementRoomTimer = false;
-                    EndHelperModule.Session.pauseTypeDict["AFK"] = true;
-                }
-
+                // allowIncrementRoomTimer is updated in LevelUpdate hook to avoid speedrun tool pause issues
+                UpdateCanIncrementRoomTimer(level);
                 roomStatDisplayer.EnsureDictsHaveKey(level);
 
                 if (allowIncrementRoomTimer)
