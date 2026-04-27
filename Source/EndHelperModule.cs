@@ -645,7 +645,7 @@ public class EndHelperModule : EverestModule {
     private static void Hook_LevelUpdate(On.Celeste.Level.orig_Update orig, global::Celeste.Level level)
     {
         // Session Reset Checker. This isn't in the everest event as it makes the ui not reset until unpause on load state.
-        // Maybe related to SpeedrunTools hooking level update without orig?
+        // Maybe related to SpeedrunTools hooking level update without orig...?
         EndHelperModule.timeSinceSessionReset++;
         if (EndHelperModule.timeSinceSessionReset == 1) { SessionResetFuncs(level); }
 
@@ -662,7 +662,12 @@ public class EndHelperModule : EverestModule {
             roomStatRtaTimeChecker_timeChange = 0;
         }
 
-        if (allowIncrementRoomTimer) level.Tracker.GetEntity<RoomStatisticsDisplayer>()?.AddRTATimer(roomStatRtaTimeChecker_timeChange);
+        if (allowIncrementRoomTimer && level.Tracker.GetEntity<RoomStatisticsDisplayer>() is { } roomStatDisplayer)
+        {
+            roomStatDisplayer.EnsureDictsHaveKey(level);
+            roomStatDisplayer.AddRTATimer(roomStatRtaTimeChecker_timeChange);
+        }
+
         orig(level);
     }
 
@@ -852,11 +857,9 @@ public class EndHelperModule : EverestModule {
             if (level.Tracker.GetEntity<RoomStatisticsDisplayer>() is { } roomStatDisplayer)
             {
                 // allowIncrementRoomTimer is updated in LevelUpdate hook to avoid speedrun tool pause issues
-                UpdateCanIncrementRoomTimer(level);
-                roomStatDisplayer.EnsureDictsHaveKey(level);
-
                 if (allowIncrementRoomTimer)
                 {
+                    roomStatDisplayer.EnsureDictsHaveKey(level);
                     roomStatDisplayer.AddTimer();
                 }
             }

@@ -55,6 +55,9 @@ Some of these can be overridden per-map with a Gameplay Tweaks Override Trigger.
 
 Changelog:
 
+# 1.2.3:
+- Room stats tracker crash hotfix? Hopefully?
+
 # 1.2.2:
 - Room Stats Tracker: Fixed timer afk-detection not working during game freeze during load/save state. 
   (This only affects real-time, since in-game time is paused during the freeze.)

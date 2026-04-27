@@ -1555,7 +1555,6 @@ public class RoomStatisticsDisplayer : Entity
     public void AddRTATimer(long addTicks)
     {
         if (currentEffectiveRoomName == "") return;
-        // !!!!!!!!!!!!!!!!!!!!!!!!!!!
         EndHelperModule.Session.roomStatDict_rtatimer[currentEffectiveRoomName] = addTicks + Convert.ToInt64(EndHelperModule.Session.roomStatDict_rtatimer[currentEffectiveRoomName]);
 
         if (dealWithFirstClear)
