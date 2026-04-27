@@ -49,7 +49,6 @@ namespace Celeste.Mod.EndHelper.Deprecated.Utils
                 int roomSwapTotalRow = EndHelperModule.Session.roomSwapRow[gridID];
                 int roomSwapTotalColumn = EndHelperModule.Session.roomSwapColumn[gridID];
                 String roomSwapPrefix = EndHelperModule.Session.roomSwapPrefix[gridID];
-                String roomTemplatePrefix = EndHelperModule.Session.roomTemplatePrefix[gridID];
 
                 for (int row = 1; row <= roomSwapTotalRow; row++)
                 {

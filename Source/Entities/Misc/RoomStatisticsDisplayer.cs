@@ -754,7 +754,6 @@ public class RoomStatisticsDisplayer : Entity
     void StatisticGUI()
     {
         Level level = SceneAs<Level>();
-        Session session = level.Session;
 
         MTexture backgroundTexture = GFX.Gui["misc/EndHelper/statGUI_background"];
         MTexture backgroundTextureShort = GFX.Gui["misc/EndHelper/statGUI_background_short"];
@@ -817,7 +816,7 @@ public class RoomStatisticsDisplayer : Entity
                 roomRtaTimeSpan = TimeSpan.FromTicks(Convert.ToInt64(EndHelperModule.Session.roomStatDict_rtatimer[roomName]));
                 roomStrawberriesCollected = Convert.ToInt32(EndHelperModule.Session.roomStatDict_strawberries[roomName]);
             }
-            string roomTimeString = Utils_General.MinimalGameplayFormat(roomTimeSpan);
+            Utils_General.MinimalGameplayFormat(roomTimeSpan);
 
             // Filtering
             bool checkRTAFilter = EndHelperModule.Settings.RoomStatMenu.MenuShowTime == EndHelperModuleSettings.RoomStatMenuSubMenu.MenuShowTimeEnum.RTA;
@@ -951,8 +950,6 @@ public class RoomStatisticsDisplayer : Entity
         long totalRtaTimer = 0;
         int totalStrawberries = 0;
 
-        bool checkRTA = EndHelperModule.Settings.RoomStatMenu.MenuShowTime == EndHelperModuleSettings.RoomStatMenuSubMenu.MenuShowTimeEnum.RTA;
-        
         switch (EndHelperModule.Settings.RoomStatMenu.MenuShowTime)
         {
             case RoomStatMenuSubMenu.MenuShowTimeEnum.Normal:
@@ -1408,7 +1405,8 @@ public class RoomStatisticsDisplayer : Entity
         else if (c == (char)8 || c == (char)24)
         {
             // Getting the length can crash. No, I have absolutely no idea how.
-            try { int roomCustomNameLength = roomCustomName.Length; }
+            try {
+            }
             catch (Exception) { roomCustomName = ""; }
 
             // Trim: Backspace, Cancel. Whatever Cancel is.

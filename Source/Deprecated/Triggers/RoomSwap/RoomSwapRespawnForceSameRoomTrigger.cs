@@ -80,7 +80,6 @@ public class RoomSwapRespawnForceSameRoomTrigger : Trigger
         Vector2? defaultSpawnPos = level.Session.LevelData.DefaultSpawn;
         if (defaultSpawnPos.HasValue)
         {
-            Vector2 defaultSpawnPosV = defaultSpawnPos.Value;
             Vector2 respawnOffsetV = respawnOffset.Value;
             level.Session.LevelData.DefaultSpawn += respawnOffsetV;
         }

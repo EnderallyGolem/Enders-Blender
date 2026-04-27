@@ -865,7 +865,7 @@ public class MultiroomWatchtower : Entity
                 {
                     // Transition camera to target pos (slightly farther that roomAimPos)
                     Vector2 targetTransitionPos = roomAimPos + inputVector * 16;
-                    TransitionToTarget(targetTransitionPos, lookoutRoom, out Vector2 newTargetPositionPos);
+                    TransitionToTarget(targetTransitionPos, lookoutRoom, out _);
 
                     lookoutRoom = null; //This is set to null (almost) immediately so the (c) prompt can't show up during the transition
                 }
@@ -1211,7 +1211,6 @@ public class MultiroomWatchtower : Entity
                 {
                     movementLimit--;
                     // Get Node Details
-                    Vector2 originalCam = camCorner;
                     float nodeBetweenLength;
 
                     //(nextNodePosition - previousNodePosition).SafeNormalize();
@@ -1334,7 +1333,6 @@ public class MultiroomWatchtower : Entity
                         // Inner box only requires y or x coordinate to be within the room - this is here to try making node placements not as strict
                         int buffer = 2;
                         int bufferInner = 8;
-                        Vector2 camCenter = camCorner + screenCenterOffset;
                         Rectangle checkRequireTransitionBox = new Rectangle((int)camCorner.X + 8 * buffer, (int)camCorner.Y + 8 * buffer, (int)screenCenterOffset.X*2 - 16 * buffer, (int)screenCenterOffset.Y*2 - 16 * buffer);
                         Rectangle checkRequireTransitionBoxInner = new Rectangle((int)camCorner.X + 8 * bufferInner, (int)camCorner.Y + 8 * bufferInner, (int)screenCenterOffset.X*2 - 16 * bufferInner, (int)screenCenterOffset.Y*2 - 16 * bufferInner);
 
@@ -1503,7 +1501,6 @@ public class MultiroomWatchtower : Entity
     public List<LevelData> GetEdgeRoomDataList(Level level)
     {
         LevelData currentRoomLevelData = level.Session.LevelData;
-        Rectangle currentRoomBounds = currentRoomLevelData.Bounds;
         Rectangle currentRoomBoundsExt = currentRoomLevelData.Bounds;
         currentRoomBoundsExt.Inflate(7, 7);
 
@@ -1533,10 +1530,6 @@ public class MultiroomWatchtower : Entity
     /// <returns></returns>
     internal static LevelData FindRoomAtPos(Level level, Vector2 pos)
     {
-        LevelData currentRoomLevelData = level.Session.LevelData;
-
-        List<LevelData> edgeRoomDataList = [];
-
         foreach (LevelData levelData in level.Session.MapData.Levels)
         {
             if (levelData.Spawns.Count > 0)

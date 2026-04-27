@@ -82,7 +82,8 @@ namespace Celeste.Mod.EndHelper.Utils
             else if (c == (char)8 || c == (char)24)
             {
                 // Getting the length can crash. No, I have absolutely no idea how.
-                try { int roomCustomNameLength = roomCustomName.Length; }
+                try {
+                }
                 catch (Exception) { roomCustomName = ""; }
 
                 // Trim: Backspace, Cancel. Whatever Cancel is.
@@ -144,8 +145,6 @@ namespace Celeste.Mod.EndHelper.Utils
 
             Utils_JournalStatistics.InitEmotes();
 
-            Oui currentOui = self.Overworld.Current;
-
             List<AreaStats> mapAreaStatsList = [];
 
             if (Engine.Scene is Level level && CollabUtils2Integration.CollabUtils2Installed)
@@ -187,7 +186,7 @@ namespace Celeste.Mod.EndHelper.Utils
 
                 foreach (AreaStats lobbyMap in areaLevelSet?.Areas ?? new List<AreaStats>())
                 {
-                    AreaData areaData = AreaData.Get(lobbyMap.ID_Safe);
+                    AreaData.Get(lobbyMap.ID_Safe);
                     mapAreaStatsList.Add(lobbyMap);
                 }
             }
@@ -584,7 +583,7 @@ namespace Celeste.Mod.EndHelper.Utils
 
                     EndHelperModule.SaveData.mapDict_roomStat_latestSession_strawberries[mapNameSide_Internal].TryGetValue(roomName, out roomStrawberriesCollected);
                 }
-                string roomTimeString = Utils_General.MinimalGameplayFormat(roomTimeSpan);
+                Utils_General.MinimalGameplayFormat(roomTimeSpan);
 
                 // Filtering
                 bool checkRTA = EndHelperModule.Settings.RoomStatMenu.MenuShowTime == EndHelperModuleSettings.RoomStatMenuSubMenu.MenuShowTimeEnum.RTA;

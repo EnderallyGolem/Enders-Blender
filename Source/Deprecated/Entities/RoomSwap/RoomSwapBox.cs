@@ -54,7 +54,6 @@ public class RoomSwapBox : Solid
         sprite = GFX.SpriteBank.Create("breakerBox");
         sprite_activate = GFX.SpriteBank.Create("breakerBox");
 
-        Sprite obj = sprite;
         sine = new SineWave(0.5f, 0f);
         Add(sine);
         bounce = Wiggler.Create(1f, 0.5f);

@@ -163,7 +163,6 @@ public class CassetteManagerTrigger : Trigger
             float c_beatTimer = cassetteBlockManager.beatTimer;
 
             int c_leadBeats = cassetteBlockManager.leadBeats;
-            int c_beatIndexOffset = cassetteBlockManager.beatIndexOffset;
             int c_beatsPerTick = cassetteManagerData.Get<int>("beatsPerTick");
             int c_ticksPerSwap = cassetteManagerData.Get<int>("ticksPerSwap");
 
@@ -484,7 +483,6 @@ public class CassetteManagerTrigger : Trigger
             int c_currentIndex = cassetteBlockManager.currentIndex;
             int c_maxBeat = cassetteBlockManager.maxBeat;
 
-            int oldbeatIndex = cassetteBlockManager.beatIndex; // Old one, BEFORE the set beat
             int c_beatsPerTick = cassetteManagerData.Get<int>("beatsPerTick");
             int c_ticksPerSwap = cassetteManagerData.Get<int>("ticksPerSwap");
 
@@ -601,7 +599,7 @@ public class CassetteManagerTrigger : Trigger
             // Set Beats
             DynamicData wonkyCassetteManagerData = DynamicData.For(wonkyCassetteBlockManager);
             int c_introBeats = wonkyCassetteManagerData.Get<int>("introBeats");
-            int s_cassetteBeatIndex = QuantumMechanicsIntegration.QMInte_CassetteBeatIndex();
+            QuantumMechanicsIntegration.QMInte_CassetteBeatIndex();
 
             QuantumMechanicsIntegration.QMInte_MusicBeatIndex(setBeat);
             QuantumMechanicsIntegration.QMInte_CassetteBeatIndex(setBeat);
@@ -620,7 +618,7 @@ public class CassetteManagerTrigger : Trigger
             int cassetteWonkyBeatIndex = QuantumMechanicsIntegration.QMInte_MusicBeatIndex();
             int c_beatLength = wonkyCassetteBlockManager.beatLength;
             int c_barLength = wonkyCassetteBlockManager.barLength;
-            int c_maxBeats = wonkyCassetteManagerData.Get<int>("maxBeats");
+            wonkyCassetteManagerData.Get<int>("maxBeats");
 
 
             // Correct for dumb cassette height stuff.
@@ -765,7 +763,7 @@ public class CassetteManagerTrigger : Trigger
 
     private void SetTempoMultiplier_QM(Level level, bool resetCheckedBeat, List<List<object>> tempoChangeTime, bool multiplyOnTop)
     {
-        if (level.Tracker.GetEntity<WonkyCassetteBlockController>() is { } wonkyCassetteBlockManager)
+        if (level.Tracker.GetEntity<WonkyCassetteBlockController>() is not null)
         {
             foreach (WonkyCassetteBlockController wonkyCasseteController in level.Tracker.GetEntities<WonkyCassetteBlockController>())
             {

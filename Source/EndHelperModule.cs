@@ -29,7 +29,7 @@ namespace Celeste.Mod.EndHelper;
 public class EndHelperModule : EverestModule {
 
     #region Everest Stuff
-    public static EndHelperModule Instance { get; private set; }
+    public static EndHelperModule Instance { get; private set; } = null!;
 
     public override Type SettingsType => typeof(EndHelperModuleSettings);
     public static EndHelperModuleSettings Settings => (EndHelperModuleSettings)Instance._Settings;
@@ -47,7 +47,7 @@ public class EndHelperModule : EverestModule {
 
     //Custom spritebank
     public static SpriteBank SpriteBank => Instance._CustomEntitySpriteBank;
-    private SpriteBank _CustomEntitySpriteBank;
+    private SpriteBank _CustomEntitySpriteBank = null!;
 
     #endregion
 
@@ -112,7 +112,6 @@ public class EndHelperModule : EverestModule {
         Everest.Events.AssetReload.OnAfterReload += ReloadCompleteFunc;
         Everest.Events.Level.OnEnter += EnterMapFunc;
         Everest.Events.Level.OnCreatePauseMenuButtons += CreatePauseMenuButtonsFunc;
-        Everest.Events.Level.OnLoadEntity += OnLoadEntityFunc;
         Everest.Events.Input.OnInitialize += OnInitialiseInput;
 
         On.Monocle.Engine.Update += Hook_EngineUpdate;
@@ -123,7 +122,6 @@ public class EndHelperModule : EverestModule {
         On.Celeste.Level.Pause += Hook_Pause;
         On.Celeste.Level.TransitionRoutine += Hook_TransitionRoutine;
         On.Monocle.Entity.Removed += Hook_EntityRemoved;
-        On.Celeste.Glitch.Apply += Hook_GlitchEffectApply;
         On.Celeste.Level.CompleteArea_bool_bool_bool += Hook_CompleteArea;
 
         Everest.Events.Player.OnBeforeUpdate += OnPlayerUpdate;
@@ -133,9 +131,9 @@ public class EndHelperModule : EverestModule {
         IL.Celeste.PlayerDeadBody.Update += ILHook_PlayerDeadBodyUpdate;
         IL.Celeste.PlayerDeadBody.End += ILHook_PlayerDeadBodyEnd;
         MethodInfo ILOrigDie = typeof(Player).GetMethod("orig_Die", BindingFlags.Public | BindingFlags.Instance)!;
-        Loadhook_Player_OrigDie = new ILHook(ILOrigDie!, Hook_ILOrigDie);
-        MethodInfo ILDeadBodyDeathRoutine = typeof(PlayerDeadBody)!.GetMethod("DeathRoutine", BindingFlags.NonPublic | BindingFlags.Instance)!.GetStateMachineTarget()!;
-        Loadhook_PlayerDeadBody_DeathRoutine = new ILHook(ILDeadBodyDeathRoutine!, Hook_ILDeadBodyDeathRoutine);
+        Loadhook_Player_OrigDie = new ILHook(ILOrigDie, Hook_ILOrigDie);
+        MethodInfo ILDeadBodyDeathRoutine = typeof(PlayerDeadBody).GetMethod("DeathRoutine", BindingFlags.NonPublic | BindingFlags.Instance)!.GetStateMachineTarget()!;
+        Loadhook_PlayerDeadBody_DeathRoutine = new ILHook(ILDeadBodyDeathRoutine, Hook_ILDeadBodyDeathRoutine);
 
         On.Celeste.AreaComplete.VersionNumberAndVariants += Hook_AreaCompleteVerNumVars;
         On.Celeste.OuiJournal.Update += Hook_JournalUpdate;
@@ -155,21 +153,21 @@ public class EndHelperModule : EverestModule {
         On.Celeste.Solid.MoveVExact += Hook_SolidMoveVExact;
 
         MethodInfo ILRefillCoroutine = typeof(Refill).GetMethod("RefillRoutine", BindingFlags.NonPublic | BindingFlags.Instance)!.GetStateMachineTarget()!;
-        Loadhook_Refill_RefillRoutine = new ILHook(ILRefillCoroutine!, Hook_IL_RefillRefillCoroutine);
+        Loadhook_Refill_RefillRoutine = new ILHook(ILRefillCoroutine, Hook_IL_RefillRefillCoroutine);
 
         MethodInfo ILTransitionCoroutine = typeof(Level).GetMethod("orig_TransitionRoutine", BindingFlags.NonPublic | BindingFlags.Instance)!.GetStateMachineTarget()!;
-        Loadhook_Level_OrigTransitionRoutine = new ILHook(ILTransitionCoroutine!, Hook_IL_OrigTransitionRoutine);
+        Loadhook_Level_OrigTransitionRoutine = new ILHook(ILTransitionCoroutine, Hook_IL_OrigTransitionRoutine);
 
         On.Celeste.Player.DashBegin += Hook_DashBegin;
         IL.Celeste.Player.SuperBounce += ILHook_SuperBounce;
         IL.Celeste.Player.SideBounce += ILHook_SideBounce;
         MethodInfo ILDashCoroutine = typeof(Player).GetMethod("DashCoroutine", BindingFlags.NonPublic | BindingFlags.Instance)!.GetStateMachineTarget()!;
-        Loadhook_Player_DashCoroutine = new ILHook(ILDashCoroutine!, Hook_IL_DashCoroutine);
+        Loadhook_Player_DashCoroutine = new ILHook(ILDashCoroutine, Hook_IL_DashCoroutine);
         MethodInfo ILRedDashCoroutine = typeof(Player).GetMethod("RedDashCoroutine", BindingFlags.NonPublic | BindingFlags.Instance)!.GetStateMachineTarget()!;
-        Loadhook_Player_RedDashCoroutine = new ILHook(ILRedDashCoroutine!, Hook_IL_RedDashCoroutine);
+        Loadhook_Player_RedDashCoroutine = new ILHook(ILRedDashCoroutine, Hook_IL_RedDashCoroutine);
 
         MethodInfo ILInputGrabCheckGet = typeof(Input).GetProperty("GrabCheck")!.GetGetMethod()!;
-        Loadhook_Input_GrabCheckGet = new ILHook(ILInputGrabCheckGet!, Hook_IL_GrabCheckGet);
+        Loadhook_Input_GrabCheckGet = new ILHook(ILInputGrabCheckGet, Hook_IL_GrabCheckGet);
 
         SpeedrunToolIntegration.Load();
         SSMQoLIntegration.Load();
@@ -189,7 +187,6 @@ public class EndHelperModule : EverestModule {
         Everest.Events.AssetReload.OnAfterReload -= ReloadCompleteFunc;
         Everest.Events.Level.OnEnter -= EnterMapFunc;
         Everest.Events.Level.OnCreatePauseMenuButtons -= CreatePauseMenuButtonsFunc;
-        Everest.Events.Level.OnLoadEntity -= OnLoadEntityFunc;
         Everest.Events.Input.OnInitialize -= OnInitialiseInput;
 
         On.Monocle.Engine.Update -= Hook_EngineUpdate;
@@ -199,7 +196,6 @@ public class EndHelperModule : EverestModule {
         On.Celeste.LevelLoader.StartLevel -= Hook_StartMapFromBeginning;
         On.Celeste.Level.Pause -= Hook_Pause;
         On.Celeste.Level.TransitionRoutine -= Hook_TransitionRoutine;
-        On.Celeste.Glitch.Apply -= Hook_GlitchEffectApply;
         On.Celeste.Level.CompleteArea_bool_bool_bool -= Hook_CompleteArea;
 
         Everest.Events.Player.OnBeforeUpdate -= OnPlayerUpdate;
@@ -382,19 +378,12 @@ public class EndHelperModule : EverestModule {
         Utils_DeathHandler.RetryButtonsManualCheck(level, menu);
     }
 
-    private static EntityID? prevLoadedEntityID = null;
-    private static bool OnLoadEntityFunc(global::Celeste.Level level, LevelData levelData, Vector2 offset, EntityData entityData)
-    {
-        //Logger.Log(LogLevel.Info, "EndHelper/main", $"Loaded entity with id {level.Session.LevelData.Name} {entityData.ID} -- {entityData.Name}");
-        prevLoadedEntityID = new EntityID(level.Session.LevelData.Name, entityData.ID);
-        return false; // True makes it not load
-    }
-
     private static void OnInitialiseInput()
     {
         Utils_Buttons.Initialise();
     }
 
+    // ReSharper disable once UnusedParameter.Local
     async static void PauseMenuButtonsFuncCooldown(Level level, TextMenu menu, bool minimal)
     {
         // Temporarily Disable
@@ -492,11 +481,11 @@ public class EndHelperModule : EverestModule {
                 //Logger.Log(LogLevel.Info, "EndHelper/main", $"Already contains {mapNameSide} => {EndHelperModule.SaveData.mapDict_roomStatCustomNameDict.Count} => {EndHelperModule.SaveData.mapDict_roomStatCustomNameDict[mapNameSide]}. Setting, Removing then Readding:");
                 if (EndHelperModule.SaveData.mapDict_roomStatCustomNameDict[mapNameSide_Internal] is Dictionary<string, string>)
                 {
-                    EndHelperModule.Session.roomStatDict_customName = (Dictionary<string, string>)EndHelperModule.SaveData.mapDict_roomStatCustomNameDict[mapNameSide_Internal];
+                    EndHelperModule.Session.roomStatDict_customName = (Dictionary<string, string>)EndHelperModule.SaveData.mapDict_roomStatCustomNameDict[mapNameSide_Internal]!;
                 } 
                 else
                 {
-                    EndHelperModule.Session.roomStatDict_customName = Utils_General.ConvertToStringDictionary((Dictionary<object, object>)EndHelperModule.SaveData.mapDict_roomStatCustomNameDict[mapNameSide_Internal]);
+                    EndHelperModule.Session.roomStatDict_customName = Utils_General.ConvertToStringDictionary((Dictionary<object, object>)EndHelperModule.SaveData.mapDict_roomStatCustomNameDict[mapNameSide_Internal]!);
                 }
                 EndHelperModule.SaveData.mapDict_roomStatCustomNameDict.Remove(mapNameSide_Internal);
             }
@@ -548,7 +537,11 @@ public class EndHelperModule : EverestModule {
                 EndHelperModule.SaveData.mapDict_roomStat_firstClear_rtatimer.Remove(earliestMapNameSide);
                 EndHelperModule.SaveData.mapDict_roomStat_firstClear_strawberries.Remove(earliestMapNameSide);
                 EndHelperModule.SaveData.mapDict_roomStat_firstClear_pauseType.Remove(earliestMapNameSide);
-            } catch { }
+            }
+            catch
+            {
+                // ignored
+            }
         }
     }
 
@@ -725,7 +718,7 @@ public class EndHelperModule : EverestModule {
                         component.OnEnd?.Invoke();
                     }
                     Utils_DeathHandler.nextFastReload = true;
-                    PlayerDeadBody deadPlayer = player.Die(Vector2.Zero, evenIfInvincible: true);
+                    player.Die(Vector2.Zero, evenIfInvincible: true);
                 }
             }
         }
@@ -924,7 +917,7 @@ public class EndHelperModule : EverestModule {
         }
     }
 
-    public static PlayerDeadBody Hook_OnPlayerDeath(On.Celeste.Player.orig_Die orig, global::Celeste.Player self, Vector2 direction, bool evenIfInvincible, bool registerDeathInStats)
+    public static PlayerDeadBody? Hook_OnPlayerDeath(On.Celeste.Player.orig_Die orig, global::Celeste.Player self, Vector2 direction, bool evenIfInvincible, bool registerDeathInStats)
     {
         if (Utils_General.disablePlayerDeathCountdown.IsTicking)
         {
@@ -933,7 +926,6 @@ public class EndHelperModule : EverestModule {
 
         // Check if actual death
         Level level = self.SceneAs<Level>();
-        Session session = level.Session;
         bool invincibilityFlag = !evenIfInvincible && global::Celeste.SaveData.Instance.Assists.Invincible;
         if (!self.Dead && !invincibilityFlag && self.StateMachine.State != 18)
         {
@@ -1081,8 +1073,9 @@ public class EndHelperModule : EverestModule {
         if (Engine.Scene is Level level)
         {
             level.Tracker.GetEntity<RoomStatisticsDisplayer>()?.AddDeath();
-            foreach (ConditionalBirdTutorial conditionalBirdTutorial in level.Tracker.GetEntities<ConditionalBirdTutorial>())
+            foreach (var entity in level.Tracker.GetEntities<ConditionalBirdTutorial>())
             {
+                ConditionalBirdTutorial conditionalBirdTutorial = (ConditionalBirdTutorial)entity;
                 conditionalBirdTutorial.UpdateConditionTracking_Death();
             }
         }
@@ -1139,9 +1132,9 @@ public class EndHelperModule : EverestModule {
             self.EndTimer = 0f;
             self.ending = true;
             scene.Remove(self);
-            if (scene is Level && (scene as Level).Wipe == self)
+            if (scene is Level level && level.Wipe == self)
             {
-                (scene as Level).Wipe = null;
+                level.Wipe = null;
             }
             self.OnComplete?.Invoke();
         }
@@ -1179,7 +1172,7 @@ public class EndHelperModule : EverestModule {
         {
             { 
                 if (EndHelperModule.Settings.QOLTweaksMenu.DisableQuickRestart ||
-                (EndHelperModule.Settings.QuickRetry.Button.Pressed && level.Tracker.GetEntity<Player>() is { } player && !level.Paused && level.CanPause && level.CanRetry))
+                (EndHelperModule.Settings.QuickRetry.Button.Pressed && level.Tracker.GetEntity<Player>() is not null && level is { Paused: false, CanPause: true, CanRetry: true }))
                 {
                     // Do not quick reset if you are quick dying (or if disabled)
                     return;
@@ -1199,6 +1192,7 @@ public class EndHelperModule : EverestModule {
 
     public static void Hook_EntityRemoved(On.Monocle.Entity.orig_Removed orig, global::Monocle.Entity self, global::Monocle.Scene scene)
     {
+        // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
         if (scene is Level && EndHelperModule.Session is not null && 
             EndHelperModule.Session.AllowDeathHandlerEntityChecks && self.Components.Get<DeathBypass>() is { } deathBypassComponent && deathBypassComponent.bypass
             && self is not Player)
@@ -1208,19 +1202,9 @@ public class EndHelperModule : EverestModule {
         orig(self, scene);
     }
 
-    public static void Hook_GlitchEffectApply(On.Celeste.Glitch.orig_Apply orig, VirtualRenderTarget source, float timer, float seed, float amplitude)
+    private static ScreenWipe? Hook_CompleteArea(On.Celeste.Level.orig_CompleteArea_bool_bool_bool orig, global::Celeste.Level level, bool spotlightWipe, bool skipScreenWipe, bool skipCompleteScreen)
     {
-        // Does not work if applied at the start/end of level render
-        orig(source, timer, seed, amplitude);
-        if (Engine.Scene is Level level)
-        {
-            //Utils_Shaders.ApplyShaders(level);
-        }
-    }
-
-    private static ScreenWipe Hook_CompleteArea(On.Celeste.Level.orig_CompleteArea_bool_bool_bool orig, global::Celeste.Level level, bool spotlightWipe, bool skipScreenWipe, bool skipCompleteScreen)
-    {
-        if (level.Tracker.GetEntity<RoomStatisticsDisplayer>() is { } roomStatDisplayer && level.Paused)
+        if (level.Tracker.GetEntity<RoomStatisticsDisplayer>() is not null && level.Paused)
         {
             Logger.Log(LogLevel.Info, "EndHelper/Main", $"Running CompleteArea pause for potential RoomStatisticsDisplay stats. Hope it doesn't crash!");
 
@@ -1272,8 +1256,8 @@ public class EndHelperModule : EverestModule {
                 if (global::Celeste.SaveData.Instance.AssistMode || global::Celeste.SaveData.Instance.VariantMode)
                 { blenderPos.Y -= 48; }
 
-                FieldInfo versionOffsetField = typeof(AreaComplete).GetField("versionOffset", BindingFlags.Static | BindingFlags.NonPublic);
-                float versionOffset = (float)versionOffsetField.GetValue(null);
+                FieldInfo versionOffsetField = typeof(AreaComplete).GetField("versionOffset", BindingFlags.Static | BindingFlags.NonPublic)!;
+                float versionOffset = (float)versionOffsetField.GetValue(null)!;
                 if (Engine.Scene is Level) versionOffset += -32f; // lazy as heck collabui check
                 blenderPos.Y += versionOffset;
                 //Logger.Log(LogLevel.Info, "EndHelper/main", $"why is the versionoffset not publically gettable: {versionOffset}");
@@ -1541,7 +1525,7 @@ public class EndHelperModule : EverestModule {
         ILCursor cursor = new ILCursor(il);
 
         // Move to where the switch starts
-        if (cursor.TryGotoNext(instr => instr.MatchSwitch(out ILLabel[] switchLabel)))
+        if (cursor.TryGotoNext(instr => instr.MatchSwitch(out _)))
         {
             while (cursor.TryGotoNext(MoveType.Before, instr => instr.MatchRet()))
             { 
@@ -1680,7 +1664,7 @@ public class EndHelperModule : EverestModule {
 
     private static void Hook_StrawberryAddedToLevel(On.Celeste.Strawberry.orig_Added orig, global::Celeste.Strawberry self, Scene scene)
     {
-        Level level = scene as Level;
+        Level level = (scene as Level)!;
         String roomName = level.Session.LevelData.Name;
         self.Add(new HomeRoom(roomName));
         //Logger.Log(LogLevel.Info, "EndHelper/main", $"added component to berry in {roomName}");

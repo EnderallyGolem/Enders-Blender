@@ -608,7 +608,6 @@ namespace Celeste.Mod.EndHelper.Utils
                                     }
                                     catch (Exception)
                                     {
-                                        EntityID parentID = follower.ParentEntityID;
                                     }
                                 }
                             }
@@ -1106,7 +1105,7 @@ namespace Celeste.Mod.EndHelper.Utils
 
         public void ToggleAllowBypassAttached(Entity entity, bool? setValue, String newRequireFlag = null)
         {
-            Level level = entity.SceneAs<Level>();
+            entity.SceneAs<Level>();
 
             // null means toggle. Otherwise will be set to that value.
             if (setValue is null)

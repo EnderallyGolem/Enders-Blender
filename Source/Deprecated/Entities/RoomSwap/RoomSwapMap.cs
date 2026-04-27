@@ -120,7 +120,6 @@ public class RoomSwapMap : Entity
         if (currentRoomName.StartsWith(EndHelperModule.Session.roomSwapPrefix[gridID]) && currentRoomPosFileName != "")
         {
             currentRoomPos = Utils_RoomSwap.GetPosFromRoomName(currentRoomName);
-            string currentRoomPosSuffix = $"{currentRoomPos[0].ToString()}{currentRoomPos[1].ToString()}";
         }
     }
 
@@ -280,7 +279,6 @@ public class RoomSwapMap : Entity
                 //Icons
                 for (int row = 1; row <= EndHelperModule.Session.roomSwapRow[gridID]; row++)
                 {
-                    List<int> iconAnimListRow = [];
                     for (int col = 1; col <= EndHelperModule.Session.roomSwapColumn[gridID]; col++)
                     {
                         string roomPosSuffix = roomPosSuffixList[row - 1][col - 1];
