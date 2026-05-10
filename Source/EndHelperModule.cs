@@ -469,8 +469,6 @@ public class EndHelperModule : EverestModule {
 
         // Move the current map to the front of the list, and trim size if exceeds max
         // The custom name dict will be the reference dict for size. (Just because it was added first.)
-
-        //Logger.Log(LogLevel.Info, "EndHelper/main", $"Being the stuff:");
         if (EndHelperModule.Settings.RoomStatMenu.MenuTrackerStorageCount != 0)
         {
             // Not disabled.
@@ -479,13 +477,13 @@ public class EndHelperModule : EverestModule {
             if (EndHelperModule.SaveData.mapDict_roomStatCustomNameDict.Contains(mapNameSide_Internal))
             {
                 //Logger.Log(LogLevel.Info, "EndHelper/main", $"Already contains {mapNameSide} => {EndHelperModule.SaveData.mapDict_roomStatCustomNameDict.Count} => {EndHelperModule.SaveData.mapDict_roomStatCustomNameDict[mapNameSide]}. Setting, Removing then Readding:");
-                if (EndHelperModule.SaveData.mapDict_roomStatCustomNameDict[mapNameSide_Internal] is Dictionary<string, string>)
+                if (EndHelperModule.SaveData.mapDict_roomStatCustomNameDict[mapNameSide_Internal] is Dictionary<string, string> strDict)
                 {
-                    EndHelperModule.Session.roomStatDict_customName = (Dictionary<string, string>)EndHelperModule.SaveData.mapDict_roomStatCustomNameDict[mapNameSide_Internal]!;
+                    EndHelperModule.Session.roomStatDict_customName = strDict;
                 } 
-                else
+                else if (EndHelperModule.SaveData.mapDict_roomStatCustomNameDict[mapNameSide_Internal] is Dictionary<object, object> objDict)
                 {
-                    EndHelperModule.Session.roomStatDict_customName = Utils_General.ConvertToStringDictionary((Dictionary<object, object>)EndHelperModule.SaveData.mapDict_roomStatCustomNameDict[mapNameSide_Internal]!);
+                    EndHelperModule.Session.roomStatDict_customName = Utils_General.ConvertToStringDictionary(objDict);
                 }
                 EndHelperModule.SaveData.mapDict_roomStatCustomNameDict.Remove(mapNameSide_Internal);
             }
@@ -801,6 +799,7 @@ public class EndHelperModule : EverestModule {
             }
         }
 
+        // Set if allow increment
         allowIncrementRoomTimer = true;
 
         if (!level.TimerStarted || level.TimerStopped || level.Completed)

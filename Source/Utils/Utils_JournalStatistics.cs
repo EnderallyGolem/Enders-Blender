@@ -892,7 +892,7 @@ namespace Celeste.Mod.EndHelper.Utils
             {
                 iconType = IconType.Gray;
             }
-            RoomStatisticsDisplayer.ShowGUIStats("", 100, 1010, 0.7f, Color.White, true, 0, true, true, false, showTotalMapBerryCount, mapTotalStrawberries, $"{totalText}: ", "", totalDeaths, totalTimer, totalRtaTimer, totalStrawberries, iconType);
+            RoomStatisticsDisplayer.ShowGuiStats("", 100, 1010, 0.7f, Color.White, true, 0, true, true, false, showTotalMapBerryCount, mapTotalStrawberries, $"{totalText}: ", "", totalDeaths, totalTimer, totalRtaTimer, totalStrawberries, iconType);
 
             // Instructions
             if (!journalStatisticsRoomNameEditMenuOpen)

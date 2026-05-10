@@ -55,6 +55,10 @@ Some of these can be overridden per-map with a Gameplay Tweaks Override Trigger.
 
 Changelog:
 
+# 1.2.4:
+- Room stats tracker: The save stats menu now defaults to neither option being selected, to prevent accidental clicking.
+- ....?
+
 # 1.2.3:
 - Room stats tracker crash hotfix? Hopefully?
 
