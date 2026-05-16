@@ -399,11 +399,16 @@ public class RoomStatisticsDisplayer : Entity
                 increNum = Math.Clamp(increNum, -1, maxIncre); // Clamp
 
                 // If shownMenuType is invalid, force it to be null
-                bool invalidFirstClear = (JournalRoomStatMenuTypeEnum)increNum == JournalRoomStatMenuTypeEnum.FirstClear
-                    && ( !(dealWithFirstClear || allowShowOldStats) || EndHelperModule.SaveData.mapDict_roomStat_firstClear_roomOrder[mapNameSide_Internal].Count == 0 );
-                bool invalidSavedClear = (JournalRoomStatMenuTypeEnum)increNum == JournalRoomStatMenuTypeEnum.Saved && !allowShowOldStats;
+                bool invalidFirstClear = !(dealWithFirstClear || allowShowOldStats)
+                   || !EndHelperModule.SaveData.mapDict_roomStat_firstClear_roomOrder.ContainsKey(mapNameSide_Internal)
+                   || EndHelperModule.SaveData.mapDict_roomStat_firstClear_roomOrder[mapNameSide_Internal].Count == 0;
+                bool invalidSavedClear = !allowShowOldStats
+                   || !EndHelperModule.SaveData.mapDict_roomStat_latestSession_roomOrder.ContainsKey(mapNameSide_Internal)
+                   || EndHelperModule.SaveData.mapDict_roomStat_latestSession_roomOrder[mapNameSide_Internal].Count == 0;
 
-                if (invalidFirstClear || invalidSavedClear) { increNum += increaseUpwards ? 1 : -1; }
+                if ((JournalRoomStatMenuTypeEnum)increNum == JournalRoomStatMenuTypeEnum.FirstClear && invalidFirstClear
+                    || (JournalRoomStatMenuTypeEnum)increNum == JournalRoomStatMenuTypeEnum.Saved && invalidSavedClear)
+                { increNum += increaseUpwards ? 1 : -1; }
                 else { break; } // Repeat until valid
             }
         }
@@ -837,14 +842,22 @@ public class RoomStatisticsDisplayer : Entity
                 }
                 roomDeaths = EndHelperModule.SaveData.mapDict_roomStat_firstClear_death[mapNameSide_Internal][roomName];
                 roomTimeSpan = TimeSpan.FromTicks(EndHelperModule.SaveData.mapDict_roomStat_firstClear_timer[mapNameSide_Internal][roomName]);
-                roomRtaTimeSpan = TimeSpan.FromTicks(EndHelperModule.SaveData.mapDict_roomStat_firstClear_rtatimer[mapNameSide_Internal][roomName]);
+                if (!EndHelperModule.SaveData.mapDict_roomStat_firstClear_rtatimer.ContainsKey(mapNameSide_Internal) ||
+                    !EndHelperModule.SaveData.mapDict_roomStat_firstClear_rtatimer[mapNameSide_Internal].ContainsKey(roomName))
+                { roomRtaTimeSpan = TimeSpan.Zero; }
+                else
+                { roomRtaTimeSpan = TimeSpan.FromTicks(EndHelperModule.SaveData.mapDict_roomStat_firstClear_rtatimer[mapNameSide_Internal][roomName]); }
             }
             else if (shownMenuType == JournalRoomStatMenuTypeEnum.Saved)
             {
                 // Show Saved stats
                 roomDeaths = EndHelperModule.SaveData.mapDict_roomStat_latestSession_death[mapNameSide_Internal][roomName];
                 roomTimeSpan = TimeSpan.FromTicks(EndHelperModule.SaveData.mapDict_roomStat_latestSession_timer[mapNameSide_Internal][roomName]);
-                roomRtaTimeSpan = TimeSpan.FromTicks(EndHelperModule.SaveData.mapDict_roomStat_latestSession_rtatimer[mapNameSide_Internal][roomName]);
+                if (!EndHelperModule.SaveData.mapDict_roomStat_latestSession_rtatimer.ContainsKey(mapNameSide_Internal) ||
+                    !EndHelperModule.SaveData.mapDict_roomStat_latestSession_rtatimer[mapNameSide_Internal].ContainsKey(roomName))
+                { roomRtaTimeSpan = TimeSpan.Zero; }
+                else
+                { roomRtaTimeSpan = TimeSpan.FromTicks(EndHelperModule.SaveData.mapDict_roomStat_latestSession_rtatimer[mapNameSide_Internal][roomName]); }
             }
             else
             {
@@ -1016,16 +1029,32 @@ public class RoomStatisticsDisplayer : Entity
                     if (dealWithFirstClear) EnsureDictsHaveKey(level, roomName, DictsHaveKeyType.FirstClear); // Safeguard. Should only matter when rebuilding.}
                     roomDeaths = EndHelperModule.SaveData.mapDict_roomStat_firstClear_death[mapNameSide_Internal][roomName];
                     roomTimeTicks = EndHelperModule.SaveData.mapDict_roomStat_firstClear_timer[mapNameSide_Internal][roomName];
-                    roomRtaTimeTicks = EndHelperModule.SaveData.mapDict_roomStat_firstClear_rtatimer[mapNameSide_Internal][roomName];
-                    roomStrawberriesCollected = EndHelperModule.SaveData.mapDict_roomStat_firstClear_strawberries[mapNameSide_Internal][roomName];
+
+                    if (!EndHelperModule.SaveData.mapDict_roomStat_firstClear_rtatimer.ContainsKey(mapNameSide_Internal)
+                        || !EndHelperModule.SaveData.mapDict_roomStat_firstClear_rtatimer[mapNameSide_Internal].ContainsKey(roomName))
+                    { roomRtaTimeTicks = 0; }
+                    else { roomRtaTimeTicks = EndHelperModule.SaveData.mapDict_roomStat_firstClear_rtatimer[mapNameSide_Internal][roomName]; }
+
+                    if (!EndHelperModule.SaveData.mapDict_roomStat_firstClear_strawberries.ContainsKey(mapNameSide_Internal)
+                        || !EndHelperModule.SaveData.mapDict_roomStat_firstClear_strawberries[mapNameSide_Internal].ContainsKey(roomName))
+                    { roomStrawberriesCollected = 0; }
+                    else { roomStrawberriesCollected = EndHelperModule.SaveData.mapDict_roomStat_firstClear_strawberries[mapNameSide_Internal][roomName]; }
                 }
                 else if (shownMenuType == JournalRoomStatMenuTypeEnum.Saved)
                 {
                     // Show saved stats
                     roomDeaths = EndHelperModule.SaveData.mapDict_roomStat_latestSession_death[mapNameSide_Internal][roomName];
                     roomTimeTicks = EndHelperModule.SaveData.mapDict_roomStat_latestSession_timer[mapNameSide_Internal][roomName];
-                    roomRtaTimeTicks = EndHelperModule.SaveData.mapDict_roomStat_latestSession_rtatimer[mapNameSide_Internal][roomName];
-                    roomStrawberriesCollected = EndHelperModule.SaveData.mapDict_roomStat_latestSession_strawberries[mapNameSide_Internal][roomName];
+
+                    if (!EndHelperModule.SaveData.mapDict_roomStat_latestSession_rtatimer.ContainsKey(mapNameSide_Internal)
+                        || !EndHelperModule.SaveData.mapDict_roomStat_latestSession_rtatimer[mapNameSide_Internal].ContainsKey(roomName))
+                    { roomRtaTimeTicks = 0; }
+                    else { roomRtaTimeTicks = EndHelperModule.SaveData.mapDict_roomStat_latestSession_rtatimer[mapNameSide_Internal][roomName]; }
+
+                    if (!EndHelperModule.SaveData.mapDict_roomStat_latestSession_strawberries.ContainsKey(mapNameSide_Internal)
+                        || !EndHelperModule.SaveData.mapDict_roomStat_latestSession_strawberries[mapNameSide_Internal].ContainsKey(roomName))
+                    { roomStrawberriesCollected = 0; }
+                    else { roomStrawberriesCollected = EndHelperModule.SaveData.mapDict_roomStat_latestSession_strawberries[mapNameSide_Internal][roomName]; }
                 }
                 else
                 {
@@ -1237,7 +1266,14 @@ public class RoomStatisticsDisplayer : Entity
             Input.GuiButton(Input.MenuConfirm, mode: Input.PrefixMode.Latest).DrawCentered(new Vector2(instructionXPos, instructionYPos), instructionColor, instructionScale, 0);
             instructionXPos += (int)(ActiveFont.WidthToNextLine("XXXXX", 0) * instructionScale);
 
-            if (allowShowOldStats || dealWithFirstClear)
+            bool invalidFirstClear = !(dealWithFirstClear || allowShowOldStats)
+                                     || !EndHelperModule.SaveData.mapDict_roomStat_firstClear_roomOrder.ContainsKey(mapNameSide_Internal)
+                                     || EndHelperModule.SaveData.mapDict_roomStat_firstClear_roomOrder[mapNameSide_Internal].Count == 0;
+            bool invalidSavedClear = !allowShowOldStats
+                                     || !EndHelperModule.SaveData.mapDict_roomStat_latestSession_roomOrder.ContainsKey(mapNameSide_Internal)
+                                     || EndHelperModule.SaveData.mapDict_roomStat_latestSession_roomOrder[mapNameSide_Internal].Count == 0;
+
+            if ( !(invalidFirstClear && invalidSavedClear) )
             {
                 ActiveFont.DrawOutline("Change Stats: ", new Vector2(instructionXPos, instructionYPos), new Vector2(0f, 0.5f), new Vector2(instructionScale, instructionScale), instructionColor, 2f, Color.Black);
                 instructionXPos += (int)(ActiveFont.WidthToNextLine("Change Stats: XI", 0) * instructionScale);

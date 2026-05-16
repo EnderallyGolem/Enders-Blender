@@ -957,7 +957,14 @@ public class EndHelperModule : EverestModule {
         if (Settings.QOLTweaksMenu.NoRespawnTransition)
         {
             Level.LoadOverride loadOverride = new Level.LoadOverride { SkipScreenWipes = 1 };
-            Level.RegisterLoadOverride(level, loadOverride);
+            try
+            {
+                Level.RegisterLoadOverride(level, loadOverride);
+            }
+            catch (Exception e)
+            {
+                Logger.Log(LogLevel.Warn, "EndHelper/Main", $"Tried to override a death transition but failed!\n{e}");
+            }
         }
 
         PlayerDeadBody origMethod = orig(self, direction, evenIfInvincible, registerDeathInStats);
