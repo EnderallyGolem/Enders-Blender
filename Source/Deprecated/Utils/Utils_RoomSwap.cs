@@ -42,7 +42,7 @@ namespace Celeste.Mod.EndHelper.Deprecated.Utils
             }
         }
 
-        internal static void ReupdateAllRooms(global::Celeste.Level level)
+        internal static void ReupdateAllRooms(Level level)
         {
             foreach (String gridID in EndHelperModule.Session.roomSwapOrderList.Keys)
             {
@@ -61,7 +61,7 @@ namespace Celeste.Mod.EndHelper.Deprecated.Utils
             }
         }
 
-        internal static async void ReplaceRoomAfterReloadEnd(string gridID, String roomSwapPrefix, int row, int column, global::Celeste.Level level)
+        internal static async void ReplaceRoomAfterReloadEnd(string gridID, String roomSwapPrefix, int row, int column, Level level)
         {
             while (EndHelperModule.reloadComplete != true)
             {
@@ -82,7 +82,7 @@ namespace Celeste.Mod.EndHelper.Deprecated.Utils
             return level.Session.LevelData; //returns current room if can't find (this should not happen)
         }
 
-        static void ReplaceRoom(String replaceSwapRoomName, String replaceTemplateRoomName, global::Celeste.Level level)
+        static void ReplaceRoom(String replaceSwapRoomName, String replaceTemplateRoomName, Level level)
         {
             LevelData replaceSwapRoomData = getRoomDataFromName(replaceSwapRoomName, level);
             LevelData replaceTemplateRoomData = getRoomDataFromName(replaceTemplateRoomName, level);

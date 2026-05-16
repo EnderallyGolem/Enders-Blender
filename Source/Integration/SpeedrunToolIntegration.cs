@@ -87,7 +87,7 @@ namespace Celeste.Mod.EndHelper.Integration
                     if (EndHelperModule.Settings.RoomStatMenu.DeathIgnoreLoadAfterDeath && EndHelperModule.Session.framesSinceRespawn <= 30)
                     {
                         // Do not increment death count. Instead make the ignore death from load state after respawn icon appear instead
-                        EndHelperModule.externalDict_pauseTypeDict["LoadNoDeath"] = true;
+                        externalDict_pauseTypeDict["LoadNoDeath"] = true;
                     } 
                     else
                     {
@@ -99,7 +99,7 @@ namespace Celeste.Mod.EndHelper.Integration
                 }
             }
 
-            EndHelperModule.timeSinceSessionReset = 0; // Call for reset
+            timeSinceSessionReset = 0; // Call for reset
             lastSessionResetCause = SessionResetCause.LoadState;
         }
     }

@@ -2,6 +2,7 @@ using Microsoft.Xna.Framework.Input;
 using System.ComponentModel;
 using static Celeste.Mod.EndHelper.EndHelperModuleSettings.RoomStatMenuSubMenu;
 using static Celeste.Mod.EndHelper.EndHelperModuleSettings.ToggleGrabSubMenu;
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
 
 namespace Celeste.Mod.EndHelper;
 
@@ -37,8 +38,8 @@ public class EndHelperModuleSettings : EverestModuleSettings {
         [SettingSubText("modoptions_EndHelperModule_DeathIgnoreLoadAfterDeath_Desc")]
         public bool DeathIgnoreLoadAfterDeath { get; set; } = false;
 
-        [SettingSubText("modoptions_EndHelperModule_MenuShowFirstClear_Desc")]
-        public bool MenuShowFirstClear { get; set; } = false;
+        // [SettingSubText("modoptions_EndHelperModule_MenuShowFirstClear_Desc")]
+        // public bool MenuShowFirstClear { get; set; } = false;
         public enum MenuShowTimeEnum { Normal, RTA, Both }
         [SettingSubText("modoptions_EndHelperModule_MenuShowTime_Desc")]
         [DefaultValue(MenuShowTimeEnum.Normal)]
@@ -128,22 +129,27 @@ public class EndHelperModuleSettings : EverestModuleSettings {
         [SettingRange(min: 0, max: 30, largeRange: false)]
         public int AutosaveTime { get; set; } = 0;
 
+        [SettingSubText("modoptions_EndHelperModule_DisableFrequentScreenShake_Desc")]
+        public bool DisableFrequentScreenShake { get; set; } = false;
+
+        [SettingSubText("modoptions_EndHelperModule_DisableQuickRestart_Desc")]
+        public bool DisableQuickRestart { get; set; } = false;
+
+        public enum PreventAccidentalQuitEnum { Disabled, TimeSmall, TimeHalf, Time1, Time1Half, Time2, Time3 }
+        [DefaultValue(PreventAccidentalQuitEnum.Disabled)]
+        [SettingSubText("modoptions_EndHelperModule_PreventAccidentalQuit_Desc")]
+        public PreventAccidentalQuitEnum PreventAccidentalQuit { get; set; }
+
+
+        [SettingSubHeader("modoptions_EndHelperModule_SubSubHeader_Respawns")]
         [SettingSubText("modoptions_EndHelperModule_AlwaysQuickRespawn_Desc")]
         public bool AlwaysQuickRespawn { get; set; } = false;
 
         [SettingSubText("modoptions_EndHelperModule_NoRespawnTransition_Desc")]
         public bool NoRespawnTransition { get; set; } = false;
 
-        [SettingSubText("modoptions_EndHelperModule_DisableQuickRestart_Desc")]
-        public bool DisableQuickRestart { get; set; } = false;
-
-        [SettingSubText("modoptions_EndHelperModule_DisableFrequentScreenShake_Desc")]
-        public bool DisableFrequentScreenShake { get; set; } = false;
-
-        public enum PreventAccidentalQuitEnum { Disabled, TimeSmall, TimeHalf, Time1, Time1Half, Time2, Time3 }
-        [DefaultValue(PreventAccidentalQuitEnum.Disabled)]
-        [SettingSubText("modoptions_EndHelperModule_PreventAccidentalQuit_Desc")]
-        public PreventAccidentalQuitEnum PreventAccidentalQuit { get; set; }
+        [SettingSubText("modoptions_EndHelperModule_NoRespawnAnimation_Desc")]
+        public bool NoRespawnAnimation { get; set; } = false;
     }
 
     [SettingSubMenu]
@@ -153,9 +159,6 @@ public class EndHelperModuleSettings : EverestModuleSettings {
         [DefaultValue(ConvertDemoEnum.Disabled)]
         [SettingSubText("modoptions_EndHelperModule_ConvertDemo_Desc")]
         public ConvertDemoEnum ConvertDemo { get; set; }
-
-        [SettingSubText("modoptions_EndHelperModule_NoRespawnAnimation_Desc")]
-        public bool NoRespawnAnimation { get; set; } = false;
 
         public enum SeemlessRespawnEnum { Disabled, EnabledNormal, EnabledNear, EnabledInstant, EnabledKeepState }
         [DefaultValue(SeemlessRespawnEnum.Disabled)]

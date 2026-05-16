@@ -79,13 +79,13 @@ public class EndHelperModule : EverestModule {
     // Decreases till -ve, enables input if 0 and disables if +
     // Lets me disable, but ensure it gets re-enabled when I don't need it anymore
     internal static Utils_General.Countdown mInputDisableTimer = new Utils_General.Countdown(); 
-    internal static Utils_General.Countdown DisableScreenTransitionMovementTimer = new Utils.Utils_General.Countdown();
+    internal static Utils_General.Countdown DisableScreenTransitionMovementTimer = new Utils_General.Countdown();
 
     // Autosave timer
     public static TimeSpan autoSaveTimer = TimeSpan.Zero;
     public static void TryAutosave(Level level)
     {
-        if (EndHelperModule.Settings.QOLTweaksMenu.AutosaveTime > 0 && autoSaveTimer.TotalMinutes >= EndHelperModule.Settings.QOLTweaksMenu.AutosaveTime)
+        if (Settings.QOLTweaksMenu.AutosaveTime > 0 && autoSaveTimer.TotalMinutes >= Settings.QOLTweaksMenu.AutosaveTime)
         {
             level.AutoSave();
             autoSaveTimer = TimeSpan.Zero;
@@ -266,7 +266,7 @@ public class EndHelperModule : EverestModule {
 
     public static bool reloadComplete;
 
-    public static void AssetReloadLevelFunc(global::Celeste.Level level)
+    public static void AssetReloadLevelFunc(Level level)
     {
         // Yeah this exists solely so reloading a map midway through it doesn't break.
         // Solely this or solely EnterMapFunc doesn't work.
@@ -286,12 +286,12 @@ public class EndHelperModule : EverestModule {
     {
         reloadComplete = false;
     }
-    private static void EnterMapFunc(global::Celeste.Session session, bool fromSaveData)
+    private static void EnterMapFunc(Session session, bool fromSaveData)
     {
         // Disable level-dependent hooks
         UnloadTempHooks();
 
-        RoomStatisticsDisplayer.hideIfGoldenStrawberryEnabled = false;
+        hideIfGoldenStrawberryEnabled = false;
         autoSaveTimer = TimeSpan.Zero;
 
         // If first time (not fromSaveData), check Hook_StartMap since it has access to level
@@ -301,15 +301,15 @@ public class EndHelperModule : EverestModule {
             lastSessionResetCause = SessionResetCause.ReenterMap;
 
             // Death-Handler: If there's a full reset respawn point, set it to there when reentering the map. (otherwise, shenanigans ensue!!!)
-            if (EndHelperModule.Session.firstFullResetPos != null)
+            if (Session.firstFullResetPos != null)
             {
-                session.RespawnPoint = EndHelperModule.Session.firstFullResetPos.Value;
+                session.RespawnPoint = Session.firstFullResetPos.Value;
             }
 
             // Clear old session data if the map is not the right map for some reason
-            if (EndHelperModule.Session.roomStatDict_mapNameSide_Internal != GetMapNameSideInternal(session.Area))
+            if (Session.roomStatDict_mapNameSide_Internal != GetMapNameSideInternal(session.Area))
             {
-                Logger.Log(LogLevel.Warn, "EndHelper/main", $"EnterMapFunc: Session data mismatch: Current data is for {EndHelperModule.Session.roomStatDict_mapNameSide_Internal}, trying to load session data for {GetMapNameSideInternal(session.Area)}. Removing room stat data from the session!");
+                Logger.Log(LogLevel.Warn, "EndHelper/main", $"EnterMapFunc: Session data mismatch: Current data is for {Session.roomStatDict_mapNameSide_Internal}, trying to load session data for {GetMapNameSideInternal(session.Area)}. Removing room stat data from the session!");
                 Utils_JournalStatistics.ResetSessionDicts();
             }
 
@@ -317,7 +317,7 @@ public class EndHelperModule : EverestModule {
             SetupRoomTrackerSaveDataDicts(session);
 
             String roomName = session.Level;
-            roomName = RoomStatisticsDisplayer.GetEffectiveRoomName(roomName);
+            roomName = GetEffectiveRoomName(roomName);
             // +1 death for save and quit. The reason why this is done here instead of everest onexit event is because
             // as far as I can tell saving and returning to lobby with collabutil saves the session before onexit runs.
 
@@ -326,13 +326,13 @@ public class EndHelperModule : EverestModule {
                 bool completedMapBefore = global::Celeste.SaveData.Instance.Areas_Safe[session.Area.ID].Modes[(int)session.Area.Mode].Completed;
 
                 // This is done manually here to avoid touching RoomStatisticsDisplayer. Because this runs before the entity is loaded.
-                EndHelperModule.Session.roomStatDict_death[roomName] = Convert.ToInt32(EndHelperModule.Session.roomStatDict_death[roomName]) + 1;
+                Session.roomStatDict_death[roomName] = Convert.ToInt32(Session.roomStatDict_death[roomName]) + 1;
                 String mapNameSide_Internal = GetMapNameSideInternal(session.Area);
 
-                bool dealWithFirstCycle = EndHelperModule.Settings.RoomStatMenu.MenuTrackerStorageCount != 0 && !completedMapBefore && EndHelperModule.SaveData.mapDict_roomStat_firstClear_roomOrder.ContainsKey(mapNameSide_Internal);
-                if (dealWithFirstCycle && EndHelperModule.SaveData.mapDict_roomStat_firstClear_death.ContainsKey(mapNameSide_Internal) && EndHelperModule.SaveData.mapDict_roomStat_firstClear_death[mapNameSide_Internal].ContainsKey(roomName))
+                bool dealWithFirstCycle = Settings.RoomStatMenu.MenuTrackerStorageCount != 0 && !completedMapBefore && SaveData.mapDict_roomStat_firstClear_roomOrder.ContainsKey(mapNameSide_Internal);
+                if (dealWithFirstCycle && SaveData.mapDict_roomStat_firstClear_death.ContainsKey(mapNameSide_Internal) && SaveData.mapDict_roomStat_firstClear_death[mapNameSide_Internal].ContainsKey(roomName))
                 {
-                    EndHelperModule.SaveData.mapDict_roomStat_firstClear_death[mapNameSide_Internal][roomName]++;
+                    SaveData.mapDict_roomStat_firstClear_death[mapNameSide_Internal][roomName]++;
                 }
             }
             catch (Exception e)
@@ -348,7 +348,7 @@ public class EndHelperModule : EverestModule {
     private static void CreatePauseMenuButtonsFunc(Level level, TextMenu menu, bool minimal)
     {
         // --- Prevent Accidental Quit ---
-        switch (EndHelperModule.Settings.QOLTweaksMenu.PreventAccidentalQuit)
+        switch (Settings.QOLTweaksMenu.PreventAccidentalQuit)
         {
             case QOLTweaks.PreventAccidentalQuitEnum.Disabled:
                 menuGiveUpLevelTimerMax = 0; break;
@@ -461,7 +461,7 @@ public class EndHelperModule : EverestModule {
         }
     }
 
-    static void SetupRoomTrackerSaveDataDicts(global::Celeste.Session session)
+    static void SetupRoomTrackerSaveDataDicts(Session session)
     {
         String mapNameSide_Internal = session.Area.GetSID();
         if (session.Area.Mode == AreaMode.BSide) { mapNameSide_Internal += "_B"; }
@@ -469,38 +469,38 @@ public class EndHelperModule : EverestModule {
 
         // Move the current map to the front of the list, and trim size if exceeds max
         // The custom name dict will be the reference dict for size. (Just because it was added first.)
-        if (EndHelperModule.Settings.RoomStatMenu.MenuTrackerStorageCount != 0)
+        if (Settings.RoomStatMenu.MenuTrackerStorageCount != 0)
         {
             // Not disabled.
 
             // Handles adding/ordering of roomStatsCustomNameDict. This won't be necessary for the other dicts.
-            if (EndHelperModule.SaveData.mapDict_roomStatCustomNameDict.Contains(mapNameSide_Internal))
+            if (SaveData.mapDict_roomStatCustomNameDict.Contains(mapNameSide_Internal))
             {
                 //Logger.Log(LogLevel.Info, "EndHelper/main", $"Already contains {mapNameSide} => {EndHelperModule.SaveData.mapDict_roomStatCustomNameDict.Count} => {EndHelperModule.SaveData.mapDict_roomStatCustomNameDict[mapNameSide]}. Setting, Removing then Readding:");
-                if (EndHelperModule.SaveData.mapDict_roomStatCustomNameDict[mapNameSide_Internal] is Dictionary<string, string> strDict)
+                if (SaveData.mapDict_roomStatCustomNameDict[mapNameSide_Internal] is Dictionary<string, string> strDict)
                 {
-                    EndHelperModule.Session.roomStatDict_customName = strDict;
-                } 
-                else if (EndHelperModule.SaveData.mapDict_roomStatCustomNameDict[mapNameSide_Internal] is Dictionary<object, object> objDict)
-                {
-                    EndHelperModule.Session.roomStatDict_customName = Utils_General.ConvertToStringDictionary(objDict);
+                    Session.roomStatDict_customName = strDict;
                 }
-                EndHelperModule.SaveData.mapDict_roomStatCustomNameDict.Remove(mapNameSide_Internal);
+                else if (SaveData.mapDict_roomStatCustomNameDict[mapNameSide_Internal] is Dictionary<object, object> objDict)
+                {
+                    Session.roomStatDict_customName = Utils_General.ConvertToStringDictionary(objDict);
+                }
+                SaveData.mapDict_roomStatCustomNameDict.Remove(mapNameSide_Internal);
             }
 
             //Logger.Log(LogLevel.Info, "EndHelper/main", $"Adding {mapNameSide_Internal}.");
-            EndHelperModule.SaveData.mapDict_roomStatCustomNameDict[mapNameSide_Internal] = EndHelperModule.Session.roomStatDict_customName;
+            SaveData.mapDict_roomStatCustomNameDict[mapNameSide_Internal] = Session.roomStatDict_customName;
 
 
             // Handle colorIndex dict
-            if (!EndHelperModule.SaveData.mapDict_roomStat_colorIndex.ContainsKey(mapNameSide_Internal))
+            if (!SaveData.mapDict_roomStat_colorIndex.ContainsKey(mapNameSide_Internal))
             {
-                EndHelperModule.SaveData.mapDict_roomStat_colorIndex.Add(mapNameSide_Internal, []);
+                SaveData.mapDict_roomStat_colorIndex.Add(mapNameSide_Internal, []);
             }
 
             // Handles firstClear dicts. Just create them if they don't already exist.
             //Logger.Log(LogLevel.Info, "EndHelper/main", $"Check if {mapNameSide_Internal} has all the first clear stuff:");
-            if (EndHelperModule.SaveData.mapDict_roomStat_firstClear_roomOrder.ContainsKey(mapNameSide_Internal))
+            if (SaveData.mapDict_roomStat_firstClear_roomOrder.ContainsKey(mapNameSide_Internal))
             {
                 // Do nothing. Already exist.
                 //Logger.Log(LogLevel.Info, "EndHelper/main", $"Yes. Already has it.");
@@ -509,32 +509,32 @@ public class EndHelperModule : EverestModule {
             {
 
                 //Logger.Log(LogLevel.Info, "EndHelper/main", $"No. Add {mapNameSide_Internal} to the relevant first clear lists!");
-                EndHelperModule.SaveData.mapDict_roomStat_firstClear_roomOrder.Add(mapNameSide_Internal, []);
-                EndHelperModule.SaveData.mapDict_roomStat_firstClear_death.Add(mapNameSide_Internal, []);
-                EndHelperModule.SaveData.mapDict_roomStat_firstClear_timer.Add(mapNameSide_Internal, []);
-                EndHelperModule.SaveData.mapDict_roomStat_firstClear_rtatimer.Add(mapNameSide_Internal, []);
-                EndHelperModule.SaveData.mapDict_roomStat_firstClear_strawberries.Add(mapNameSide_Internal, []);
-                EndHelperModule.SaveData.mapDict_roomStat_firstClear_pauseType.Add(mapNameSide_Internal, []);
+                SaveData.mapDict_roomStat_firstClear_roomOrder.Add(mapNameSide_Internal, []);
+                SaveData.mapDict_roomStat_firstClear_death.Add(mapNameSide_Internal, []);
+                SaveData.mapDict_roomStat_firstClear_timer.Add(mapNameSide_Internal, []);
+                SaveData.mapDict_roomStat_firstClear_rtatimer.Add(mapNameSide_Internal, []);
+                SaveData.mapDict_roomStat_firstClear_strawberries.Add(mapNameSide_Internal, []);
+                SaveData.mapDict_roomStat_firstClear_pauseType.Add(mapNameSide_Internal, []);
             }
         }
 
-        while (EndHelperModule.SaveData.mapDict_roomStatCustomNameDict.Count > EndHelperModule.Settings.RoomStatMenu.MenuTrackerStorageCount && EndHelperModule.Settings.RoomStatMenu.MenuTrackerStorageCount != -1)
+        while (SaveData.mapDict_roomStatCustomNameDict.Count > Settings.RoomStatMenu.MenuTrackerStorageCount && Settings.RoomStatMenu.MenuTrackerStorageCount != -1)
         {
-            String earliestMapNameSide = (String)EndHelperModule.SaveData.mapDict_roomStatCustomNameDict.Cast<DictionaryEntry>().ElementAt(0).Key;
+            String earliestMapNameSide = (String)SaveData.mapDict_roomStatCustomNameDict.Cast<DictionaryEntry>().ElementAt(0).Key;
             //Logger.Log(LogLevel.Info, "EndHelper/main", $"Too many mapDicts: Removing the earliest: {earliestMapNameSide}");
-            EndHelperModule.SaveData.mapDict_roomStatCustomNameDict.RemoveAt(0);
+            SaveData.mapDict_roomStatCustomNameDict.RemoveAt(0);
 
             try
             {
                 // Try block In case these don't exist (which is possible if updating from older ver)
-                EndHelperModule.SaveData.mapDict_roomStat_colorIndex.Remove(earliestMapNameSide);
+                SaveData.mapDict_roomStat_colorIndex.Remove(earliestMapNameSide);
 
-                EndHelperModule.SaveData.mapDict_roomStat_firstClear_roomOrder.Remove(earliestMapNameSide);
-                EndHelperModule.SaveData.mapDict_roomStat_firstClear_death.Remove(earliestMapNameSide);
-                EndHelperModule.SaveData.mapDict_roomStat_firstClear_timer.Remove(earliestMapNameSide);
-                EndHelperModule.SaveData.mapDict_roomStat_firstClear_rtatimer.Remove(earliestMapNameSide);
-                EndHelperModule.SaveData.mapDict_roomStat_firstClear_strawberries.Remove(earliestMapNameSide);
-                EndHelperModule.SaveData.mapDict_roomStat_firstClear_pauseType.Remove(earliestMapNameSide);
+                SaveData.mapDict_roomStat_firstClear_roomOrder.Remove(earliestMapNameSide);
+                SaveData.mapDict_roomStat_firstClear_death.Remove(earliestMapNameSide);
+                SaveData.mapDict_roomStat_firstClear_timer.Remove(earliestMapNameSide);
+                SaveData.mapDict_roomStat_firstClear_rtatimer.Remove(earliestMapNameSide);
+                SaveData.mapDict_roomStat_firstClear_strawberries.Remove(earliestMapNameSide);
+                SaveData.mapDict_roomStat_firstClear_pauseType.Remove(earliestMapNameSide);
             }
             catch
             {
@@ -546,7 +546,7 @@ public class EndHelperModule : EverestModule {
 
     // This has to be here so you don't get softlocked if MInput is disabled in UI or something
     // ...somehow that can still happen. well.
-    private static void Hook_EngineUpdate(On.Monocle.Engine.orig_Update orig, global::Monocle.Engine self, GameTime gameTime)
+    private static void Hook_EngineUpdate(On.Monocle.Engine.orig_Update orig, Engine self, GameTime gameTime)
     {
         bool levelPause = false;
         if (Engine.Scene is Level level)
@@ -565,7 +565,7 @@ public class EndHelperModule : EverestModule {
         Utils_General.scrollResetInputFrames.Update();
 
         // Autosave Timer
-        if (EndHelperModule.Settings.QOLTweaksMenu.AutosaveTime > 0)
+        if (Settings.QOLTweaksMenu.AutosaveTime > 0)
         {
             autoSaveTimer += TimeSpanShims.FromSeconds((double)Engine.RawDeltaTime);
         }
@@ -576,7 +576,7 @@ public class EndHelperModule : EverestModule {
         //Utils_Shaders.LoadCustomShaders(forceReload: true);
         TryAutosave(level);
 
-        if (EndHelperModule.Session.enableRoomSwapFuncs)
+        if (Session.enableRoomSwapFuncs)
         {
             // This only exists so it updates when you respawn from debug. It umm still requires a transition/respawn to work lol
             // Also runs if SessionResetCause is ReenterMap
@@ -586,9 +586,9 @@ public class EndHelperModule : EverestModule {
             {
                 // Check if require double reload - if room the player is in a grid
                 String currentRoom = level.Session.LevelData.Name;
-                foreach (String gridID in EndHelperModule.Session.roomSwapOrderList.Keys)
+                foreach (String gridID in Session.roomSwapOrderList.Keys)
                 {
-                    String roomSwapPrefix = EndHelperModule.Session.roomSwapPrefix[gridID];
+                    String roomSwapPrefix = Session.roomSwapPrefix[gridID];
                     if (currentRoom.Contains(roomSwapPrefix))
                     {
                         // Is in one! Reload level again and break out of the loop.
@@ -633,18 +633,18 @@ public class EndHelperModule : EverestModule {
         }
     }
 
-    private static void Hook_LevelUpdate(On.Celeste.Level.orig_Update orig, global::Celeste.Level level)
+    private static void Hook_LevelUpdate(On.Celeste.Level.orig_Update orig, Level level)
     {
         // Session Reset Checker. This isn't in the everest event as it makes the ui not reset until unpause on load state.
         // Maybe related to SpeedrunTools hooking level update without orig...?
-        EndHelperModule.timeSinceSessionReset++;
-        if (EndHelperModule.timeSinceSessionReset == 1) { SessionResetFuncs(level); }
+        timeSinceSessionReset++;
+        if (timeSinceSessionReset == 1) { SessionResetFuncs(level); }
 
         UpdateCanIncrementRoomTimer(level);
 
         // Update RTA Timer
-        roomStatRtaTimeChecker_timeChange = System.DateTime.Now.Ticks - roomStatRtaTimeChecker_currTime;
-        roomStatRtaTimeChecker_currTime = System.DateTime.Now.Ticks;
+        roomStatRtaTimeChecker_timeChange = DateTime.Now.Ticks - roomStatRtaTimeChecker_currTime;
+        roomStatRtaTimeChecker_currTime = DateTime.Now.Ticks;
 
         if (roomStatRtaTimeChecker_timeChange < -3e7 || roomStatRtaTimeChecker_timeChange > 6e9)
         {
@@ -660,9 +660,21 @@ public class EndHelperModule : EverestModule {
         }
 
         orig(level);
+
+        // I am not adding a after update everest event just for this
+        if (Settings.QOLTweaksMenu.NoRespawnAnimation
+            && level.Tracker.GetEntity<Player>() is { respawnTween: not null } && !level.FrozenOrPaused)
+        {
+            pauseTimeUpdate = true;
+            level.PauseLock = true;
+            level.Update();
+            pauseTimeUpdate = false;
+            level.PauseLock = false;
+        }
     }
 
-    private static void OnBeforeLevelUpdate(global::Celeste.Level self)
+    private static bool pauseTimeUpdate = false;
+    private static void OnBeforeLevelUpdate(Level self)
     {
         Level level = self;
         RunUnpauseActions(level);
@@ -674,8 +686,8 @@ public class EndHelperModule : EverestModule {
         if (!self.FrozenOrPaused && !self.Transitioning) DisableScreenTransitionMovementTimer.Update();
 
         // Session Reset Checker
-        EndHelperModule.timeSinceSessionReset++;
-        if (EndHelperModule.timeSinceSessionReset == 1)
+        timeSinceSessionReset++;
+        if (timeSinceSessionReset == 1)
         {
             SessionResetFuncs(self);
         }
@@ -684,25 +696,25 @@ public class EndHelperModule : EverestModule {
             // Increment timeSinceRespawn if player is alive. and also not paused
             if (level.Tracker.GetEntity<Player>() is { } player && !player.Dead && !player.JustRespawned && !level.FrozenOrPaused)
             {
-                EndHelperModule.Session.framesSinceRespawn++;
+                Session.framesSinceRespawn++;
             }
         }
 
-        if (EndHelperModule.Settings.FreeMultiroomWatchtower.Button.Pressed && !level.FrozenOrPaused && !level.Transitioning)
+        if (Settings.FreeMultiroomWatchtower.Button.Pressed && !level.FrozenOrPaused && !level.Transitioning)
         {
             Utils_MultiroomWatchtower.SpawnMultiroomWatchtower();
         }
 
         // Quick Restart Keybind
         {
-            if (EndHelperModule.Settings.QuickRetry.Button.Pressed && level.Tracker.GetEntity<Player>() is { } player && !level.Paused && level.CanPause && level.CanRetry && !player.Dead && !level.InCutscene)
+            if (Settings.QuickRetry.Button.Pressed && level.Tracker.GetEntity<Player>() is { } player && !level.Paused && level.CanPause && level.CanRetry && !player.Dead && !level.InCutscene)
             {
                 if (level.Session.GrabbedGolden)
                 {
                     // Don't die if you have a golden. Just play a funny sfx instead.
                     player.Add(new SoundSource("event:/game/general/strawberry_laugh"));
                     return;
-                } 
+                }
                 else if (!player.Dead)
                 {
                     Utils_DeathHandler.SetManualReset(level); // Set spawnpoint to full reset if it's used
@@ -724,28 +736,28 @@ public class EndHelperModule : EverestModule {
         // Grab Recast Keybind
         if (level.Paused == false)
         {
-            if (EndHelperModule.Settings.ToggleGrab.Button.Pressed)
+            if (Settings.ToggleGrab.Button.Pressed)
             {
-                EndHelperModule.Session.usedGameplayTweaks["grabrecast"] = true;
+                Session.usedGameplayTweaks["grabrecast"] = true;
 
                 Session.toggleifyEnabled = !Session.toggleifyEnabled;
 
                 // Set to false first
                 Session.GrabFakeTogglePressPressed = false;
 
-                if (EndHelperModule.Settings.ToggleGrabMenu.toggleGrabBehaviour == ToggleGrabSubMenu.ToggleGrabBehaviourEnum.TurnGrabToTogglePress)
+                if (Settings.ToggleGrabMenu.toggleGrabBehaviour == ToggleGrabSubMenu.ToggleGrabBehaviourEnum.TurnGrabToTogglePress)
                 { Session.GrabFakeTogglePressPressed = !Input.Grab; }
 
-                if (EndHelperModule.Settings.ToggleGrabMenu.toggleGrabBehaviour == ToggleGrabSubMenu.ToggleGrabBehaviourEnum.TurnGrabToToggle)
+                if (Settings.ToggleGrabMenu.toggleGrabBehaviour == ToggleGrabSubMenu.ToggleGrabBehaviourEnum.TurnGrabToToggle)
                 { Session.GrabFakeTogglePressPressed = Input.Grab; }
             }
 
-            if (Input.Grab.Pressed && EndHelperModule.Settings.ToggleGrabMenu.toggleGrabBehaviour != ToggleGrabSubMenu.ToggleGrabBehaviourEnum.NothingIfGrab)
+            if (Input.Grab.Pressed && Settings.ToggleGrabMenu.toggleGrabBehaviour != ToggleGrabSubMenu.ToggleGrabBehaviourEnum.NothingIfGrab)
             {
                 // Convert this too, unless NothingIfGrab
                 Session.GrabFakeTogglePressPressed = !Session.GrabFakeTogglePressPressed;
             }
-            if (Session.toggleifyEnabled && Input.Grab.Pressed && EndHelperModule.Settings.ToggleGrabMenu.toggleGrabBehaviour == ToggleGrabSubMenu.ToggleGrabBehaviourEnum.NothingIfGrab
+            if (Session.toggleifyEnabled && Input.Grab.Pressed && Settings.ToggleGrabMenu.toggleGrabBehaviour == ToggleGrabSubMenu.ToggleGrabBehaviourEnum.NothingIfGrab
                 && global::Celeste.Settings.Instance.GrabMode == GrabModes.Toggle)
             {
                 Input.UpdateGrab(); // If NothingIfGrab and Toggle Grab, LOCK THIS during toggleify. (Locking being just update twice)
@@ -838,8 +850,10 @@ public class EndHelperModule : EverestModule {
         }
     }
 
-    private static void Hook_LevelUpdateTime(On.Celeste.Level.orig_UpdateTime orig, global::Celeste.Level self)
+    private static void Hook_LevelUpdateTime(On.Celeste.Level.orig_UpdateTime orig, Level self)
     {
+        if (pauseTimeUpdate) return;
+
         Level level = self;
         previousSessionTime = level.Session.Time;
         AreaKey area = level.Session.Area;
@@ -862,21 +876,21 @@ public class EndHelperModule : EverestModule {
         // Check if can increment time spent in room
         allowIncrementLevelTimer = true;
         if (allowIncrementLevelTimer && level.Paused && (
-            EndHelperModule.Settings.PauseOptionLevel == LevelPauseScenarioEnum.Pause ||
-            EndHelperModule.Settings.PauseOptionLevel == LevelPauseScenarioEnum.PauseAFK
+            Settings.PauseOptionLevel == LevelPauseScenarioEnum.Pause ||
+            Settings.PauseOptionLevel == LevelPauseScenarioEnum.PauseAFK
         ))
-        { 
+        {
             allowIncrementLevelTimer = false;
-            EndHelperModule.Session.pauseTypeDict["LevelTimer_Pause"] = true;
+            Session.pauseTypeDict["LevelTimer_Pause"] = true;
         }
 
         if (allowIncrementLevelTimer && afkDurationFrames >= 1800 && (
-            EndHelperModule.Settings.PauseOptionLevel == LevelPauseScenarioEnum.AFK ||
-            EndHelperModule.Settings.PauseOptionLevel == LevelPauseScenarioEnum.PauseAFK
+            Settings.PauseOptionLevel == LevelPauseScenarioEnum.AFK ||
+            Settings.PauseOptionLevel == LevelPauseScenarioEnum.PauseAFK
         ))
-        { 
+        {
             allowIncrementLevelTimer = false;
-            EndHelperModule.Session.pauseTypeDict["LevelTimer_AFK"] = true;
+            Session.pauseTypeDict["LevelTimer_AFK"] = true;
         }
 
         if (!allowIncrementLevelTimer)
@@ -890,14 +904,14 @@ public class EndHelperModule : EverestModule {
     {
         if (Utils_Buttons.NeutralDrop.Pressed && self.Holding != null && self.minHoldTimer <= 0f)
         {
-            EndHelperModule.Session.usedGameplayTweaks["neutraldrop"] = true;
+            Session.usedGameplayTweaks["neutraldrop"] = true;
             Input.MoveY.Value = 1;
             Utils_Buttons.NeutralDrop.ConsumeBuffer();
             self.Throw();
         }
         if (Utils_Buttons.Backboost.Pressed && self.Holding != null && self.minHoldTimer <= 0f)
         {
-            EndHelperModule.Session.usedGameplayTweaks["backboost"] = true;
+            Session.usedGameplayTweaks["backboost"] = true;
             if (self.Facing == Facings.Left)
             {
                 self.Facing = Facings.Right;
@@ -910,13 +924,13 @@ public class EndHelperModule : EverestModule {
             self.Throw();
         }
 
-        if (EndHelperModule.Session.AllowDeathHandlerEntityChecks)
+        if (Session.AllowDeathHandlerEntityChecks)
         {
             Utils_DeathHandler.PlayerUpdate(self);
         }
     }
 
-    public static PlayerDeadBody? Hook_OnPlayerDeath(On.Celeste.Player.orig_Die orig, global::Celeste.Player self, Vector2 direction, bool evenIfInvincible, bool registerDeathInStats)
+    public static PlayerDeadBody? Hook_OnPlayerDeath(On.Celeste.Player.orig_Die orig, Player self, Vector2 direction, bool evenIfInvincible, bool registerDeathInStats)
     {
         if (Utils_General.disablePlayerDeathCountdown.IsTicking)
         {
@@ -929,8 +943,8 @@ public class EndHelperModule : EverestModule {
         if (!self.Dead && !invincibilityFlag && self.StateMachine.State != 18)
         {
             // Untoggle-ify if set to do so on death
-            if (EndHelperModule.Settings.ToggleGrabMenu.UntoggleUponDeath) { Session.toggleifyEnabled = false; }
-            EndHelperModule.Session.framesSinceRespawn = 0;
+            if (Settings.ToggleGrabMenu.UntoggleUponDeath) { Session.toggleifyEnabled = false; }
+            Session.framesSinceRespawn = 0;
 
             if (!level.IsInBounds(self)) Utils_DeathHandler.ForceShortDeathCooldown(); // Reduce cooldown if player is out of bounds. Will definitely need to die soon!
 
@@ -939,11 +953,14 @@ public class EndHelperModule : EverestModule {
             Utils_DeathHandler.BeforePlayerDeath(self);
         }
 
+        // Skip animation
+        if (Settings.QOLTweaksMenu.NoRespawnTransition)
+        {
+            Level.LoadOverride loadOverride = new Level.LoadOverride { SkipScreenWipes = 1 };
+            Level.RegisterLoadOverride(level, loadOverride);
+        }
+
         PlayerDeadBody origMethod = orig(self, direction, evenIfInvincible, registerDeathInStats);
-
-        //if (origMethod is not null)
-        //{ }
-
         return origMethod;
     }
 
@@ -961,7 +978,7 @@ public class EndHelperModule : EverestModule {
     }
     private static bool ILHook_PlayerDeadBodyUpdate_ReplacementMenuConfirmPressed(bool origPressed)
     {
-        bool forceFast = Utils_DeathHandler.CheckPlayerNextFastReload() || EndHelperModule.Settings.QOLTweaksMenu.AlwaysQuickRespawn;
+        bool forceFast = Utils_DeathHandler.CheckPlayerNextFastReload() || Settings.QOLTweaksMenu.AlwaysQuickRespawn;
         return forceFast || origPressed; // Same as original, unless forceFast
     }
 
@@ -1002,7 +1019,7 @@ public class EndHelperModule : EverestModule {
             //instr => instr.MatchLdfld<Session>("Deaths"),
             //instr => instr.MatchLdcI4(out _),
             //instr => instr.MatchAdd(),
-            instr => instr.MatchStfld(typeof(global::Celeste.Session),"Deaths")
+            instr => instr.MatchStfld(typeof(Session),"Deaths")
         ))
         {
             cursor.EmitDelegate(ILRunOnPlayerDeath);
@@ -1051,7 +1068,7 @@ public class EndHelperModule : EverestModule {
             ILLabel endLabel = cursor.DefineLabel();
 
             cursor.EmitDelegate<Func<bool>>(Utils_DeathHandler.CheckPlayerDeathSkipRemovePlayer); // Skip Check: true = skip, false = run original
-            
+
             cursor.Emit(OpCodes.Brtrue_S, skipLabel); // If true (skip), jump to skipLabel (BEFORE going through above instructions)
             cursor.GotoNext(MoveType.After,
                 instr => instr.MatchCallvirt(typeof(Scene), "Remove") // Advance past above instructions
@@ -1094,7 +1111,7 @@ public class EndHelperModule : EverestModule {
         }
     }
 
-    public static void Hook_OnPlayerRespawn(On.Celeste.Player.orig_IntroRespawnBegin orig, global::Celeste.Player self)
+    public static void Hook_OnPlayerRespawn(On.Celeste.Player.orig_IntroRespawnBegin orig, Player self)
     {
         Level level = self.SceneAs<Level>();
 
@@ -1102,12 +1119,10 @@ public class EndHelperModule : EverestModule {
         Utils_RoomSwap.ReupdateAllRooms();
 
         orig(self);
-        if (Utils_DeathHandler.seemlessRespawn == SeemlessRespawnEnum.EnabledInstant || EndHelperModule.Settings.GameplayTweaksMenu.NoRespawnAnimation)
+        if (Utils_DeathHandler.seemlessRespawn == SeemlessRespawnEnum.EnabledInstant)
         {
             self.StateMachine.State = 0;
             self.Sprite.Scale = new Vector2(1.5f, 0.5f);
-
-            if (EndHelperModule.Settings.GameplayTweaksMenu.NoRespawnAnimation) EndHelperModule.Session.usedGameplayTweaks["norespawnanim"] = true;
         }
         if (Utils_DeathHandler.seemlessRespawn == SeemlessRespawnEnum.EnabledKeepState || Utils_DeathHandler.playerHasDeathBypass)
         {
@@ -1121,10 +1136,10 @@ public class EndHelperModule : EverestModule {
         TryAutosave(level);
     }
 
-    public static void Hook_OnScreenWipeUpdate(On.Celeste.ScreenWipe.orig_Update orig, global::Celeste.ScreenWipe self, Scene scene)
+    public static void Hook_OnScreenWipeUpdate(On.Celeste.ScreenWipe.orig_Update orig, ScreenWipe self, Scene scene)
     {
         // Immediately end transition if player is dead
-        if (EndHelperModule.Settings.QOLTweaksMenu.NoRespawnTransition && scene.Entities.AmountOf<PlayerDeadBody>() > 0)
+        if (Settings.QOLTweaksMenu.NoRespawnTransition && scene.Entities.AmountOf<PlayerDeadBody>() > 0)
         {
             self.Duration = 0.1f;
             self.Percent = 1;
@@ -1136,19 +1151,21 @@ public class EndHelperModule : EverestModule {
                 level.Wipe = null;
             }
             self.OnComplete?.Invoke();
+            Level.LoadOverride loadOverride = new Level.LoadOverride();
+            loadOverride.SkipScreenWipes = 1;
         }
         orig(self, scene);
     }
 
     private static IEnumerator Hook_TransitionRoutine(
-        On.Celeste.Level.orig_TransitionRoutine orig, global::Celeste.Level self, global::Celeste.LevelData next, Vector2 direction
+        On.Celeste.Level.orig_TransitionRoutine orig, Level self, LevelData next, Vector2 direction
     )
     {
         Utils_General.framesSinceEnteredRoom = 0;
         yield return new SwapImmediately(orig(self, next, direction));
     }
 
-    private static void Hook_StartMapFromBeginning(On.Celeste.LevelLoader.orig_StartLevel orig, global::Celeste.LevelLoader self)
+    private static void Hook_StartMapFromBeginning(On.Celeste.LevelLoader.orig_StartLevel orig, LevelLoader self)
     {
         Level level = self.Level;
         level.Add(new RoomStatisticsDisplayer(level));
@@ -1163,21 +1180,21 @@ public class EndHelperModule : EverestModule {
         orig(self);
     }
 
-    private static void Hook_Pause(On.Celeste.Level.orig_Pause orig, global::Celeste.Level self, int startIndex, bool minimal, bool quickReset)
+    private static void Hook_Pause(On.Celeste.Level.orig_Pause orig, Level self, int startIndex, bool minimal, bool quickReset)
     {
         Level level = self;
 
         if (quickReset)
         {
-            { 
-                if (EndHelperModule.Settings.QOLTweaksMenu.DisableQuickRestart ||
-                (EndHelperModule.Settings.QuickRetry.Button.Pressed && level.Tracker.GetEntity<Player>() is not null && level is { Paused: false, CanPause: true, CanRetry: true }))
+            {
+                if (Settings.QOLTweaksMenu.DisableQuickRestart ||
+                (Settings.QuickRetry.Button.Pressed && level.Tracker.GetEntity<Player>() is not null && level is { Paused: false, CanPause: true, CanRetry: true }))
                 {
                     // Do not quick reset if you are quick dying (or if disabled)
                     return;
                 }
             }
-        } 
+        }
         else
         {
             if (!level.Paused)
@@ -1189,11 +1206,11 @@ public class EndHelperModule : EverestModule {
         orig(self, startIndex, minimal, quickReset);
     }
 
-    public static void Hook_EntityRemoved(On.Monocle.Entity.orig_Removed orig, global::Monocle.Entity self, global::Monocle.Scene scene)
+    public static void Hook_EntityRemoved(On.Monocle.Entity.orig_Removed orig, Entity self, Scene scene)
     {
         // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
-        if (scene is Level && EndHelperModule.Session is not null && 
-            EndHelperModule.Session.AllowDeathHandlerEntityChecks && self.Components.Get<DeathBypass>() is { } deathBypassComponent && deathBypassComponent.bypass
+        if (scene is Level && Session is not null &&
+            Session.AllowDeathHandlerEntityChecks && self.Components.Get<DeathBypass>() is { } deathBypassComponent && deathBypassComponent.bypass
             && self is not Player)
         {
             DeathBypass.entityIDDisappearUntilFullReset.Add(deathBypassComponent.entityID);
@@ -1201,7 +1218,7 @@ public class EndHelperModule : EverestModule {
         orig(self, scene);
     }
 
-    private static ScreenWipe? Hook_CompleteArea(On.Celeste.Level.orig_CompleteArea_bool_bool_bool orig, global::Celeste.Level level, bool spotlightWipe, bool skipScreenWipe, bool skipCompleteScreen)
+    private static ScreenWipe? Hook_CompleteArea(On.Celeste.Level.orig_CompleteArea_bool_bool_bool orig, Level level, bool spotlightWipe, bool skipScreenWipe, bool skipCompleteScreen)
     {
         if (level.Tracker.GetEntity<RoomStatisticsDisplayer>() is not null && level.Paused)
         {
@@ -1229,7 +1246,7 @@ public class EndHelperModule : EverestModule {
             List<string> iconList = [];
 
             // Check each gameplay tweak, and add relevant GFX / set showFullBlender to true if required
-            Dictionary<string, bool> tweakList = EndHelperModule.Session.usedGameplayTweaks;
+            Dictionary<string, bool> tweakList = Session.usedGameplayTweaks;
 
             // dashredirect backboost neutraldrop | seemlessrespawn_keepstate seemlessrespawn_minor grabrecast
 
@@ -1294,7 +1311,7 @@ public class EndHelperModule : EverestModule {
     }
 
 
-    private static void Hook_JournalUpdate(On.Celeste.OuiJournal.orig_Update orig, global::Celeste.OuiJournal self)
+    private static void Hook_JournalUpdate(On.Celeste.OuiJournal.orig_Update orig, OuiJournal self)
     {
         Utils_JournalStatistics.Update(self);
         if (!Utils_JournalStatistics.journalStatisticsGuiOpen)
@@ -1303,26 +1320,26 @@ public class EndHelperModule : EverestModule {
         }
     }
 
-    private static void Hook_JournalRender(On.Celeste.OuiJournal.orig_Render orig, global::Celeste.OuiJournal self)
+    private static void Hook_JournalRender(On.Celeste.OuiJournal.orig_Render orig, OuiJournal self)
     {
         orig(self);
 
         // Specifically for in overworld
         if (Engine.Scene is Overworld)
         {
-            if (RoomStatisticsDisplayer.tooltipDuration > -60)
+            if (tooltipDuration > -60)
             {
-                ActiveFont.DrawOutline(RoomStatisticsDisplayer.tooltipText, new Vector2(100, 950), Vector2.Zero, Vector2.One, Color.White * alpha, 2, Color.Black * alpha);
-                RoomStatisticsDisplayer.tooltipDuration += -4;
+                ActiveFont.DrawOutline(tooltipText, new Vector2(100, 950), Vector2.Zero, Vector2.One, Color.White * alpha, 2, Color.Black * alpha);
+                tooltipDuration += -4;
             }
-            if (RoomStatisticsDisplayer.tooltipDuration > 10 && RoomStatisticsDisplayer.alpha < 1) { RoomStatisticsDisplayer.alpha += 0.1f; }
-            if (RoomStatisticsDisplayer.tooltipDuration < 0 && RoomStatisticsDisplayer.alpha > 0) { RoomStatisticsDisplayer.alpha -= 0.03f; }
+            if (tooltipDuration > 10 && alpha < 1) { alpha += 0.1f; }
+            if (tooltipDuration < 0 && alpha > 0) { alpha -= 0.03f; }
         }
 
         Utils_JournalStatistics.Render();
     }
 
-    private static void Hook_JournalClose(On.Celeste.OuiJournal.orig_Close orig, global::Celeste.OuiJournal self)
+    private static void Hook_JournalClose(On.Celeste.OuiJournal.orig_Close orig, OuiJournal self)
     {
         orig(self);
         Utils_JournalStatistics.journalStatisticsGuiOpen = false;
@@ -1401,7 +1418,7 @@ public class EndHelperModule : EverestModule {
     }
 
     private static Vector2 preRedirectDashDir = Vector2.Zero;
-    private static void Hook_DashBegin(On.Celeste.Player.orig_DashBegin orig, global::Celeste.Player self)
+    private static void Hook_DashBegin(On.Celeste.Player.orig_DashBegin orig, Player self)
     {
         preRedirectDashDir = Input.LastAim;
         orig(self);
@@ -1481,7 +1498,7 @@ public class EndHelperModule : EverestModule {
     private static float GetScreenShakeReplacementIntensity(float initialIntensity)
     {
         // Replace the incoming intensity value with 0.0f
-        float outIntensity = EndHelperModule.Settings.QOLTweaksMenu.DisableFrequentScreenShake ? 0.0f : initialIntensity;
+        float outIntensity = Settings.QOLTweaksMenu.DisableFrequentScreenShake ? 0.0f : initialIntensity;
         //Logger.Log(LogLevel.Info, "EndHelper/main", $"Something related to dash intensity happened. {initialIntensity} >> {outIntensity}");
         return outIntensity;
     }
@@ -1493,21 +1510,21 @@ public class EndHelperModule : EverestModule {
         //Logger.Log(LogLevel.Info, "EndHelper/main", $"current aim: {Input.Aim.PreviousValue}");
 
         Vector2 currentAim = Input.Aim.PreviousValue;
-        ConvertDemoEnum usedConvertDemoSetting = EndHelperModule.Session.GameplayTweaksOverride_ConvertDemo != null ? EndHelperModule.Session.GameplayTweaksOverride_ConvertDemo.Value : EndHelperModule.Settings.GameplayTweaksMenu.ConvertDemo;
+        ConvertDemoEnum usedConvertDemoSetting = Session.GameplayTweaksOverride_ConvertDemo != null ? Session.GameplayTweaksOverride_ConvertDemo.Value : Settings.GameplayTweaksMenu.ConvertDemo;
 
         // If down direction was redirected to neutral, add it back during redirection //global::Celeste.SaveData.Instance.Assists.Invincible
-        if (usedConvertDemoSetting != GameplayTweaks.ConvertDemoEnum.Disabled && !global::Celeste.SaveData.Instance.Assists.ThreeSixtyDashing
+        if (usedConvertDemoSetting != ConvertDemoEnum.Disabled && !global::Celeste.SaveData.Instance.Assists.ThreeSixtyDashing
             && preRedirectDashDir.Y > 0.01 && redirectedVector.Y == 0)
         {
-            if (EndHelperModule.Session.GameplayTweaksOverride_ConvertDemo == null)
+            if (Session.GameplayTweaksOverride_ConvertDemo == null)
             {
-                EndHelperModule.Session.usedGameplayTweaks["dashredirect"] = true;
+                Session.usedGameplayTweaks["dashredirect"] = true;
             }
 
             redirectedVector.Y = preRedirectDashDir.Y;
 
             // If this happens, last aim will probably be left/right. Check current aim to see if it should be downwards or diagonal, unless forced diagonal
-            if (usedConvertDemoSetting == GameplayTweaks.ConvertDemoEnum.EnabledNormal && currentAim.X == 0)
+            if (usedConvertDemoSetting == ConvertDemoEnum.EnabledNormal && currentAim.X == 0)
             {
                 redirectedVector.X = 0;
             }
@@ -1527,7 +1544,7 @@ public class EndHelperModule : EverestModule {
         if (cursor.TryGotoNext(instr => instr.MatchSwitch(out _)))
         {
             while (cursor.TryGotoNext(MoveType.Before, instr => instr.MatchRet()))
-            { 
+            {
                 cursor.EmitDelegate<Func<bool, bool>>(ToggleifyModifyGrab); // Loop across all 3 grab type checks
                 cursor.Index++;
             }
@@ -1541,10 +1558,10 @@ public class EndHelperModule : EverestModule {
 
         if (Session.toggleifyEnabled)
         {
-            switch (EndHelperModule.Settings.ToggleGrabMenu.toggleGrabBehaviour)
+            switch (Settings.ToggleGrabMenu.toggleGrabBehaviour)
             {
                 case ToggleGrabSubMenu.ToggleGrabBehaviourEnum.UntoggleOnGrab:
-                    if (pressedGrab)  { Session.toggleifyEnabled = false; } 
+                    if (pressedGrab)  { Session.toggleifyEnabled = false; }
                     else { grabbing = !grabbing; }
                     Session.GrabFakeTogglePressPressed = false;
                     Session.ToggleGrabRanNothing = false;
@@ -1576,12 +1593,12 @@ public class EndHelperModule : EverestModule {
                 case ToggleGrabSubMenu.ToggleGrabBehaviourEnum.NothingIfGrab:
                     if (grabMode == GrabModes.Hold) { grabbing = true; }
                     else if (grabMode == GrabModes.Invert) { grabbing = false; }
-                    else if (grabMode == GrabModes.Toggle) { 
+                    else if (grabMode == GrabModes.Toggle) {
                         if (Session.ToggleGrabRanNothing == false)
                         {
                             Session.GrabFakeTogglePressPressed = !grabbing; // Store OPPOSITE grab mode before toggle-ifier in here
                             Session.ToggleGrabRanNothing = true;
-                        } 
+                        }
                         else
                         {
                             grabbing = Session.GrabFakeTogglePressPressed;
@@ -1602,13 +1619,13 @@ public class EndHelperModule : EverestModule {
         return grabbing;
     }
 
-    public static void Hook_KillboxKill(On.Celeste.Killbox.orig_OnPlayer orig, global::Celeste.Killbox self, global::Celeste.Player player)
+    public static void Hook_KillboxKill(On.Celeste.Killbox.orig_OnPlayer orig, Killbox self, Player player)
     {
-        if (EndHelperModule.Session.AllowDeathHandlerEntityChecks && !global::Celeste.SaveData.Instance.Assists.Invincible) Utils_DeathHandler.SetNextRespawnFullReset(player.level, true);
+        if (Session.AllowDeathHandlerEntityChecks && !global::Celeste.SaveData.Instance.Assists.Invincible) Utils_DeathHandler.SetNextRespawnFullReset(player.level, true);
         orig(self, player);
     }
 
-    public static bool Hook_SpinnerInView(On.Celeste.CrystalStaticSpinner.orig_InView orig, global::Celeste.CrystalStaticSpinner self)
+    public static bool Hook_SpinnerInView(On.Celeste.CrystalStaticSpinner.orig_InView orig, CrystalStaticSpinner self)
     {
         bool inView = orig(self);
 
@@ -1623,7 +1640,7 @@ public class EndHelperModule : EverestModule {
 
         return inView;
     }
-    public static void Hook_BoosterPlayerDied(On.Celeste.Booster.orig_PlayerDied orig, global::Celeste.Booster self)
+    public static void Hook_BoosterPlayerDied(On.Celeste.Booster.orig_PlayerDied orig, Booster self)
     {
         orig(self);
         // Booster forces tag to be 1 (idk what 1 is but its not global) upon death. I don't want that to happen with deathbypass
@@ -1634,13 +1651,13 @@ public class EndHelperModule : EverestModule {
         }
     }
 
-    public static void Hook_SolidMoveHExact(On.Celeste.Solid.orig_MoveHExact orig, global::Celeste.Solid self, int move)
+    public static void Hook_SolidMoveHExact(On.Celeste.Solid.orig_MoveHExact orig, Solid self, int move)
     {
         // This fixes a very specific crash - with deathhandler, if a solid has a staticmover that has a subentity, the subentity may have a null scene on reset.
         self.Scene ??= Engine.Scene as Level;
         orig(self, move);
     }
-    public static void Hook_SolidMoveVExact(On.Celeste.Solid.orig_MoveVExact orig, global::Celeste.Solid self, int move)
+    public static void Hook_SolidMoveVExact(On.Celeste.Solid.orig_MoveVExact orig, Solid self, int move)
     {
         // Same as above
         self.Scene ??= Engine.Scene as Level;
@@ -1648,7 +1665,7 @@ public class EndHelperModule : EverestModule {
     }
 
 
-    public static void Hook_UsingMapEditor(On.Celeste.Editor.MapEditor.orig_Update orig, global::Celeste.Editor.MapEditor self)
+    public static void Hook_UsingMapEditor(On.Celeste.Editor.MapEditor.orig_Update orig, Editor.MapEditor self)
     {
         timeSinceSessionReset = 0;
         lastSessionResetCause = SessionResetCause.Debug;
@@ -1661,7 +1678,7 @@ public class EndHelperModule : EverestModule {
         public string roomName = roomName;
     }
 
-    private static void Hook_StrawberryAddedToLevel(On.Celeste.Strawberry.orig_Added orig, global::Celeste.Strawberry self, Scene scene)
+    private static void Hook_StrawberryAddedToLevel(On.Celeste.Strawberry.orig_Added orig, Strawberry self, Scene scene)
     {
         Level level = (scene as Level)!;
         String roomName = level.Session.LevelData.Name;
@@ -1671,7 +1688,7 @@ public class EndHelperModule : EverestModule {
         orig(self, scene);
     }
 
-    private static void Hook_CollectStrawberry(On.Celeste.Strawberry.orig_OnCollect orig, global::Celeste.Strawberry self)
+    private static void Hook_CollectStrawberry(On.Celeste.Strawberry.orig_OnCollect orig, Strawberry self)
     {
         Level level = self.SceneAs<Level>();
         if (level.Tracker.GetEntity<RoomStatisticsDisplayer>() is { } roomStatDisplayer)
@@ -1681,7 +1698,7 @@ public class EndHelperModule : EverestModule {
         orig(self);
     }
 
-    private static void Hook_SpeedrunTimerRender(On.Celeste.SpeedrunTimerDisplay.orig_Render orig, global::Celeste.SpeedrunTimerDisplay self)
+    private static void Hook_SpeedrunTimerRender(On.Celeste.SpeedrunTimerDisplay.orig_Render orig, SpeedrunTimerDisplay self)
     {
         bool renderTimer = true;
         if (Engine.Scene is Level level && level.Tracker.GetEntity<RoomStatisticsDisplayer>() is { } roomStatDisplayer && roomStatDisplayer.statisticsGuiOpen)
@@ -1694,10 +1711,10 @@ public class EndHelperModule : EverestModule {
             if (Engine.Scene is Level level2 && level2.Paused && self.Visible)
             {
                 // Display pause/afk icons if necessary
-                if (!EndHelperModule.Session.pauseTypeDict.ContainsKey("LevelTimer_Pause")) { EndHelperModule.Session.pauseTypeDict["LevelTimer_Pause"] = false; }
-                if (!EndHelperModule.Session.pauseTypeDict.ContainsKey("LevelTimer_AFK")) { EndHelperModule.Session.pauseTypeDict["LevelTimer_AFK"] = false; }
-                bool freezedByPause = EndHelperModule.Session.pauseTypeDict["LevelTimer_Pause"];
-                bool freezedByAfk = EndHelperModule.Session.pauseTypeDict["LevelTimer_AFK"];
+                if (!Session.pauseTypeDict.ContainsKey("LevelTimer_Pause")) { Session.pauseTypeDict["LevelTimer_Pause"] = false; }
+                if (!Session.pauseTypeDict.ContainsKey("LevelTimer_AFK")) { Session.pauseTypeDict["LevelTimer_AFK"] = false; }
+                bool freezedByPause = Session.pauseTypeDict["LevelTimer_Pause"];
+                bool freezedByAfk = Session.pauseTypeDict["LevelTimer_AFK"];
                 String pauseIconMsg = ":EndHelper/ui_timerfreeze_pause:";
                 String afkIconMsg = ":EndHelper/ui_timerfreeze_afk:";
 
@@ -1765,8 +1782,8 @@ public class EndHelperModule : EverestModule {
         // If Recast is enabled and set to TurnGrabToToggle(Press), this is as good as grab mode being on.
         // So for purposes of the icon, return grabMode as toggle.
         if (Session.toggleifyEnabled && (
-            EndHelperModule.Settings.ToggleGrabMenu.toggleGrabBehaviour == ToggleGrabSubMenu.ToggleGrabBehaviourEnum.TurnGrabToToggle
-            || EndHelperModule.Settings.ToggleGrabMenu.toggleGrabBehaviour == ToggleGrabSubMenu.ToggleGrabBehaviourEnum.TurnGrabToTogglePress
+            Settings.ToggleGrabMenu.toggleGrabBehaviour == ToggleGrabSubMenu.ToggleGrabBehaviourEnum.TurnGrabToToggle
+            || Settings.ToggleGrabMenu.toggleGrabBehaviour == ToggleGrabSubMenu.ToggleGrabBehaviourEnum.TurnGrabToTogglePress
         ))
         {
             grabMode = GrabModes.Toggle;

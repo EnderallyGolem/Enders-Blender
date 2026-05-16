@@ -96,8 +96,8 @@ namespace Celeste.Mod.EndHelper.Integration
 
         internal static Ghost GetGhostFromName(Level level, String name)
         {
-            List<Monocle.Entity> ghostList = level.Tracker.GetEntities<Ghost>();
-            foreach (Monocle.Entity ghost in ghostList)
+            List<Entity> ghostList = level.Tracker.GetEntities<Ghost>();
+            foreach (Entity ghost in ghostList)
             {
                 Ghost ghostGhost = (Ghost)ghost;
                 if (ghostGhost.NameTag.Name == name)

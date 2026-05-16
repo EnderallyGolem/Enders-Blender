@@ -22,23 +22,27 @@ public class RoomStatisticsDisplayer : Entity
     #region Initialisation
 
     private string clipboardText = "";
-    public string currentEffectiveRoomName { get; private set; } = "";
-    public string currentRoomName { get; private set; } = "";
+    private string currentEffectiveRoomName { get; set; } = "";
+    private string currentRoomName { get; set; } = "";
     public bool statisticsGuiOpen;
     internal Utils_General.Countdown disableRoomChangeTimer = new Utils_General.Countdown();   // Eg: When viewing other rooms with multi-room bino
 
-    public string mapNameSide_Internal { get; private set; } = ""; // Internally checked to distinguish between map and sides & to determine which lang to pick for room names
-    public string mapNameSide_Display { get; private set; } = "";  // Text to display to the player
+    private string mapNameSide_Internal { get; set; } = ""; // Internally checked to distinguish between map and sides & to determine which lang to pick for room names
+    private string mapNameSide_Display { get; set; } = "";  // Text to display to the player
 
-    public Color mapNameColor { get; private set; }    // for fun :D
-    public bool dealWithFirstClear { get; private set; }
-    public enum roomStatMenuFilter { None, Death0, Death10, Time60s, Renamed }
-    public static roomStatMenuFilter filterSetting = roomStatMenuFilter.None;
+    private Color mapNameColor { get; set; }    // for fun :D
+    private bool dealWithFirstClear { get; set; }
+    private bool allowShowOldStats { get; set; }
+    public enum RoomStatMenuFilter { None, Death0, Death10, Time60s, Renamed }
+    public static RoomStatMenuFilter filterSetting = RoomStatMenuFilter.None;
 
     internal static bool hideIfGoldenStrawberryEnabled;
     internal static bool renameRoomsMoveRooms;
 
     private bool hasUpdatedOnce;
+
+    // Same as JournalStatistics, but with an additional null for current stats
+    private JournalRoomStatMenuTypeEnum? shownMenuType = null;
 
     public RoomStatisticsDisplayer(Level level)
     {
@@ -58,20 +62,17 @@ public class RoomStatisticsDisplayer : Entity
 
         EndHelperModule.Session.roomStatDict_mapNameSide_Internal = mapNameSide_Internal; // Store mapNameSide of map into session - for error reference
 
+        // Determine default stat to show. If level not cleared, show first clear stat. Otherwise, leave it as null
+        bool mapBeatenBefore = SaveData.Instance.Areas_Safe[level.Session.Area.ID].Modes[(int)level.Session.Area.Mode].Completed;
+        shownMenuType = mapBeatenBefore ? null : JournalRoomStatMenuTypeEnum.FirstClear;
+
         InitEmotes();
     }
 
     public override void Awake(Scene scene)
     {
         base.Awake(scene);
-        EndHelperModule.Session.pauseTypeDict["Level_Invalid"] = (scene as Level)!.Session.StartedFromBeginning;
-
-        // Do not get affected by save states. This umm does not work. Commenting this out so it doesn't break if it works.
-        //if (SpeedrunToolIntegration.SpeedrunToolInstalled)
-        //{
-        //    SpeedrunToolImport.IgnoreSaveState?.Invoke(this, true);
-        //    Logger.Log(LogLevel.Info, "EndHelper/RoomStatisticsDisplayer", $"ignore save state !!");
-        //}
+        EndHelperModule.Session.pauseTypeDict["Level_Invalid"] = !(scene as Level)!.Session.StartedFromBeginning;
     }
 
     #endregion
@@ -375,6 +376,39 @@ public class RoomStatisticsDisplayer : Entity
         }
     }
 
+    /// <summary>
+    /// Validates the shown menu type. Sets to null if invalid.
+    /// </summary>
+    /// <param name="changeAmount">Changes the menu type by this number of steps</param>
+    private void ValidateShownMenuType(int changeAmount = 0)
+    {
+        int increNum = (int?)shownMenuType ?? -1; // First Clear 0, Saved 1
+        int maxIncre = Enum.GetValues(typeof(JournalRoomStatMenuTypeEnum)).Length-1;
+
+        bool increaseUpwards = changeAmount >= 0;
+        increNum += changeAmount;
+        CheckValid();
+        shownMenuType = increNum == -1 ? null : (JournalRoomStatMenuTypeEnum)increNum;
+
+        void CheckValid()
+        {
+            while (true)
+            {
+                if (increNum < -1 && !increaseUpwards) increNum = maxIncre;
+                if (increNum > maxIncre && increaseUpwards) increNum = -1;
+                increNum = Math.Clamp(increNum, -1, maxIncre); // Clamp
+
+                // If shownMenuType is invalid, force it to be null
+                bool invalidFirstClear = (JournalRoomStatMenuTypeEnum)increNum == JournalRoomStatMenuTypeEnum.FirstClear
+                    && ( !(dealWithFirstClear || allowShowOldStats) || EndHelperModule.SaveData.mapDict_roomStat_firstClear_roomOrder[mapNameSide_Internal].Count == 0 );
+                bool invalidSavedClear = (JournalRoomStatMenuTypeEnum)increNum == JournalRoomStatMenuTypeEnum.Saved && !allowShowOldStats;
+
+                if (invalidFirstClear || invalidSavedClear) { increNum += increaseUpwards ? 1 : -1; }
+                else { break; } // Repeat until valid
+            }
+        }
+    }
+
     public override void Update()
     {
         // Keep these updated!
@@ -387,7 +421,10 @@ public class RoomStatisticsDisplayer : Entity
         // Don't update this when map is completed, otherwise the stats may change upon collecting heart
         if (!level.Completed)
         {
-            dealWithFirstClear = EndHelperModule.Settings.RoomStatMenu.MenuTrackerStorageCount != 0 && !SaveData.Instance.Areas_Safe[level.Session.Area.ID].Modes[(int)level.Session.Area.Mode].Completed && EndHelperModule.SaveData.mapDict_roomStat_firstClear_roomOrder.ContainsKey(mapNameSide_Internal);
+            bool mapBeatenBefore = SaveData.Instance.Areas_Safe[level.Session.Area.ID].Modes[(int)level.Session.Area.Mode].Completed;
+            bool canShowSavedStats = EndHelperModule.Settings.RoomStatMenu.MenuTrackerStorageCount != 0 && EndHelperModule.SaveData.mapDict_roomStat_firstClear_roomOrder.ContainsKey(mapNameSide_Internal);
+            dealWithFirstClear = canShowSavedStats && !mapBeatenBefore;
+            allowShowOldStats = canShowSavedStats && mapBeatenBefore;
         }
 
         String roomDialogName = $"{mapNameSide_Internal}_{level.Session.LevelData.Name}".Replace(".", "__point__").DialogCleanOrNull(Dialog.Languages["english"]) ?? "";
@@ -510,7 +547,7 @@ public class RoomStatisticsDisplayer : Entity
         long rtatimerNum;
         int strawberriesNum;
 
-        if (EndHelperModule.Settings.RoomStatMenu.MenuShowFirstClear && dealWithFirstClear)
+        if (shownMenuType == JournalRoomStatMenuTypeEnum.FirstClear && dealWithFirstClear)
         {
             // Show first cycle
             deathNum = EndHelperModule.SaveData.mapDict_roomStat_firstClear_death[mapNameSide_Internal][currentEffectiveRoomName];
@@ -767,9 +804,13 @@ public class RoomStatisticsDisplayer : Entity
         List<string> roomNamesToShowList = new List<string>();
 
         ICollection allRoomsList;
-        if (EndHelperModule.Settings.RoomStatMenu.MenuShowFirstClear && dealWithFirstClear)
+        if (shownMenuType == JournalRoomStatMenuTypeEnum.FirstClear)
         {
             allRoomsList = EndHelperModule.SaveData.mapDict_roomStat_firstClear_roomOrder[mapNameSide_Internal];
+        }
+        else if (shownMenuType == JournalRoomStatMenuTypeEnum.Saved)
+        {
+            allRoomsList = EndHelperModule.SaveData.mapDict_roomStat_latestSession_roomOrder[mapNameSide_Internal];
         }
         else
         {
@@ -786,16 +827,24 @@ public class RoomStatisticsDisplayer : Entity
             int roomDeaths;
             TimeSpan roomTimeSpan;
             TimeSpan roomRtaTimeSpan;
-            int roomStrawberriesCollected;
 
-            if (EndHelperModule.Settings.RoomStatMenu.MenuShowFirstClear && dealWithFirstClear)
+            if (shownMenuType == JournalRoomStatMenuTypeEnum.FirstClear)
             {
                 // Show First Cycle
-                EnsureDictsHaveKey(level, roomName, DictsHaveKeyType.FirstClear); // Strawberry might not have key when load state
+                if (dealWithFirstClear)
+                {
+                    EnsureDictsHaveKey(level, roomName, DictsHaveKeyType.FirstClear); // Strawberry might not have key when load state
+                }
                 roomDeaths = EndHelperModule.SaveData.mapDict_roomStat_firstClear_death[mapNameSide_Internal][roomName];
                 roomTimeSpan = TimeSpan.FromTicks(EndHelperModule.SaveData.mapDict_roomStat_firstClear_timer[mapNameSide_Internal][roomName]);
                 roomRtaTimeSpan = TimeSpan.FromTicks(EndHelperModule.SaveData.mapDict_roomStat_firstClear_rtatimer[mapNameSide_Internal][roomName]);
-                roomStrawberriesCollected = EndHelperModule.SaveData.mapDict_roomStat_firstClear_strawberries[mapNameSide_Internal][roomName];
+            }
+            else if (shownMenuType == JournalRoomStatMenuTypeEnum.Saved)
+            {
+                // Show Saved stats
+                roomDeaths = EndHelperModule.SaveData.mapDict_roomStat_latestSession_death[mapNameSide_Internal][roomName];
+                roomTimeSpan = TimeSpan.FromTicks(EndHelperModule.SaveData.mapDict_roomStat_latestSession_timer[mapNameSide_Internal][roomName]);
+                roomRtaTimeSpan = TimeSpan.FromTicks(EndHelperModule.SaveData.mapDict_roomStat_latestSession_rtatimer[mapNameSide_Internal][roomName]);
             }
             else
             {
@@ -803,29 +852,26 @@ public class RoomStatisticsDisplayer : Entity
                 roomDeaths = Convert.ToInt32(EndHelperModule.Session.roomStatDict_death[roomName]);
                 roomTimeSpan = TimeSpan.FromTicks(Convert.ToInt64(EndHelperModule.Session.roomStatDict_timer[roomName]));
                 roomRtaTimeSpan = TimeSpan.FromTicks(Convert.ToInt64(EndHelperModule.Session.roomStatDict_rtatimer[roomName]));
-                roomStrawberriesCollected = Convert.ToInt32(EndHelperModule.Session.roomStatDict_strawberries[roomName]);
             }
-            Utils_General.MinimalGameplayFormat(roomTimeSpan);
 
             // Filtering
             bool checkRTAFilter = EndHelperModule.Settings.RoomStatMenu.MenuShowTime == RoomStatMenuSubMenu.MenuShowTimeEnum.RTA;
             switch (filterSetting)
             {
-                case roomStatMenuFilter.Death0:
+                case RoomStatMenuFilter.Death0:
                     if (roomDeaths <= 0) { continue; }
                     break;
 
-                case roomStatMenuFilter.Death10:
+                case RoomStatMenuFilter.Death10:
                     if (roomDeaths <= 10) { continue; }
                     break;
 
-                case roomStatMenuFilter.Time60s:
+                case RoomStatMenuFilter.Time60s:
                     if ((checkRTAFilter && roomRtaTimeSpan.TotalSeconds <= 60) || (!checkRTAFilter && roomTimeSpan.TotalSeconds <= 60)) { continue; }
                     break;
 
-                case roomStatMenuFilter.Renamed:
-                    String defaultName = roomName;
-                    defaultName = $"{mapNameSide_Internal}_{roomName}".DialogCleanOrNull(Dialog.Languages["english"]) ?? roomName;
+                case RoomStatMenuFilter.Renamed:
+                    String defaultName = $"{mapNameSide_Internal}_{roomName}".DialogCleanOrNull(Dialog.Languages["english"]) ?? roomName;
 
                     if (defaultName == Convert.ToString(EndHelperModule.Session.roomStatDict_customName[roomName])) { continue; }
                     break;
@@ -835,19 +881,19 @@ public class RoomStatisticsDisplayer : Entity
         String filterString;
         switch (filterSetting)
         {
-            case roomStatMenuFilter.Death0:
+            case RoomStatMenuFilter.Death0:
                 filterString = "≥1 Death";
                 break;
 
-            case roomStatMenuFilter.Death10:
+            case RoomStatMenuFilter.Death10:
                 filterString = "≥10 Deaths";
                 break;
 
-            case roomStatMenuFilter.Time60s:
+            case RoomStatMenuFilter.Time60s:
                 filterString = "≥60s";
                 break;
 
-            case roomStatMenuFilter.Renamed:
+            case RoomStatMenuFilter.Renamed:
                 filterString = "Renamed";
                 break;
 
@@ -895,16 +941,20 @@ public class RoomStatisticsDisplayer : Entity
 
         // Map Name Header
         ActiveFont.DrawOutline($"{mapNameSide_Display}", new Vector2(960, 5), new Vector2(0.5f, 0f), new Vector2(0.7f, 0.7f), mapNameColor, 2f, Color.Black);
-        if (EndHelperModule.Settings.RoomStatMenu.MenuShowFirstClear && dealWithFirstClear)
+        String mapNameHeader;
+        if (shownMenuType == JournalRoomStatMenuTypeEnum.FirstClear)
         {
-            String firstClearMsg = Dialog.Clean("EndHelper_Dialog_RoomStatisticsDisplayer_FirstRun");
-            ActiveFont.DrawOutline($"({firstClearMsg})", new Vector2(960, 40), new Vector2(0.5f, 0f), new Vector2(0.45f, 0.45f), Color.DarkGray, 2f, Color.Black);
+            mapNameHeader = Dialog.Clean("EndHelper_Dialog_RoomStatisticsDisplayer_FirstRun");
+        }
+        else if (shownMenuType == JournalRoomStatMenuTypeEnum.Saved)
+        {
+            mapNameHeader = Dialog.Clean("EndHelper_Dialog_RoomStatisticsDisplayer_SavedClear");
         }
         else
         {
-            String currentSessionMsg = Dialog.Clean("EndHelper_Dialog_RoomStatisticsDisplayer_Current");
-            ActiveFont.DrawOutline($"({currentSessionMsg})", new Vector2(960, 40), new Vector2(0.5f, 0f), new Vector2(0.45f, 0.45f), Color.DarkGray, 2f, Color.Black);
+            mapNameHeader = Dialog.Clean("EndHelper_Dialog_RoomStatisticsDisplayer_Current");
         }
+        ActiveFont.DrawOutline($"({mapNameHeader})", new Vector2(960, 40), new Vector2(0.5f, 0f), new Vector2(0.45f, 0.45f), Color.DarkGray, 2f, Color.Black);
 
         // The table headers (aka just death and timer icons)
         const int iconHeightOffset = -50;
@@ -953,9 +1003,6 @@ public class RoomStatisticsDisplayer : Entity
         {
             foreach (string roomName in roomNamesToShowList)
             {
-                // Just in case. This sometimes errors out when rebuilding, but as a safeguard in case it occurs elsewhere im gonna ensure the key exist.
-                EnsureDictsHaveKey(level, roomName, (EndHelperModule.Settings.RoomStatMenu.MenuShowFirstClear && dealWithFirstClear) ? DictsHaveKeyType.FirstClear : DictsHaveKeyType.Current);
-
                 int roomDeaths;
                 long roomTimeTicks;
                 TimeSpan roomTimeSpan;
@@ -963,17 +1010,27 @@ public class RoomStatisticsDisplayer : Entity
                 TimeSpan roomRtaTimeSpan;
                 int roomStrawberriesCollected;
 
-                if (EndHelperModule.Settings.RoomStatMenu.MenuShowFirstClear && dealWithFirstClear)
+                if (shownMenuType == JournalRoomStatMenuTypeEnum.FirstClear)
                 {
                     // Show First Cycle
+                    if (dealWithFirstClear) EnsureDictsHaveKey(level, roomName, DictsHaveKeyType.FirstClear); // Safeguard. Should only matter when rebuilding.}
                     roomDeaths = EndHelperModule.SaveData.mapDict_roomStat_firstClear_death[mapNameSide_Internal][roomName];
                     roomTimeTicks = EndHelperModule.SaveData.mapDict_roomStat_firstClear_timer[mapNameSide_Internal][roomName];
                     roomRtaTimeTicks = EndHelperModule.SaveData.mapDict_roomStat_firstClear_rtatimer[mapNameSide_Internal][roomName];
                     roomStrawberriesCollected = EndHelperModule.SaveData.mapDict_roomStat_firstClear_strawberries[mapNameSide_Internal][roomName];
                 }
+                else if (shownMenuType == JournalRoomStatMenuTypeEnum.Saved)
+                {
+                    // Show saved stats
+                    roomDeaths = EndHelperModule.SaveData.mapDict_roomStat_latestSession_death[mapNameSide_Internal][roomName];
+                    roomTimeTicks = EndHelperModule.SaveData.mapDict_roomStat_latestSession_timer[mapNameSide_Internal][roomName];
+                    roomRtaTimeTicks = EndHelperModule.SaveData.mapDict_roomStat_latestSession_rtatimer[mapNameSide_Internal][roomName];
+                    roomStrawberriesCollected = EndHelperModule.SaveData.mapDict_roomStat_latestSession_strawberries[mapNameSide_Internal][roomName];
+                }
                 else
                 {
                     // Show current stats
+                    EnsureDictsHaveKey(level, roomName, DictsHaveKeyType.Current); // Safeguard. Should only matter when rebuilding.
                     roomDeaths = Convert.ToInt32(EndHelperModule.Session.roomStatDict_death[roomName]);
                     roomTimeTicks = Convert.ToInt64(EndHelperModule.Session.roomStatDict_timer[roomName]);
                     roomRtaTimeTicks = Convert.ToInt64(EndHelperModule.Session.roomStatDict_rtatimer[roomName]);
@@ -1016,7 +1073,7 @@ public class RoomStatisticsDisplayer : Entity
                     textScale = new Vector2(0.4f, 0.4f);
                 }
                 else if
-                (ActiveFont.WidthToNextLine(customRoomName, 0) * 0.7 > 510)
+                    (ActiveFont.WidthToNextLine(customRoomName, 0) * 0.7 > 510)
                 {
                     textScale = new Vector2(0.5f, 0.5f);
                 }
@@ -1036,7 +1093,8 @@ public class RoomStatisticsDisplayer : Entity
                     {
                         int colorIndex;
 
-                        if (EndHelperModule.Settings.RoomStatMenu.MenuShowFirstClear && dealWithFirstClear && EndHelperModule.SaveData.mapDict_roomStat_colorIndex[mapNameSide_Internal].ContainsKey(roomName))
+                        if (shownMenuType == JournalRoomStatMenuTypeEnum.FirstClear || shownMenuType == JournalRoomStatMenuTypeEnum.Saved
+                            && EndHelperModule.SaveData.mapDict_roomStat_colorIndex[mapNameSide_Internal].ContainsKey(roomName))
                         {
                             colorIndex = EndHelperModule.SaveData.mapDict_roomStat_colorIndex[mapNameSide_Internal][roomName];
                         }
@@ -1130,15 +1188,26 @@ public class RoomStatisticsDisplayer : Entity
             }
 
             // Total Stats
-            bool showTotalMapBerryCount = true;
-            if (!EndHelperModule.Settings.RoomStatMenu.MenuSpoilBerries && !SaveData.Instance.Areas_Safe[level.Session.Area.ID].Modes[(int)level.Session.Area.Mode].Completed)
-            {
-                showTotalMapBerryCount = false; // No berry count spoilery
-            }
+            bool showTotalMapBerryCount = EndHelperModule.Settings.RoomStatMenu.MenuSpoilBerries
+                                          || SaveData.Instance.Areas_Safe[level.Session.Area.ID].Modes[(int)level.Session.Area.Mode].Completed;
 
             String totalText = "Total";
-            if (filterSetting != roomStatMenuFilter.None) { totalText += $" [{filterString}]"; }
-            IconType iconType = EndHelperModule.Session.pauseTypeDict["Level_Invalid"] ? IconType.Gray : IconType.White;
+            if (filterSetting != RoomStatMenuFilter.None) { totalText += $" [{filterString}]"; }
+
+            IconType iconType = IconType.White;
+            if (
+                    // Null
+                (shownMenuType == null && EndHelperModule.Session.pauseTypeDict["Level_Invalid"])
+                ||  // First Clear
+                (shownMenuType == JournalRoomStatMenuTypeEnum.FirstClear
+                 && EndHelperModule.SaveData.mapDict_roomStat_firstClear_pauseType[mapNameSide_Internal].ContainsKey("Level_Invalid")
+                 && EndHelperModule.SaveData.mapDict_roomStat_firstClear_pauseType[mapNameSide_Internal]["Level_Invalid"])
+                || // Saved Clear
+                (shownMenuType == JournalRoomStatMenuTypeEnum.Saved
+                 && EndHelperModule.SaveData.mapDict_roomStat_latestSession_pauseType[mapNameSide_Internal].ContainsKey("Level_Invalid")
+                 && EndHelperModule.SaveData.mapDict_roomStat_latestSession_pauseType[mapNameSide_Internal]["Level_Invalid"])
+            )
+            { iconType = IconType.Gray; }
 
             ShowGuiStats(currentEffectiveRoomName, 100, 1010, 0.7f, Color.White, true, 0, true, true, false, showTotalMapBerryCount, level.Session.MapData.DetectedStrawberries, $"{totalText}: ", "", totalDeaths, totalTimer, totalRtaTimer, totalStrawberries, iconType);
         }
@@ -1148,6 +1217,7 @@ public class RoomStatisticsDisplayer : Entity
         const int instructionYPos = 1060;
         const float instructionScale = 0.4f;
         Color instructionColor = Color.LightGray;
+        bool allowFuseRoom = shownMenuType == null || (shownMenuType == JournalRoomStatMenuTypeEnum.FirstClear && dealWithFirstClear);
 
         if (!roomNameEditMenuOpen && !inCreateSegmentRoomMenu)
         {
@@ -1167,10 +1237,13 @@ public class RoomStatisticsDisplayer : Entity
             Input.GuiButton(Input.MenuConfirm, mode: Input.PrefixMode.Latest).DrawCentered(new Vector2(instructionXPos, instructionYPos), instructionColor, instructionScale, 0);
             instructionXPos += (int)(ActiveFont.WidthToNextLine("XXXXX", 0) * instructionScale);
 
-            ActiveFont.DrawOutline("Segment/Fuse Room:", new Vector2(instructionXPos, instructionYPos), new Vector2(0f, 0.5f), new Vector2(instructionScale, instructionScale), instructionColor, 2f, Color.Black);
-            instructionXPos += (int)(ActiveFont.WidthToNextLine("Segment/Fuse Room: XI", 0) * instructionScale);
-            Input.GuiButton(Input.MenuJournal, mode: Input.PrefixMode.Latest).DrawCentered(new Vector2(instructionXPos, instructionYPos), instructionColor, instructionScale, 0);
-            instructionXPos += (int)(ActiveFont.WidthToNextLine("XXXXX", 0) * instructionScale);
+            if (allowShowOldStats || dealWithFirstClear)
+            {
+                ActiveFont.DrawOutline("Change Stats: ", new Vector2(instructionXPos, instructionYPos), new Vector2(0f, 0.5f), new Vector2(instructionScale, instructionScale), instructionColor, 2f, Color.Black);
+                instructionXPos += (int)(ActiveFont.WidthToNextLine("Change Stats: XI", 0) * instructionScale);
+                Input.GuiButton(Input.MenuJournal, mode: Input.PrefixMode.Latest).DrawCentered(new Vector2(instructionXPos, instructionYPos), instructionColor, instructionScale, 0);
+                instructionXPos += (int)(ActiveFont.WidthToNextLine("XXXXX", 0) * instructionScale);
+            }
 
             if (dictSize > roomsPerColumn * 2)
             {
@@ -1179,6 +1252,14 @@ public class RoomStatisticsDisplayer : Entity
                 Input.GuiButton(Input.MenuLeft, mode: Input.PrefixMode.Latest).DrawCentered(new Vector2(instructionXPos, instructionYPos), instructionColor, instructionScale, 0);
                 instructionXPos += (int)(ActiveFont.WidthToNextLine("XX", 0) * instructionScale);
                 Input.GuiButton(Input.MenuRight, mode: Input.PrefixMode.Latest).DrawCentered(new Vector2(instructionXPos, instructionYPos), instructionColor, instructionScale, 0);
+                instructionXPos += (int)(ActiveFont.WidthToNextLine("XXXXX", 0) * instructionScale);
+            }
+
+            if (allowFuseRoom)
+            {
+                ActiveFont.DrawOutline("Segment/Fuse Room:", new Vector2(instructionXPos, instructionYPos), new Vector2(0f, 0.5f), new Vector2(instructionScale, instructionScale), instructionColor, 2f, Color.Black);
+                instructionXPos += (int)(ActiveFont.WidthToNextLine("Segment/Fuse Room: XI", 0) * instructionScale);
+                Input.GuiButton(Input.MenuDown, mode: Input.PrefixMode.Latest).DrawCentered(new Vector2(instructionXPos, instructionYPos), instructionColor, instructionScale, 0);
                 instructionXPos += (int)(ActiveFont.WidthToNextLine("XXXXX", 0) * instructionScale);
             }
         }
@@ -1285,16 +1366,19 @@ public class RoomStatisticsDisplayer : Entity
                 }
             }
 
-            // Scroll Sets of rooms
             MInput.Disabled = false;
             if (!roomNameEditMenuOpen)
             {
-                firstRowShown = Utils_General.ScrollInput(valueToChange: firstRowShown, increaseInput: Input.MenuDown, increaseValue: roomsPerColumn * 2,
-                    decreaseInput: Input.MenuUp, decreaseValue: roomsPerColumn * 2, minValue: 0, maxValue: (dictSize - 1) - (dictSize - 1) % (roomsPerColumn * 2), loopValues: false, doNotChangeIfPastCap: true,
-                    framesFirstHeldChange: 30, framesBetweenHeldChange: 5);
+                // Scroll sets of rooms
+                // firstRowShown = Utils_General.ScrollInput(valueToChange: firstRowShown, increaseInput: Input.MenuDown, increaseValue: roomsPerColumn * 2,
+                //     decreaseInput: Input.MenuUp, decreaseValue: roomsPerColumn * 2, minValue: 0, maxValue: (dictSize - 1) - (dictSize - 1) % (roomsPerColumn * 2), loopValues: false, doNotChangeIfPastCap: true,
+                //     framesFirstHeldChange: 30, framesBetweenHeldChange: 5);
                 firstRowShown = Utils_General.ScrollInput(valueToChange: firstRowShown, increaseInput: Input.MenuRight, increaseValue: roomsPerColumn * 2,
                     decreaseInput: Input.MenuLeft, decreaseValue: roomsPerColumn * 2, minValue: 0, maxValue: (dictSize - 1) - (dictSize - 1) % (roomsPerColumn * 2), loopValues: false, doNotChangeIfPastCap: true,
                     framesFirstHeldChange: 30, framesBetweenHeldChange: 5);
+
+                // Scroll stat type
+                if (Input.MenuJournal.Pressed) ValidateShownMenuType(1);
             }
 
             // Ensure room that is being renamed is currently viewble
@@ -1330,8 +1414,8 @@ public class RoomStatisticsDisplayer : Entity
                 // Allow moving rooms
                 if (Input.MenuJournal.Check)
                 {
-                    journalRoomStatMenuTypeEnum? menuType = EndHelperModule.Settings.RoomStatMenu.MenuShowFirstClear && dealWithFirstClear ? journalRoomStatMenuTypeEnum.FirstClear : null;
-                    EditingRoomMovePosition(oldEditingRoomIndex, editingRoomIndex, mapNameSide_Internal, menuType);
+                    //JournalRoomStatMenuTypeEnum? editMenuType = EndHelperModule.Settings.RoomStatMenu.MenuShowFirstClear && dealWithFirstClear ? JournalRoomStatMenuTypeEnum.FirstClear : null;
+                    EditingRoomMovePosition(oldEditingRoomIndex, editingRoomIndex, mapNameSide_Internal, shownMenuType);
                     renameRoomsMoveRooms = true;
                 }
                 else
@@ -1361,9 +1445,9 @@ public class RoomStatisticsDisplayer : Entity
             else if (Input.MenuConfirm.Pressed)
             {
                 // Change Filter
-                filterSetting = (roomStatMenuFilter)(((int)filterSetting + 1) % Enum.GetValues(typeof(roomStatMenuFilter)).Length);
+                filterSetting = (RoomStatMenuFilter)(((int)filterSetting + 1) % Enum.GetValues(typeof(RoomStatMenuFilter)).Length);
             }
-            else if (Input.MenuJournal.Pressed)
+            else if (Input.MenuDown.Pressed && allowFuseRoom)
             {
                 // Segment current room (bring up menu)
                 CreateSegmentRoomMenu(level, currentEffectiveRoomName, currentRoomName);
@@ -1573,7 +1657,7 @@ public class RoomStatisticsDisplayer : Entity
 
     public enum DictsHaveKeyType { All, FirstClear, Current }
     // This does not include latest session
-    public void EnsureDictsHaveKey(Level level, String roomName = null, DictsHaveKeyType dictsHaveKeyType = DictsHaveKeyType.All)
+    public void EnsureDictsHaveKey(Level level, String? roomName = null, DictsHaveKeyType dictsHaveKeyType = DictsHaveKeyType.All)
     {
         roomName ??= currentEffectiveRoomName;
         if (roomName == "") return;
@@ -1610,8 +1694,8 @@ public class RoomStatisticsDisplayer : Entity
         }
 
 
-        // All the first clear stuff
-        if (dictsHaveKeyType == DictsHaveKeyType.All)
+        // All the first clear stuff. (if allowShowOldStats, first clear should NOT change!)
+        if (dictsHaveKeyType == DictsHaveKeyType.All && !allowShowOldStats)
         {
             // For version updating - Empty/Nonexistent rtatimer: Copy from regular timer
             // If there's no regular timer, this won't run, and the next ver-updating will take over
@@ -1676,7 +1760,7 @@ public class RoomStatisticsDisplayer : Entity
             }
         }
 
-        else if (dictsHaveKeyType == DictsHaveKeyType.FirstClear)
+        else if (dictsHaveKeyType == DictsHaveKeyType.FirstClear && !allowShowOldStats)
         {
             if (dealWithFirstClear && !EndHelperModule.SaveData.mapDict_roomStat_firstClear_roomOrder[mapNameSide_Internal].Contains(roomName))
             {
@@ -1715,6 +1799,7 @@ public class RoomStatisticsDisplayer : Entity
                 EndHelperModule.Session.roomStatDict_timer[headRoom] = Convert.ToInt64(EndHelperModule.Session.roomStatDict_timer[headRoom]) + Convert.ToInt64(EndHelperModule.Session.roomStatDict_timer[combinedRoom]);
                 EndHelperModule.Session.roomStatDict_rtatimer[headRoom] = Convert.ToInt64(EndHelperModule.Session.roomStatDict_rtatimer[headRoom]) + Convert.ToInt64(EndHelperModule.Session.roomStatDict_rtatimer[combinedRoom]);
                 EndHelperModule.Session.roomStatDict_death.Remove(combinedRoom);
+                EndHelperModule.Session.roomStatDict_timer.Remove(combinedRoom);
                 EndHelperModule.Session.roomStatDict_rtatimer.Remove(combinedRoom);
             }
             if (EndHelperModule.Session.roomStatDict_strawberries.Contains(combinedRoom))
@@ -1829,9 +1914,9 @@ public class RoomStatisticsDisplayer : Entity
     //    return null;
     //}
 
-    private string getPreviousRoomToFuseWith(string roomName) // Return null if no previous room
+    private string? GetPreviousRoomToFuseWith(string roomName) // Return null if no previous room
     {
-        if (EndHelperModule.Settings.RoomStatMenu.MenuShowFirstClear && dealWithFirstClear)
+        if (shownMenuType == JournalRoomStatMenuTypeEnum.FirstClear)
         {
             // Check if first item
             int index = EndHelperModule.SaveData.mapDict_roomStat_firstClear_roomOrder[mapNameSide_Internal].IndexOf(roomName);
@@ -1842,6 +1927,18 @@ public class RoomStatisticsDisplayer : Entity
             }
 
             return EndHelperModule.SaveData.mapDict_roomStat_firstClear_roomOrder[mapNameSide_Internal][index - 1];
+        }
+        if (shownMenuType == JournalRoomStatMenuTypeEnum.Saved)
+        {
+            // Check if first item
+            int index = EndHelperModule.SaveData.mapDict_roomStat_latestSession_roomOrder[mapNameSide_Internal].IndexOf(roomName);
+            if (index <= 0)
+            {
+                // Either not found or first item. Either way, there is no previous room, so return null.
+                return null;
+            }
+
+            return EndHelperModule.SaveData.mapDict_roomStat_latestSession_roomOrder[mapNameSide_Internal][index - 1];
         }
         else
         {
@@ -1858,7 +1955,7 @@ public class RoomStatisticsDisplayer : Entity
         }
     }
 
-    static private int GetRoomSegCount(String roomName)
+    private static int GetRoomSegCount(String roomName)
     {
         roomName = GetRoomNameNoSeg(roomName);
 
@@ -2020,7 +2117,7 @@ public class RoomStatisticsDisplayer : Entity
         }
 
         // FUSE HEADER
-        String roomFuseWith = getPreviousRoomToFuseWith(currentEffectiveRoomName); // null = CANNOT FUSE
+        String roomFuseWith = GetPreviousRoomToFuseWith(currentEffectiveRoomName); // null = CANNOT FUSE
         String displayRoomFuseWith = roomFuseWith == null ? null : GetShortenedDisplayRoomName(roomFuseWith);
 
         if (GetRoomSegCount(currentEffectiveRoomName) > 1)
@@ -2155,7 +2252,7 @@ public class RoomStatisticsDisplayer : Entity
                 if (EndHelperModule.Settings.GameplayTweaksMenu.SeemlessRespawn == GameplayTweaks.SeemlessRespawnEnum.EnabledKeepState) { watermarkIconList.Add("endscreen_seemlessrespawn_keepstate"); }
                 else { watermarkIconList.Add("endscreen_seemlessrespawn_minor"); }
             }
-            if (EndHelperModule.Settings.GameplayTweaksMenu.NoRespawnAnimation) { watermarkIconList.Add("endscreen_norespawnanim"); }
+            //if (EndHelperModule.Settings.GameplayTweaksMenu.NoRespawnAnimation) { watermarkIconList.Add("endscreen_norespawnanim"); } // Previously gameplay tweak. Now qol, so this is unused.
             if (tweakList["grabrecast"] && (EndHelperModule.Settings.ToggleGrab.Buttons.Count > 0 || EndHelperModule.Settings.ToggleGrab.Keys.Count > 0)) watermarkIconList.Add("endscreen_grabrecast");
 
             if (watermarkIconList.Count > 0)

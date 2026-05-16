@@ -45,7 +45,7 @@ namespace Celeste.Mod.EndHelper.Utils
 
 
         public static float framesSinceEnteredRoom = 0;
-        public static Utils_General.Countdown disablePlayerDeathCountdown = new Utils_General.Countdown();
+        public static Countdown disablePlayerDeathCountdown = new Countdown();
 
 
         /// <summary>

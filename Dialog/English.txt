@@ -29,10 +29,6 @@ modoptions_EndHelperModule_DeathIgnoreLoadAfterDeath=Ignore Load State Death Aft
 modoptions_EndHelperModule_DeathIgnoreLoadAfterDeath_Desc=If enabled, if you load a state immediately after respawning, the death from loading the state will not be tracked.
 The room stat tracker menu will display an icon if this has been used.
 
-modoptions_EndHelperModule_MenuShowFirstClear=Show First Clear Stats
-modoptions_EndHelperModule_MenuShowFirstClear_Desc=In maps, if the map hasn't been cleared before,
-the stats display and menu will show the combined stats of all sessions.
-
 modoptions_EndHelperModule_StoredClears=Overwrite Saved Stats When
 modoptions_EndHelperModule_StoredClears_Desc=Whether if, upon rebeating a map, the stats will be saved over the previous clear's stats.
 Valid clears are clears from the start of the map without debug (non grayed-out timer).
@@ -109,7 +105,7 @@ EndHelper_Dialog_RoomStatisticsDisplayer_FirstClear=1st Clear Total
 EndHelper_Dialog_RoomStatisticsDisplayer_FirstRun=1st Run Total
 EndHelper_Dialog_RoomStatisticsDisplayer_Current=Current Run
 EndHelper_Dialog_RoomStatisticsDisplayer_MapNotClearedYet=In Progress
-EndHelper_Dialog_RoomStatisticsDisplayer_LastClear=Saved Clear
+EndHelper_Dialog_RoomStatisticsDisplayer_SavedClear=Saved Clear
 EndHelper_Dialog_RoomStatisticsDisplayer_Journal_NoMaps=No maps with data are available.
 Come back after playing some maps!
 EndHelper_Dialog_RoomStatisticsDisplayer_Journal_NoMaps_LowStorageSetting=No maps with data are available.
@@ -127,6 +123,7 @@ EndHelper_Dialog_MultiroomWatchtower_SpectatingUnable=No player to spectate. (Ho
 
 ######### Gameplay Tweaks #########
 modoptions_EndHelperModule_SubHeader_GameplayTweaks=Gameplay Tweaks
+(These may be considered cheating! A watermark will be displayed while using them.)
 
 # Toggle Grab Key
 modoptions_EndHelperModule_ToggleGrabMenu=Grab Recast Key
@@ -162,7 +159,8 @@ modoptions_EndHelperModule_ConvertDemo_EnabledDiagonal=Enabled - Diagonal
 
 
 modoptions_EndHelperModule_SeemlessRespawn=Seemless Respawn
-modoptions_EndHelperModule_SeemlessRespawn_Desc=Changes respawns to be more seemless by reloading the room without a wipe.
+modoptions_EndHelperModule_SeemlessRespawn_Desc=Changes respawns to be more seemless.
+Unlike the respawn changes in QOL tweaks, this significantly changes how respawns work internally!
 May be buggy in rooms which instantly teleport you after respawning, and with some modded entities!
 "Enabled - Keep State" isn't a proper respawn and keeps dash counts, velocity, held berries, etc.
 
@@ -176,8 +174,6 @@ modoptions_EndHelperModule_SeemlessRespawn_EnabledKeepState=Enabled - Keep State
 # No Respawn Animation
 modoptions_EndHelperModule_NoRespawnAnimation=No Respawn Animation
 modoptions_EndHelperModule_NoRespawnAnimation_Desc=Removes the respawn animation.
-Note that this lets you get control of Madeline earlier than normal.
-Combine with QOL Tweaks > Instant Respawn Transition for instant respawns!
 
 
 ######### QOL Tweaks #########
@@ -185,6 +181,7 @@ modoptions_EndHelperModule_SubHeader_QOLTweaks=QOL Tweaks
 
 ### QOL Tweaks SubMenu
 modoptions_EndHelperModule_QOLTweaksMenu=QOL Tweaks
+modoptions_EndHelperModule_SubSubHeader_Respawns=Respawn Changes
 
 # Autosave
 modoptions_EndHelperModule_AutosaveTime=Autosave Time

@@ -522,7 +522,7 @@ public class CassetteManagerTrigger : Trigger
             }
 
             // Step 1: Reset and Disable everything!
-            foreach (CassetteBlock cassetteBlock in base.Scene.Tracker.GetEntities<CassetteBlock>())
+            foreach (CassetteBlock cassetteBlock in Scene.Tracker.GetEntities<CassetteBlock>())
             {
                 DynamicData cassetteBlockData = DynamicData.For(cassetteBlock);
                 Vector2 initialPos = cassetteBlockData.Get<Vector2>("EndHelper_CassetteInitialPos") + new Vector2(0, 2);
@@ -535,7 +535,7 @@ public class CassetteManagerTrigger : Trigger
                 cassetteBlock.Activated = false; // Stop activating.
                 cassetteBlock.Collidable = false;
             }
-            foreach (CassetteListener component in base.Scene.Tracker.GetComponents<CassetteListener>())
+            foreach (CassetteListener component in Scene.Tracker.GetComponents<CassetteListener>())
             {
                 component.Activated = false; // Just no.
             }
@@ -543,7 +543,7 @@ public class CassetteManagerTrigger : Trigger
             // Reset the stuff attached to the cassette block too
             if (setBeatResetCassettePos)
             {
-                foreach (CassetteBlock cassetteBlock in base.Scene.Tracker.GetEntities<CassetteBlock>())
+                foreach (CassetteBlock cassetteBlock in Scene.Tracker.GetEntities<CassetteBlock>())
                 {
                     DynamicData cassetteBlockData = DynamicData.For(cassetteBlock);
                     List<StaticMover> staticMoverList = cassetteBlockData.Get<List<StaticMover>>("staticMovers");
@@ -629,7 +629,7 @@ public class CassetteManagerTrigger : Trigger
 
 
             // Step 1: Reset and Disable everything!
-            foreach (WonkyCassetteBlock cassetteBlock in base.Scene.Tracker.GetEntities<WonkyCassetteBlock>())
+            foreach (WonkyCassetteBlock cassetteBlock in Scene.Tracker.GetEntities<WonkyCassetteBlock>())
             {
                 DynamicData cassetteBlockData = DynamicData.For(cassetteBlock);
                 Vector2 initialPos = cassetteBlockData.Get<Vector2>("EndHelper_CassetteInitialPos") + new Vector2(0, 2);
@@ -658,7 +658,7 @@ public class CassetteManagerTrigger : Trigger
                 }
                 cassetteBlock.Collidable = false;
             }
-            foreach (WonkyCassetteListener wonkyListener in base.Scene.Tracker.GetComponents<WonkyCassetteListener>())
+            foreach (WonkyCassetteListener wonkyListener in Scene.Tracker.GetComponents<WonkyCassetteListener>())
             {
                 wonkyListener.Activated = false; // Just no.
             }
@@ -666,7 +666,7 @@ public class CassetteManagerTrigger : Trigger
             // Reset the stuff attached to the cassette block too
             if (setBeatResetCassettePos)
             {
-                foreach (WonkyCassetteBlock cassetteBlock in base.Scene.Tracker.GetEntities<WonkyCassetteBlock>())
+                foreach (WonkyCassetteBlock cassetteBlock in Scene.Tracker.GetEntities<WonkyCassetteBlock>())
                 {
                     DynamicData cassetteBlockData = DynamicData.For(cassetteBlock);
                     List<StaticMover> staticMoverList = cassetteBlockData.Get<List<StaticMover>>("staticMovers");
@@ -696,7 +696,7 @@ public class CassetteManagerTrigger : Trigger
 
             int beatInBar = cassetteWonkyBeatIndex / (16 / c_beatLength) % c_barLength;
 
-            foreach (WonkyCassetteListener wonkyListener in base.Scene.Tracker.GetComponents<WonkyCassetteListener>())
+            foreach (WonkyCassetteListener wonkyListener in Scene.Tracker.GetComponents<WonkyCassetteListener>())
             {
                 if (wonkyListener.ShouldBeActive(beatInBar) && !wonkyListener.Activated)
                 {
@@ -783,7 +783,7 @@ public class CassetteManagerTrigger : Trigger
     // Currently UNUSED.
     private void RevertWillActivate(int index)
     {
-        foreach (CassetteBlock entity in base.Scene.Tracker.GetEntities<CassetteBlock>())
+        foreach (CassetteBlock entity in Scene.Tracker.GetEntities<CassetteBlock>())
         {
             if (entity.Index == index)
             {
@@ -793,7 +793,7 @@ public class CassetteManagerTrigger : Trigger
             }
         }
 
-        foreach (CassetteListener component in base.Scene.Tracker.GetComponents<CassetteListener>())
+        foreach (CassetteListener component in Scene.Tracker.GetComponents<CassetteListener>())
         {
             if (component.Index == index)
             {

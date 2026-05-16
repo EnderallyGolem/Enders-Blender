@@ -44,7 +44,7 @@ namespace Celeste.Mod.EndHelper.Deprecated.Utils
             IL.Celeste.CassetteBlockManager.AdvanceMusic -= ILHook_CassetteBlockManagerAdvMusic;
         }
 
-        private static void Hook_CassetteBlockAwake(On.Celeste.CassetteBlock.orig_Awake orig, global::Celeste.CassetteBlock self, Scene scene)
+        private static void Hook_CassetteBlockAwake(On.Celeste.CassetteBlock.orig_Awake orig, CassetteBlock self, Scene scene)
         {
             // Set initial dynamic data stuff
             DynamicData cassetteBlockData = DynamicData.For(self);
@@ -69,7 +69,7 @@ namespace Celeste.Mod.EndHelper.Deprecated.Utils
             }
         }
 
-        private static void Hook_CassetteBlockManagerAwake(On.Celeste.CassetteBlockManager.orig_Awake orig, global::Celeste.CassetteBlockManager self, Scene scene)
+        private static void Hook_CassetteBlockManagerAwake(On.Celeste.CassetteBlockManager.orig_Awake orig, CassetteBlockManager self, Scene scene)
         {
             // Set initial dynamic data stuff
             DynamicData cassetteManagerData = DynamicData.For(self);
@@ -101,7 +101,7 @@ namespace Celeste.Mod.EndHelper.Deprecated.Utils
             if (cursor.TryGotoNext(MoveType.After, instr => instr.MatchLdarg(1)))
             {
                 // Multiply `time` by CassetteManagerTrigger multiplier
-                cursor.EmitDelegate<Func<float, float>>(Utils_CassetteManager.ManagerMultiplyCassetteSpeed);
+                cursor.EmitDelegate<Func<float, float>>(ManagerMultiplyCassetteSpeed);
             }
 
             // Find "if (leadBeats > 0)" condition check. Replace the whole thing with new logic if using the manager
@@ -112,7 +112,7 @@ namespace Celeste.Mod.EndHelper.Deprecated.Utils
             ))
             {
                 // Condition in IL code is 0 <= leadBeats mean skip instr. This here force-changes the 0 to int limit (true, skip) if using the manager.
-                cursor.EmitDelegate<Func<int, int>>(Utils_CassetteManager.ManagerLeadBeatShenanigans);
+                cursor.EmitDelegate<Func<int, int>>(ManagerLeadBeatShenanigans);
             }
         }
 

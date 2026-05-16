@@ -138,7 +138,7 @@ namespace Celeste.Mod.EndHelper.Deprecated.Integration
                 {
                     List<List<object>> multiplierList = wonkyCassetteManagerData.Get<List<List<object>>>("EndHelper_CassetteManagerTriggerTempoMultiplierList");
                     bool multiplyOnTop = wonkyCassetteManagerData.Get<bool>("EndHelper_CassetteManagerTriggerTempoMultiplierMultiplyOnTop");
-                    int beatIndex = QuantumMechanicsIntegration.QMInte_MusicBeatIndex();
+                    int beatIndex = QMInte_MusicBeatIndex();
                     int beatIndexMax = wonkyCassetteManagerData.Get<int>("maxBeats");
                     int c_introBeats = wonkyCassetteManagerData.Get<int>("introBeats");
 

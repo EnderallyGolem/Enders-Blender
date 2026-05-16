@@ -34,8 +34,8 @@ namespace Celeste.Mod.EndHelper.Utils
         private static int journalStatisticsFirstRowShown = 0;
         private static int journalStatisticsEditingRoomIndex = 0;
 
-        internal enum journalRoomStatMenuTypeEnum { FirstClear, Saved }
-        private static journalRoomStatMenuTypeEnum journalRoomStatMenuType = journalRoomStatMenuTypeEnum.FirstClear;
+        internal enum JournalRoomStatMenuTypeEnum { FirstClear=0, Saved=1 }
+        private static JournalRoomStatMenuTypeEnum journalRoomStatMenuType = JournalRoomStatMenuTypeEnum.FirstClear;
 
         internal static float journalStatisticsBackgroundAlpha;
 
@@ -143,7 +143,7 @@ namespace Celeste.Mod.EndHelper.Utils
 
             journalOpen = true;
 
-            Utils_JournalStatistics.InitEmotes();
+            InitEmotes();
 
             List<AreaStats> mapAreaStatsList = [];
 
@@ -157,7 +157,7 @@ namespace Celeste.Mod.EndHelper.Utils
                 LevelSetStats areaLevelSet = null;
                 if (areaLevelSetName != null)
                 {
-                    areaLevelSet = global::Celeste.SaveData.Instance.GetLevelSetStatsFor(areaLevelSetName);
+                    areaLevelSet = SaveData.Instance.GetLevelSetStatsFor(areaLevelSetName);
                 }
 
                 List<AreaStats> sortedMaps = areaLevelSet?.Areas;
@@ -193,7 +193,7 @@ namespace Celeste.Mod.EndHelper.Utils
             else
             {
                 //Logger.Log(LogLevel.Info, "EndHelper/main", $"the journal is in overworld (or lobby no collabutil????)");
-                foreach (AreaStats overworldMap in global::Celeste.SaveData.Instance.Areas_Safe)
+                foreach (AreaStats overworldMap in SaveData.Instance.Areas_Safe)
                 {
                     AreaData areaData = AreaData.Get(overworldMap.ID_Safe);
                     if (areaData.Interlude_Safe)
@@ -230,13 +230,13 @@ namespace Celeste.Mod.EndHelper.Utils
                 AreaKey mapKeyC = areaKey; mapKeyC.Mode = AreaMode.CSide;
 
 
-                String mapNameSide_Display_A = RoomStatisticsDisplayer.GetMapNameSideDisplay(mapKeyA);
-                String mapNameSide_Internal_A = RoomStatisticsDisplayer.GetMapNameSideInternal(mapKeyA);
-                Color mapNameColor = RoomStatisticsDisplayer.GetMapColour(mapKeyA);
-                String mapNameSide_Display_B = RoomStatisticsDisplayer.GetMapNameSideDisplay(mapKeyB);
-                String mapNameSide_Internal_B = RoomStatisticsDisplayer.GetMapNameSideInternal(mapKeyB);
-                String mapNameSide_Display_C = RoomStatisticsDisplayer.GetMapNameSideDisplay(mapKeyC);
-                String mapNameSide_Internal_C = RoomStatisticsDisplayer.GetMapNameSideInternal(mapKeyC);
+                String mapNameSide_Display_A = GetMapNameSideDisplay(mapKeyA);
+                String mapNameSide_Internal_A = GetMapNameSideInternal(mapKeyA);
+                Color mapNameColor = GetMapColour(mapKeyA);
+                String mapNameSide_Display_B = GetMapNameSideDisplay(mapKeyB);
+                String mapNameSide_Internal_B = GetMapNameSideInternal(mapKeyB);
+                String mapNameSide_Display_C = GetMapNameSideDisplay(mapKeyC);
+                String mapNameSide_Internal_C = GetMapNameSideInternal(mapKeyC);
 
                 if ((EndHelperModule.SaveData.mapDict_roomStat_firstClear_roomOrder.ContainsKey(mapNameSide_Internal_A) && EndHelperModule.SaveData.mapDict_roomStat_firstClear_roomOrder[mapNameSide_Internal_A].Count > 0)
                     || EndHelperModule.SaveData.mapDict_roomStat_latestSession_roomOrder.ContainsKey(mapNameSide_Internal_A))
@@ -300,7 +300,7 @@ namespace Celeste.Mod.EndHelper.Utils
                     if (Input.MenuCancel.Pressed)
                     {
                         string clipboardToolTipMsg = Dialog.Get("EndHelper_Dialog_RoomStatisticsDisplayer_CopiedToClipboard");
-                        RoomStatisticsDisplayer.ShowTooltip(clipboardToolTipMsg, 2f);
+                        ShowTooltip(clipboardToolTipMsg, 2f);
                         TextInput.SetClipboardText(journalStatisticsClipboardText);
                     }
                     Utils_General.ConsumeInput(Input.ESC, 3);
@@ -341,7 +341,7 @@ namespace Celeste.Mod.EndHelper.Utils
                     // Tab changing stat type
                     if (Input.MenuJournal.Pressed)
                     {
-                        journalRoomStatMenuType = (journalRoomStatMenuTypeEnum)(((int)journalRoomStatMenuType + 1) % Enum.GetValues(typeof(journalRoomStatMenuTypeEnum)).Length);
+                        journalRoomStatMenuType = (JournalRoomStatMenuTypeEnum)(((int)journalRoomStatMenuType + 1) % Enum.GetValues(typeof(JournalRoomStatMenuTypeEnum)).Length);
                     }
 
                     // Scroll through maps
@@ -488,7 +488,7 @@ namespace Celeste.Mod.EndHelper.Utils
 
             // Map Name Header
             ActiveFont.DrawOutline($"{mapNameSide_Display}", new Vector2(960, 5), new Vector2(0.5f, 0f), new Vector2(0.7f, 0.7f), mapNameColor, 2f, Color.Black);
-            if (journalRoomStatMenuType == journalRoomStatMenuTypeEnum.FirstClear)
+            if (journalRoomStatMenuType == JournalRoomStatMenuTypeEnum.FirstClear)
             {
                 String firstClearMsg;
 
@@ -504,7 +504,7 @@ namespace Celeste.Mod.EndHelper.Utils
             }
             else
             {
-                String currentSessionMsg = Dialog.Clean("EndHelper_Dialog_RoomStatisticsDisplayer_LastClear");
+                String currentSessionMsg = Dialog.Clean("EndHelper_Dialog_RoomStatisticsDisplayer_SavedClear");
                 ActiveFont.DrawOutline($"({currentSessionMsg})", new Vector2(960, 40), new Vector2(0.5f, 0f), new Vector2(0.45f, 0.45f), Color.DarkGray, 2f, Color.Black);
             }
 
@@ -515,7 +515,7 @@ namespace Celeste.Mod.EndHelper.Utils
             const float instructionScale = 0.4f;
             Color instructionColor = Color.LightGray;
 
-            if (journalRoomStatMenuType == journalRoomStatMenuTypeEnum.FirstClear)
+            if (journalRoomStatMenuType == JournalRoomStatMenuTypeEnum.FirstClear)
             {
                 if (EndHelperModule.SaveData.mapDict_roomStat_firstClear_roomOrder.TryGetValue(mapNameSide_Internal, out List<string> value)
                     && EndHelperModule.SaveData.mapDict_roomStat_firstClear_roomOrder[mapNameSide_Internal].Count > 0)
@@ -561,7 +561,7 @@ namespace Celeste.Mod.EndHelper.Utils
                 TimeSpan roomRtaTimeSpan;
                 int roomStrawberriesCollected = 0;
 
-                if (journalRoomStatMenuType == journalRoomStatMenuTypeEnum.FirstClear)
+                if (journalRoomStatMenuType == JournalRoomStatMenuTypeEnum.FirstClear)
                 {
                     // Show First Cycle
                     roomDeaths = EndHelperModule.SaveData.mapDict_roomStat_firstClear_death[mapNameSide_Internal][roomName];
@@ -586,22 +586,22 @@ namespace Celeste.Mod.EndHelper.Utils
                 Utils_General.MinimalGameplayFormat(roomTimeSpan);
 
                 // Filtering
-                bool checkRTA = EndHelperModule.Settings.RoomStatMenu.MenuShowTime == EndHelperModuleSettings.RoomStatMenuSubMenu.MenuShowTimeEnum.RTA;
+                bool checkRTA = EndHelperModule.Settings.RoomStatMenu.MenuShowTime == RoomStatMenuSubMenu.MenuShowTimeEnum.RTA;
                 switch (filterSetting)
                 {
-                    case roomStatMenuFilter.Death0:
+                    case RoomStatMenuFilter.Death0:
                         if (roomDeaths <= 0) { continue; }
                         break;
 
-                    case roomStatMenuFilter.Death10:
+                    case RoomStatMenuFilter.Death10:
                         if (roomDeaths <= 10) { continue; }
                         break;
 
-                    case roomStatMenuFilter.Time60s:
+                    case RoomStatMenuFilter.Time60s:
                         if ( (checkRTA && roomRtaTimeSpan.TotalSeconds <= 60) || (!checkRTA && roomTimeSpan.TotalSeconds <= 60)) { continue; }
                         break;
 
-                    case roomStatMenuFilter.Renamed:
+                    case RoomStatMenuFilter.Renamed:
                         String defaultName = roomName;
                         defaultName = $"{mapNameSide_Internal}_{roomName}".DialogCleanOrNull(Dialog.Languages["english"]) ?? roomName;
 
@@ -617,19 +617,19 @@ namespace Celeste.Mod.EndHelper.Utils
             String filterString;
             switch (filterSetting)
             {
-                case roomStatMenuFilter.Death0:
+                case RoomStatMenuFilter.Death0:
                     filterString = "≥1 Death";
                     break;
 
-                case roomStatMenuFilter.Death10:
+                case RoomStatMenuFilter.Death10:
                     filterString = "≥10 Deaths";
                     break;
 
-                case roomStatMenuFilter.Time60s:
+                case RoomStatMenuFilter.Time60s:
                     filterString = "≥60s";
                     break;
 
-                case roomStatMenuFilter.Renamed:
+                case RoomStatMenuFilter.Renamed:
                     filterString = "Renamed";
                     break;
 
@@ -722,7 +722,7 @@ namespace Celeste.Mod.EndHelper.Utils
                 TimeSpan roomRtaTimeSpan;
                 int roomStrawberriesCollected = 0;
 
-                if (journalRoomStatMenuType == journalRoomStatMenuTypeEnum.FirstClear)
+                if (journalRoomStatMenuType == JournalRoomStatMenuTypeEnum.FirstClear)
                 {
                     // Show First Cycle
                     roomDeaths = EndHelperModule.SaveData.mapDict_roomStat_firstClear_death[mapNameSide_Internal][roomName];
@@ -816,7 +816,7 @@ namespace Celeste.Mod.EndHelper.Utils
                         journalStatisticsEditingRoomName = roomName; // Update editingRoomName while updating the bg
                         backgroundTextureEdit.Draw(new Vector2(startX + col2BufferCurrent, startY + heightBetweenRows * displayRow), Vector2.Zero, bgColor);
 
-                        if (RoomStatisticsDisplayer.renameRoomsMoveRooms)
+                        if (renameRoomsMoveRooms)
                         {
                             moveRoomArrows.DrawOutline(new Vector2(startX + col2BufferCurrent - 40, startY + heightBetweenRows * displayRow), new Vector2(0.5f, 0.5f), Color.White, 1.3f);
                         }
@@ -884,15 +884,15 @@ namespace Celeste.Mod.EndHelper.Utils
             }
 
             String totalText = "Total";
-            if (filterSetting != roomStatMenuFilter.None) { totalText += $" [{filterString}]"; }
+            if (filterSetting != RoomStatMenuFilter.None) { totalText += $" [{filterString}]"; }
 
             IconType iconType = IconType.White;
-            if ((journalRoomStatMenuType == journalRoomStatMenuTypeEnum.FirstClear && EndHelperModule.SaveData.mapDict_roomStat_firstClear_pauseType[mapNameSide_Internal].ContainsKey("Level_Invalid") && EndHelperModule.SaveData.mapDict_roomStat_firstClear_pauseType[mapNameSide_Internal]["Level_Invalid"])
-                || (journalRoomStatMenuType == journalRoomStatMenuTypeEnum.Saved && EndHelperModule.SaveData.mapDict_roomStat_latestSession_pauseType[mapNameSide_Internal].ContainsKey("Level_Invalid") && EndHelperModule.SaveData.mapDict_roomStat_latestSession_pauseType[mapNameSide_Internal]["Level_Invalid"]))
+            if ((journalRoomStatMenuType == JournalRoomStatMenuTypeEnum.FirstClear && EndHelperModule.SaveData.mapDict_roomStat_firstClear_pauseType[mapNameSide_Internal].ContainsKey("Level_Invalid") && EndHelperModule.SaveData.mapDict_roomStat_firstClear_pauseType[mapNameSide_Internal]["Level_Invalid"])
+                || (journalRoomStatMenuType == JournalRoomStatMenuTypeEnum.Saved && EndHelperModule.SaveData.mapDict_roomStat_latestSession_pauseType[mapNameSide_Internal].ContainsKey("Level_Invalid") && EndHelperModule.SaveData.mapDict_roomStat_latestSession_pauseType[mapNameSide_Internal]["Level_Invalid"]))
             {
                 iconType = IconType.Gray;
             }
-            RoomStatisticsDisplayer.ShowGuiStats("", 100, 1010, 0.7f, Color.White, true, 0, true, true, false, showTotalMapBerryCount, mapTotalStrawberries, $"{totalText}: ", "", totalDeaths, totalTimer, totalRtaTimer, totalStrawberries, iconType);
+            ShowGuiStats("", 100, 1010, 0.7f, Color.White, true, 0, true, true, false, showTotalMapBerryCount, mapTotalStrawberries, $"{totalText}: ", "", totalDeaths, totalTimer, totalRtaTimer, totalStrawberries, iconType);
 
             // Instructions
             if (!journalStatisticsRoomNameEditMenuOpen)
@@ -966,7 +966,7 @@ namespace Celeste.Mod.EndHelper.Utils
             // Timer and Death Count Freeze Icons
             String pauseIconMsg = "";
 
-            if (journalRoomStatMenuType == journalRoomStatMenuTypeEnum.FirstClear)
+            if (journalRoomStatMenuType == JournalRoomStatMenuTypeEnum.FirstClear)
             {
                 if (!EndHelperModule.SaveData.mapDict_roomStat_firstClear_pauseType[mapNameSide_Internal].ContainsKey("Pause")) { EndHelperModule.SaveData.mapDict_roomStat_firstClear_pauseType[mapNameSide_Internal]["Pause"] = false; }
                 if (!EndHelperModule.SaveData.mapDict_roomStat_firstClear_pauseType[mapNameSide_Internal].ContainsKey("Inactive")) { EndHelperModule.SaveData.mapDict_roomStat_firstClear_pauseType[mapNameSide_Internal]["Inactive"] = false; }
@@ -1109,7 +1109,7 @@ namespace Celeste.Mod.EndHelper.Utils
                 // Allow moving rooms
                 if (Input.MenuJournal.Check)
                 {
-                    Utils_JournalStatistics.EditingRoomMovePosition(oldEditingRoomIndex, journalStatisticsEditingRoomIndex, mapNameSide_Internal, journalRoomStatMenuType);
+                    EditingRoomMovePosition(oldEditingRoomIndex, journalStatisticsEditingRoomIndex, mapNameSide_Internal, journalRoomStatMenuType);
                     renameRoomsMoveRooms = true;
                 }
                 else
@@ -1142,7 +1142,7 @@ namespace Celeste.Mod.EndHelper.Utils
                 else if (Input.MenuConfirm.Pressed)
                 {
                     // Change Filter
-                    filterSetting = (roomStatMenuFilter)(((int)filterSetting + 1) % Enum.GetValues(typeof(roomStatMenuFilter)).Length);
+                    filterSetting = (RoomStatMenuFilter)(((int)filterSetting + 1) % Enum.GetValues(typeof(RoomStatMenuFilter)).Length);
                 }
             }
             if (Engine.Scene is Level)
@@ -1165,7 +1165,7 @@ namespace Celeste.Mod.EndHelper.Utils
             }
         } 
 
-        public static void EditingRoomMovePosition(int initialPosIndex, int finalPosIndex, string mapNameSide_Internal, journalRoomStatMenuTypeEnum? menuType)
+        public static void EditingRoomMovePosition(int initialPosIndex, int finalPosIndex, string mapNameSide_Internal, JournalRoomStatMenuTypeEnum? menuType)
         {
             if (initialPosIndex == finalPosIndex)
             {
@@ -1184,7 +1184,7 @@ namespace Celeste.Mod.EndHelper.Utils
                     EndHelperModule.Session.roomStatDict_timer.RemoveAt(initialPosIndex);
                     EndHelperModule.Session.roomStatDict_timer.Insert(finalPosIndex, roomNameKey, value_timer);
 
-                    long value_rtatimer = Convert.ToInt64(EndHelperModule.Session.roomStatDict_timer[initialPosIndex]);
+                    long value_rtatimer = Convert.ToInt64(EndHelperModule.Session.roomStatDict_rtatimer[initialPosIndex]);
                     EndHelperModule.Session.roomStatDict_rtatimer.RemoveAt(initialPosIndex);
                     EndHelperModule.Session.roomStatDict_rtatimer.Insert(finalPosIndex, roomNameKey, value_rtatimer);
 
@@ -1198,13 +1198,13 @@ namespace Celeste.Mod.EndHelper.Utils
 
                     break;
 
-                case journalRoomStatMenuTypeEnum.FirstClear:
+                case JournalRoomStatMenuTypeEnum.FirstClear:
                     String roomNameFirstClear = EndHelperModule.SaveData.mapDict_roomStat_firstClear_roomOrder[mapNameSide_Internal][initialPosIndex];
                     EndHelperModule.SaveData.mapDict_roomStat_firstClear_roomOrder[mapNameSide_Internal].RemoveAt(initialPosIndex);
                     EndHelperModule.SaveData.mapDict_roomStat_firstClear_roomOrder[mapNameSide_Internal].Insert(finalPosIndex, roomNameFirstClear);
                     break;
 
-                case journalRoomStatMenuTypeEnum.Saved:
+                case JournalRoomStatMenuTypeEnum.Saved:
                     String roomNameLastSession = EndHelperModule.SaveData.mapDict_roomStat_latestSession_roomOrder[mapNameSide_Internal][initialPosIndex];
                     EndHelperModule.SaveData.mapDict_roomStat_latestSession_roomOrder[mapNameSide_Internal].RemoveAt(initialPosIndex);
                     EndHelperModule.SaveData.mapDict_roomStat_latestSession_roomOrder[mapNameSide_Internal].Insert(finalPosIndex, roomNameLastSession);
@@ -1225,7 +1225,7 @@ namespace Celeste.Mod.EndHelper.Utils
 
 
             // Shh! Don't tell anybody!
-            DateTime dateTime = System.DateTime.Today;
+            DateTime dateTime = DateTime.Today;
             int day = dateTime.Day;
             int month = dateTime.Month;
 

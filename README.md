@@ -55,9 +55,18 @@ Some of these can be overridden per-map with a Gameplay Tweaks Override Trigger.
 
 Changelog:
 
-# 1.2.4:
-- Room stats tracker: The save stats menu now defaults to neither option being selected, to prevent accidental clicking.
-- ....?
+# 1.3:
+- Room stats tracker: 
+	- While in a map, the type of stats shown can be toggled.
+		- Before clearing a map, the current stat and first clear stat can be toggled (with the first clear stats being the default).
+		- After clearing a map, the current stat and old stats (first clear and saved, previously viewable in the journal) can be viewed while in the map.
+		- The Show First Clear Stats setting has been removed, since it can be toggled from within the menu.
+	- The save stats menu now defaults to neither option being selected, to prevent accidental clicking.
+	- Fixed a crash when both fusing and rearranging rooms.
+- QOL Tweaks:
+	- Instant Respawn Transition now also hides the 2nd half of the respawn animation.
+	- No Respawn Animation has been modified to speed up the game to achieve the effect, like speedrun tools (but does not speed up the timer).
+		- (Since it does not mess with cycles anymore, it has been shifted to the QOL tweaks menu).
 
 # 1.2.3:
 - Room stats tracker crash hotfix? Hopefully?
