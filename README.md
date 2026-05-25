@@ -55,6 +55,10 @@ Some of these can be overridden per-map with a Gameplay Tweaks Override Trigger.
 
 Changelog:
 
+# 1.3.1
+- Removed deprecated entities from lang
+
+
 # 1.3:
 - Room stats tracker: 
 	- While in a map, the type of stats shown can be toggled.
