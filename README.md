@@ -14,8 +14,9 @@ Calling it a blender was funnier. Too lazy to change the internal names though.
 - Stats Menu
     - Menu which shows information for all rooms
     - Rooms can be fused together, segmented, or rearranged
-    - Total first clear stats and one other clear's stats are saved and are viewable in the journal
+    - Total first clear stats and one other clear's stats are saved and are viewable in the map and in the journal
     - Stats can be copied onto clipboard
+	- Current room's death, time and real time stats can be modified with the debug command endersblender_roomstats
 
 ###### QOL Tweaks
 - Quick-Retry Keybind
@@ -56,7 +57,15 @@ Some of these can be overridden per-map with a Gameplay Tweaks Override Trigger.
 Changelog:
 
 # 1.3.1
-- Removed deprecated entities from lang
+
+- Room stats tracker
+	- Added debug command endersblender_roomstats. Can be use to modify the time, rta time or death in the current room.
+
+- Misc:
+	- Expanded options for freezing chapter timer to include inactivity.
+	- Added option for freezing file timer.
+	- Removed icons displayed when chapter timer was modified due to settings.
+	- Removed deprecated entities from lang.
 
 
 # 1.3:

@@ -15,7 +15,7 @@ modoptions_EndHelperModule_SubHeader_RoomStat=Room Statistics
 
 # Room Statistics Menu
 modoptions_EndHelperModule_RoomStatMenu=Room Stat Tracker
-modoptions_EndHelperModule_PauseOption=Freeze Room Timer When
+modoptions_EndHelperModule_PauseOption=Freeze Room Timer
 modoptions_EndHelperModule_PauseOption_Desc=AFK: No input for 30s. Inactive: In dummy state (Eg: in cutscene, using watchtower)
 The room stat tracker menu will display icons if these have been used.
 modoptions_EndHelperModule_PauseOption_None=Never
@@ -29,7 +29,7 @@ modoptions_EndHelperModule_DeathIgnoreLoadAfterDeath=Ignore Load State Death Aft
 modoptions_EndHelperModule_DeathIgnoreLoadAfterDeath_Desc=If enabled, if you load a state immediately after respawning, the death from loading the state will not be tracked.
 The room stat tracker menu will display an icon if this has been used.
 
-modoptions_EndHelperModule_StoredClears=Overwrite Saved Stats When
+modoptions_EndHelperModule_StoredClears=Overwrite Saved Stats
 modoptions_EndHelperModule_StoredClears_Desc=Whether if, upon rebeating a map, the stats will be saved over the previous clear's stats.
 Valid clears are clears from the start of the map without debug (non grayed-out timer).
 modoptions_EndHelperModule_StoredClears_Always=Always
@@ -224,13 +224,32 @@ modoptions_EndHelperModule_PreventAccidentalQuit_Desc=Adds a cooldown to Restart
 modoptions_EndHelperModule_SubHeader_Misc=Miscellaneous Stuff
 
 # Freeze Level Timer
-modoptions_EndHelperModule_PauseOptionLevel=Freeze Level Timer When
-modoptions_EndHelperModule_PauseOptionLevel_Desc=Does not affect the File time. This also affects Journal times! AFK: No input for 30s.
-Icons will be displayed under the speedrun timer when the game is paused if used.
+modoptions_EndHelperModule_PauseOptionLevel=Freeze Chapter Timer
+modoptions_EndHelperModule_PauseOptionLevel_Desc=This also affects Journal times! AFK: No input for 30s.
+Inactive: In dummy state (Eg: in cutscene, using watchtower)
 modoptions_EndHelperModule_PauseOptionLevel_None=Never
 modoptions_EndHelperModule_PauseOptionLevel_Pause=Paused
 modoptions_EndHelperModule_PauseOptionLevel_AFK=AFK
 modoptions_EndHelperModule_PauseOptionLevel_PauseAFK=Paused / AFK
+modoptions_EndHelperModule_PauseOptionLevel_PauseInactive=Paused / Inactive
+modoptions_EndHelperModule_PauseOptionLevel_PauseInactiveAFK=Paused / Inactive / AFK
+
+modoptions_EndHelperModule_PauseOptionFile=Freeze File Timer
+modoptions_EndHelperModule_PauseOptionFile_Desc=AFK: No input for 30s.
+Inactive: In dummy state (Eg: in cutscene, using watchtower)
+modoptions_EndHelperModule_PauseOptionFile_None=Never
+modoptions_EndHelperModule_PauseOptionFile_Pause=Paused
+modoptions_EndHelperModule_PauseOptionFile_AFK=AFK
+modoptions_EndHelperModule_PauseOptionFile_PauseAFK=Paused / AFK
+modoptions_EndHelperModule_PauseOptionFile_PauseInactive=Paused / Inactive
+modoptions_EndHelperModule_PauseOptionFile_PauseInactiveAFK=Paused / Inactive / AFK
+
+
+
+
+
+
+
 
 
 # ----------------------------------  Map Stuff  ----------------------------------------
@@ -310,10 +329,6 @@ EndHelperTest_Tutorial_RoomSwap_ChangeRespawnTrigger=Room-Swap Change Respawn Tr
 EndHelperTest_Tutorial_RoomSwap_ChangeRespawnTrigger_Desc=Normal Trigger will break!
 EndHelperTest_Tutorial_RoomSwap_RespawnForceSameRoomTrigger=Respawn Force Same Room Trigger
 EndHelperTest_Tutorial_RoomSwap_RespawnForceSameRoomTrigger_Desc=Add to every room in grid!
-
-
-# ----------------------------------  Death Warp  ----------------------------------------
-EndHelperTest_Tutorial_DeathHandler_Category=Death Handler
 
 
 

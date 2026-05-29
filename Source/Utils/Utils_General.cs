@@ -14,7 +14,33 @@ using System.Threading.Tasks;
 
 namespace Celeste.Mod.EndHelper.Utils
 {
-    static internal class Utils_General
+    public static class Utils_General_Public
+    {
+        public enum TimerPauseScenarioEnum { None, Pause, AFK, PauseAFK, PauseInactive, PauseInactiveAFK }
+
+        public static bool TimerPauseScenarioCheck(TimerPauseScenarioEnum timerPauseScenarioEnum, String checkRef)
+        {
+            if (checkRef == "pause")
+            {
+                return timerPauseScenarioEnum
+                    is TimerPauseScenarioEnum.Pause or TimerPauseScenarioEnum.PauseAFK
+                    or TimerPauseScenarioEnum.PauseInactive or TimerPauseScenarioEnum.PauseInactiveAFK;
+            }
+            if (checkRef == "afk")
+            {
+                return timerPauseScenarioEnum
+                    is TimerPauseScenarioEnum.AFK or TimerPauseScenarioEnum.PauseAFK or TimerPauseScenarioEnum.PauseInactiveAFK;
+            }
+            if (checkRef == "inactive")
+            {
+                return timerPauseScenarioEnum is TimerPauseScenarioEnum.PauseInactive or TimerPauseScenarioEnum.PauseInactiveAFK;
+            }
+            throw new Exception("Invalid checkRef: Either pause, afk or inactive");
+        }
+    }
+
+
+    internal static class Utils_General
     {
         public class Countdown
         {
@@ -42,11 +68,8 @@ namespace Celeste.Mod.EndHelper.Utils
             public bool IsTicking => TimeLeft > 0;
         }
 
-
-
         public static float framesSinceEnteredRoom = 0;
         public static Countdown disablePlayerDeathCountdown = new Countdown();
-
 
         /// <summary>
         /// Compare if 2 2d lists are equal

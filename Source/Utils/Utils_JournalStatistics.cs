@@ -10,12 +10,13 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using NETCoreifier;
 using static Celeste.Mod.EndHelper.EndHelperModuleSettings;
 using static Celeste.Mod.EndHelper.Entities.Misc.RoomStatisticsDisplayer;
 
 namespace Celeste.Mod.EndHelper.Utils
 {
-    static internal class Utils_JournalStatistics
+    internal static class Utils_JournalStatistics
     {
         internal static bool journalOpen = false;
         internal static bool journalStatisticsGuiOpen = false;
@@ -1238,6 +1239,65 @@ namespace Celeste.Mod.EndHelper.Utils
             }
         }
     }
+
+    // ReSharper disable once UnusedType.Global
+    public class RoomStatisticsDebug
+    {
+        [Monocle.Command("endersblender_roomstats", "endersblender_roomstats [time/rtatime/death] [value]. Add + or - to add/subtract, otherwise value is set. Time is in seconds.")]
+        private static void ModifyRoomStats()
+        {
+            if (Engine.Scene is Level && Engine.Scene.Tracker.GetEntity<RoomStatisticsDisplayer>() is { } rsd)
+            {
+                string[] commands = Engine.Commands.commandHistory[0].Split(" ");
+
+                if (commands.Length == 1) { InvalidCommandError("Format: endersblender_roomstats [time/rtatime/death] [value]\nValue for time is in seconds. Add a + or - sign to add or decrease the current value instead of setting it."); return; }
+                if (commands.Length != 3) { InvalidCommandError("Invalid Format!\nFormat: endersblender_roomstats [time/rtatime/death] [value]\nValue for time is in seconds. Add a + or - sign to add or decrease the current value instead of setting it."); return; }
+
+                String modifyType = commands[1];
+
+                int modifyNum;
+                bool modifyRelative = false;
+
+                if (commands[2][0] == '+' || commands[2][0] == '-') modifyRelative = true;
+
+                try { modifyNum = Int32.Parse(commands[2]); }
+                catch { InvalidCommandError("Invalid Value! Should be an integer!"); return; }
+
+
+                switch (modifyType)
+                {
+                    case "time":
+                        long timeTicks = TimeSpan.FromSeconds(modifyNum).Ticks;
+                        if (modifyRelative) rsd.AddTimer(timeTicks);
+                        else rsd.SetTimer(timeTicks);
+                        return;
+                    case "rtatime":
+                        long timeTicks2 = TimeSpan.FromSeconds(modifyNum).Ticks;
+                        if (modifyRelative) rsd.AddRTATimer(timeTicks2);
+                        else rsd.SetRTATimer(timeTicks2);
+                        return;
+                    case "death":
+                        if (modifyRelative) rsd.AddDeath(modifyNum);
+                        else rsd.SetDeath(modifyNum);
+                        return;
+                    default:
+                        InvalidCommandError("Invalid stat type! Should either be time, rtatime or death.");
+                        return;
+                }
+
+            }
+            else
+            {
+                InvalidCommandError("Command can only be used while in a map!");
+            }
+        }
+
+        private static void InvalidCommandError(String errorMsg)
+        {
+            Engine.Commands.Log(errorMsg);
+        }
+    }
+
 
     public class RoomStatisticsEmotes
     {

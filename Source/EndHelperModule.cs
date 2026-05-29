@@ -143,7 +143,6 @@ public class EndHelperModule : EverestModule {
         On.Celeste.Editor.MapEditor.Update += Hook_UsingMapEditor;
         On.Celeste.Strawberry.Added += Hook_StrawberryAddedToLevel;
         On.Celeste.Strawberry.OnCollect += Hook_CollectStrawberry;
-        On.Celeste.SpeedrunTimerDisplay.Render += Hook_SpeedrunTimerRender;
         IL.Celeste.GrabbyIcon.Update += ILHook_GrabbyIconUpdate;
 
         On.Celeste.Killbox.OnPlayer += Hook_KillboxKill;
@@ -221,7 +220,6 @@ public class EndHelperModule : EverestModule {
         On.Celeste.Editor.MapEditor.Update -= Hook_UsingMapEditor;
         On.Celeste.Strawberry.Added -= Hook_StrawberryAddedToLevel;
         On.Celeste.Strawberry.OnCollect -= Hook_CollectStrawberry;
-        On.Celeste.SpeedrunTimerDisplay.Render -= Hook_SpeedrunTimerRender;
         IL.Celeste.GrabbyIcon.Update -= ILHook_GrabbyIconUpdate;
 
         Loadhook_Refill_RefillRoutine?.Dispose(); Loadhook_Refill_RefillRoutine = null;
@@ -779,7 +777,7 @@ public class EndHelperModule : EverestModule {
     public static bool allowIncrementRoomTimer = true;
     public static long previousSessionTime;
     public static long previousSaveDataTime;
-    public static bool allowIncrementLevelTimer = true;
+    public static long previousFileTime;
 
     // Store timers for RTA Timer
     private static long roomStatRtaTimeChecker_currTime;
@@ -817,36 +815,26 @@ public class EndHelperModule : EverestModule {
         if (!level.TimerStarted || level.TimerStopped || level.Completed)
         { allowIncrementRoomTimer = false; }
 
-        if (allowIncrementRoomTimer && level.FrozenOrPaused && (
-            Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.RoomPauseScenarioEnum.Pause ||
-            Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.RoomPauseScenarioEnum.PauseAFK ||
-            Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.RoomPauseScenarioEnum.PauseInactive ||
-            Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.RoomPauseScenarioEnum.PauseInactiveAFK
-        ))
+        if (allowIncrementRoomTimer && level.FrozenOrPaused &&
+            Utils_General_Public.TimerPauseScenarioCheck(Settings.RoomStatMenu.PauseOption, "pause"))
         {
             allowIncrementRoomTimer = false;
             Session.pauseTypeDict["Pause"] = true;
         }
 
-
-        if (allowIncrementRoomTimer && inactiveDurationFrames >= 60 && (
-            Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.RoomPauseScenarioEnum.PauseInactive ||
-            Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.RoomPauseScenarioEnum.PauseInactiveAFK
-         ))
-        {
-            allowIncrementRoomTimer = false;
-            if (level.TimerStarted && !level.TimerStopped && !level.Completed)
-            { Session.pauseTypeDict["Inactive"] = true; }
-        }
-
-        if (allowIncrementRoomTimer && afkDurationFrames >= 1800 && (
-            Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.RoomPauseScenarioEnum.AFK ||
-            Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.RoomPauseScenarioEnum.PauseAFK ||
-            Settings.RoomStatMenu.PauseOption == RoomStatMenuSubMenu.RoomPauseScenarioEnum.PauseInactiveAFK
-        ))
+        if (allowIncrementRoomTimer && afkDurationFrames >= 1800 &&
+            Utils_General_Public.TimerPauseScenarioCheck(Settings.RoomStatMenu.PauseOption, "afk"))
         {
             allowIncrementRoomTimer = false;
             Session.pauseTypeDict["AFK"] = true;
+        }
+
+        if (allowIncrementRoomTimer && inactiveDurationFrames >= 60 &&
+            Utils_General_Public.TimerPauseScenarioCheck(Settings.RoomStatMenu.PauseOption, "inactive"))
+        {
+            allowIncrementRoomTimer = false;
+            if (level.TimerStarted && level is { TimerStopped: false, Completed: false })
+            { Session.pauseTypeDict["Inactive"] = true; }
         }
     }
 
@@ -858,6 +846,7 @@ public class EndHelperModule : EverestModule {
         previousSessionTime = level.Session.Time;
         AreaKey area = level.Session.Area;
         previousSaveDataTime = global::Celeste.SaveData.Instance.Areas_Safe[area.ID].Modes[(int)area.Mode].TimePlayed;
+        previousFileTime = global::Celeste.SaveData.Instance.Time;
 
         {
             if (level.Tracker.GetEntity<RoomStatisticsDisplayer>() is { } roomStatDisplayer)
@@ -872,32 +861,48 @@ public class EndHelperModule : EverestModule {
         }
         orig(self);
 
-        // Prevent level timer from increasing if pause/afk
-        // Check if can increment time spent in room
-        allowIncrementLevelTimer = true;
-        if (allowIncrementLevelTimer && level.Paused && (
-            Settings.PauseOptionLevel == LevelPauseScenarioEnum.Pause ||
-            Settings.PauseOptionLevel == LevelPauseScenarioEnum.PauseAFK
-        ))
-        {
-            allowIncrementLevelTimer = false;
-            Session.pauseTypeDict["LevelTimer_Pause"] = true;
-        }
+        // Prevent CHAPTER timer from increasing if pause/afk/inactive
+        // ReSharper disable once ReplaceWithSingleAssignment.True
+        bool allowIncrementLevelTimer = true;
 
-        if (allowIncrementLevelTimer && afkDurationFrames >= 1800 && (
-            Settings.PauseOptionLevel == LevelPauseScenarioEnum.AFK ||
-            Settings.PauseOptionLevel == LevelPauseScenarioEnum.PauseAFK
-        ))
-        {
-            allowIncrementLevelTimer = false;
-            Session.pauseTypeDict["LevelTimer_AFK"] = true;
-        }
+        if (allowIncrementLevelTimer && level.Paused &&
+            Utils_General_Public.TimerPauseScenarioCheck(Settings.PauseOptionLevel, "pause"))
+        { allowIncrementLevelTimer = false; }
+
+        if (allowIncrementLevelTimer && afkDurationFrames >= 1800 &&
+        Utils_General_Public.TimerPauseScenarioCheck(Settings.PauseOptionLevel, "afk"))
+        { allowIncrementLevelTimer = false; }
+
+        if (allowIncrementLevelTimer && inactiveDurationFrames >= 60 &&
+            Utils_General_Public.TimerPauseScenarioCheck(Settings.PauseOptionLevel, "inactive"))
+        { allowIncrementLevelTimer = false; }
 
         if (!allowIncrementLevelTimer)
         {
             level.Session.Time = previousSessionTime;
             global::Celeste.SaveData.Instance.Areas_Safe[area.ID].Modes[(int)area.Mode].TimePlayed = previousSaveDataTime;
         }
+
+        // Prevent FILE timer from increasing if pause/afk/inactive
+        allowIncrementLevelTimer = true;
+
+        if (allowIncrementLevelTimer && level.Paused &&
+            Utils_General_Public.TimerPauseScenarioCheck(Settings.PauseOptionFile, "pause"))
+        { allowIncrementLevelTimer = false; }
+
+        if (allowIncrementLevelTimer && afkDurationFrames >= 1800 &&
+            Utils_General_Public.TimerPauseScenarioCheck(Settings.PauseOptionFile, "afk"))
+        { allowIncrementLevelTimer = false; }
+
+        if (allowIncrementLevelTimer && inactiveDurationFrames >= 60 &&
+            Utils_General_Public.TimerPauseScenarioCheck(Settings.PauseOptionFile, "inactive"))
+        { allowIncrementLevelTimer = false; }
+
+        if (!allowIncrementLevelTimer)
+        {
+            global::Celeste.SaveData.Instance.Time = previousFileTime;
+        }
+
     }
 
     public static void OnPlayerUpdate(Player self)
@@ -1703,65 +1708,6 @@ public class EndHelperModule : EverestModule {
             roomStatDisplayer.AddStrawberry(self);
         }
         orig(self);
-    }
-
-    private static void Hook_SpeedrunTimerRender(On.Celeste.SpeedrunTimerDisplay.orig_Render orig, SpeedrunTimerDisplay self)
-    {
-        bool renderTimer = true;
-        if (Engine.Scene is Level level && level.Tracker.GetEntity<RoomStatisticsDisplayer>() is { } roomStatDisplayer && roomStatDisplayer.statisticsGuiOpen)
-        { renderTimer = false; }
-
-        if (!self.Active || self.DrawLerp <= 0) { renderTimer = false; }
-
-        if (renderTimer)
-        {
-            if (Engine.Scene is Level level2 && level2.Paused && self.Visible)
-            {
-                // Display pause/afk icons if necessary
-                if (!Session.pauseTypeDict.ContainsKey("LevelTimer_Pause")) { Session.pauseTypeDict["LevelTimer_Pause"] = false; }
-                if (!Session.pauseTypeDict.ContainsKey("LevelTimer_AFK")) { Session.pauseTypeDict["LevelTimer_AFK"] = false; }
-                bool freezedByPause = Session.pauseTypeDict["LevelTimer_Pause"];
-                bool freezedByAfk = Session.pauseTypeDict["LevelTimer_AFK"];
-                String pauseIconMsg = ":EndHelper/ui_timerfreeze_pause:";
-                String afkIconMsg = ":EndHelper/ui_timerfreeze_afk:";
-
-                if (global::Celeste.Settings.Instance.SpeedrunClock == SpeedrunType.Chapter)
-                {
-                    const int xPos = 13; const int xPosDiff = 22; const int yPos = 162;
-                    if (freezedByPause && freezedByAfk)
-                    {
-                        ActiveFont.DrawOutline(pauseIconMsg, new Vector2(xPos, yPos), new Vector2(0.5f, 0.5f), Vector2.One * 2f, Color.DarkGray, 1f, Color.Black);
-                        ActiveFont.DrawOutline(afkIconMsg, new Vector2(xPos + xPosDiff, yPos), new Vector2(0.5f, 0.5f), Vector2.One * 2f, Color.DarkGray, 1f, Color.Black);
-                    }
-                    else if (freezedByPause)
-                    {
-                        ActiveFont.DrawOutline(pauseIconMsg, new Vector2(xPos, yPos), new Vector2(0.5f, 0.5f), Vector2.One * 2f, Color.DarkGray, 1f, Color.Black);
-                    }
-                    else if (freezedByAfk)
-                    {
-                        ActiveFont.DrawOutline(afkIconMsg, new Vector2(xPos, yPos), new Vector2(0.5f, 0.5f), Vector2.One * 2f, Color.DarkGray, 1f, Color.Black);
-                    }
-                }
-                else if (global::Celeste.Settings.Instance.SpeedrunClock == SpeedrunType.File)
-                {
-                    const int xPos = 13; const int xPosDiff = 22; const int yPos = 185;
-                    if (freezedByPause && freezedByAfk)
-                    {
-                        ActiveFont.DrawOutline(pauseIconMsg, new Vector2(xPos, yPos), new Vector2(0.5f, 0.5f), Vector2.One * 2f, Color.DarkGray, 1f, Color.Black);
-                        ActiveFont.DrawOutline(afkIconMsg, new Vector2(xPos + xPosDiff, yPos), new Vector2(0.5f, 0.5f), Vector2.One * 2f, Color.DarkGray, 1f, Color.Black);
-                    }
-                    else if (freezedByPause)
-                    {
-                        ActiveFont.DrawOutline(pauseIconMsg, new Vector2(xPos, yPos), new Vector2(0.5f, 0.5f), Vector2.One * 2f, Color.DarkGray, 1f, Color.Black);
-                    }
-                    else if (freezedByAfk)
-                    {
-                        ActiveFont.DrawOutline(afkIconMsg, new Vector2(xPos, yPos), new Vector2(0.5f, 0.5f), Vector2.One * 2f, Color.DarkGray, 1f, Color.Black);
-                    }
-                }
-            }
-            orig(self);
-        }
     }
 
     #region GrabbyIcon

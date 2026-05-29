@@ -1,7 +1,5 @@
-using Microsoft.Xna.Framework.Input;
 using System.ComponentModel;
-using static Celeste.Mod.EndHelper.EndHelperModuleSettings.RoomStatMenuSubMenu;
-using static Celeste.Mod.EndHelper.EndHelperModuleSettings.ToggleGrabSubMenu;
+using Celeste.Mod.EndHelper.Utils;
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
 
 namespace Celeste.Mod.EndHelper;
@@ -29,11 +27,9 @@ public class EndHelperModuleSettings : EverestModuleSettings {
     [SettingSubMenu]
     public class RoomStatMenuSubMenu
     {
-        public enum RoomPauseScenarioEnum { None, Pause, AFK, PauseAFK, PauseInactive, PauseInactiveAFK }
-
-        [DefaultValue(RoomPauseScenarioEnum.Pause)]
+        [DefaultValue(Utils_General_Public.TimerPauseScenarioEnum.Pause)]
         [SettingSubText("modoptions_EndHelperModule_PauseOption_Desc")]
-        public RoomPauseScenarioEnum PauseOption { get; set; }
+        public Utils_General_Public.TimerPauseScenarioEnum PauseOption { get; set; }
 
         [SettingSubText("modoptions_EndHelperModule_DeathIgnoreLoadAfterDeath_Desc")]
         public bool DeathIgnoreLoadAfterDeath { get; set; } = false;
@@ -169,11 +165,14 @@ public class EndHelperModuleSettings : EverestModuleSettings {
 
 
     // The settings
-    public enum LevelPauseScenarioEnum { None, Pause, AFK, PauseAFK }
-    [DefaultValue(LevelPauseScenarioEnum.None)]
+    [DefaultValue(Utils_General_Public.TimerPauseScenarioEnum.None)]
     //[SettingSubHeader("modoptions_EndHelperModule_SubHeader_Misc")]
     [SettingSubText("modoptions_EndHelperModule_PauseOptionLevel_Desc")]
-    public LevelPauseScenarioEnum PauseOptionLevel { get; set; }
+    public Utils_General_Public.TimerPauseScenarioEnum PauseOptionLevel { get; set; }
+
+    [DefaultValue(Utils_General_Public.TimerPauseScenarioEnum.None)]
+    [SettingSubText("modoptions_EndHelperModule_PauseOptionFile_Desc")]
+    public Utils_General_Public.TimerPauseScenarioEnum PauseOptionFile { get; set; }
 
 
     [SettingSubHeader("modoptions_EndHelperModule_SubHeader_RoomStat")]

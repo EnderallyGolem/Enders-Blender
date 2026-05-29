@@ -1329,10 +1329,10 @@ public class RoomStatisticsDisplayer : Entity
             // Timer and Death Count Freeze Icons
             String pauseIconMsg = "";
 
-            if (!EndHelperModule.Session.pauseTypeDict.ContainsKey("Pause")) { EndHelperModule.Session.pauseTypeDict["Pause"] = false; }
-            if (!EndHelperModule.Session.pauseTypeDict.ContainsKey("Inactive")) { EndHelperModule.Session.pauseTypeDict["Inactive"] = false; }
-            if (!EndHelperModule.Session.pauseTypeDict.ContainsKey("AFK")) { EndHelperModule.Session.pauseTypeDict["AFK"] = false; }
-            if (!EndHelperModule.Session.pauseTypeDict.ContainsKey("LoadNoDeath")) { EndHelperModule.Session.pauseTypeDict["LoadNoDeath"] = false; }
+            EndHelperModule.Session.pauseTypeDict.TryAdd("Pause", false);
+            EndHelperModule.Session.pauseTypeDict.TryAdd("Inactive", false);
+            EndHelperModule.Session.pauseTypeDict.TryAdd("AFK", false);
+            EndHelperModule.Session.pauseTypeDict.TryAdd("LoadNoDeath", false);
 
             if (EndHelperModule.Session.pauseTypeDict["LoadNoDeath"])
             {
@@ -1632,27 +1632,39 @@ public class RoomStatisticsDisplayer : Entity
         else if (areaKey.Mode == AreaMode.CSide) { mapNameSide_Internal += "_C"; }
         return mapNameSide_Internal;
     }
-    public void AddDeath()
+    public void AddDeath(int addNum = 1)
     {
         // NOTE: Manual AddDeath at EndHelperModule > EnterMapFunc
         EnsureDictsHaveKey(SceneAs<Level>(), currentEffectiveRoomName);
-        EndHelperModule.Session.roomStatDict_death[currentEffectiveRoomName] = Convert.ToInt32(EndHelperModule.Session.roomStatDict_death[currentEffectiveRoomName]) + 1;
+        EndHelperModule.Session.roomStatDict_death[currentEffectiveRoomName] = Convert.ToInt32(EndHelperModule.Session.roomStatDict_death[currentEffectiveRoomName]) + addNum;
 
         if (dealWithFirstClear)
-        {
-            EndHelperModule.SaveData.mapDict_roomStat_firstClear_death[mapNameSide_Internal][currentEffectiveRoomName]++;
-        }
+        { EndHelperModule.SaveData.mapDict_roomStat_firstClear_death[mapNameSide_Internal][currentEffectiveRoomName] += addNum; }
+    }
+    public void SetDeath(int setNum)
+    {
+        EndHelperModule.Session.roomStatDict_death[currentEffectiveRoomName] = setNum;
+        if (dealWithFirstClear)
+        { EndHelperModule.SaveData.mapDict_roomStat_firstClear_death[mapNameSide_Internal][currentEffectiveRoomName] = setNum; }
     }
 
-    public void AddTimer()
+    public void AddTimer(long? addTicks = null)
     {
         if (currentEffectiveRoomName == "") return;
-        EndHelperModule.Session.roomStatDict_timer[currentEffectiveRoomName] = TimeSpanShims.FromSeconds(Engine.RawDeltaTime).Ticks + Convert.ToInt64(EndHelperModule.Session.roomStatDict_timer[currentEffectiveRoomName]);
+
+        addTicks ??= TimeSpanShims.FromSeconds(Engine.RawDeltaTime).Ticks;
+        EndHelperModule.Session.roomStatDict_timer[currentEffectiveRoomName] = addTicks.Value + Convert.ToInt64(EndHelperModule.Session.roomStatDict_timer[currentEffectiveRoomName]);
 
         if (dealWithFirstClear)
-        {
-            EndHelperModule.SaveData.mapDict_roomStat_firstClear_timer[mapNameSide_Internal][currentEffectiveRoomName] += TimeSpanShims.FromSeconds(Engine.RawDeltaTime).Ticks;
-        }
+        { EndHelperModule.SaveData.mapDict_roomStat_firstClear_timer[mapNameSide_Internal][currentEffectiveRoomName] += addTicks.Value; }
+    }
+
+    public void SetTimer(long setTicks)
+    {
+        if (currentEffectiveRoomName == "") return;
+        EndHelperModule.Session.roomStatDict_timer[currentEffectiveRoomName] = setTicks;
+        if (dealWithFirstClear)
+        { EndHelperModule.SaveData.mapDict_roomStat_firstClear_timer[mapNameSide_Internal][currentEffectiveRoomName] = setTicks; }
     }
 
     public void AddRTATimer(long addTicks)
@@ -1661,9 +1673,14 @@ public class RoomStatisticsDisplayer : Entity
         EndHelperModule.Session.roomStatDict_rtatimer[currentEffectiveRoomName] = addTicks + Convert.ToInt64(EndHelperModule.Session.roomStatDict_rtatimer[currentEffectiveRoomName]);
 
         if (dealWithFirstClear)
-        {
-            EndHelperModule.SaveData.mapDict_roomStat_firstClear_rtatimer[mapNameSide_Internal][currentEffectiveRoomName] += addTicks;
-        }
+        { EndHelperModule.SaveData.mapDict_roomStat_firstClear_rtatimer[mapNameSide_Internal][currentEffectiveRoomName] += addTicks; }
+    }
+    public void SetRTATimer(long setTicks)
+    {
+        if (currentEffectiveRoomName == "") return;
+        EndHelperModule.Session.roomStatDict_rtatimer[currentEffectiveRoomName] = setTicks;
+        if (dealWithFirstClear)
+        { EndHelperModule.SaveData.mapDict_roomStat_firstClear_rtatimer[mapNameSide_Internal][currentEffectiveRoomName] = setTicks; }
     }
 
     public void AddStrawberry(Strawberry strawberry)
@@ -1909,13 +1926,11 @@ public class RoomStatisticsDisplayer : Entity
         redirectRoomName = GetRoomNameNoSeg(redirectRoomName);
 
         // Add room fusion by creating a new key in roomStatDict_fuseRoomRedirect.
-        if (EndHelperModule.Session.roomStatDict_fuseRoomRedirect.ContainsKey(currentEffectiveRoomName))
+        if (!EndHelperModule.Session.roomStatDict_fuseRoomRedirect.TryAdd(currentEffectiveRoomName, redirectRoomName))
         {
             // It shouldn't already be in roomStatDict_fuseRoomRedirect, since you can't modify a fused room directly (only by the head room)
             throw new Exception("Tried fusing an already fused room. This should never happen since fused rooms aren't accessible directly.");
         }
-
-        EndHelperModule.Session.roomStatDict_fuseRoomRedirect.Add(currentEffectiveRoomName, redirectRoomName);
 
         // Ensure redirectRoomName exists. There's a possibly it, eg, exists in first clear list but not current session list.
         EnsureDictsHaveKey(level, redirectRoomName);
