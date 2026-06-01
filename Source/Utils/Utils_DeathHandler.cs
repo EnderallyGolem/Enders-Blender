@@ -18,7 +18,7 @@ namespace Celeste.Mod.EndHelper.Utils
         internal static bool deathWipe = true;              // If false, skips wipe when dying.
         private static bool previousDeathWipe = true;
         internal static bool nextFastReload = false;        // If true, next reload will be forced to be fast (screen transition animation after dying)
-        internal static SeemlessRespawnEnum seemlessRespawn = SeemlessRespawnEnum.Disabled;
+        internal static SeamlessRespawnEnum SeamlessRespawn = SeamlessRespawnEnum.Disabled;
 
         internal static bool playerHasDeathBypass = false; // Constantly false, unless when dying with bypass
                                                            // Then will be true until Hook_OnPlayerRespawn sets it to false.
@@ -52,12 +52,9 @@ namespace Celeste.Mod.EndHelper.Utils
         internal static float oldLaunchedTimer;
 
         // For player death bypass reloads
-        internal static string oldbypass_requireFlag;
+        internal static string oldbypass_requireFlag = "";
         internal static bool oldbypass_showVisuals;
         internal static int oldStateMachine;
-
-        // Prevent death spam
-        public static float deathCooldownFrames { private set; get; } = 0;
 
         #region Hook Functions
         
@@ -65,9 +62,9 @@ namespace Celeste.Mod.EndHelper.Utils
         public static void Update(Level level)
         {
             spinnerAltInView = false;
-            if (deathCooldownFrames > 0 && !level.FrozenOrPaused)
+            if (EndHelperModule.Session.deathCooldownFrames > 0 && !level.FrozenOrPaused)
             {
-                deathCooldownFrames -= 1;
+                EndHelperModule.Session.deathCooldownFrames -= 1;
             }
         }
 
@@ -106,24 +103,25 @@ namespace Celeste.Mod.EndHelper.Utils
                 // Init stuff
                 DeathBypass.entityIDDisappearUntilFullReset = [];
             }
+            EndHelperModule.Session.AllowDeathHandlerAllChecks = true;
             EndHelperModule.Session.AllowDeathHandlerEntityChecks = true;
         }
 
         public static void ForceShortDeathCooldown()
         {
             // 5 frames is the minimum cooldown which prevents pauses
-            if (deathCooldownFrames > 5) deathCooldownFrames = 5;
+            if (EndHelperModule.Session.deathCooldownFrames > 5) EndHelperModule.Session.deathCooldownFrames = 5;
         }
-        public static void ForceNoDeathCooldown() { deathCooldownFrames = 0; }
+        public static void ForceNoDeathCooldown() { EndHelperModule.Session.deathCooldownFrames = 0; }
 
         public static void UpdateSeemlessRespawn()
         {
-            seemlessRespawn = EndHelperModule.Settings.GameplayTweaksMenu.SeemlessRespawn;
+            SeamlessRespawn = EndHelperModule.Settings.GameplayTweaksMenu.seamlessRespawn;
             if (EndHelperModule.Session.overrideSeemlessRespawn != null)
-            { seemlessRespawn = EndHelperModule.Session.overrideSeemlessRespawn.Value; }
-            else if (seemlessRespawn != SeemlessRespawnEnum.Disabled) {
+                { SeamlessRespawn = EndHelperModule.Session.overrideSeemlessRespawn.Value; }
+            else if (SeamlessRespawn != SeamlessRespawnEnum.Disabled) {
                 EndHelperModule.Session.usedGameplayTweaks["seemlessrespawn_minor"] = true;
-                if (seemlessRespawn == SeemlessRespawnEnum.EnabledKeepState)
+                if (SeamlessRespawn == SeamlessRespawnEnum.EnabledKeepState)
                 {
                     EndHelperModule.Session.usedGameplayTweaks["seemlessrespawn_keepstate"] = true;
                 }
@@ -139,23 +137,23 @@ namespace Celeste.Mod.EndHelper.Utils
                     EndHelperModule.Session.overrideSeemlessRespawn = null;
                     break;
                 case "Disabled":
-                    EndHelperModule.Session.overrideSeemlessRespawn = SeemlessRespawnEnum.Disabled;
+                    EndHelperModule.Session.overrideSeemlessRespawn = SeamlessRespawnEnum.Disabled;
                     break;
                 case "EnabledNormal":
-                    EndHelperModule.Session.overrideSeemlessRespawn = SeemlessRespawnEnum.EnabledNormal;
+                    EndHelperModule.Session.overrideSeemlessRespawn = SeamlessRespawnEnum.EnabledNormal;
                     break;
                 case "EnabledNear":
-                    EndHelperModule.Session.overrideSeemlessRespawn = SeemlessRespawnEnum.EnabledNear;
+                    EndHelperModule.Session.overrideSeemlessRespawn = SeamlessRespawnEnum.EnabledNear;
                     break;
                 case "EnabledInstant":
-                    EndHelperModule.Session.overrideSeemlessRespawn = SeemlessRespawnEnum.EnabledInstant;
+                    EndHelperModule.Session.overrideSeemlessRespawn = SeamlessRespawnEnum.EnabledInstant;
                     break;
                 case "EnabledKeepState":
-                    EndHelperModule.Session.overrideSeemlessRespawn = SeemlessRespawnEnum.EnabledKeepState;
+                    EndHelperModule.Session.overrideSeemlessRespawn = SeamlessRespawnEnum.EnabledKeepState;
                     break;
                 case "EnabledExceptFullReset":
                     EndHelperModule.Session.seemlessRespawnExceptFullReset = true;
-                    EndHelperModule.Session.overrideSeemlessRespawn = SeemlessRespawnEnum.EnabledNormal;
+                    EndHelperModule.Session.overrideSeemlessRespawn = SeamlessRespawnEnum.EnabledNormal;
                     break;
                 default:
                     EndHelperModule.Session.overrideSeemlessRespawn = null;
@@ -184,19 +182,30 @@ namespace Celeste.Mod.EndHelper.Utils
             }
         }
 
+        public static bool CheckDeathHandlerEnabled(bool update = false)
+        {
+            // Set seemless respawn details
+            if (update)
+            {
+                // Check if it should be enabled/disabled if it hasn't (enabled if allow entity chats or seamless enabled)
+                UpdateSeemlessRespawn(); // Update if seamless is enabled (checks override as well)
+                EndHelperModule.Session.AllowDeathHandlerAllChecks =
+                    EndHelperModule.Settings.GameplayTweaksMenu.seamlessRespawn != SeamlessRespawnEnum.Disabled
+                    || EndHelperModule.Session.AllowDeathHandlerEntityChecks;
+            }
+            return EndHelperModule.Session.AllowDeathHandlerAllChecks;
+        }
+
         public static void BeforePlayerDeath(Player player)
         {
             //Logger.Log(LogLevel.Info, "EndHelper/Utils_DeathHandler", $"BeforePlayerDeath ran!");
-
-            // Set seemless respawn details
-            UpdateSeemlessRespawn();
             Level level = player.SceneAs<Level>();
 
             if (EndHelperModule.Session.AllowDeathHandlerEntityChecks)
             {
                 // If level was paused when this happens and lastFullResetPos is not null, player retried from menu: count as manual reset
 
-                if (player.Components.Get<DeathBypass>() is { } deathBypass && deathBypass.bypass)
+                if (player.Components.Get<DeathBypass>() is { bypass: true } deathBypass)
                 {
                     oldbypass_requireFlag = deathBypass.RequireFlag;
                     oldbypass_showVisuals = deathBypass.showVisuals;
@@ -235,22 +244,20 @@ namespace Celeste.Mod.EndHelper.Utils
             if (playerHasDeathBypass && !level.Session.GrabbedGolden && !manualReset)
             {
                 deathWipe = false;
-                // TO-DO: If carrying X-death golden, don't deathwipe true.
             }
             else
             {
-                switch (seemlessRespawn)
+                switch (SeamlessRespawn)
                 {
-                    case SeemlessRespawnEnum.Disabled:
+                    case SeamlessRespawnEnum.Disabled:
                         deathWipe = true;
                         break;
-                    case SeemlessRespawnEnum.EnabledNear:
+                    case SeamlessRespawnEnum.EnabledNear:
                         Rectangle cameraRectVer = level.Camera.GetRect(128, 128);
                         Vector2 respawnPoint = level.Session.RespawnPoint.Value;
                         deathWipe = cameraRectVer.Contains((int)respawnPoint.X, (int)respawnPoint.Y) ? false : true;
                         break;
-                    case SeemlessRespawnEnum.EnabledKeepState:
-                        // TO-DO: If carrying X-death golden, don't deathwipe true.
+                    case SeamlessRespawnEnum.EnabledKeepState:
                         deathWipe = false;
                         if (level.Session.GrabbedGolden)
                         {
@@ -453,13 +460,24 @@ namespace Celeste.Mod.EndHelper.Utils
         public static void AfterPlayerDeath(Player player)
         {
             //Logger.Log(LogLevel.Info, "EndHelper/Utils_DeathHandler", $"AfterPlayerDeath ran!");
+            if (SeamlessRespawn == SeamlessRespawnEnum.EnabledInstant)
+            {
+                player.StateMachine.State = 0;
+                player.Sprite.Scale = new Vector2(1.5f, 0.5f);
+            }
+            if (SeamlessRespawn == SeamlessRespawnEnum.EnabledKeepState || playerHasDeathBypass)
+            {
+                player.StateMachine.State = 0;
+                player.Sprite.Scale = new Vector2(1f, 1f);
+            }
+
             Level level = player.SceneAs<Level>();
 
             if (!deathWipe)
             {
                 // Set death cooldown (in frames), only if no deathwipe.
                 // Longer cooldown if death bypass, though important stuff should ignore the cooldown.
-                deathCooldownFrames = 20;
+                EndHelperModule.Session.deathCooldownFrames = 20;
             }
 
             if (EndHelperModule.Session.AllowDeathHandlerEntityChecks)
@@ -515,11 +533,11 @@ namespace Celeste.Mod.EndHelper.Utils
         }
         internal static bool CheckPlayerDeathSkipRemovePlayer()
         {
-            return !deathWipe;
+            return CheckDeathHandlerEnabled() && !deathWipe;
         }
         internal static bool CheckPlayerDeathSkipLoseFollowers()
         {
-            return seemlessRespawn == SeemlessRespawnEnum.EnabledKeepState || (playerHasDeathBypass && !manualReset && !EndHelperModule.Session.nextRespawnFullReset);
+            return SeamlessRespawn == SeamlessRespawnEnum.EnabledKeepState || (playerHasDeathBypass && !manualReset && !EndHelperModule.Session.nextRespawnFullReset);
         }
         internal static void OnPlayerDeathSkipRemovePlayer(PlayerDeadBody playerDeadBody)
         {
@@ -582,7 +600,7 @@ namespace Celeste.Mod.EndHelper.Utils
 
                     bool transferFollowersBackLater = false;
 
-                    if (effect != ReloadRoomSeemlesslyEffect.Death || seemlessRespawn == SeemlessRespawnEnum.EnabledKeepState || playerDyingWithDeathBypass)
+                    if (effect != ReloadRoomSeemlesslyEffect.Death || SeamlessRespawn == SeamlessRespawnEnum.EnabledKeepState || playerDyingWithDeathBypass)
                     {
                         oldDashes = player.Dashes;
                         oldStamina = player.Stamina;
@@ -644,7 +662,7 @@ namespace Celeste.Mod.EndHelper.Utils
 
                         if (level.Tracker.GetEntity<Player>() is { } respawnPlayer)
                         {
-                            if (seemlessRespawn == SeemlessRespawnEnum.EnabledInstant || seemlessRespawn == SeemlessRespawnEnum.EnabledKeepState || playerDyingWithDeathBypass)
+                            if (SeamlessRespawn == SeamlessRespawnEnum.EnabledInstant || SeamlessRespawn == SeamlessRespawnEnum.EnabledKeepState || playerDyingWithDeathBypass)
                             {
                                 //Logger.Log(LogLevel.Info, "EndHelper/Utils_DeathHandler", $"the current nextrespawnfullreset is {EndHelperModule.Session.nextRespawnFullReset}");
 
@@ -669,7 +687,7 @@ namespace Celeste.Mod.EndHelper.Utils
                                     SeemlessRespawnCamera(level, respawnPlayer, oldCameraPos, respawnCameraPos, 0.3f);
                                 }
 
-                                if (seemlessRespawn == SeemlessRespawnEnum.EnabledKeepState || playerDyingWithDeathBypass)
+                                if (SeamlessRespawn == SeamlessRespawnEnum.EnabledKeepState || playerDyingWithDeathBypass)
                                 {
                                     respawnPlayer.Dashes = oldDashes;
                                     respawnPlayer.Stamina = oldStamina;
@@ -727,7 +745,7 @@ namespace Celeste.Mod.EndHelper.Utils
                                         deathBypass.Update();
                                     }
 
-                                    if (seemlessRespawn == SeemlessRespawnEnum.EnabledKeepState || (playerDyingWithDeathBypass && !EndHelperModule.Session.nextRespawnFullReset))
+                                    if (SeamlessRespawn == SeamlessRespawnEnum.EnabledKeepState || (playerDyingWithDeathBypass && !EndHelperModule.Session.nextRespawnFullReset))
                                     {
                                         Leader.StoreStrawberries(player.Get<Leader>());
                                         Leader.RestoreStrawberries(respawnPlayer.Get<Leader>());

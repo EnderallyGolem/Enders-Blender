@@ -24,4 +24,5 @@ triggers.EndHelper/GameplayTweaksOverrideTrigger.attributes.description.setToDef
 triggers.EndHelper/GameplayTweaksOverrideTrigger.attributes.description.activateEnterRoom=Activates the trigger upon entering the room.
 triggers.EndHelper/GameplayTweaksOverrideTrigger.attributes.description.requireFlag=If specified, the trigger will only run if this flag is enabled.\nA list of flags in the format "flagA, flagB, !flagC | flagD, flagE" can be specified.\nThis means (flagA and flagB and not flagC) or (flagD and flagE).
 triggers.EndHelper/GameplayTweaksOverrideTrigger.attributes.description.preventDownDashRedirects=Converts manual demos into down/down-diagonal dashes.
-triggers.EndHelper/GameplayTweaksOverrideTrigger.attributes.description.seemlessRespawn=Changes respawns to be more seemless with no wipes.
+triggers.EndHelper/GameplayTweaksOverrideTrigger.attributes.description.seemlessRespawn=Seamless Respawn
+triggers.EndHelper/GameplayTweaksOverrideTrigger.attributes.description.seemlessRespawn=Changes respawns to be more seamless with no wipes.

@@ -50,14 +50,17 @@ public class EndHelperModuleSession : EverestModuleSession
     public int framesSinceRespawn = 0;
 
 
-    // Death-Handler: If false, skips a lot of checks. Enabled by death bypass component and (throwable) respawn points if full reset is used. Disabled upon entering map.
-    public bool AllowDeathHandlerEntityChecks = false;
+    // Death-Handler: If false, skips a lot of checks.
+    public bool AllowDeathHandlerAllChecks = false; // Enabled by like anything
+    public bool AllowDeathHandlerEntityChecks = false; // Enabled by death bypass component and (throwable) respawn points if full reset is used.
 
     // Death-Handler: Store full reset pos. This is null whenever screen transition occurs. When entering full reset zone, set spawn here.
     public Vector2? lastFullResetPos = null;
     public Vector2? firstFullResetPos = null;
     public bool nextRespawnFullReset = false; // Set to true if respawn point changed by full reset change respawn or by falling into a pit. Set to False after death.
 
+    // Death-Handler: Store respawn cooldown also shrug
+    public float deathCooldownFrames = 0;
 
     // Gameplay Tweaks
 
@@ -81,5 +84,5 @@ public class EndHelperModuleSession : EverestModuleSession
 
     // Override Gameplay Tweaks - With triggers
     public ConvertDemoEnum? GameplayTweaksOverride_ConvertDemo = null;
-    public SeemlessRespawnEnum? overrideSeemlessRespawn = null; public bool seemlessRespawnExceptFullReset = false;
+    public SeamlessRespawnEnum? overrideSeemlessRespawn = null; public bool seemlessRespawnExceptFullReset = false;
 }

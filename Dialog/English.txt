@@ -158,17 +158,17 @@ modoptions_EndHelperModule_ConvertDemo_EnabledNormal=Enabled - Normal
 modoptions_EndHelperModule_ConvertDemo_EnabledDiagonal=Enabled - Diagonal
 
 
-modoptions_EndHelperModule_SeemlessRespawn=Seemless Respawn
-modoptions_EndHelperModule_SeemlessRespawn_Desc=Changes respawns to be more seemless.
+modoptions_EndHelperModule_SeamlessRespawn=Seamless Respawn
+modoptions_EndHelperModule_SeamlessRespawn_Desc=Changes respawns to be more seamless.
 Unlike the respawn changes in QOL tweaks, this significantly changes how respawns work internally!
 May be buggy in rooms which instantly teleport you after respawning, and with some modded entities!
 "Enabled - Keep State" isn't a proper respawn and keeps dash counts, velocity, held berries, etc.
 
-modoptions_EndHelperModule_SeemlessRespawn_Disabled=Disabled
-modoptions_EndHelperModule_SeemlessRespawn_EnabledNormal=Enabled - Normal
-modoptions_EndHelperModule_SeemlessRespawn_EnabledNear=Enabled - Near Only
-modoptions_EndHelperModule_SeemlessRespawn_EnabledInstant=Enabled - Instant
-modoptions_EndHelperModule_SeemlessRespawn_EnabledKeepState=Enabled - Keep State
+modoptions_EndHelperModule_SeamlessRespawn_Disabled=Disabled
+modoptions_EndHelperModule_SeamlessRespawn_EnabledNormal=Enabled - Normal
+modoptions_EndHelperModule_SeamlessRespawn_EnabledNear=Enabled - Near Only
+modoptions_EndHelperModule_SeamlessRespawn_EnabledInstant=Enabled - Instant
+modoptions_EndHelperModule_SeamlessRespawn_EnabledKeepState=Enabled - Keep State
 
 
 # No Respawn Animation
@@ -347,7 +347,7 @@ EndHelperTest_Tutorial_CassetteMisc_ChangeTempo=Set Tempo On Enter
 EndHelperTest_Tutorial_CassetteMisc_SetBeatEnter=Set Beat On Enter
 EndHelperTest_Tutorial_CassetteMisc_SetBeatInside=Set Beat Inside
 EndHelperTest_Tutorial_CassetteMisc_Reset=Reset
-EndHelperTest_Tutorial_CassetteMisc_SeemlessLoop=Short Loop
+EndHelperTest_Tutorial_CassetteMisc_SeamlessLoop=Short Loop
 EndHelperTest_Tutorial_CassetteMisc_Info=The triggers in this room are all the same triggers, with different parameters.
 In short, they allow you to set the music tempo and/or change the current beat.
 Check out their settings in lönn to understand them better!

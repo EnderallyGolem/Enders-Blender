@@ -951,11 +951,14 @@ public class EndHelperModule : EverestModule {
             if (Settings.ToggleGrabMenu.UntoggleUponDeath) { Session.toggleifyEnabled = false; }
             Session.framesSinceRespawn = 0;
 
-            if (!level.IsInBounds(self)) Utils_DeathHandler.ForceShortDeathCooldown(); // Reduce cooldown if player is out of bounds. Will definitely need to die soon!
+            if (Utils_DeathHandler.CheckDeathHandlerEnabled(true))
+            {
+                if (!level.IsInBounds(self)) Utils_DeathHandler.ForceShortDeathCooldown(); // Reduce cooldown if player is out of bounds. Will definitely need to die soon!
 
-            // Prevent death spam (if using seemless respawn).
-            if (Utils_DeathHandler.deathCooldownFrames > 0) return null;
-            Utils_DeathHandler.BeforePlayerDeath(self);
+                // Prevent death spam (if using seemless respawn).
+                if (Session.deathCooldownFrames > 0) return null;
+                Utils_DeathHandler.BeforePlayerDeath(self);
+            }
         }
 
         // Skip animation
@@ -1129,20 +1132,11 @@ public class EndHelperModule : EverestModule {
 
         //Update the room-swap rooms. This is kind of here as a failsafe, and also otherwise warping with debug mode permamently empty the swap rooms.
         Utils_RoomSwap.ReupdateAllRooms();
-
         orig(self);
-        if (Utils_DeathHandler.seemlessRespawn == SeemlessRespawnEnum.EnabledInstant)
+        if (Utils_DeathHandler.CheckDeathHandlerEnabled(false))
         {
-            self.StateMachine.State = 0;
-            self.Sprite.Scale = new Vector2(1.5f, 0.5f);
+            Utils_DeathHandler.AfterPlayerDeath(self);
         }
-        if (Utils_DeathHandler.seemlessRespawn == SeemlessRespawnEnum.EnabledKeepState || Utils_DeathHandler.playerHasDeathBypass)
-        {
-            self.StateMachine.State = 0;
-            self.Sprite.Scale = new Vector2(1f, 1f);
-        }
-
-        Utils_DeathHandler.AfterPlayerDeath(self);
 
         // Autosave
         TryAutosave(level);

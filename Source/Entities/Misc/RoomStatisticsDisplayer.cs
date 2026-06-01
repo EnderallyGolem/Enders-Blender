@@ -2298,9 +2298,9 @@ public class RoomStatisticsDisplayer : Entity
             if (tweakList["backboost"] && (EndHelperModule.Settings.Backboost.Buttons.Count > 0 || EndHelperModule.Settings.Backboost.Keys.Count > 0)) watermarkIconList.Add("endscreen_backboost");
             if (tweakList["neutraldrop"] && (EndHelperModule.Settings.NeutralDrop.Buttons.Count > 0 || EndHelperModule.Settings.NeutralDrop.Keys.Count > 0)) watermarkIconList.Add("endscreen_neutraldrop");
 
-            if (EndHelperModule.Settings.GameplayTweaksMenu.SeemlessRespawn != GameplayTweaks.SeemlessRespawnEnum.Disabled)
+            if (EndHelperModule.Settings.GameplayTweaksMenu.seamlessRespawn != GameplayTweaks.SeamlessRespawnEnum.Disabled)
             {
-                if (EndHelperModule.Settings.GameplayTweaksMenu.SeemlessRespawn == GameplayTweaks.SeemlessRespawnEnum.EnabledKeepState) { watermarkIconList.Add("endscreen_seemlessrespawn_keepstate"); }
+                if (EndHelperModule.Settings.GameplayTweaksMenu.seamlessRespawn == GameplayTweaks.SeamlessRespawnEnum.EnabledKeepState) { watermarkIconList.Add("endscreen_seemlessrespawn_keepstate"); }
                 else { watermarkIconList.Add("endscreen_seemlessrespawn_minor"); }
             }
             //if (EndHelperModule.Settings.GameplayTweaksMenu.NoRespawnAnimation) { watermarkIconList.Add("endscreen_norespawnanim"); } // Previously gameplay tweak. Now qol, so this is unused.
@@ -2313,7 +2313,7 @@ public class RoomStatisticsDisplayer : Entity
                 {
                     watermarkStr += $":EndHelper/{watermark}:";
                 }
-                ActiveFont.Draw(watermarkStr, new Vector2(0, 1050), Vector2.Zero, Vector2.One * 3.2f, Color.Black * 0.5f);
+                ActiveFont.Draw(watermarkStr, new Vector2(0, 1050), Vector2.Zero, Vector2.One * 3.2f, Color.Black * 0.65f);
             }
         }
 

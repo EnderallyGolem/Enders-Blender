@@ -38,7 +38,7 @@ Some of these can be overridden per-map with a Gameplay Tweaks Override Trigger.
     - Prevents down dashes from being redirected out of dashing down, aka prevent manual demos (except upward ones), by forcing them to be down or down diagonal
     - Does not affect demo keys.
 - No Respawn Animation
-- Seemless Respawns
+- Seamless Respawns
 	- Smoothly transitions the camera without a screen transition upon death
 	- Unaffected by Always Quick Respawn and No Respawn Transition QOL Tweaks
 - Neutral Drop Keybind
@@ -57,9 +57,11 @@ Some of these can be overridden per-map with a Gameplay Tweaks Override Trigger.
 Changelog:
 
 # 1.3.1
-
 - Room stats tracker
 	- Added debug command endersblender_roomstats. Can be use to modify the time, rta time or death in the current room.
+
+- Gameplay Tweaks:
+	- Fixed issues with death cooldown when using (and not using) seAmless respawns
 
 - Misc:
 	- Expanded options for freezing chapter timer to include inactivity.
@@ -181,7 +183,7 @@ Changelog:
 	- Autosave can now also occur during load state.
 
 - Gameplay Tweaks:
-	- Seemless Respawn: Fixed spinner flicker during death for spinners with custom hues.
+	- Seamless Respawn: Fixed spinner flicker during death for spinners with custom hues.
 
 - Mapping Tools:
 	- Conditional Bird Tutorial
@@ -204,7 +206,7 @@ Changelog:
 		- Flag Killbox
 	
 - Gameplay Tweaks:
-	- Fixed Seemless Respawn bugging out when clicking retry in the menu
+	- Fixed Seamless Respawn bugging out when clicking retry in the menu
 	
 - Mapping Tools:
 	- Conditional Bird Tutorial: Added option - Only Fulfill Condition Once, which means once the bird flew down once, it can fly down again without fulfilling the condition. (This was previously the default behaviour.)
@@ -234,12 +236,12 @@ Changelog:
 - patch for viewing journal stats in some maps
 		
 ## 1.1.3:
-- seemless respawn crash patch
+- seamless respawn crash patch
 
 ## 1.1.1:
 - New Additions:
     - Gameplay Tweaks:
-        - Seemless Respawns: Changes respawns to be more seemless by reloading the room without a wipe. This is kind of buggy and only meant for maps (enabled with gameplay tweak trigger) for now.
+        - Seamless Respawns: Changes respawns to be more seamless by reloading the room without a wipe. This is kind of buggy and only meant for maps (enabled with gameplay tweak trigger) for now.
 
 - Room Stats:
 	- You can name a room dialog %skip to prevent it from showing up (previous room stats will be incremented instead)
