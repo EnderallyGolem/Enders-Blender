@@ -277,8 +277,7 @@ public class RoomStatisticsDisplayer : Entity
         }
     }
 
-    private void ShowSaveSessionMenu(int current_deaths, long current_timer, long current_rtatimer, int current_berries, bool current_invalidClear,
-                                     int saved_deaths, long saved_timer, long saved_rtatimer, int saved_berries, bool saved_invalidClear)
+    private void ShowSaveSessionMenu(int current_deaths, long current_timer, long current_rtatimer, int current_berries, bool current_invalidClear, int saved_deaths, long saved_timer, long saved_rtatimer, int saved_berries, bool saved_invalidClear)
     {
         TextMenu menu = new TextMenu();
         Level level = SceneAs<Level>();
@@ -583,8 +582,10 @@ public class RoomStatisticsDisplayer : Entity
             IconType iconType = IconType.White;
             if (level.Completed) iconType = savedSessionData ? IconType.Green : IconType.Gray;
             bool showAliveTimer = EndHelperModule.Settings.RoomStatDisplayMenu.ShowAliveTime;
+            float opacity = EndHelperModule.Settings.RoomStatDisplayMenu.Opacity / 10f;
+            String mapNamePrefix = EndHelperModule.Settings.RoomStatDisplayMenu.ShowMapName ? mapNameSide_Display : "";
 
-            ShowGuiStats(currentEffectiveRoomName, displayXPos, displayYPos, displayScale, timerColor, false, xJustification, false, false, showAliveTimer, false, level.Session.MapData.DetectedStrawberries, "", "", deathNum, timerNum, rtatimerNum, strawberriesNum, iconType);
+            ShowGuiStats(currentEffectiveRoomName, displayXPos, displayYPos, displayScale, timerColor, false, xJustification, false, false, showAliveTimer, false, level.Session.MapData.DetectedStrawberries, mapNamePrefix, "", deathNum, timerNum, rtatimerNum, strawberriesNum, iconType, opacity);
         }
 
         RenderOtherStuffCompletelyUnrelatedToRoomStatsButAddedHereDueToConvenience(level);
@@ -611,18 +612,25 @@ public class RoomStatisticsDisplayer : Entity
 
     // currentEffectiveRoomName only necessary if showRoomName or showAll enabled. Otherwise just set to empty string
     internal enum IconType { White, Gray, Green, Yellow }
-    internal static void ShowGuiStats(string currentEffectiveRoomName, int displayXPos, int displayYPos, float displayScale, Color timerColor, bool yCentered, float xJustification, bool showMenuStats, bool hideRoomName, bool showAliveTimer, bool showTotalMapBerryCount, int totalMapBerryCount, string prefix, string suffix, int deathNum, long timerNum, long rtatimerNum, int strawberriesNum, IconType iconType)
+    internal static void ShowGuiStats(string currentEffectiveRoomName, int displayXPos, int displayYPos, float displayScale, Color timerColor, bool yCentered, float xJustification, bool showMenuStats, bool hideRoomName, bool showAliveTimer, bool showTotalMapBerryCount, int totalMapBerryCount, string prefix, string suffix, int deathNum, long timerNum, long rtatimerNum, int strawberriesNum, IconType iconType, float opacity)
     {
         var roomDisplaySettings = EndHelperModule.Settings.RoomStatDisplayMenu;
         Vector2 justification = new Vector2(0, yCentered ? 0.5f : 0f);
         List<DisplayInfo> displayInfoList = new List<DisplayInfo>(8);
 
+        bool showColon = roomDisplaySettings.ShowDeaths || roomDisplaySettings.ShowTimeSpent || (roomDisplaySettings.ShowStrawberries && strawberriesNum > 0) || showAliveTimer;
+        bool showRoomName = !hideRoomName && (roomDisplaySettings.ShowRoomName || showMenuStats) && currentEffectiveRoomName != "";
+
         if (prefix != "")
         {
-            displayInfoList.Add(new DisplayInfo("prefix", prefix, (int)(ActiveFont.WidthToNextLine(prefix, 0) * displayScale)));
+            string displayMsg = prefix;
+
+            if (showColon && !showRoomName) displayMsg += ":";
+
+            displayInfoList.Add(new DisplayInfo("prefix", displayMsg, (int)(ActiveFont.WidthToNextLine($"{displayMsg} ", 0) * displayScale)));
         }
 
-        if (!hideRoomName && (roomDisplaySettings.ShowRoomName || showMenuStats) && currentEffectiveRoomName != "")
+        if (showRoomName)
         {
             string displayMsg = "";
 
@@ -644,11 +652,7 @@ public class RoomStatisticsDisplayer : Entity
                 displayMsg += customRoomName;
             }
 
-            if (roomDisplaySettings.ShowDeaths || roomDisplaySettings.ShowTimeSpent
-                || (roomDisplaySettings.ShowStrawberries && strawberriesNum > 0) || showAliveTimer)
-            {
-                displayMsg += ":";
-            }
+            if (showColon) displayMsg += ":";
 
             displayInfoList.Add(new DisplayInfo("roomname", displayMsg, (int)(ActiveFont.WidthToNextLine($"{displayMsg} ", 0) * displayScale)));
         }
@@ -745,7 +749,7 @@ public class RoomStatisticsDisplayer : Entity
         }
         if (suffix != "")
         {
-            displayInfoList.Add(new DisplayInfo("suffix", suffix, (int)(ActiveFont.WidthToNextLine($"{prefix}", 0) * displayScale)));
+            displayInfoList.Add(new DisplayInfo("suffix", suffix, (int)(ActiveFont.WidthToNextLine(suffix, 0) * displayScale)));
         }
 
         // First get the totalTextWidth to find how much to offset for the justification
@@ -770,7 +774,7 @@ public class RoomStatisticsDisplayer : Entity
             if (iconType == IconType.Green) color = Calc.HexToColor("6ded87");
             if (iconType == IconType.Yellow) color = Calc.HexToColor("fad768");
 
-            ActiveFont.DrawOutline(displayInfo.displayMsg, new Vector2(sectionXPos + xOffset, displayYPos), justification, Vector2.One * displayScale, color, 2f, Color.Black);
+            ActiveFont.DrawOutline(displayInfo.displayMsg, new Vector2(sectionXPos + xOffset, displayYPos), justification, Vector2.One * displayScale, color*opacity, 2f, Color.Black*opacity);
             sectionXPos += displayInfo.textWidth;
         }
     }
@@ -1238,7 +1242,7 @@ public class RoomStatisticsDisplayer : Entity
             )
             { iconType = IconType.Gray; }
 
-            ShowGuiStats(currentEffectiveRoomName, 100, 1010, 0.7f, Color.White, true, 0, true, true, false, showTotalMapBerryCount, level.Session.MapData.DetectedStrawberries, $"{totalText}: ", "", totalDeaths, totalTimer, totalRtaTimer, totalStrawberries, iconType);
+            ShowGuiStats(currentEffectiveRoomName, 100, 1010, 0.7f, Color.White, true, 0, true, true, false, showTotalMapBerryCount, level.Session.MapData.DetectedStrawberries, totalText, "", totalDeaths, totalTimer, totalRtaTimer, totalStrawberries, iconType, 1);
         }
 
         // Instructions
@@ -2298,9 +2302,9 @@ public class RoomStatisticsDisplayer : Entity
             if (tweakList["backboost"] && (EndHelperModule.Settings.Backboost.Buttons.Count > 0 || EndHelperModule.Settings.Backboost.Keys.Count > 0)) watermarkIconList.Add("endscreen_backboost");
             if (tweakList["neutraldrop"] && (EndHelperModule.Settings.NeutralDrop.Buttons.Count > 0 || EndHelperModule.Settings.NeutralDrop.Keys.Count > 0)) watermarkIconList.Add("endscreen_neutraldrop");
 
-            if (EndHelperModule.Settings.GameplayTweaksMenu.seamlessRespawn != GameplayTweaks.SeamlessRespawnEnum.Disabled)
+            if (EndHelperModule.Settings.GameplayTweaksMenu.SeamlessRespawn != GameplayTweaks.SeamlessRespawnEnum.Disabled)
             {
-                if (EndHelperModule.Settings.GameplayTweaksMenu.seamlessRespawn == GameplayTweaks.SeamlessRespawnEnum.EnabledKeepState) { watermarkIconList.Add("endscreen_seemlessrespawn_keepstate"); }
+                if (EndHelperModule.Settings.GameplayTweaksMenu.SeamlessRespawn == GameplayTweaks.SeamlessRespawnEnum.EnabledKeepState) { watermarkIconList.Add("endscreen_seemlessrespawn_keepstate"); }
                 else { watermarkIconList.Add("endscreen_seemlessrespawn_minor"); }
             }
             //if (EndHelperModule.Settings.GameplayTweaksMenu.NoRespawnAnimation) { watermarkIconList.Add("endscreen_norespawnanim"); } // Previously gameplay tweak. Now qol, so this is unused.

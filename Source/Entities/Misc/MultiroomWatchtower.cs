@@ -1432,7 +1432,7 @@ public class MultiroomWatchtower : Entity
 
         Audio.SetMusicParam("escape", 0f); //i have no idea what this does it was in the regular bino code tho
         level.ScreenPadding = 0f;
-        level.ZoomSnap(Vector2.Zero, 1f);
+        //level.ZoomSnap(Vector2.Zero, level.Zoom);
         level.Remove(hud);
         interacting = false;
         previouslyInteracted = true;

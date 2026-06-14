@@ -10,7 +10,7 @@ using System.Runtime.CompilerServices;
 using System.ComponentModel.Design.Serialization;
 using Celeste.Mod.EndHelper.Utils;
 
-namespace Celeste.Mod.EndHelper.Deprecated.Entities.Misc;
+namespace Celeste.Mod.EndHelper.Entities.Misc;
 [Tracked]
 [CustomEntity("EndHelper/TileEntity")]
 

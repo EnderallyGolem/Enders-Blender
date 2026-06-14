@@ -5,10 +5,9 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Xna.Framework;
-using Celeste.Mod.EndHelper.Deprecated.Utils;
 using Celeste.Mod.EndHelper.Utils;
 
-namespace Celeste.Mod.EndHelper.Deprecated.Entities.Misc
+namespace Celeste.Mod.EndHelper.Entities.Misc
 {
     [CustomEntity("EndHelper/CassetteBeatGate")]
     [Tracked(false)]

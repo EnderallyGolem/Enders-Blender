@@ -1,5 +1,4 @@
-﻿using Celeste.Mod.EndHelper.Deprecated.Entities.Misc;
-using Celeste.Mod.EndHelper.Entities.Misc;
+﻿using Celeste.Mod.EndHelper.Entities.Misc;
 using Celeste.Mod.EndHelper.Integration;
 using Celeste.Mod.EndHelper.Utils;
 using Microsoft.Xna.Framework;
@@ -16,8 +15,6 @@ using System.Collections.Specialized;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-using Celeste.Mod.EndHelper.Deprecated.Integration;
-using Celeste.Mod.EndHelper.Deprecated.Utils;
 using static Celeste.Mod.EndHelper.EndHelperModuleSettings;
 using static Celeste.Mod.EndHelper.EndHelperModuleSettings.GameplayTweaks;
 using static Celeste.Mod.EndHelper.Entities.Misc.RoomStatisticsDisplayer;
@@ -1226,22 +1223,21 @@ public class EndHelperModule : EverestModule {
 
     private static ScreenWipe? Hook_CompleteArea(On.Celeste.Level.orig_CompleteArea_bool_bool_bool orig, Level level, bool spotlightWipe, bool skipScreenWipe, bool skipCompleteScreen)
     {
-        if (level.Tracker.GetEntity<RoomStatisticsDisplayer>() is not null && level.Paused)
+        if (level.Tracker.GetEntity<RoomStatisticsDisplayer>() is not null)
         {
             Logger.Log(LogLevel.Info, "EndHelper/Main", $"Running CompleteArea pause for potential RoomStatisticsDisplay stats. Hope it doesn't crash!");
 
+            level.Paused = true;
             level.RegisterAreaComplete();
-            void action()
+            ActionWhenUnpaused.Add(Action);
+            return null;
+
+            void Action()
             {
                 orig(level, spotlightWipe, skipScreenWipe, skipCompleteScreen);
             }
-            ActionWhenUnpaused.Add(action);
-            return null;
         }
-        else
-        {
-            return orig(level, spotlightWipe, skipScreenWipe, skipCompleteScreen);
-        }
+        return orig(level, spotlightWipe, skipScreenWipe, skipCompleteScreen);
     }
 
     private static void Hook_AreaCompleteVerNumVars(On.Celeste.AreaComplete.orig_VersionNumberAndVariants orig, string version, float ease, float alpha)

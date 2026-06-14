@@ -4,10 +4,9 @@ using Monocle;
 using MonoMod.Utils;
 using System;
 using System.Collections.Generic;
-using Celeste.Mod.EndHelper.Deprecated.Entities.Misc;
 using MonoMod.Cil;
 
-namespace Celeste.Mod.EndHelper.Deprecated.Utils
+namespace Celeste.Mod.EndHelper.Utils
 {
     static internal class Utils_CassetteManager
     {

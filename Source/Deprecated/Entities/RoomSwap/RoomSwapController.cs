@@ -1,10 +1,10 @@
-using Celeste.Mod.EndHelper.Deprecated.Utils;
+using Celeste.Mod.EndHelper.Utils;
 using Celeste.Mod.Entities;
 using Microsoft.Xna.Framework;
 using Monocle;
 
 
-
+// ReSharper disable once CheckNamespace
 namespace Celeste.Mod.EndHelper.Entities.RoomSwap;
 
 [CustomEntity("EndHelper/RoomSwapController")]

@@ -27,6 +27,7 @@ modoptions_EndHelperModule_PauseOption_PauseInactiveAFK=Paused / Inactive / AFK
 
 modoptions_EndHelperModule_DeathIgnoreLoadAfterDeath=Ignore Load State Death After Respawn
 modoptions_EndHelperModule_DeathIgnoreLoadAfterDeath_Desc=If enabled, if you load a state immediately after respawning, the death from loading the state will not be tracked.
+This prevents double counting of deaths when loading a state immediately after dying.
 The room stat tracker menu will display an icon if this has been used.
 
 modoptions_EndHelperModule_StoredClears=Overwrite Saved Stats
@@ -62,12 +63,14 @@ modoptions_EndHelperModule_RoomStatDisplayMenu=Room Stat Tracker HUD
 modoptions_EndHelperModule_OffsetX=X-Offset
 modoptions_EndHelperModule_OffsetY=Y-Offset
 modoptions_EndHelperModule_Size=Display Size
+modoptions_EndHelperModule_Opacity=Display Opacity
 
 modoptions_EndHelperModule_xJustification=Alignment
 modoptions_EndHelperModule_xJustification_Left=Left
 modoptions_EndHelperModule_xJustification_Center=Center
 modoptions_EndHelperModule_xJustification_Right=Right
 
+modoptions_EndHelperModule_ShowMapName=Show Map Name
 modoptions_EndHelperModule_ShowRoomName=Show Room Name
 modoptions_EndHelperModule_ShowDeaths=Show Deaths
 modoptions_EndHelperModule_ShowTimeSpent=Show In-Game Time Spent

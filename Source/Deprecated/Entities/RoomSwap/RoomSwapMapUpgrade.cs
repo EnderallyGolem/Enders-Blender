@@ -4,8 +4,9 @@ using Monocle;
 using System.Runtime.CompilerServices;
 using System;
 using System.Collections;
-using Celeste.Mod.EndHelper.Deprecated.Utils;
+using Celeste.Mod.EndHelper.Utils;
 
+// ReSharper disable once CheckNamespace
 namespace Celeste.Mod.EndHelper.Entities.RoomSwap;
 
 [CustomEntity("EndHelper/RoomSwapMapUpgrade")]

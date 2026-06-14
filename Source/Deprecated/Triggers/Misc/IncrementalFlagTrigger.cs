@@ -5,7 +5,7 @@ using Monocle;
 using System;
 using System.Runtime.CompilerServices;
 
-namespace Celeste.Mod.EndHelper.Deprecated.Triggers.Misc;
+namespace Celeste.Mod.EndHelper.Triggers.Misc;
 
 [CustomEntity("EndHelper/IncrementalFlagTrigger")]
 public class IncrementalFlagTrigger : Trigger

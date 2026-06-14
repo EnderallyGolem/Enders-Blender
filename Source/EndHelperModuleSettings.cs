@@ -61,6 +61,7 @@ public class EndHelperModuleSettings : EverestModuleSettings {
     [SettingSubMenu]
     public class RoomStatDisplaySubMenu
     {
+        public bool ShowMapName { get; set; } = false;
         public bool ShowRoomName { get; set; } = false;
         public bool ShowDeaths { get; set; } = false;
         public bool ShowTimeSpent { get; set; } = false;
@@ -90,6 +91,9 @@ public class EndHelperModuleSettings : EverestModuleSettings {
 
         [SettingRange(min: 1, max: 20, largeRange: false)]
         public int Size { get; set; } = 10;
+
+        [SettingRange(min: 1, max: 10, largeRange: false)]
+        public int Opacity { get; set; } = 10;
     }
 
 
@@ -159,7 +163,7 @@ public class EndHelperModuleSettings : EverestModuleSettings {
         public enum SeamlessRespawnEnum { Disabled, EnabledNormal, EnabledNear, EnabledInstant, EnabledKeepState }
         [DefaultValue(SeamlessRespawnEnum.Disabled)]
         [SettingSubText("modoptions_EndHelperModule_SeamlessRespawn_Desc")]
-        public SeamlessRespawnEnum seamlessRespawn { get; set; }
+        public SeamlessRespawnEnum SeamlessRespawn { get; set; }
 
     }
 

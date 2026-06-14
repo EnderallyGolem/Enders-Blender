@@ -1,24 +1,12 @@
 using Celeste.Mod.Entities;
-using Celeste.Mod.EndHelper.Triggers;
 using Microsoft.Xna.Framework;
 using Monocle;
-using System.Runtime.CompilerServices;
-using static Celeste.TempleGate;
-using static On.Celeste.Level;
-using System.Security.Cryptography.X509Certificates;
 using System;
-using Microsoft.Xna.Framework.Graphics;
 using System.Collections.Generic;
-using static MonoMod.InlineRT.MonoModRule;
-using System.Threading.Tasks;
-using static Celeste.Mod.EndHelper.EndHelperModule;
-using System.Data.Common;
-using AsmResolver.PE.DotNet.ReadyToRun;
-using Celeste.Mod.EndHelper.Deprecated.Utils;
 using Celeste.Mod.EndHelper.Utils;
 
 
-
+// ReSharper disable once CheckNamespace
 namespace Celeste.Mod.EndHelper.Entities.RoomSwap;
 [Tracked(true)]
 [CustomEntity("EndHelper/RoomSwapMap")]

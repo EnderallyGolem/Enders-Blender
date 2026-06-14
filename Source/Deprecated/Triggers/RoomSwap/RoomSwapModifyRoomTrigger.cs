@@ -1,8 +1,6 @@
 using Celeste.Mod.EndHelper.Utils;
 using Celeste.Mod.Entities;
 using Microsoft.Xna.Framework;
-using System;
-using Celeste.Mod.EndHelper.Deprecated.Utils;
 
 namespace Celeste.Mod.EndHelper.Triggers.RoomSwap;
 

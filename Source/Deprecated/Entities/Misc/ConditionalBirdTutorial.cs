@@ -6,7 +6,7 @@ using Monocle;
 using System;
 using System.Collections;
 
-namespace Celeste.Mod.EndHelper.Deprecated.Entities.Misc;
+namespace Celeste.Mod.EndHelper.Entities.Misc;
 [Tracked(true)]
 [TrackedAs(typeof(CustomBirdTutorial))]
 [CustomEntity("EndHelper/ConditionalBirdTutorial")]

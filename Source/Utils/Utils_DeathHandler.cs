@@ -116,7 +116,7 @@ namespace Celeste.Mod.EndHelper.Utils
 
         public static void UpdateSeemlessRespawn()
         {
-            SeamlessRespawn = EndHelperModule.Settings.GameplayTweaksMenu.seamlessRespawn;
+            SeamlessRespawn = EndHelperModule.Settings.GameplayTweaksMenu.SeamlessRespawn;
             if (EndHelperModule.Session.overrideSeemlessRespawn != null)
                 { SeamlessRespawn = EndHelperModule.Session.overrideSeemlessRespawn.Value; }
             else if (SeamlessRespawn != SeamlessRespawnEnum.Disabled) {
@@ -190,7 +190,7 @@ namespace Celeste.Mod.EndHelper.Utils
                 // Check if it should be enabled/disabled if it hasn't (enabled if allow entity chats or seamless enabled)
                 UpdateSeemlessRespawn(); // Update if seamless is enabled (checks override as well)
                 EndHelperModule.Session.AllowDeathHandlerAllChecks =
-                    EndHelperModule.Settings.GameplayTweaksMenu.seamlessRespawn != SeamlessRespawnEnum.Disabled
+                    EndHelperModule.Settings.GameplayTweaksMenu.SeamlessRespawn != SeamlessRespawnEnum.Disabled
                     || EndHelperModule.Session.AllowDeathHandlerEntityChecks;
             }
             return EndHelperModule.Session.AllowDeathHandlerAllChecks;

@@ -4,7 +4,7 @@ using Microsoft.Xna.Framework;
 using Monocle;
 using System.Runtime.CompilerServices;
 
-namespace Celeste.Mod.EndHelper.Deprecated.Entities.Misc
+namespace Celeste.Mod.EndHelper.Entities.Misc
 {
     [CustomEntity("EndHelper/FlagKillbox")]
     [Tracked(false)]

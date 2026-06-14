@@ -3,11 +3,10 @@ using Microsoft.Xna.Framework;
 using Monocle;
 using System.Runtime.CompilerServices;
 using System;
-using Celeste.Mod.EndHelper.Deprecated.Utils;
 using static MonoMod.InlineRT.MonoModRule;
 using Celeste.Mod.EndHelper.Utils;
 using Microsoft.Xna.Framework.Graphics;
-
+// ReSharper disable once CheckNamespace
 namespace Celeste.Mod.EndHelper.Entities.RoomSwap;
 
 [CustomEntity("EndHelper/RoomSwapBox")]

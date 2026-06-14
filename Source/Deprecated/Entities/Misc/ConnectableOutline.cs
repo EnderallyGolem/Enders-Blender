@@ -6,7 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
-namespace Celeste.Mod.EndHelper.Deprecated.Entities.Misc
+namespace Celeste.Mod.EndHelper.Entities.Misc
 {
     [CustomEntity("EndHelper/ConnectableOutline")]
     [Tracked(false)]

@@ -11,8 +11,6 @@ using System.Linq;
 using System.Reflection;
 using System.Reflection.Metadata.Ecma335;
 using System.Runtime.CompilerServices;
-using Celeste.Mod.EndHelper.Deprecated.Integration;
-using Celeste.Mod.EndHelper.Deprecated.Utils;
 
 namespace Celeste.Mod.EndHelper.Triggers.RoomSwap;
 

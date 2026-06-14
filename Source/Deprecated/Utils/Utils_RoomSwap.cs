@@ -9,7 +9,7 @@ using Celeste.Mod.EndHelper.Utils;
 using Microsoft.Xna.Framework;
 using Monocle;
 
-namespace Celeste.Mod.EndHelper.Deprecated.Utils
+namespace Celeste.Mod.EndHelper.Utils
 {
     static internal class Utils_RoomSwap
     {

@@ -56,6 +56,10 @@ Some of these can be overridden per-map with a Gameplay Tweaks Override Trigger.
 
 Changelog:
 
+# 1.3.2
+- Room stats tracker
+	- HUD: Added options to show map name and to adjust opacity
+
 # 1.3.1
 - Room stats tracker
 	- Added debug command endersblender_roomstats. Can be use to modify the time, rta time or death in the current room.
@@ -68,6 +72,7 @@ Changelog:
 	- Added option for freezing file timer.
 	- Removed icons displayed when chapter timer was modified due to settings.
 	- Removed deprecated entities from lang.
+	- Reverted namespace change for deprecated entities... i did not realise that could break things. oops.
 
 
 # 1.3:
