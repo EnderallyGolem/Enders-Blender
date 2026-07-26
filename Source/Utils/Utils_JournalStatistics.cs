@@ -804,7 +804,13 @@ namespace Celeste.Mod.EndHelper.Utils
                             case 4: bgColor = Color.Blue; break;
                             case 5: bgColor = Color.Magenta; break;
                             case 6: bgColor = Color.DarkRed; break;
-                            default: bgColor = Color.White; break;
+                            default:
+                                colorIndex -= 10;
+                                int rindex = colorIndex / 1000000; colorIndex -= rindex*1000000;
+                                int gindex = colorIndex / 1000; colorIndex -= gindex*1000;
+                                int bindex = colorIndex;
+                                bgColor = new Color(rindex, gindex, bindex);
+                                break;
                         }
                     }
                     else

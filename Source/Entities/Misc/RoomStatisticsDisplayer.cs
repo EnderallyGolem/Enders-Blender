@@ -1145,7 +1145,13 @@ public class RoomStatisticsDisplayer : Entity
                             case 4: bgColor = Color.Blue; break;
                             case 5: bgColor = Color.Magenta; break;
                             case 6: bgColor = Color.DarkRed; break;
-                            default: bgColor = Color.White; break;
+                            default:
+                                colorIndex -= 10;
+                                int rindex = colorIndex / 1000000; colorIndex -= rindex*1000000;
+                                int gindex = colorIndex / 1000; colorIndex -= gindex*1000;
+                                int bindex = colorIndex;
+                                bgColor = new Color(rindex, gindex, bindex);
+                                break;
                         }
                     }
                     else
@@ -1598,6 +1604,7 @@ public class RoomStatisticsDisplayer : Entity
         String mapNameSide_Display = areaKey.SID;
         if (mapNameSide_Display.StartsWith("Celeste/"))
         {
+            // Special vanilla logic
             int mapID = areaKey.ID;
             mapNameSide_Display = $"AREA_{mapID}";
         }
@@ -1728,7 +1735,19 @@ public class RoomStatisticsDisplayer : Entity
         }
         if (!EndHelperModule.Session.roomStatDict_colorIndex.Contains(roomName) && roomName == currentEffectiveRoomName)
         {
-            EndHelperModule.Session.roomStatDict_colorIndex[roomName] = level.Session.LevelData.EditorColorIndex;
+            // TESTING PURPOSES
+            level.Session.LevelData.CustomEditorColor = Color.Tomato;
+
+            Color? customColor = level.Session.LevelData.CustomEditorColor;
+            if (customColor is null)
+            {
+                EndHelperModule.Session.roomStatDict_colorIndex[roomName] = level.Session.LevelData.EditorColorIndex;
+            }
+            else
+            {
+                int colorIndexCustom = customColor.Value.R*1000000 + customColor.Value.G*1000 + customColor.Value.B + 10;
+                EndHelperModule.Session.roomStatDict_colorIndex[roomName] = colorIndexCustom;
+            }
             UpdateSaveDataColorIndex();
         }
 

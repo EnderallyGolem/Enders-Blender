@@ -1227,7 +1227,6 @@ public class EndHelperModule : EverestModule {
         {
             Logger.Log(LogLevel.Info, "EndHelper/Main", $"Running CompleteArea pause for potential RoomStatisticsDisplay stats. Hope it doesn't crash!");
 
-            level.Paused = true;
             level.RegisterAreaComplete();
             ActionWhenUnpaused.Add(Action);
             return null;
