@@ -1735,9 +1735,6 @@ public class RoomStatisticsDisplayer : Entity
         }
         if (!EndHelperModule.Session.roomStatDict_colorIndex.Contains(roomName) && roomName == currentEffectiveRoomName)
         {
-            // TESTING PURPOSES
-            level.Session.LevelData.CustomEditorColor = Color.Tomato;
-
             Color? customColor = level.Session.LevelData.CustomEditorColor;
             if (customColor is null)
             {
@@ -1943,13 +1940,13 @@ public class RoomStatisticsDisplayer : Entity
         CombineRoomStats(level, roomNamePrevSeg, roomNameLatestSeg);
     }
 
-    private void CreateRoomFuse(Level level, String currentEffectiveRoomName, String redirectRoomName)
+    private void CreateRoomFuse(Level level, String _currentEffectiveRoomName, String redirectRoomName)
     {
-        currentEffectiveRoomName = GetRoomNameNoSeg(currentEffectiveRoomName);
+        _currentEffectiveRoomName = GetRoomNameNoSeg(_currentEffectiveRoomName);
         redirectRoomName = GetRoomNameNoSeg(redirectRoomName);
 
         // Add room fusion by creating a new key in roomStatDict_fuseRoomRedirect.
-        if (!EndHelperModule.Session.roomStatDict_fuseRoomRedirect.TryAdd(currentEffectiveRoomName, redirectRoomName))
+        if (!EndHelperModule.Session.roomStatDict_fuseRoomRedirect.TryAdd(_currentEffectiveRoomName, redirectRoomName))
         {
             // It shouldn't already be in roomStatDict_fuseRoomRedirect, since you can't modify a fused room directly (only by the head room)
             throw new Exception("Tried fusing an already fused room. This should never happen since fused rooms aren't accessible directly.");
@@ -1959,7 +1956,7 @@ public class RoomStatisticsDisplayer : Entity
         EnsureDictsHaveKey(level, redirectRoomName);
 
         // Now combine stats!
-        CombineRoomStats(level, redirectRoomName, currentEffectiveRoomName);
+        CombineRoomStats(level, redirectRoomName, _currentEffectiveRoomName);
     }
 
     private static void RemoveRoomFuse(String fuseRoomName)
@@ -2068,7 +2065,7 @@ public class RoomStatisticsDisplayer : Entity
     }
 
     // allRedirects means this will constantly iterate until it finds the head room, otherwise it will only redirect once
-    static private string GetRoomFuseRedirect(String roomName, bool allRedirects = true)
+    private static string GetRoomFuseRedirect(String roomName, bool allRedirects = true)
     {
         roomName = GetRoomNameNoSeg(roomName); // Make sure we are dealing with the raw, non-segmented room names.
 
