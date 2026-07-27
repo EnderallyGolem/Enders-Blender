@@ -96,6 +96,11 @@ namespace Celeste.Mod.EndHelper.Utils
             return EndHelperModule.Session.lastFullResetPos;
         }
 
+        public static float getDeathCooldownFrames()
+        {
+            return EndHelperModule.Session.deathCooldownFrames;
+        }
+
         public static void EnableDeathHandlerEntityChecks()
         {
             if (!EndHelperModule.Session.AllowDeathHandlerEntityChecks)

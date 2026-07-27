@@ -59,6 +59,7 @@ Changelog:
 # 1.3.2
 - Room stats tracker
 	- HUD: Added options to show map name and to adjust opacity
+	- Updated to work with custom debug map room colors
 
 # 1.3.1
 - Room stats tracker
