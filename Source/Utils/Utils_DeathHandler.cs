@@ -482,7 +482,12 @@ namespace Celeste.Mod.EndHelper.Utils
             {
                 // Set death cooldown (in frames), only if no deathwipe.
                 // Longer cooldown if death bypass, though important stuff should ignore the cooldown.
-                EndHelperModule.Session.deathCooldownFrames = 20;
+                if (EndHelperModule.Session.AllowDeathHandlerEntityChecks)
+                {
+                    EndHelperModule.Session.deathCooldownFrames = 1;
+                } else {
+                    EndHelperModule.Session.deathCooldownFrames = 20;
+                }
             }
 
             if (EndHelperModule.Session.AllowDeathHandlerEntityChecks)

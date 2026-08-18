@@ -687,14 +687,6 @@ public class EndHelperModule : EverestModule {
             SessionResetFuncs(self);
         }
 
-        {
-            // Increment timeSinceRespawn if player is alive. and also not paused
-            if (level.Tracker.GetEntity<Player>() is { } player && !player.Dead && !player.JustRespawned && !level.FrozenOrPaused)
-            {
-                Session.framesSinceRespawn++;
-            }
-        }
-
         if (Settings.FreeMultiroomWatchtower.Button.Pressed && !level.FrozenOrPaused && !level.Transitioning)
         {
             Utils_MultiroomWatchtower.SpawnMultiroomWatchtower();
@@ -837,9 +829,16 @@ public class EndHelperModule : EverestModule {
 
     private static void Hook_LevelUpdateTime(On.Celeste.Level.orig_UpdateTime orig, Level self)
     {
-        if (pauseTimeUpdate) return;
+        if (pauseTimeUpdate) return; // For quick respawns (speed up game without skipping time)
 
         Level level = self;
+
+        // Increment timeSinceRespawn if player is alive. and also not paused
+        if (level.Tracker.GetEntity<Player>() is { } player && !player.Dead && !player.JustRespawned && !level.FrozenOrPaused)
+        {
+            Session.framesSinceRespawn++;
+        }
+
         previousSessionTime = level.Session.Time;
         AreaKey area = level.Session.Area;
         previousSaveDataTime = global::Celeste.SaveData.Instance.Areas_Safe[area.ID].Modes[(int)area.Mode].TimePlayed;
