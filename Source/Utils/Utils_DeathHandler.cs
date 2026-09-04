@@ -480,14 +480,12 @@ namespace Celeste.Mod.EndHelper.Utils
 
             if (!deathWipe)
             {
-                // Set death cooldown (in frames), only if no deathwipe.
+                // Set death cooldown (in frames), only if no deathwipe, and using entity checks.
                 // Longer cooldown if death bypass, though important stuff should ignore the cooldown.
-                if (EndHelperModule.Session.AllowDeathHandlerEntityChecks)
-                {
-                    EndHelperModule.Session.deathCooldownFrames = 1;
-                } else {
-                    EndHelperModule.Session.deathCooldownFrames = 20;
-                }
+
+                // The 20 cooldown is to prevent death spam when using Deathhandler.
+                // It shouldn't matter without deathhandler, but default to 1 to ensure it doesn't interfere with anything.
+                EndHelperModule.Session.deathCooldownFrames = EndHelperModule.Session.AllowDeathHandlerEntityChecks ? 20 : 1;
             }
 
             if (EndHelperModule.Session.AllowDeathHandlerEntityChecks)

@@ -700,7 +700,6 @@ public class EndHelperModule : EverestModule {
                 {
                     // Don't die if you have a golden. Just play a funny sfx instead.
                     player.Add(new SoundSource("event:/game/general/strawberry_laugh"));
-                    return;
                 }
                 else if (!player.Dead)
                 {

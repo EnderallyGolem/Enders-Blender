@@ -176,7 +176,7 @@ modoptions_EndHelperModule_SeamlessRespawn_EnabledKeepState=Enabled - Keep State
 
 # No Respawn Animation
 modoptions_EndHelperModule_NoRespawnAnimation=No Respawn Animation
-modoptions_EndHelperModule_NoRespawnAnimation_Desc=Removes the respawn animation.
+modoptions_EndHelperModule_NoRespawnAnimation_Desc=Removes the respawn animation after the screen transition.
 
 
 ######### QOL Tweaks #########
