@@ -1,5 +1,4 @@
-# EndHelper
-Calling it a blender was funnier. Too lazy to change the internal names though.  
+# Ender's Blender
 [Source code](https://github.com/EnderallyGolem/Enders-Blender)
 [Gamebanana page](https://gamebanana.com/mods/568903)
 

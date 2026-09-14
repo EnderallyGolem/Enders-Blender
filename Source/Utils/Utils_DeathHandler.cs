@@ -13,7 +13,7 @@ using static Celeste.Mod.EndHelper.EndHelperModuleSettings.GameplayTweaks;
 
 namespace Celeste.Mod.EndHelper.Utils
 {
-    static public class Utils_DeathHandler
+    public static class Utils_DeathHandler
     {
         internal static bool deathWipe = true;              // If false, skips wipe when dying.
         private static bool previousDeathWipe = true;
@@ -341,6 +341,8 @@ namespace Celeste.Mod.EndHelper.Utils
         {
             bool changedRespawn = false;
 
+            // Logger.Log(LogLevel.Info, "EndHelper/Utils_DeathHandler", $"Updating respawn - target {targetPos} | fullResetOnly {fullResetOnly} | lastFullResetPos {EndHelperModule.Session.lastFullResetPos}");
+
             if (fullResetOnly && EndHelperModule.Session.lastFullResetPos is not null)
             {
                 // For full reset, only target the lastFullRestPos, regardless of targetPos
@@ -442,7 +444,7 @@ namespace Celeste.Mod.EndHelper.Utils
 
         public static void SetNextRespawnFullReset(Level level, bool setTo, bool manualReset = false)
         {
-            //Logger.Log(LogLevel.Info, "EndHelper/Utils_DeathHandler", $"Set Next Respawn Full Reset: setTo {setTo} | manualReset {manualReset}");
+            // Logger.Log(LogLevel.Info, "EndHelper/Utils_DeathHandler", $"Set Next Respawn Full Reset: setTo {setTo} | manualReset {manualReset}");
             if (setTo)
             {
                 if (manualReset && EndHelperModule.Session.firstFullResetPos is not null)
