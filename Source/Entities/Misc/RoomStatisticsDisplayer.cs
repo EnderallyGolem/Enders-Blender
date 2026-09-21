@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Specialized;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using Celeste.Mod.EndHelper.Utils;
 using Microsoft.Xna.Framework;
@@ -79,9 +81,38 @@ public class RoomStatisticsDisplayer : Entity
 
     #region Update
 
-    public void ImportRoomStatInfo()
+
+    static void AssignIfNotNull<T>(ref T target, object? source)
     {
-        EndHelperModule.Session.roomStatDict_customName = externalRoomStatDict_customName; // Import
+        if (source != null) target = (T)source;
+    }
+
+    public static void SetExportData(List<object>? importStats)
+    {
+        if (importStats != null && importStats.Count == 13)
+        {
+            AssignIfNotNull(ref externalRoomStatDict_customName, importStats[0]);
+            AssignIfNotNull(ref externalRoomStatDict_death, importStats[1]);
+            AssignIfNotNull(ref externalRoomStatDict_timer, importStats[2]);
+            AssignIfNotNull(ref externalRoomStatDict_rtatimer, importStats[3]);
+            AssignIfNotNull(ref externalRoomStatDict_strawberries, importStats[4]);
+            AssignIfNotNull(ref externalRoomStatDict_colorIndex, importStats[5]);
+            AssignIfNotNull(ref externalDict_pauseTypeDict, importStats[6]);
+            AssignIfNotNull(ref externalDict_fuseRoomRedirect, importStats[7]);
+            AssignIfNotNull(ref externalRoomStatDict_firstClear_roomOrder, importStats[8]);
+            AssignIfNotNull(ref externalRoomStatDict_firstClear_death, importStats[9]);
+            AssignIfNotNull(ref externalRoomStatDict_firstClear_timer, importStats[10]);
+            AssignIfNotNull(ref externalRoomStatDict_firstClear_rtatimer, importStats[11]);
+            AssignIfNotNull(ref externalRoomStatDict_firstClear_strawberries, importStats[12]);
+        }
+    }
+
+    public void ImportRoomStatInfo(List<object>? importStats = null)
+    {
+        SetExportData(importStats); // Manual import stats if needed lol. Probably does nothing.
+
+        // Import data from the temp static storage
+        EndHelperModule.Session.roomStatDict_customName = externalRoomStatDict_customName;
         EndHelperModule.Session.roomStatDict_death = externalRoomStatDict_death;
         EndHelperModule.Session.roomStatDict_timer = externalRoomStatDict_timer;
         EndHelperModule.Session.roomStatDict_rtatimer = externalRoomStatDict_rtatimer;
@@ -109,9 +140,10 @@ public class RoomStatisticsDisplayer : Entity
         }
     }
 
-    public void ExportRoomStatInfo(Level level)
+    public List<object>? ExportRoomStatInfo(Level level)
     {
-        externalRoomStatDict_customName = EndHelperModule.Session.roomStatDict_customName; // Export
+        // Export (send data to temporary static storage)
+        externalRoomStatDict_customName = EndHelperModule.Session.roomStatDict_customName;
         externalRoomStatDict_death = EndHelperModule.Session.roomStatDict_death;
         externalRoomStatDict_timer = EndHelperModule.Session.roomStatDict_timer;
         externalRoomStatDict_rtatimer = EndHelperModule.Session.roomStatDict_rtatimer;
@@ -162,6 +194,9 @@ public class RoomStatisticsDisplayer : Entity
                 SaveSessionData();
             }
         }
+
+        List<object> allTheExportedStats = [externalRoomStatDict_customName, externalRoomStatDict_death, externalRoomStatDict_timer, externalRoomStatDict_rtatimer, externalRoomStatDict_strawberries, externalRoomStatDict_colorIndex, externalDict_pauseTypeDict, externalDict_fuseRoomRedirect, externalRoomStatDict_firstClear_roomOrder, externalRoomStatDict_firstClear_death, externalRoomStatDict_firstClear_timer, externalRoomStatDict_firstClear_rtatimer, externalRoomStatDict_firstClear_strawberries];
+        return allTheExportedStats;
     }
 
     private void SaveSessionData()
