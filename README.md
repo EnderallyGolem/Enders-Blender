@@ -55,6 +55,9 @@ Some of these can be overridden per-map with a Gameplay Tweaks Override Trigger.
 
 Changelog:
 
+# 1.3.3
+- Added some Interops for the room stats.
+
 # 1.3.2
 - Room stats tracker
 	- HUD: Added options to show map name and to adjust opacity

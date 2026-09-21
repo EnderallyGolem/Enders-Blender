@@ -92,7 +92,6 @@ namespace Celeste.Mod.EndHelper.Integration
                     else
                     {
                         // Add +1 death when loading state, unless the player is already dead. Use the currentRoomName from roomStatDisplayer so it doesn't count multi-room bino
-                        // EndHelperModule.externalRoomStatDict_death[roomStatDisplayer.currentRoomName] = Convert.ToInt32(EndHelperModule.externalRoomStatDict_death[roomStatDisplayer.currentRoomName]) + 1;
                         roomStatDisplayer.AddDeath();
                         roomStatDisplayer.ExportRoomStatInfo(preloadLevel);
                     }
