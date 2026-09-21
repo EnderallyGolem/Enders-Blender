@@ -98,8 +98,6 @@ namespace Celeste.Mod.EndHelper.Utils
             /// <summary>
             /// ImportStatistics specifically for states. This should be ran right after the states have been loaded.
             /// Rather than immediately importing the stats, this also run some functions that should run on reload (noteably trying to autosave).
-            /// <br/><br/>
-            /// also if you are running this can you run the NotifySessionReset interop in Ender's Extras pretty please <![CDATA[<33]]>
             ///
             /// </summary>
             /// <param name="level">The level AFTER the state is loaded.</param>
