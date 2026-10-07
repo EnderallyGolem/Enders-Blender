@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using Celeste.Mod.Core;
 using Celeste.Mod.EndHelper.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
@@ -500,7 +501,7 @@ public class RoomStatisticsDisplayer : Entity
 
             // Very hacky way to prevent double-pressing
             Input.MenuJournal.ConsumePress();
-            Input.QuickRestart.ConsumePress();
+            CoreModule.Settings.MenuSearch.Button.ConsumePress();
             Input.MenuCancel.ConsumePress();
         }
         else if (statisticsGuiOpen && !roomNameEditMenuOpen && (!level.Paused || journalOpen || Input.ESC.Pressed || Input.MenuCancel.Pressed || Input.Pause
@@ -1298,7 +1299,7 @@ public class RoomStatisticsDisplayer : Entity
             // Normal room stats instructions
             ActiveFont.DrawOutline("Edit Room Name: ", new Vector2(instructionXPos, instructionYPos), new Vector2(0f, 0.5f), new Vector2(instructionScale, instructionScale), instructionColor, 2f, Color.Black);
             instructionXPos += (int)(ActiveFont.WidthToNextLine("Edit Room Name: XI", 0) * instructionScale);
-            Input.GuiButton(Input.QuickRestart, mode: Input.PrefixMode.Latest).DrawCentered(new Vector2(instructionXPos, instructionYPos), instructionColor, instructionScale, 0);
+            Input.GuiButton(CoreModule.Settings.MenuSearch.Button, mode: Input.PrefixMode.Latest).DrawCentered(new Vector2(instructionXPos, instructionYPos), instructionColor, instructionScale, 0);
             instructionXPos += (int)(ActiveFont.WidthToNextLine("XXXXX", 0) * instructionScale);
 
             ActiveFont.DrawOutline("Copy to Clipboard: ", new Vector2(instructionXPos, instructionYPos), new Vector2(0f, 0.5f), new Vector2(instructionScale, instructionScale), instructionColor, 2f, Color.Black);
@@ -1512,10 +1513,10 @@ public class RoomStatisticsDisplayer : Entity
         // Room Stat Menu Buttons Functionality
         if (!roomNameEditMenuOpen && !inCreateSegmentRoomMenu)
         {
-            if (Input.QuickRestart.Pressed)
+            if (CoreModule.Settings.MenuSearch.Button)
             {
                 // Renaming current room
-                Utils_General.ConsumeInput(Input.QuickRestart, 3);
+                Utils_General.ConsumeInput(CoreModule.Settings.MenuSearch.Button, 3);
 
                 //LogLevel.Info, "EndHelper/RoomStatisticsDisplayer", $"open text menu");
                 roomNameEditMenuOpen = true;

@@ -199,10 +199,18 @@ modoptions_EndHelperModule_AlwaysQuickRespawn_Desc=Respawn quickly upon death wi
 modoptions_EndHelperModule_NoRespawnTransition=Instant Respawn Transition
 modoptions_EndHelperModule_NoRespawnTransition_Desc=Makes the screen transition when respawning instant.
 
-# Quick Restart
+# Disable Quick Restart
 modoptions_EndHelperModule_DisableQuickRestart=Disable Quick Restart Keybind
 modoptions_EndHelperModule_DisableQuickRestart_Desc=Why is this set to R if empty
 why is this the everest search key, WWHHHHHYYYYYYYYYYYY
+edit: yo its no longer the everest search key yaayyy
+
+# Disable Debug Reload
+modoptions_EndHelperModule_DisableDebugReload=Disable Debug Reload
+modoptions_EndHelperModule_DisableDebugReload_Desc=Disables reloading assets with F1, F2 and F3 when debug mode is enabled.
+waiting for when everest lets you rebind this...
+
+
 
 # Dash Screen Shake
 modoptions_EndHelperModule_DisableFrequentScreenShake=Disable Frequent Screen Shakes

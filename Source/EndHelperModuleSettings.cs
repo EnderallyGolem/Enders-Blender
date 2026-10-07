@@ -140,6 +140,9 @@ public class EndHelperModuleSettings : EverestModuleSettings {
         [SettingSubText("modoptions_EndHelperModule_PreventAccidentalQuit_Desc")]
         public PreventAccidentalQuitEnum PreventAccidentalQuit { get; set; }
 
+        [SettingSubText("modoptions_EndHelperModule_DisableDebugReload_Desc")]
+        public bool DisableDebugReload { get; set; } = false;
+
 
         [SettingSubHeader("modoptions_EndHelperModule_SubSubHeader_Respawns")]
         [SettingSubText("modoptions_EndHelperModule_AlwaysQuickRespawn_Desc")]

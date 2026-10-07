@@ -55,6 +55,13 @@ Some of these can be overridden per-map with a Gameplay Tweaks Override Trigger.
 
 Changelog:
 
+# 1.3.4
+- Room stats tracker:
+	- The room rename keybind is now the everest search key rather than the quick retry key. By default they are both R.
+
+- Misc:
+	- Added option to disable using F1/F2/F3 to reload the room when debug mode is on
+
 # 1.3.3
 - Added some Interops for the room stats.
 

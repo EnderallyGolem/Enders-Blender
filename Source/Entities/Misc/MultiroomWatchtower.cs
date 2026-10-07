@@ -1,25 +1,13 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 using Microsoft.Xna.Framework;
 using Monocle;
-using MonoMod;
 using Celeste.Mod.Entities;
-using static Celeste.TempleGate;
-using static On.Celeste.Level;
 using System.Threading.Tasks;
-using System.Runtime.Intrinsics;
-using System.Linq;
-
-using Celeste.Mod.Core;
-using static Celeste.GaussianBlur;
-using static Celeste.WaveDashPage;
-using System.Diagnostics.CodeAnalysis;
 using Celeste.Mod.EndHelper.Integration;
 using Celeste.Mod.EndHelper.Utils;
-using Microsoft.Xna.Framework.Graphics;
 
 // Because I keep forgetting: the vanilla entity is Lookout.
 namespace Celeste.Mod.EndHelper.Entities.Misc;

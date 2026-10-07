@@ -10,6 +10,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Celeste.Mod.Core;
 using NETCoreifier;
 using static Celeste.Mod.EndHelper.EndHelperModuleSettings;
 using static Celeste.Mod.EndHelper.Entities.Misc.RoomStatisticsDisplayer;
@@ -907,7 +908,7 @@ namespace Celeste.Mod.EndHelper.Utils
                 // Normal room stats instructions
                 ActiveFont.DrawOutline("Edit Room Name: ", new Vector2(instructionXPos, instructionYPos), new Vector2(0f, 0.5f), new Vector2(instructionScale, instructionScale), instructionColor, 2f, Color.Black);
                 instructionXPos += (int)(ActiveFont.WidthToNextLine($"Edit Room Name: XI", 0) * instructionScale);
-                Input.GuiButton(Input.QuickRestart, mode: Input.PrefixMode.Latest).DrawCentered(new Vector2(instructionXPos, instructionYPos), instructionColor, instructionScale, 0);
+                Input.GuiButton(CoreModule.Settings.MenuSearch.Button, mode: Input.PrefixMode.Latest).DrawCentered(new Vector2(instructionXPos, instructionYPos), instructionColor, instructionScale, 0);
                 instructionXPos += (int)(ActiveFont.WidthToNextLine($"XXXXX", 0) * instructionScale);
 
                 ActiveFont.DrawOutline("Copy to Clipboard: ", new Vector2(instructionXPos, instructionYPos), new Vector2(0f, 0.5f), new Vector2(instructionScale, instructionScale), instructionColor, 2f, Color.Black);
@@ -1131,11 +1132,10 @@ namespace Celeste.Mod.EndHelper.Utils
             // Room Stat Menu Buttons Functionality
             if (!journalStatisticsRoomNameEditMenuOpen)
             {
-                if (Input.QuickRestart.Pressed)
+                if (CoreModule.Settings.MenuSearch.Button)
                 {
                     // Renaming current room
                     // Consume Input shouldn't be here for journal otherwise it might eat up input when its not supposed to
-                    //ConsumeInput(Input.QuickRestart, 3);
 
                     //LogLevel.Info, "EndHelper/RoomStatisticsDisplayer", $"open text menu");
                     journalStatisticsRoomNameEditMenuOpen = true;

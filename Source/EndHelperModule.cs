@@ -15,6 +15,7 @@ using System.Collections.Specialized;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using Microsoft.Xna.Framework.Input;
 using static Celeste.Mod.EndHelper.EndHelperModuleSettings;
 using static Celeste.Mod.EndHelper.EndHelperModuleSettings.GameplayTweaks;
 using static Celeste.Mod.EndHelper.Entities.Misc.RoomStatisticsDisplayer;
@@ -120,6 +121,7 @@ public class EndHelperModule : EverestModule {
         On.Celeste.Level.TransitionRoutine += Hook_TransitionRoutine;
         On.Monocle.Entity.Removed += Hook_EntityRemoved;
         On.Celeste.Level.CompleteArea_bool_bool_bool += Hook_CompleteArea;
+        IL.Celeste.Level.Update += ILHook_LevelUpdate;
 
         Everest.Events.Player.OnBeforeUpdate += OnPlayerUpdate;
         On.Celeste.Player.Die += Hook_OnPlayerDeath;
@@ -128,9 +130,9 @@ public class EndHelperModule : EverestModule {
         IL.Celeste.PlayerDeadBody.Update += ILHook_PlayerDeadBodyUpdate;
         IL.Celeste.PlayerDeadBody.End += ILHook_PlayerDeadBodyEnd;
         MethodInfo ILOrigDie = typeof(Player).GetMethod("orig_Die", BindingFlags.Public | BindingFlags.Instance)!;
-        Loadhook_Player_OrigDie = new ILHook(ILOrigDie, Hook_ILOrigDie);
+        Loadhook_Player_OrigDie = new ILHook(ILOrigDie, ILHook_OrigDie);
         MethodInfo ILDeadBodyDeathRoutine = typeof(PlayerDeadBody).GetMethod("DeathRoutine", BindingFlags.NonPublic | BindingFlags.Instance)!.GetStateMachineTarget()!;
-        Loadhook_PlayerDeadBody_DeathRoutine = new ILHook(ILDeadBodyDeathRoutine, Hook_ILDeadBodyDeathRoutine);
+        Loadhook_PlayerDeadBody_DeathRoutine = new ILHook(ILDeadBodyDeathRoutine, ILHook_DeadBodyDeathRoutine);
 
         On.Celeste.AreaComplete.VersionNumberAndVariants += Hook_AreaCompleteVerNumVars;
         On.Celeste.OuiJournal.Update += Hook_JournalUpdate;
@@ -149,21 +151,21 @@ public class EndHelperModule : EverestModule {
         On.Celeste.Solid.MoveVExact += Hook_SolidMoveVExact;
 
         MethodInfo ILRefillCoroutine = typeof(Refill).GetMethod("RefillRoutine", BindingFlags.NonPublic | BindingFlags.Instance)!.GetStateMachineTarget()!;
-        Loadhook_Refill_RefillRoutine = new ILHook(ILRefillCoroutine, Hook_IL_RefillRefillCoroutine);
+        Loadhook_Refill_RefillRoutine = new ILHook(ILRefillCoroutine, ILHook_RefillRefillCoroutine);
 
         MethodInfo ILTransitionCoroutine = typeof(Level).GetMethod("orig_TransitionRoutine", BindingFlags.NonPublic | BindingFlags.Instance)!.GetStateMachineTarget()!;
-        Loadhook_Level_OrigTransitionRoutine = new ILHook(ILTransitionCoroutine, Hook_IL_OrigTransitionRoutine);
+        Loadhook_Level_OrigTransitionRoutine = new ILHook(ILTransitionCoroutine, ILHook_OrigTransitionRoutine);
 
         On.Celeste.Player.DashBegin += Hook_DashBegin;
         IL.Celeste.Player.SuperBounce += ILHook_SuperBounce;
         IL.Celeste.Player.SideBounce += ILHook_SideBounce;
         MethodInfo ILDashCoroutine = typeof(Player).GetMethod("DashCoroutine", BindingFlags.NonPublic | BindingFlags.Instance)!.GetStateMachineTarget()!;
-        Loadhook_Player_DashCoroutine = new ILHook(ILDashCoroutine, Hook_IL_DashCoroutine);
+        Loadhook_Player_DashCoroutine = new ILHook(ILDashCoroutine, ILHook_DashCoroutine);
         MethodInfo ILRedDashCoroutine = typeof(Player).GetMethod("RedDashCoroutine", BindingFlags.NonPublic | BindingFlags.Instance)!.GetStateMachineTarget()!;
-        Loadhook_Player_RedDashCoroutine = new ILHook(ILRedDashCoroutine, Hook_IL_RedDashCoroutine);
+        Loadhook_Player_RedDashCoroutine = new ILHook(ILRedDashCoroutine, ILHook_RedDashCoroutine);
 
         MethodInfo ILInputGrabCheckGet = typeof(Input).GetProperty("GrabCheck")!.GetGetMethod()!;
-        Loadhook_Input_GrabCheckGet = new ILHook(ILInputGrabCheckGet, Hook_IL_GrabCheckGet);
+        Loadhook_Input_GrabCheckGet = new ILHook(ILInputGrabCheckGet, ILHook_GrabCheckGet);
 
         SpeedrunToolIntegration.Load();
         SSMQoLIntegration.Load();
@@ -193,6 +195,7 @@ public class EndHelperModule : EverestModule {
         On.Celeste.Level.Pause -= Hook_Pause;
         On.Celeste.Level.TransitionRoutine -= Hook_TransitionRoutine;
         On.Celeste.Level.CompleteArea_bool_bool_bool -= Hook_CompleteArea;
+        IL.Celeste.Level.Update -= ILHook_LevelUpdate;
 
         Everest.Events.Player.OnBeforeUpdate -= OnPlayerUpdate;
         On.Celeste.Player.Die -= Hook_OnPlayerDeath;
@@ -1019,7 +1022,7 @@ public class EndHelperModule : EverestModule {
         }
     }
 
-    public static void Hook_ILOrigDie(ILContext il)
+    public static void ILHook_OrigDie(ILContext il)
     {
         ILCursor cursor = new ILCursor(il);
 
@@ -1107,7 +1110,7 @@ public class EndHelperModule : EverestModule {
         }
     }
 
-    public static void Hook_ILDeadBodyDeathRoutine(ILContext il)
+    public static void ILHook_DeadBodyDeathRoutine(ILContext il)
     {
         ILCursor cursor = new ILCursor(il);
 
@@ -1236,6 +1239,32 @@ public class EndHelperModule : EverestModule {
         }
         return orig(level, spotlightWipe, skipScreenWipe, skipCompleteScreen);
     }
+    public static void ILHook_LevelUpdate(ILContext il)
+    {
+        ILCursor cursor = new ILCursor(il);
+
+        // Skip the F1/F2/F3 checks when there's debug mode
+        while (cursor.TryGotoNext(MoveType.After,
+                   instr => instr.MatchCall(typeof(MInput), "get_Keyboard"),
+                   instr => instr.MatchLdcI4(out _), // Keys.F1, F2, F3 are 112, 113 and 114
+                   instr => instr.MatchCallvirt<MInput.KeyboardData>("Pressed")
+               ))
+        {
+            #pragma warning disable CL0001
+            cursor.EmitDelegate<Func<bool, bool>>(CheckSkipDebugReset);
+            #pragma warning restore CL0001
+        }
+    }
+
+    private static bool CheckSkipDebugReset(bool originalResult)
+    {
+        if ((MInput.Keyboard.Pressed(Keys.F1) || MInput.Keyboard.Pressed(Keys.F2) || MInput.Keyboard.Pressed(Keys.F3))
+            && Settings.QOLTweaksMenu.DisableDebugReload)
+        {
+            return false; // Prevent reload
+        }
+        return originalResult;
+    }
 
     private static void Hook_AreaCompleteVerNumVars(On.Celeste.AreaComplete.orig_VersionNumberAndVariants orig, string version, float ease, float alpha)
     {
@@ -1345,7 +1374,7 @@ public class EndHelperModule : EverestModule {
         Utils_JournalStatistics.journalOpen = false;
     }
 
-    private static void Hook_IL_RefillRefillCoroutine(ILContext il)
+    private static void ILHook_RefillRefillCoroutine(ILContext il)
     {
         ILCursor cursor = new ILCursor(il);
 
@@ -1362,7 +1391,7 @@ public class EndHelperModule : EverestModule {
         }
     }
 
-    private static void Hook_IL_OrigTransitionRoutine(ILContext il)
+    private static void ILHook_OrigTransitionRoutine(ILContext il)
     {
         ILCursor cursor = new ILCursor(il);
 
@@ -1453,7 +1482,7 @@ public class EndHelperModule : EverestModule {
         }
     }
 
-    private static void Hook_IL_DashCoroutine(ILContext il)
+    private static void ILHook_DashCoroutine(ILContext il)
     {
         ILCursor cursor = new ILCursor(il);
 
@@ -1477,7 +1506,7 @@ public class EndHelperModule : EverestModule {
         }
     }
 
-    private static void Hook_IL_RedDashCoroutine(ILContext il)
+    private static void ILHook_RedDashCoroutine(ILContext il)
     {
         ILCursor cursor = new ILCursor(il);
 
@@ -1535,7 +1564,7 @@ public class EndHelperModule : EverestModule {
         return redirectedVector;
     }
 
-    private static void Hook_IL_GrabCheckGet(ILContext il)
+    private static void ILHook_GrabCheckGet(ILContext il)
     {
         ILCursor cursor = new ILCursor(il);
 
