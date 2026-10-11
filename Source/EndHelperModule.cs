@@ -1224,9 +1224,12 @@ public class EndHelperModule : EverestModule {
 
     private static ScreenWipe? Hook_CompleteArea(On.Celeste.Level.orig_CompleteArea_bool_bool_bool orig, Level level, bool spotlightWipe, bool skipScreenWipe, bool skipCompleteScreen)
     {
-        if (level.Tracker.GetEntity<RoomStatisticsDisplayer>() is not null)
+        if (level.Tracker.GetEntity<RoomStatisticsDisplayer>() is { } stats && !level.Completed && !level.InCutscene)
         {
-            Logger.Log(LogLevel.Info, "EndHelper/Main", $"Running CompleteArea pause for potential RoomStatisticsDisplay stats. Hope it doesn't crash!");
+            // This is specifically targeted on if CompleteArea is the cause of the area being completed.
+            // InCutscene can prevent crash if the cutscene depends on it. Levels should be completed when the cutscene begins anyways, before any ScreenWipe occurs.
+
+            Logger.Log(LogLevel.Info, "EndHelper/Main", $"Running CompleteArea pause for potential RoomStatisticsDisplay stats. If this causes a crash please report it! MapNameSide: {stats.GetMapRoom()} | Room: {level.Session.LevelData.Name}");
 
             level.RegisterAreaComplete();
             ActionWhenUnpaused.Add(Action);

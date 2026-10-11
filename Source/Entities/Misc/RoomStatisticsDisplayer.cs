@@ -190,7 +190,7 @@ public class RoomStatisticsDisplayer : Entity
             }
 
             // Latest Session Data. These only gets exported at the end of the map, if you started from the beginning (valid clear).
-            if (level.Completed && CheckSaveSessionData(level))
+            if ( level.Completed && CheckSaveSessionData(level))
             {
                 SaveSessionData();
             }
@@ -223,14 +223,29 @@ public class RoomStatisticsDisplayer : Entity
 
     private bool haveCheckedSaveSessionData;
     private bool savedSessionData;
+
+    internal String GetMapRoom() => mapNameSide_Internal;
     private bool CheckSaveSessionData(Level level)
     {
         if (haveCheckedSaveSessionData) return false;
         haveCheckedSaveSessionData = true;
 
-        if (mapNameSide_Internal == "Celeste/7-Summit" && level.Session.LevelData.Name == "credits-summit")
+        Dictionary<String, String> blacklistRooms = new Dictionary<string, string>()
         {
-            return false; // Hardcode it not to store for vanilla credits, because the menu can crash the game :(
+            // SJ checks are redundancy they aren't needed
+            ["StrawberryJam2021/0-Lobbies/1-Beginner"] = "sj2021beginnerlobby",
+            ["StrawberryJam2021/0-Lobbies/2-Intermediate"] = "01",
+            ["StrawberryJam2021/0-Lobbies/3-Advanced"] = "a1",
+            ["StrawberryJam2021/0-Lobbies/4-Expert"] = "lobby1",
+            ["StrawberryJam2021/0-Lobbies/5-Grandmaster"] = "GM_main",
+
+            // Vanilla check is needed. sog.
+            ["Celeste/7-Summit"] = "credits-summit"
+        };
+
+        if (blacklistRooms.ContainsKey(mapNameSide_Internal) && blacklistRooms[mapNameSide_Internal] == level.Session.LevelData.Name)
+        {
+            return false; // Hardcode it not to store for these maps, to avoid crash.
         }
 
         if (!EndHelperModule.SaveData.mapDict_roomStat_latestSession_death.ContainsKey(mapNameSide_Internal))
