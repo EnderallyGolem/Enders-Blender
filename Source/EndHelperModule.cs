@@ -1224,20 +1224,29 @@ public class EndHelperModule : EverestModule {
 
     private static ScreenWipe? Hook_CompleteArea(On.Celeste.Level.orig_CompleteArea_bool_bool_bool orig, Level level, bool spotlightWipe, bool skipScreenWipe, bool skipCompleteScreen)
     {
-        if (level.Tracker.GetEntity<RoomStatisticsDisplayer>() is { } stats && !level.Completed && !level.InCutscene)
+        if (level.Tracker.GetEntity<RoomStatisticsDisplayer>() is { } stats && !level.Completed)
         {
             // This is specifically targeted on if CompleteArea is the cause of the area being completed.
-            // InCutscene can prevent crash if the cutscene depends on it. Levels should be completed when the cutscene begins anyways, before any ScreenWipe occurs.
-
-            Logger.Log(LogLevel.Info, "EndHelper/Main", $"Running CompleteArea pause for potential RoomStatisticsDisplay stats. If this causes a crash please report it! MapNameSide: {stats.GetMapRoom()} | Room: {level.Session.LevelData.Name}");
+            // If so, run as per normal but stop the wipe from progressing until that is done.
+            Logger.Log(LogLevel.Info, "EndHelper/Main", $"Running CompleteArea wipe delay for potential RoomStatisticsDisplay stats. If this causes a crash or freeze please report it! MapNameSide: {stats.GetMapRoom()} | Room: {level.Session.LevelData.Name}");
 
             level.RegisterAreaComplete();
-            ActionWhenUnpaused.Add(Action);
-            return null;
+            stats.Update();
+
+            float oldWipePercent = 0;
+            ScreenWipe? wipe = orig(level, spotlightWipe, skipScreenWipe, skipCompleteScreen);
+
+            if (wipe is not null)
+            {
+                oldWipePercent = wipe.Percent; // Probably 0
+                wipe.Percent = float.MinValue; // Freeze it
+                ActionWhenUnpaused.Add(Action); // Wipe it
+            }
+            return wipe;
 
             void Action()
             {
-                orig(level, spotlightWipe, skipScreenWipe, skipCompleteScreen);
+                wipe.Percent=oldWipePercent; // Begin wipe
             }
         }
         return orig(level, spotlightWipe, skipScreenWipe, skipCompleteScreen);
